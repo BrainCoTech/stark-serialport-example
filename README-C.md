@@ -4,8 +4,8 @@ The macos, linux directory contains example programs showing how to use libstark
 
 The examples currently included are:
 
-list_ports.c - displays a list of ports on the system.
-rs485.c - get info & control Stark Device by RS-485 bus.
+- list_ports.c - displays a list of ports on the system.
+- rs485.c - get info & control Stark Device by RS-485 bus.
 
 The Makefile in this directory will attempt to build all the examples,
 using 'gcc' to compile them and 'pkg-config' to discover the include
