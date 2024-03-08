@@ -117,7 +117,7 @@ class SRLOG(object):
     """Represent the globals variables"""
     BASEDIR = []
     USE_COLOR = True
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s][Zen Python Binding:%(pathname)s:%(lineno)d]>%(message)s", datefmt="%Y-%m-%d %H:%M:%S,%f")
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s][Zen Python Binding:%(pathname)s:%(lineno)d]>%(message)s", datefmt="%Y-%m-%d %H:%M:%S")
     LOGGER = Starkogger(None)
     LOGGING = logging.getLogger("Stark python binding")
     LOGGING.setLevel(logging.DEBUG)

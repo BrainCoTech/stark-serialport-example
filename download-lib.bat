@@ -66,6 +66,7 @@ goto :eof
     call wget %URL%/dist.zip
     call 7z x dist.zip
     del dist.zip
+    rmdir /s /q __MACOSX
 
     :: 2. create VERSION file
     echo libstark Version: %LIB_VERSION% > VERSION
