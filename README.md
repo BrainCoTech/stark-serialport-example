@@ -3,7 +3,10 @@
 ## download or update stark lib dependencies
 
 ```shell
+# on Linux/macOS
 ./download-lib.sh
+# on Windows, need install choco first
+./download-lib.dat
 ```
 
 ## Python example

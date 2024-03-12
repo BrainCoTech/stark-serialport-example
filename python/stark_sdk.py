@@ -4,14 +4,17 @@ import platform
 import numpy as np
 from enum import IntEnum  # Enum declarations
 from cffi import FFI
-
+import pathlib
+ 
 ffi = FFI()
 
 def fatal_error(msg):
     print("FATAL_ERROR:" + msg)
 
 def load_library():
-    lib_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "..", "dist")
+    current_dir = pathlib.Path(__file__).resolve()
+    parent_dir = current_dir.parent.parent
+    lib_dir = os.path.join(parent_dir, "dist")
     print(f"""Loading StarkSDK from {lib_dir}""")
 
     # 1. load header

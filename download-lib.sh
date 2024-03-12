@@ -3,6 +3,11 @@ set -e
 cd ${0%/*}
 SCRIPT_DIR=$(pwd)
 
+if [[ "$OSTYPE" == "msys" ]]; then
+    $COMSPEC /c download-lib.bat
+    exit
+fi
+
 # libstark settings
 LIB_VERSION="v0.0.1"
 URL="https://app.brainco.cn/universal/stark-serialport-prebuild/${LIB_VERSION}"
