@@ -2,7 +2,7 @@
 setlocal
 cd %~dp0
 set SCRIPT_DIR=%cd%
-set LIB_VERSION=v0.0.1
+set LIB_VERSION=v0.0.2
 set URL=app.brainco.cn/universal/stark-serialport-prebuild/%LIB_VERSION%
 goto :main
 
@@ -63,9 +63,9 @@ goto :eof
 
     :: 1. download lib
     call :echo_y [libstark][win] download header
-    call wget %URL%/dist.zip
-    call 7z x dist.zip
-    del dist.zip
+    call wget %URL%/win.zip
+    call 7z x win.zip
+    del win.zip
     del /s /q dist\*.DS_STORE
     rmdir /s /q __MACOSX dist\linux dist\mac
 

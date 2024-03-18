@@ -37,6 +37,7 @@ def load_library():
         lib_path = os.path.join(lib_dir, "win", "shared")
         # add path 'python/libstark/' to environment variable 'PATH' to load the dependent DLLs.
         os.environ["PATH"] += os.pathsep + lib_path
+        # print(*os.environ['PATH'].split(os.pathsep), sep='\n')
         dll_path = os.path.join(lib_path, "stark.dll")
         print(f"""Loading StarkSDK from {dll_path}""")
         return ffi.dlopen(dll_path)

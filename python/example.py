@@ -125,8 +125,8 @@ if __name__ == '__main__':
     _target_device = device
 
     # getters
-    device.get_serialport_cfg(on_serialport_cfg_response)
-    serial_read_value()
+    # device.get_serialport_cfg(on_serialport_cfg_response)
+    # serial_read_value()
     # device.get_hand_type(on_hand_type_response)
     # serial_read_value()
     # device.get_motorboard_info(on_motorboard_info_response)
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     # time.sleep(2)
     # device.set_finger_speed(-50)
     # time.sleep(2)
-    # device.set_finger_speeds([-10, 20, 30, 40, 50])
+    # device.set_finger_speeds([-10, 20, 30, 40, 50, 60])
     # time.sleep(2)
     # device.set_led_info(mode=LedMode.blink, color=LedColor.g)
 

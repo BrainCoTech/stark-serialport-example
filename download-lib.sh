@@ -9,7 +9,8 @@ if [[ "$OSTYPE" == "msys" ]]; then
 fi
 
 # libstark settings
-LIB_VERSION="v0.0.1"
+LIB_VERSION="v0.0.2"
+LIB_NAME=""
 URL="https://app.brainco.cn/universal/stark-serialport-prebuild/${LIB_VERSION}"
 
 # colorful echo functions
@@ -36,16 +37,19 @@ rm -rf dist
 platform=$(uname)
 if [ "$platform" == "Darwin" ]; then
     echo_y "[libstark] download libstark (${LIB_VERSION}) ..."
+    LIB_NAME="mac"
 elif [ "$(uname)" == "Linux" ]; then
     echo_y "[libstark] download libstark (${LIB_VERSION}) ..."  
+    LIB_NAME="linux"
 else
     echo_r "This script does not support your platform ($platform)"
     exit 1
 fi
 
-wget ${URL}/dist.zip
-unzip dist.zip
-rm dist.zip*
+ZIP_NAME="$LIB_NAME.zip"
+wget ${URL}/$ZIP_NAME
+unzip $ZIP_NAME
+rm $ZIP_NAME
 rm -rf __MACOSX
 
 # 4. create VERSION file
