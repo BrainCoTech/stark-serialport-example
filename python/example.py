@@ -117,8 +117,8 @@ if __name__ == '__main__':
     StarkSDK.set_write_data_callback(serial_write_data)
 
     # broadcast
-    StarkSDK.set_finger_speeds([10, 20, 30, 40, 50])
-    StarkSDK.set_finger_positions([10, 20, 30, 40, 50])
+    # StarkSDK.set_finger_speeds([10, 20, 30, 40, 50, 60])
+    # StarkSDK.set_finger_positions([10, 20, 30, 40, 50, 60])
 
     serial_device_id = 10
     device = StarkDevice.create_serial_device(serial_device_id, f"{serial_port_name}_{serial_device_id}")
@@ -148,10 +148,19 @@ if __name__ == '__main__':
     # device.set_serialport_cfg(baudrate=115200)
     # device.set_max_current(3000)
     # device.reset_finger_positions()
+    # time.sleep(2)
     # device.set_finger_position(50)
-    # device.set_finger_positions([10, 20, 30, 40, 50])
+    # time.sleep(2)
+    # device.set_finger_positions([10, 20, 30, 40, 50, 60])
+    # time.sleep(2)
+    device.set_finger_positions([100, 100, 100, 100, 100, 100])
+    time.sleep(2)
+    # device.set_finger_positions([0, 0, 0, 0, 0, 0])
+    # time.sleep(2)
     # device.set_finger_speed(-50)
+    # time.sleep(2)
     # device.set_finger_speeds([-10, 20, 30, 40, 50])
+    # time.sleep(2)
     # device.set_led_info(mode=LedMode.blink, color=LedColor.g)
 
     if port_set is not None:
