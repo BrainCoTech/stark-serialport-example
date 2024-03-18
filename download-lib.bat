@@ -66,8 +66,6 @@ goto :eof
     call wget %URL%/win.zip
     call 7z x win.zip
     del win.zip
-    del /s /q dist\*.DS_STORE
-    rmdir /s /q __MACOSX dist\linux dist\mac
 
     :: 2. create VERSION file
     echo libstark Version: %LIB_VERSION% > VERSION
