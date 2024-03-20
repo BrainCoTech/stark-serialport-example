@@ -48,7 +48,7 @@ fi
 
 ZIP_NAME="$LIB_NAME.zip"
 wget ${URL}/$ZIP_NAME
-unzip $ZIP_NAME
+unzip -o $ZIP_NAME -d .
 rm $ZIP_NAME
 rm -rf __MACOSX
 
