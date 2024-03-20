@@ -2,7 +2,7 @@
 setlocal
 cd %~dp0
 set SCRIPT_DIR=%cd%
-set LIB_VERSION=v0.0.2
+set LIB_VERSION=v0.0.3
 set URL=app.brainco.cn/universal/stark-serialport-prebuild/%LIB_VERSION%
 goto :main
 
@@ -64,7 +64,7 @@ goto :eof
     :: 1. download lib
     call :echo_y [libstark][win] download header
     call wget %URL%/win.zip
-    call 7z x win.zip
+    call 7z x -y win.zip
     del win.zip
 
     :: 2. create VERSION file

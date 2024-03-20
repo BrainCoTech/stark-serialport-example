@@ -5,8 +5,10 @@
 ```shell
 # on Linux/macOS
 ./download-lib.sh
+
 # on Windows, need install choco first
-./download-lib.dat
+[choco setup](https://docs.chocolatey.org/en-us/choco/setup)
+download-lib.dat
 ```
 
 ## Python example

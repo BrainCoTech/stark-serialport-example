@@ -6,11 +6,13 @@ import serial
 from stark_logger import SRLOG
 from stark_sdk import *
 
-if sys.platform.startswith('darwin'):
+if platform.system() == "Windows":
+    serial_port_name = "COM3"  
+elif sys.platform.startswith('darwin'):
     serial_port_name = "/dev/tty.usbserial-14220"
 else:
     # serial_port_name = "/dev/ttyCH341USB0"
-    serial_port_name = "/dev/ttyUSB0"    
+    serial_port_name = "/dev/ttyUSB0"   
 
 SRLOG.LOG_INFO(f"Serial port name: {serial_port_name}")
 SRLOG.LOG_INFO(f"SDK version: {StarkSDK.get_sdk_version()}")
