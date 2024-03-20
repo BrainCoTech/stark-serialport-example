@@ -85,7 +85,7 @@ def serial_read_value():
         byte_number_2 = port_set.in_waiting
     receive_frame = port_set.read_all()
     hex_data = ','.join(['0x{:02X}'.format(byte) for byte in receive_frame])
-    # print(f"receive_frame, len: {len(receive_frame)}, data: {hex_data}")
+    print(f"receive_frame, len: {len(receive_frame)}, data: {hex_data}")
 
     _target_device.did_receive_data(receive_frame)    
 
@@ -127,10 +127,10 @@ if __name__ == '__main__':
     _target_device = device
 
     # getters
-    # device.get_serialport_cfg(on_serialport_cfg_response)
-    # serial_read_value()
-    # device.get_hand_type(on_hand_type_response)
-    # serial_read_value()
+    device.get_serialport_cfg(on_serialport_cfg_response)
+    serial_read_value()
+    device.get_hand_type(on_hand_type_response)
+    serial_read_value()
     # device.get_motorboard_info(on_motorboard_info_response)
     # serial_read_value()
     # device.get_max_current(on_limit_current_response)
@@ -155,8 +155,8 @@ if __name__ == '__main__':
     # time.sleep(2)
     # device.set_finger_positions([10, 20, 30, 40, 50, 60])
     # time.sleep(2)
-    device.set_finger_positions([100, 100, 100, 100, 100, 100])
-    time.sleep(2)
+    # device.set_finger_positions([100, 100, 100, 100, 100, 100])
+    # time.sleep(2)
     # device.set_finger_positions([0, 0, 0, 0, 0, 0])
     # time.sleep(2)
     # device.set_finger_speed(-50)
