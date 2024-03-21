@@ -17,7 +17,7 @@ BINARIES = $(SOURCES:.c=)
 	$(CC) $(CFLAGS) $< \
 	    -I$(DIST_DIR)/include \
 	    -L$(DIST_DIR)/linux/static \
-	    -lstark -lm -lpthread -lrt -lstdc++ \
+	    -lstark -lm -lpthread -lrt -lstdc++ -ldl \
 	$(LIBS) \
 	-o $@.exe
 	@echo "\033[1;33m[mac][static] build done\033[0m"
