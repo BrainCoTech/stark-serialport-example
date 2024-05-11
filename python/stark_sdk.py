@@ -89,6 +89,7 @@ class StarkSDK:
     def set_finger_positions(finger_positions):
         libstark.stark_group_set_finger_positions(ffi.new("int[]", finger_positions))    
 
+print("StarkSDK version:" + StarkSDK.get_sdk_version())
 class StarkDeviceListener(abc.ABC):
     def on_error(self, error):
         pass  # print("on_error not implemented: %i" % error.code
@@ -139,9 +140,9 @@ class HandType(IntEnum):
     small_left = 4
 
 class ForceLevel(IntEnum):
-    small = 0
-    normal = 1
-    full = 2
+    small = 1
+    normal = 2
+    full = 3
 
 class FingerMovementState(IntEnum):
     idle = 0
@@ -351,6 +352,10 @@ class StarkDevice(StarkDeviceListener):
         if self.__uuid in StarkDevice._device_pointer_map:
             libstark.stark_set_serial_device_id(StarkDevice._device_pointer_map[self.__uuid], device_id)
 
+    def factory_set_device_sn(self, operation_key, board_sn, cb=None):
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.factory_set_device_sn(StarkDevice._device_pointer_map[self.__uuid], operation_key.encode('utf-8'), board_sn.encode('utf-8'))        
+
     def get_motorboard_info(self, cb=None):
         self.__on_motorboard_info = cb
         if self.__uuid in StarkDevice._device_pointer_map:
@@ -427,7 +432,7 @@ class StarkDevice(StarkDeviceListener):
             info = MotorboardInfo(c_info)
             if device.__on_motorboard_info is not None:
                 device.__on_motorboard_info(info)
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_motorboard_info is not None:
                 device.__listener.on_motorboard_info(info)
         else:
             fatal_error("__on_motorboard_info_internal:device unavailable for:" + uuid)  
@@ -440,7 +445,7 @@ class StarkDevice(StarkDeviceListener):
             device = StarkDevice._device_map[uuid]
             if device.__on_hand_type is not None:
                 device.__on_hand_type(hand_type)
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_hand_type is not None:
                 device.__listener.on_hand_type(hand_type)
         else:
             fatal_error("__on_hand_type_internal:device unavailable for:" + uuid)
@@ -454,7 +459,7 @@ class StarkDevice(StarkDeviceListener):
             serialport_cfg = SerialPortCfg(c_cfg)
             if device.__on_serialport_cfg is not None:
                 device.__on_serialport_cfg(serialport_cfg)
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_serialport_cfg is not None:
                 device.__listener.on_serialport_cfg(serialport_cfg)
         else:
             fatal_error("__on_serialport_cfg_internal:device unavailable for:" + uuid)                
@@ -467,7 +472,7 @@ class StarkDevice(StarkDeviceListener):
             device = StarkDevice._device_map[uuid]
             if device.__on_voltage is not None:
                 device.__on_voltage(voltage)
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_voltage is not None:
                 device.__listener.on_voltage(voltage)
         else:
             fatal_error("__on_voltage_internal:device unavailable for:" + uuid)
@@ -480,7 +485,7 @@ class StarkDevice(StarkDeviceListener):
             device = StarkDevice._device_map[uuid]
             if device.__on_limit_current is not None:
                 device.__on_limit_current(limit_current)
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_limit_current is not None:
                 device.__listener.on_limit_current(limit_current)
         else:
             fatal_error("__on_limit_current_internal:device unavailable for:" + uuid)
@@ -493,7 +498,7 @@ class StarkDevice(StarkDeviceListener):
             device = StarkDevice._device_map[uuid]
             if device.__on_force_level is not None:
                 device.__on_force_level(force_level)
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_force_level is not None:
                 device.__listener.on_force_level(force_level)
         else:
             fatal_error("__on_force_level_internal:device unavailable for:" + uuid)
@@ -507,7 +512,7 @@ class StarkDevice(StarkDeviceListener):
             data = StarkFingerStatusData(c_data)
             if device.__on_finger_status is not None:
                 device.__on_finger_status(data)        
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_finger_status is not None:
                 device.__listener.on_finger_status(data)
         else:
             fatal_error("__on_finger_status_internal:device unavailable for:" + uuid)    
@@ -521,7 +526,7 @@ class StarkDevice(StarkDeviceListener):
             data = StarkFingerMovementData(c_data)
             if device.__on_finger_movement_status is not None:
                 device.__on_finger_movement_status(data)        
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_finger_movement_status is not None:
                 device.__listener.on_finger_movement_status(data)
         else:
             fatal_error("__on_finger_movement_status_internal:device unavailable for:" + uuid)        
@@ -535,7 +540,7 @@ class StarkDevice(StarkDeviceListener):
             info = LedInfo(c_info)
             if device.__on_led_info is not None:
                 device.__on_led_info(info)
-            if device.__listener is not None:
+            if device.__listener is not None and device.__listener.on_led_info is not None:
                 device.__listener.on_led_info(info)
         else:
             fatal_error("__on_led_info_internal:device unavailable for:" + uuid)
@@ -549,9 +554,8 @@ class StarkDevice(StarkDeviceListener):
             event = ButtonPressEvent(c_event)
             if device.__on_button_event is not None:
                 device.__on_button_event(event)
-            if device.__listener is not None:
-                device.__listener.on_button_event(ButtonPressEvent(                device.__on_button_event(event)
-))
+            if device.__listener is not None and device.__listener.on_button_event is not None:
+                device.__listener.on_button_event(event)
         else:
             fatal_error("__on_button_event_internal:device unavailable for:" + uuid)          
 

@@ -12,13 +12,15 @@ elif sys.platform.startswith('darwin'):
     serial_port_name = "/dev/tty.usbserial-14220"
 else:
     # serial_port_name = "/dev/ttyCH341USB0"
-    serial_port_name = "/dev/ttyUSB0"   
+    serial_port_name = "/dev/ttyUSB0"    
 
 SRLOG.LOG_INFO(f"Serial port name: {serial_port_name}")
 SRLOG.LOG_INFO(f"SDK version: {StarkSDK.get_sdk_version()}")
 StarkSDK.set_log_level(LogLevel.info)
 
 _target_device: StarkDevice = None
+
+device_baudrate=19200
 
 # open serial port 8N1
 port_set = None
@@ -55,8 +57,7 @@ def serial_open(port=None):
     port_status = True
     global port_set
     try:
-        s = serial.Serial(port, baudrate=115200, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=0.1)
-        # s = serial.Serial(port, baudrate=19200, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=0.1)
+        s = serial.Serial(port, baudrate=device_baudrate, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=0.1)
         port_set = s
     except OSError:
         port_status = False
@@ -67,7 +68,7 @@ def serial_write_data(value):
         print(f"serial_write {len(value)} bytes")
         ret = port_set.write(value)
         port_set.flush()
-        # print(f"serial_write_data: {value}, ret: {ret}")
+        print(f"serial_write_data: {value}, ret: {ret}")
         return 0
     return -1
 
@@ -145,9 +146,9 @@ if __name__ == '__main__':
     # serial_read_value()
 
     # setters
+    # device.factory_set_device_sn("stark-key", "stark-sn")
     # device.set_serial_device_id(10)
-    # device.set_serialport_cfg(baudrate=19200)
-    # device.set_serialport_cfg(baudrate=115200)
+    # device.set_serialport_cfg(baudrate=device_baudrate)
     # device.set_max_current(3000)
     # device.reset_finger_positions()
     # time.sleep(2)
