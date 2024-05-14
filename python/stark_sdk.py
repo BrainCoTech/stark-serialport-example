@@ -322,14 +322,6 @@ class StarkDevice(StarkDeviceListener):
     def name(self):
         return self.__name
 
-    @property
-    def firmware_revision(self):
-        if self.__uuid in StarkDevice._device_pointer_map:
-            firmware_rev = libstark.stark_get_firmware_revision(StarkDevice._device_pointer_map[self.__uuid])
-            return ffi.string(firmware_rev, 64).decode("utf-8")
-        print("Never connected to the device; firmware revision is not available")
-        return None
-
     def did_receive_data(self, data):  
         if self.__uuid in StarkDevice._device_pointer_map:
             libstark.stark_did_receive_data(StarkDevice._device_pointer_map[self.__uuid], ffi.new("uint8_t[]", data), len(data))        
