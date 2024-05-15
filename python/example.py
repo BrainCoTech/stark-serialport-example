@@ -15,8 +15,7 @@ else:
     serial_port_name = "/dev/ttyUSB0"    
 
 SRLOG.LOG_INFO(f"Serial port name: {serial_port_name}")
-SRLOG.LOG_INFO(f"SDK version: {StarkSDK.get_sdk_version()}")
-StarkSDK.set_log_level(LogLevel.info)
+StarkSDK.set_log_level(level=LogLevel.info)
 
 _target_device: StarkDevice = None
 
@@ -63,38 +62,60 @@ def serial_open(port=None):
         port_status = False
     return port_status
 
-def serial_write_data(value):
+def serial_close():
+    global port_set
     if port_set is not None:
-        print(f"serial_write {len(value)} bytes")
-        ret = port_set.write(value)
-        port_set.flush()
-        print(f"serial_write_data: {value}, ret: {ret}")
-        return 0
-    return -1
+        port_set.close()
+        port_set = None
 
-def serial_read_value():
+def serial_write_data(value, print_data=False):
+    if print_data:
+        print(f"serial_write_data: {len(value)} bytes")
+        print(f"serial_write_data: {value.hex()}")
+        print(f"serial_write_data: {','.join(['0x{:02X}'.format(byte) for byte in value])}")
+
     if port_set is None:
         print("port_set is None")
-        return 
+        return -1
+    
+    ret = port_set.write(value)
+    port_set.flush()
+    print(f"serial_write_data: {value}, ret: {ret}")
+    return 0
 
-    # every 100ms check the data receive is ready
+def serial_read_value(print_data=False):
+    if port_set is None:
+        print("port_set is None")
+        return -1
+    
+    # every 50ms check the data receive is ready
     byte_number_1 = 0
     byte_number_2 = 1
     while byte_number_1 != byte_number_2:
         byte_number_1 = port_set.in_waiting
-        time.sleep(0.1)
+        time.sleep(0.05)
         byte_number_2 = port_set.in_waiting
     receive_frame = port_set.read_all()
-    hex_data = ','.join(['0x{:02X}'.format(byte) for byte in receive_frame])
-    print(f"receive_frame, len: {len(receive_frame)}, data: {hex_data}")
 
-    _target_device.did_receive_data(receive_frame)    
+    if print_data:
+        print(f"receive_frame, len: {len(receive_frame)}, data: {','.join(['0x{:02X}'.format(byte) for byte in receive_frame])}")
+    _target_device.did_receive_data(receive_frame)
+    return 0    
+
+def on_error_response(error):
+    SRLOG.LOG_ERROR(f"Error: {error.message}")
+
+def on_device_error_response(device, error):
+    SRLOG.LOG_ERROR(f"device: {device.name}, Error: {error.message}")
 
 def on_serialport_cfg_response(serialport_cfg):
     SRLOG.LOG_INFO(f"Serialport cfg, baudrate: {serialport_cfg.baudrate}, serial_device_id: {serialport_cfg.serial_device_id}")
 
 def on_hand_type_response(hand_type):
-    SRLOG.LOG_INFO(f"Hand type: {hand_type}")      
+    SRLOG.LOG_INFO(f"Hand type: {hand_type}")   
+
+def on_force_level_response(force_level):
+    SRLOG.LOG_INFO(f"Force level: {force_level}")      
 
 def on_motorboard_info_response(motorboard_info):
     SRLOG.LOG_INFO(f"Motorboard info, fw_version: {motorboard_info.fw_version}, sn: {motorboard_info.sn}, hand_type: {motorboard_info.hand_type}")
@@ -118,13 +139,16 @@ if __name__ == '__main__':
     SRLOG.LOG_INFO(f"serial_ports: {serial_ports()}")
     SRLOG.LOG_INFO(f"serial_open: {serial_open(serial_port_name)}")
     StarkSDK.set_write_data_callback(serial_write_data)
+    StarkSDK.set_error_callback(on_error_response)
 
     # broadcast
-    # StarkSDK.set_finger_speeds([10, 20, 30, 40, 50, 60])
-    # StarkSDK.set_finger_positions([10, 20, 30, 40, 50, 60])
+    StarkSDK.set_finger_speeds([10, 20, 30, 40, 50, 60])
+    StarkSDK.set_finger_positions([10, 20, 30, 40, 50, 60])
 
-    serial_device_id = 10
+    serial_device_id = 254 # broadcast id
+    serial_device_id = 10 # 10 ~ 253
     device = StarkDevice.create_serial_device(serial_device_id, f"{serial_port_name}_{serial_device_id}")
+    device.set_error_callback(on_device_error_response)
     _target_device = device
 
     # getters
@@ -132,40 +156,45 @@ if __name__ == '__main__':
     serial_read_value()
     device.get_hand_type(on_hand_type_response)
     serial_read_value()
-    # device.get_motorboard_info(on_motorboard_info_response)
-    # serial_read_value()
-    # device.get_max_current(on_limit_current_response)
-    # serial_read_value()
-    # device.get_voltage(on_voltage_response)
-    # serial_read_value()
-    # device.get_finger_status(on_finger_status_response)
-    # serial_read_value()
-    # device.get_finger_movement_status(on_finger_movement_status_response)
-    # serial_read_value()
-    # device.get_button_event(on_button_event_response)
-    # serial_read_value()
+    device.get_force_level(on_force_level_response)
+    serial_read_value()
+    device.get_motorboard_info(on_motorboard_info_response)
+    serial_read_value()
+    device.get_max_current(on_limit_current_response)
+    serial_read_value()
+    device.get_voltage(on_voltage_response)
+    serial_read_value()
+    device.get_finger_status(on_finger_status_response)
+    serial_read_value()
+    device.get_finger_movement_status(on_finger_movement_status_response)
+    serial_read_value()
+    device.get_button_event(on_button_event_response)
+    serial_read_value()
 
     # setters
-    # device.factory_set_device_sn("stark-key", "stark-sn")
-    # device.set_serial_device_id(10)
-    # device.set_serialport_cfg(baudrate=device_baudrate)
-    # device.set_max_current(3000)
-    # device.reset_finger_positions()
-    # time.sleep(2)
-    # device.set_finger_position(50)
-    # time.sleep(2)
-    # device.set_finger_positions([10, 20, 30, 40, 50, 60])
-    # time.sleep(2)
-    # device.set_finger_positions([100, 100, 100, 100, 100, 100])
-    # time.sleep(2)
-    # device.set_finger_positions([0, 0, 0, 0, 0, 0])
-    # time.sleep(2)
-    # device.set_finger_speed(-50)
-    # time.sleep(2)
-    # device.set_finger_speeds([-10, 20, 30, 40, 50, 60])
-    # time.sleep(2)
-    # device.set_led_info(mode=LedMode.blink, color=LedColor.g)
+    device.factory_set_device_sn("stark-key", "stark-sn")
+    device.factory_set_hand_type("stark-key", hand_type=HandType.medium_left)
+    device.set_force_level(force_level=ForceLevel.full)
+    # device.set_serial_device_id(1000) # invalid device_id
+    device.set_serial_device_id(10)
+    device.set_serialport_cfg(baudrate=device_baudrate)
+    device.set_max_current(3000)
+    device.reset_finger_positions()
+    time.sleep(2)
+    device.set_finger_position(50)
+    time.sleep(2)
+    device.set_finger_positions([10, 20, 30, 40, 50, 60])
+    time.sleep(2)
+    device.set_finger_positions([100, 100, 100, 100, 100, 100])
+    time.sleep(2)
+    device.set_finger_positions([0, 0, 0, 0, 0, 0])
+    time.sleep(2)
+    device.set_finger_speed(-50)
+    time.sleep(2)
+    device.set_finger_speeds([-10, 20, 30, 40, 50, 60])
+    time.sleep(2)
+    device.set_led_info(mode=LedMode.blink, color=LedColor.g)
 
-    if port_set is not None:
-        port_set.close()
+    serial_close()
+    exit(0)
 

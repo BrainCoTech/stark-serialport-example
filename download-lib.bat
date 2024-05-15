@@ -2,7 +2,7 @@
 setlocal
 cd %~dp0
 set SCRIPT_DIR=%cd%
-set LIB_VERSION=v0.0.5
+set LIB_VERSION=v0.0.6
 set URL=app.brainco.cn/universal/stark-serialport-prebuild/%LIB_VERSION%
 goto :main
 
