@@ -109,9 +109,6 @@ class DeviceListener(StarkDeviceListener):
     def on_error(_, error):
         SRLOG.LOG_ERROR(f"Error: {error.message}")
 
-def on_device_error_response(device, error):
-    SRLOG.LOG_ERROR(f"device: {device.name}, Error: {error.message}")
-
 def on_serialport_cfg_response(serialport_cfg):
     SRLOG.LOG_INFO(f"Serialport cfg, baudrate: {serialport_cfg.baudrate}, serial_device_id: {serialport_cfg.serial_device_id}")
 
@@ -152,9 +149,13 @@ if __name__ == '__main__':
     serial_device_id = 254 # broadcast id
     serial_device_id = 10 # 10 ~ 253
     device = StarkDevice.create_serial_device(serial_device_id, f"{serial_port_name}_{serial_device_id}")
-    device.set_error_callback(on_device_error_response)
     device.set_listener(DeviceListener())
     _target_device = device
+
+    # invalid params case
+    # device.set_force_level(666) # invalid force_level
+    # device.set_serial_device_id(1000) # invalid device_id
+    # exit(0)
 
     # getters
     device.get_serialport_cfg(on_serialport_cfg_response)
@@ -180,7 +181,6 @@ if __name__ == '__main__':
     device.factory_set_device_sn("stark-key", "stark-sn")
     device.factory_set_hand_type("stark-key", hand_type=HandType.medium_left)
     device.set_force_level(force_level=ForceLevel.full)
-    # device.set_serial_device_id(1000) # invalid device_id
     device.set_serial_device_id(10)
     device.set_serialport_cfg(baudrate=device_baudrate)
     device.set_max_current(3000)

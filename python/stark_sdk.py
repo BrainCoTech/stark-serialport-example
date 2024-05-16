@@ -319,7 +319,6 @@ class StarkDevice(StarkDeviceListener):
     __uuid = None
     __name = None
     __listener = None
-    __on_error = None
 
     def __init__(self, uuid, name, address):
         self.__uuid = uuid
@@ -337,15 +336,10 @@ class StarkDevice(StarkDeviceListener):
     @property
     def name(self):
         return self.__name
-    
-    def set_error_callback(self, cb):
-        self.__on_error = cb 
 
     def run_error_callback(self, error):
         if self.__listener is not None and self.__listener.on_error is not None:
-            self.__listener.on_error(error)    
-        if self.__on_error is not None:
-            self.__on_error(self, error)
+            self.__listener.on_error(error)
 
     def set_listener(self, listener):
         if isinstance(listener, StarkDeviceListener):
