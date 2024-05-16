@@ -173,6 +173,11 @@ int main(int argc, char **argv) {
 
     open_serial();
 
+    const int finger_positions[6] = {50, 40, 30, 20, 50, 50};
+    const int finger_speeds[6] = {30, 30, 30, 30, -30, 30};
+    stark_group_set_finger_speeds(finger_speeds);
+    stark_group_set_finger_positions(finger_positions);
+
     const char* device_id = "Stark_OK";
     const int serial_device_id = 10;
     // const int serial_device_id = 254; // boardcast id
@@ -188,14 +193,10 @@ int main(int argc, char **argv) {
     stark_set_max_current(device, 2000); // 2000mA
     stark_reset_finger_positions(device);
     stark_set_finger_position(device, 66);
-    const int finger_positions[6] = {50, 40, 30, 20, 50, 50};
     stark_set_finger_positions(device, finger_positions);
     stark_set_finger_speed(device, -69);
-    const int finger_speeds[6] = {30, 30, 30, 30, -30, 30};
     stark_set_finger_speeds(device, finger_speeds);
     stark_set_led_info(device, LED_MODE_BLINK, LED_COLOR_R);
-    stark_group_set_finger_speeds(finger_speeds);
-    stark_group_set_finger_positions(finger_positions);
 
     // getters
     stark_get_serialport_cfg(device, on_serialport_cfg);

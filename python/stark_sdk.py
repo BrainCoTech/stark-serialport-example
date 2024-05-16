@@ -126,6 +126,8 @@ class StarkError:
         else:
             raise ValueError("Either code or message must be provided")
 class StarkSDK:
+    __on_error = None
+
     @staticmethod
     def set_log_level(level=LogLevel.info):
         return libstark.stark_set_log_level(level.value)
@@ -199,6 +201,7 @@ class SerialPortCfg:
     def __init__(self, c_cfg):
         self.serial_device_id = c_cfg.serial_device_id
         self.baudrate = c_cfg.baudrate
+
 class MotorboardInfo:
     hand_type = None
     sn = None
@@ -316,6 +319,7 @@ class StarkDevice(StarkDeviceListener):
     __uuid = None
     __name = None
     __listener = None
+    __on_error = None
 
     def __init__(self, uuid, name, address):
         self.__uuid = uuid
@@ -335,13 +339,17 @@ class StarkDevice(StarkDeviceListener):
         return self.__name
     
     def set_error_callback(self, cb):
-        self.__on_error = cb
+        self.__on_error = cb 
 
     def run_error_callback(self, error):
         if self.__listener is not None and self.__listener.on_error is not None:
-            self.__listener.on_error(self, error)    
+            self.__listener.on_error(error)    
         if self.__on_error is not None:
             self.__on_error(self, error)
+
+    def set_listener(self, listener):
+        if isinstance(listener, StarkDeviceListener):
+            self.__listener = listener        
 
     def did_receive_data(self, data):  
         if self.__uuid in StarkDevice._device_pointer_map:

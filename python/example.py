@@ -100,10 +100,14 @@ def serial_read_value(print_data=False):
     if print_data:
         print(f"receive_frame, len: {len(receive_frame)}, data: {','.join(['0x{:02X}'.format(byte) for byte in receive_frame])}")
     _target_device.did_receive_data(receive_frame)
-    return 0    
+    return 0  
 
 def on_error_response(error):
     SRLOG.LOG_ERROR(f"Error: {error.message}")
+
+class DeviceListener(StarkDeviceListener):
+    def on_error(_, error):
+        SRLOG.LOG_ERROR(f"Error: {error.message}")
 
 def on_device_error_response(device, error):
     SRLOG.LOG_ERROR(f"device: {device.name}, Error: {error.message}")
@@ -149,6 +153,7 @@ if __name__ == '__main__':
     serial_device_id = 10 # 10 ~ 253
     device = StarkDevice.create_serial_device(serial_device_id, f"{serial_port_name}_{serial_device_id}")
     device.set_error_callback(on_device_error_response)
+    device.set_listener(DeviceListener())
     _target_device = device
 
     # getters
