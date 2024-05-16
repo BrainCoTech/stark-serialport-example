@@ -9,7 +9,7 @@ if [[ "$OSTYPE" == "msys" ]]; then
 fi
 
 # libstark settings
-LIB_VERSION="v0.0.6"
+LIB_VERSION="v0.0.7"
 LIB_NAME=""
 URL="https://app.brainco.cn/universal/stark-serialport-prebuild/${LIB_VERSION}"
 
