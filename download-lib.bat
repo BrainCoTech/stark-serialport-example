@@ -67,6 +67,8 @@ goto :eof
     call 7z x -y win.zip
     del win.zip
 
+    copy /Y dll\*.dll dist\win\shared
+
     :: 2. create VERSION file
     echo libstark Version: %LIB_VERSION% > VERSION
     for /f "tokens=*" %%t in ('date /t') do (
