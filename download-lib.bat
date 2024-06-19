@@ -2,7 +2,7 @@
 setlocal
 cd %~dp0
 set SCRIPT_DIR=%cd%
-set LIB_VERSION=v0.0.8
+set LIB_VERSION=v0.1.0
 set URL=app.brainco.cn/universal/stark-serialport-prebuild/%LIB_VERSION%
 goto :main
 
@@ -58,15 +58,18 @@ goto :eof
     )
 
     call :echo_y [libstark][win] download libstark "%LIB_VERSION%" ...
-    rmdir /s /q include win android
+    rmdir /s /q dist win include
     del VERSION
 
     :: 1. download lib
     call :echo_y [libstark][win] download header
-    call wget %URL%/win.zip
+    call wget %URL%/win.zip?$RANDOM -O win.zip
     call 7z x -y win.zip
+    @REM mkdir dist
+    @REM call 7z x -y win.zip -odist
     del win.zip
 
+    @REM copy /Y win dist\win
     copy /Y dll\*.dll dist\win\shared
 
     :: 2. create VERSION file

@@ -1,27 +1,22 @@
 #!/bin/bash
 set -e
-cd ${0%/*}
-SCRIPT_DIR=$(pwd)
 
 if [[ "$OSTYPE" == "msys" ]]; then
-    $COMSPEC /c download-lib.bat
+    powershell -Command "& '.\download-lib.bat'"
     exit
 fi
 
+cd ${0%/*}
+SCRIPT_DIR=$(pwd)
+
 # libstark settings
-LIB_VERSION="v0.0.8"
+LIB_VERSION="v0.1.0"
 LIB_NAME=""
 URL="https://app.brainco.cn/universal/stark-serialport-prebuild/${LIB_VERSION}"
 
 # colorful echo functions
 function echo_y() { echo -e "\033[1;33m$@\033[0m" ; }   # yellow
 function echo_r() { echo -e "\033[0;31m$@\033[0m" ; }   # red
-
-# check windows
-if [[ "$OSTYPE" == "msys" ]]; then
-    $COMSPEC /c download-lib.bat
-    exit
-fi
 
 # 1. check libstark version from VERSION file
 if [ -f VERSION ] && grep --fixed-strings --quiet ${LIB_VERSION} VERSION; then
@@ -63,7 +58,7 @@ fi
 
 
 ZIP_NAME="$LIB_NAME.zip"
-wget ${URL}/$ZIP_NAME
+wget ${URL}/$ZIP_NAME?$RANDOM -O $ZIP_NAME
 unzip -o $ZIP_NAME -d .
 rm $ZIP_NAME
 rm -rf __MACOSX

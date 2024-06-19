@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <libserialport.h>
-#include <stark_sdk.h>
-#include <time.h>
 #include <execinfo.h>
 #include <signal.h>
+#include <libserialport.h>
+#include <stark_sdk.h>
 #include <uv.h>
+#include <thread>
+#include <future>
 
 #ifdef __APPLE__
 #define SERIAL_PORT "/dev/tty.usbserial-14310"
 #elif __linux__
-// #define SERIAL_PORT "/dev/ttyCH341USB0"
 #define SERIAL_PORT "/dev/ttyUSB0"
 #endif
 
@@ -19,6 +19,7 @@
 
 /* The ports we will use. */
 struct sp_port *port = NULL;
+static StarkDfuState dfu_state = STARK_DFU_STATE_IDLE;
 
 /* Helper function for error handling. */
 int check(enum sp_return result);
@@ -136,40 +137,66 @@ void on_error(const char *device_id, int error) {
     printf("on_error, device_id: %s, error: %d\n", device_id, error);
 }
 
-void on_serialport_cfg(const char *device_id, SerialPortCfg *cfg) {
-    printf("on_serialport_cfg, device_id: %s, serial_device_id: %d, baudrate: %d\n", device_id, cfg->serial_device_id, cfg->baudrate);
-}
-
-void on_hand_type(const char *device_id, int hand_type) {
-    printf("on_hand_type, device_id: %s, hand_type: %d\n", device_id, hand_type);
-}
-
-void on_force_level(const char *device_id, int force_level) {
-    printf("on_force_level, device_id: %s, force_level: %d\n", device_id, force_level);
-}
-
 void on_motorboard_info(const char *device_id, MotorboardInfo *info) {
     printf("on_motorboard_info, device_id: %s, hand_type: %d, sn: %s, fw_version: %s\n", device_id, info->hand_type, info->sn, info->fw_version);
 }
 
-void on_voltage(const char *device_id, float voltage) {
-    printf("on_voltage, device_id: %s, voltage: %f\n", device_id, voltage);
+void async_dfu_read(uv_timer_t* timer_handle) {
+    printf("async_dfu_read\n");
+    if (timer_handle == NULL) {
+        fprintf(stderr, "async_dfu_read: Invalid timer handle\n");
+        return;
+    }
+
+    const char *device_id = (const char *)timer_handle->data;
+    if (device_id == NULL) {
+        fprintf(stderr, "async_dfu_read: Timer data (device_id) is NULL\n");
+        uv_timer_stop(timer_handle);
+        free(timer_handle);
+        return;
+    }
+
+    StarkDevice *device = stark_get_device(device_id);
+    if (device == NULL) {
+        fprintf(stderr, "async_dfu_read: Failed to retrieve device for id: %s\n", device_id);
+        uv_timer_stop(timer_handle);
+        free(timer_handle);
+        return;
+    }
+
+    uv_timer_stop(timer_handle);
+    free(timer_handle);
 }
 
-void on_limit_current(const char *device_id, int limit_current) {
-    printf("on_limit_current, device_id: %s, limit_current: %d\n", device_id, limit_current);
+void on_dfu_read(const char *device_id) {
+    printf("on_dfu_read\n");
+    StarkDevice *device = stark_get_device(device_id);
+    if (device == NULL) {
+        fprintf(stderr, "async_dfu_read: Failed to retrieve device for id: %s\n", device_id);
+        return;
+    }
+    std::thread([device]() {
+        receive_data(device, 3);
+    }).detach();
 }
 
-void on_finger_status(const char *device_id, FingerStatusData *finger_status) {
-    printf("on_finger_status, device_id: %s, finger_status: %p\n", device_id, finger_status);
+void on_dfu_state(const char *device_id, int state) {
+    printf("on_ota_state, device_id: %s, dfu_state: %s\n", device_id, stark_dfu_state_to_string(state));
+    dfu_state = (StarkDfuState)state;
 }
 
-void on_motor_status(const char *device_id, MotorStatusData *motor_status) {
-    printf("on_motor_status, device_id: %s, motor_status: %p\n", device_id, motor_status);
+void on_dfu_progress(const char *device_id, float progress) {
+    printf("on_ota_progress, device_id: %s, progress: %.1f\n", device_id, progress * 100.0);
 }
 
-void on_button_event(const char *device_id, ButtonPressEvent *event) {
-    printf("on_button_event, device_id: %s, button_event: %p\n", device_id, event);
+int modbus_write_registers(const char *device_id, const uint16_t *data, int register_address, int count) {
+    printf("modbus_write_registers, device_id: %s, register_address: %d, count: %d\n", device_id, register_address, count);
+    if (register_address == 900) {
+        // send enter ota cmd
+        uint8_t data[] = {0x0, 0x10, 0x3, 0x84, 0x0, 0x1, 0x2, 0x0, 0x1, 0x47, 0x44};
+        send_data(device_id, data, sizeof(data));
+    }
+    return 0;
 }
 
 void timer_close_cb(uv_handle_t* handle){
@@ -197,7 +224,7 @@ void start_loop() {
     uv_timer_init(loop, timer_handle);
 
     // 启动定时器，每2000ms触发一次回调
-    int result = uv_timer_start(timer_handle, loop_timer_cb, 3000, 0);
+    int result = uv_timer_start(timer_handle, loop_timer_cb, 1000, 2000);
     if (result != 0) {
         fprintf(stderr, "Failed to start timer: %s\n", uv_strerror(result));
         free(timer_handle);
@@ -230,57 +257,34 @@ void handler(int sig) {
 int main(int argc, char *argv[]) {
     signal(SIGSEGV, handler);   // Install our handler for SIGSEGV (segmentation fault)
     signal(SIGABRT, handler);   // Install our handler for SIGABRT (abort signal)
+
     printf("----------------------Main begin----------------------\n");
     printf("StarkSDK version: v%s\n", stark_get_sdk_version());
     stark_set_write_data_callback(send_data);
-
+    
     open_serial();
 
-    // const int finger_positions[6] = {50, 40, 30, 20, 50, 50};
-    // const int finger_speeds[6] = {30, 30, 30, 30, -30, 30};
-    // stark_group_set_finger_speeds(finger_speeds);
-    // stark_group_set_finger_positions(finger_positions);
-
     const char* device_id = "Stark_OK";
-    // const int serial_device_id = 10;
-    // const int serial_device_id = 254; // boardcast id
-    const int serial_device_id = 2;
+
+    // proto协议固件
+    // const int serial_device_id = 10; // 10 ~ 254, 9.2.7固件
+    const int serial_device_id = 2; // 1.2.4 固件
     StarkDevice* device = stark_create_serial_device(device_id, serial_device_id);
-    stark_set_error_callback(device, on_error);
+    printf("serial_device: %p\n", device);
 
-    // setters
-    // factory_set_device_sn(device, "stark-key", "stark-sn");
-    // factory_set_hand_type(device, "stark-key", MEDIUM_LEFT);
-    // stark_set_serial_baudrate(device, BAUD_RATE);
-    // stark_set_serial_device_id(device, 99);
-    // stark_set_force_level(device, STARK_FORCE_LEVEL_NORMAL);
-    // stark_set_max_current(device, 2000); // 2000mA
-    // stark_reset_finger_positions(device);
-    // stark_set_finger_position(device, 66);
-    // stark_set_finger_positions(device, finger_positions);
-    // stark_set_finger_speed(device, -69);
-    // stark_set_finger_speeds(device, finger_speeds);
-    // stark_set_led_info(device, LED_MODE_BLINK, LED_COLOR_R);
+    // Modbus协议固件
+    // const int slave_id = 0; # 0 ~ 254
+    // StarkDevice* device = stark_create_modbus_device(device_id, slave_id);
+    // modbus_set_write_registers_callback(device, modbus_write_registers);
 
-    // getters
-    // stark_get_serialport_cfg(device, on_serialport_cfg);
-    // receive_data(device, 1);
-    stark_get_hand_type(device, on_hand_type);
-    receive_data(device, 1);
-    // stark_get_force_level(device, on_force_level);
-    // receive_data(device, 1);
-    // stark_get_motorboard_info(device, on_motorboard_info);
-    // receive_data(device, 1);
-    // stark_get_voltage(device, on_voltage);
-    // receive_data(device, 1);
-    // stark_get_max_current(device, on_limit_current);
-    // receive_data(device, 1);
-    // stark_get_finger_status(device, on_finger_status);
-    // receive_data(device, 1);
-    // stark_get_motor_status(device, on_motor_status);
-    // receive_data(device, 1);
-    // stark_get_button_event(device, on_button_event);
-    // receive_data(device, 1);
+    // start ota
+    stark_set_dfu_read_callback(device, on_dfu_read);
+    stark_set_dfu_state_callback(device, on_dfu_state);
+    stark_set_dfu_progress_callback(device, on_dfu_progress);
+
+    dfu_state = STARK_DFU_STATE_IDLE;
+    // stark_start_dfu(device, "../ota_bin/FW_MotorController_Release_SecureOTA_485_1.2.4.ota");
+    stark_start_dfu(device, "../ota_bin/FW_MotorController_Release_SecureOTA_485_9.2.7.ota");
 
     start_loop();
     close_serial();
@@ -288,8 +292,7 @@ int main(int argc, char *argv[]) {
 }
 
 /* Helper function for error handling. */
-int check(enum sp_return result)
-{
+int check(enum sp_return result) {
 	/* For this example we'll just exit on any error by calling abort(). */
 	char *error_message;
 

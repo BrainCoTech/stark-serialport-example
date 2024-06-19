@@ -23,6 +23,6 @@ system. You just need the libserialport.h & stark-sdk.h header available to comp
 and the libserialport & libstark library available to link and run them.
 
 ```shell
-cd linux && make && make run
-cd mac && make && make run
+cd linux && make && make run_serial
+cd mac && make && make run_serial
 ```
