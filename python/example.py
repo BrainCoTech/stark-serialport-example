@@ -19,7 +19,7 @@ StarkSDK.set_log_level(level=LogLevel.info)
 
 _target_device: StarkDevice = None
 
-device_baudrate=19200
+device_baudrate=115200
 
 # open serial port 8N1
 port_set = None
