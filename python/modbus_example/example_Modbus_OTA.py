@@ -59,7 +59,7 @@ def main():
 
     current_dir = pathlib.Path(__file__).resolve()
     parent_dir = current_dir.parent.parent.parent
-    ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'FW_MotorController_Release_SecureOTA_modbus_0.1.1.ota') # Modbus固件
+    ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'FW_MotorController_Release_SecureOTA_modbus_0.1.6.ota') # Modbus固件
     # ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'FW_MotorController_Release_SecureOTA_485_9.2.7.ota')  # protobuf固件
     if not os.path.exists(ota_bin_path):
         SKLog.warning(f"OTA文件不存在: {ota_bin_path}")

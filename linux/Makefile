@@ -10,7 +10,7 @@ PKG_CONFIG := pkg-config
 
 # 获取编译选项和链接选项
 CFLAGS := -g -Wall $(shell $(PKG_CONFIG) --cflags libserialport)
-CXXFLAGS := -g -Wall -std=c++11 $(shell $(PKG_CONFIG) --cflags libserialport)
+CXXFLAGS := -g -Wall -std=c++17 $(shell $(PKG_CONFIG) --cflags libserialport)
 LIBS := $(shell $(PKG_CONFIG) --libs libserialport) -rdynamic
 
 SOURCES := $(wildcard *.c) $(wildcard *.cpp)

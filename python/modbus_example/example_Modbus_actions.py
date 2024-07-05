@@ -3,7 +3,7 @@ import os
 from modbus_client_utils import *
 
 filename = os.path.basename(__file__).split('.')[0]
-StarkSDK.init(isModbus=True, log_level=logging.INFO, log_file_name=f'{filename}.log')
+StarkSDK.init(isModbus=True, log_level=logging.INFO, log_file_name=f'{filename}.log', c_log_level=LogLevel.info)
 pymodbus_apply_logging_config(level=logging.INFO)    
 
 # 动作序列定义
@@ -66,22 +66,22 @@ def main():
     device.set_read_holding_registers_callback(lambda register_address, count: client_read_holding_registers(client, register_address, count, slave=slave_id))
     device.set_read_input_registers_callback(lambda register_address, count: client_read_input_registers(client, register_address, count, slave=slave_id))
 
-    action_id = 11
-    
-    # # 测试写入 action sequence
-    # SKLog.info(f"write Action Sequence: {len(sample_action_sequences)}")
-    # for action in sample_action_sequences:
-    #     print(f"{action},")
-    # mapped_sequences = map(lambda action: action_sequence_info_to_list(action), sample_action_sequences)
-    # action_sequences = list(mapped_sequences)
-    # device.transfer_action_sequence(action_id, action_sequences=action_sequences)
-    
-    # # 测试保存 action sequence
-    # device.save_action_sequence(action_id)
+    SKLog.info(f"Action Sequence: {len(sample_action_sequences)}")
+    for action in sample_action_sequences:
+        print(f"{action},")
+
+    mapped_sequences = map(lambda action: action_sequence_info_to_list(action), sample_action_sequences)
+    action_sequences = list(mapped_sequences)
+
+    action_id = ActionSequenceId.custom_gesture_1
+
+    # 测试写入 action sequence
+    device.transfer_action_sequence(action_id, action_sequences=action_sequences)
+    # 测试保存 action sequence
+    device.save_action_sequence(action_id)
 
     # 测试读取 action sequence
     device.get_action_sequence(action_id, cb=lambda action_sequences: SKLog.info(f"get Action Sequence: {action_sequences}"))
-
     # 测试运行 action sequence
     device.run_action_sequence(action_id)
     

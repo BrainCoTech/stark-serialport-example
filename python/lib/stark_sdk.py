@@ -84,10 +84,11 @@ class ForceLevel(IntEnum):
     full = 3
 
 class MotroState(IntEnum):
-    idle = 0
-    running = 1
-    protected_zone = 2
-    stall = 3
+    unknown = 0
+    idle = 1
+    running = 2
+    protected_zone = 3
+    stall = 4
 
 class LedMode(IntEnum):
     unknown = 0
@@ -113,12 +114,31 @@ class ButtonPressState(IntEnum):
     pressing = 1
     not_pressing = 2
 
+class ActionSequenceId(IntEnum):
+    # 内置手势1~6：张开、握拳、两只捏、三只捏、侧边捏、单指点
+    default_gesture_open = 1
+    default_gesture_fist = 2
+    default_gesture_pinch_two = 3
+    default_gesture_pinch_three = 4
+    default_gesture_pinch_side = 5
+    default_gesture_point = 6
+    # 自定义手势6个: 10~15
+    custom_gesture_1 = 10
+    custom_gesture_2 = 11
+    custom_gesture_3 = 12
+    custom_gesture_4 = 13
+    custom_gesture_5 = 14
+    custom_gesture_6 = 15
+
 class StarkErrorCode(IntEnum):
     none = 0
     unknown = -1
     invalid_params = -2
     invalid_data = -3
-    parse_failed = -4  
+    parse_failed = -4
+    alloc_failed = -5
+    read_failed = -6
+    operation_failed = -7  
 
 class StarkDfuState(IntEnum):
     idle = 0
@@ -259,10 +279,7 @@ class StarkSDK:
                 return
         libstark.stark_group_set_finger_speeds(ffi.new("int[]", finger_speeds)) 
 
-class SerialPortCfg:  
-    serial_device_id = None
-    baudrate = None
-
+class SerialPortCfg: 
     def __init__(self, c_cfg):
         self.serial_device_id = c_cfg.serial_device_id
         self.baudrate = c_cfg.baudrate
@@ -271,14 +288,8 @@ class SerialPortCfg:
         return f"SerialPortCfg(serial_device_id={self.serial_device_id}, baudrate={self.baudrate})"    
 
 class MotorboardInfo:
-    hand_type = HandType.unknown
-    sn = None
-    fw_version = None
-
     def __init__(self, c_info):
-        if c_info is None:
-            return
-        
+        self.hand_type = HandType.unknown
         if isinstance(c_info.hand_type, int) and c_info.hand_type >= 0 and c_info.hand_type < 5:
             self.hand_type = HandType(c_info.hand_type)
         self.sn = ffi.string(c_info.sn, 20).decode("utf-8")
@@ -289,11 +300,6 @@ class MotorboardInfo:
                 f"sn={self.sn}, fw_version={self.fw_version})")     
     
 class StarkFingerStatus:
-    finger_positions = None
-    finger_speeds = None
-    finger_currents = None
-    finger_pwms = None
-
     def __init__(self, c_status):
         self.finger_positions = ffi.unpack(c_status.finger_positions, 6)
         self.finger_speeds = ffi.unpack(c_status.finger_speeds, 6)
@@ -304,9 +310,6 @@ class StarkFingerStatus:
         return f"finger_positions: {self.finger_positions}, finger_speeds: {self.finger_speeds}, finger_currents: {self.finger_currents}, finger_pwms: {self.finger_pwms}"    
 
 class FingerStatusData:
-    n_finger_status = 0        
-    finger_status = []   
-
     def __init__(self, c_data):
         self.n_finger_status = c_data.n_finger_status
         self.finger_status = []
@@ -318,12 +321,7 @@ class FingerStatusData:
             return f"n_finger_status: {self.n_finger_status}, finger_status: {self.finger_status[0]}"     
         return f"n_finger_status: {self.n_finger_status}, finger_status: []"  
     
-class ActionSequenceData: 
-    index = 0
-    duration = 0
-    positions = []
-    speeds = []
-    strengths = []   
+class ActionSequenceData:   
     def __init__(self, c_data):
         self.index = c_data.index
         self.duration = c_data.duration
@@ -332,10 +330,6 @@ class ActionSequenceData:
         self.strengths = ffi.unpack(c_data.motor_strengths, 6)
 
 class ActionSequence: 
-    action_id = 0
-    action_num = 0
-    action_sequences = []
-
     def __init__(self, c_seq):
         self.action_id = c_seq.action_id
         self.action_num = c_seq.action_num
@@ -347,19 +341,21 @@ class ActionSequence:
         return f"action_id: {self.action_id}, action_num: {self.action_num}"
 
 class MotorStatusData:
-    n_motor_status = 0        
-    motor_status = []   
-
     def __init__(self, c_data):
         self.n_motor_status = c_data.n_motor_status
-        self.motor_status = ffi.unpack(c_data.motor_status, 6)      
+        values = ffi.unpack(c_data.motor_status, self.n_motor_status)
+        self.motor_statuses = []
+        for value in values:
+            if value < MotroState.idle or value > MotroState.stall:
+                status = MotroState.idle 
+            else:
+                status = MotroState(value)
+            self.motor_statuses.append(status)
 
     def __str__(self) -> str:
-        return f"n_motor_status: {self.n_motor_status}, motor_status: {self.motor_status}"          
+        return f"motor_statuses: {', '.join([status.name for status in self.motor_statuses])}"         
+    
 class LedInfo:
-    led_color = None
-    led_mode = None
-
     def __init__(self, c_info):
         self.led_color = LedColor(c_info.led_color)
         self.led_mode = LedMode(c_info.led_mode)
@@ -367,10 +363,6 @@ class LedInfo:
     __str__ = lambda self: f"LedInfo(led_color={self.led_color.name}, led_mode={self.led_mode.name})"    
 
 class ButtonPressEvent:
-    timestamp = None
-    button_id = None
-    press_status = None
-
     def __init__(self, c_info):
         self.timestamp = c_info.timestamp
         self.button_id = c_info.button_id
@@ -403,12 +395,28 @@ class StarkDeviceListener(abc.ABC):
     def on_led_info(self, led_info):
         pass
     def on_turbo_mode(self, turbo_mode):
-        pass   
+        pass 
+    def on_turbo_conf(self, turbo_interval, turbo_duration):
+        pass  
+    def on_auto_calibration(self, auto_calibration_enabled):
+        pass
     def on_finger_positions(self, finger_positions):
         pass
     def on_finger_speeds(self, finger_speeds):
         pass
     def on_finger_currents(self, finger_currents):
+        pass
+    def on_action_sequence(self, action_sequence):
+        pass
+    def on_stall_durations(self, stall_durations):
+        pass
+    def on_stall_currents(self, stall_currents):
+        pass
+    def on_finger_pwms(self, finger_pwms):
+        pass
+    def on_dfu_state(self, dfu_state):
+        pass
+    def on_dfu_progress(self, dfu_progress):
         pass
 
 data_array_store = []
@@ -454,6 +462,10 @@ class StarkDevice(StarkDeviceListener):
     
     @property
     def slave(self):
+        return self.__address
+    
+    @property
+    def slave_id(self):
         return self.__address
 
     @property
@@ -598,6 +610,84 @@ class StarkDevice(StarkDeviceListener):
         if self.__uuid in StarkDevice._device_pointer_map:
             libstark.factory_set_hand_type(StarkDevice._device_pointer_map[self.__uuid], operation_key.encode('utf-8'), hand_type.value)
 
+    def factory_get_stall_durations(self, cb=None):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support factory_get_stall_durations"))
+            return
+        self.__on_stall_durations = cb
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.factory_get_stall_durations(StarkDevice._device_pointer_map[self.__uuid], StarkDevice.__on_stall_durations_internal)
+
+    def factory_set_stall_durations(self, operation_key, durations):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support factory_set_stall_durations"))
+            return
+        if not isinstance(operation_key, str) or operation_key == '':
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid operation_key:" + operation_key))
+            return
+        if durations is None or len(durations) != 6:
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid stall_durations:" + str(durations)))
+            return
+        # check if all values are in range
+        for duration in durations:
+            if duration < 100 or duration > 10000:
+                self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid stall_durations:" + str(durations)))
+                return
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.factory_set_stall_durations(StarkDevice._device_pointer_map[self.__uuid], operation_key.encode('utf-8'), durations)
+
+    def factory_set_stall_currents(self, operation_key, level: ForceLevel, currents):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support factory_set_stall_currents"))
+            return
+        if not isinstance(operation_key, str) or operation_key == '':
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid operation_key:" + operation_key))
+            return
+        if not isinstance(currents, list) or len(currents) != 6:
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid finger_currents:" + str(currents)))
+            return
+        # check if all values are in range
+        for current in currents:
+            if current < 50 or current > 600:
+                self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid finger_currents:" + str(currents)))
+                return
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.factory_set_stall_currents(StarkDevice._device_pointer_map[self.__uuid], operation_key.encode('utf-8'), level.value, ffi.new("int[]", currents))
+
+    def factory_set_finger_pwms(self, operation_key, level: ForceLevel, pwms):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support factory_set_finger_pwms"))
+            return
+        if not isinstance(pwms, list) or len(pwms) != 6:
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid finger_pwms:" + str(pwms)))
+            return
+        if not isinstance(operation_key, str) or operation_key == '':
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid operation_key:" + operation_key))
+            return
+        # check if all values are in range
+        for pwm in pwms:
+            if pwm < 0 or pwm > 100:
+                self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid finger_pwms:" + str(pwms)))
+                return
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.factory_set_finger_pwms(StarkDevice._device_pointer_map[self.__uuid], operation_key.encode('utf-8'), level.value, ffi.new("int[]", pwms))
+
+    def factory_get_stall_currents(self, level: ForceLevel, cb=None):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support factory_get_stall_currents"))
+            return
+        self.__on_stall_currents = cb
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.factory_get_stall_currents(StarkDevice._device_pointer_map[self.__uuid], level.value, StarkDevice.__on_stall_currents_internal)       
+
+    def factory_get_finger_pwms(self, level: ForceLevel, cb=None):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support factory_get_finger_pwms"))
+            return
+        self.__on_finger_pwms = cb
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.factory_get_finger_pwms(StarkDevice._device_pointer_map[self.__uuid], level.value, StarkDevice.__on_finger_pwms_internal)
+
     def get_hand_type(self, cb=None):
         self.__on_hand_type = cb
         if self.__uuid in StarkDevice._device_pointer_map:
@@ -672,12 +762,53 @@ class StarkDevice(StarkDeviceListener):
         if self.__uuid in StarkDevice._device_pointer_map:
             libstark.stark_get_turbo_mode(StarkDevice._device_pointer_map[self.__uuid], StarkDevice.__on_turbo_mode_internal)         
     
-    def set_turbo_mode(self, turbo_mode:bool):
-        if not isinstance(turbo_mode, bool):
-            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid turbo_mode:" + str(turbo_mode)))
+    def set_turbo_mode(self, turbo_mode: bool):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support set_turbo_mode"))
             return
         if self.__uuid in StarkDevice._device_pointer_map:
             libstark.stark_set_turbo_mode(StarkDevice._device_pointer_map[self.__uuid], turbo_mode)
+
+    # 单位：ms
+    def set_turbo_conf(self, turbo_interval: int = 500, turbo_duration: int = 500):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support set_turbo_config"))
+            return
+        if turbo_interval <= 50 or turbo_duration <= 50:
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid turbo_interval or turbo_duration"))
+            return
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.stark_set_turbo_conf(StarkDevice._device_pointer_map[self.__uuid], turbo_interval, turbo_duration) 
+
+    def get_turbo_conf(self, cb=None):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support get_turbo_config"))
+            return
+        self.__on_turbo_conf = cb
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.stark_get_turbo_conf(StarkDevice._device_pointer_map[self.__uuid], StarkDevice.__on_turbo_conf_internal)        
+
+    def set_auto_calibration(self, enabled: bool):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support set_auto_calibration"))
+            return
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.stark_set_auto_calibration(StarkDevice._device_pointer_map[self.__uuid], enabled)     
+
+    def get_auto_calibration(self, cb=None):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support get_auto_calibration"))
+            return
+        self.__on_auto_calibration = cb
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.stark_get_auto_calibration(StarkDevice._device_pointer_map[self.__uuid], StarkDevice.__on_auto_calibration_internal)         
+
+    def send_manual_calibration_cmd(self):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Serial does not support send_manual_calibration"))
+            return
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.stark_manual_calibration(StarkDevice._device_pointer_map[self.__uuid])
 
     def get_finger_status(self, cb=None):
         if StarkSDK.isModbus:
@@ -780,16 +911,16 @@ class StarkDevice(StarkDeviceListener):
         if not StarkSDK.isModbus:
             self.serial_receive_data()
 
-    def save_action_sequence(self, action_id: int):
-        if not isinstance(action_id, int) or action_id < 10 or action_id > 15:
-            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid action_id:" + str(action_id)))
+    def save_action_sequence(self, action_id: ActionSequenceId):
+        if action_id.value < ActionSequenceId.custom_gesture_1.value:
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid action_id:" + str(action_id.name)))
             return
         if self.__uuid in StarkDevice._device_pointer_map:
-            libstark.stark_save_action_sequence(StarkDevice._device_pointer_map[self.__uuid], action_id)
+            libstark.stark_save_action_sequence(StarkDevice._device_pointer_map[self.__uuid], action_id.value)
 
-    def transfer_action_sequence(self, action_id: int, action_sequences: list):
-        if not isinstance(action_id, int) or action_id < 10 or action_id > 15:
-            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid action_id:" + str(action_id)))
+    def transfer_action_sequence(self, action_id: ActionSequenceId, action_sequences: list):
+        if action_id.value < ActionSequenceId.custom_gesture_1.value:
+            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid action_id:" + str(action_id.name)))
             return
         if not isinstance(action_sequences, list) or len(action_sequences) < 0 or len(action_sequences) > 32:
             self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid action_sequences:" + str(action_sequences)))
@@ -803,22 +934,16 @@ class StarkDevice(StarkDeviceListener):
             ptr_array = ffi.new("uint16_t*[]", rows)
             for i in range(rows):
                 ptr_array[i] = ffi.cast("uint16_t*", ffi.from_buffer(action_sequences[i]))
-            libstark.stark_transfer_action_sequence(StarkDevice._device_pointer_map[self.__uuid], action_id, rows, ffi.cast("uint16_t**", ptr_array))
+            libstark.stark_transfer_action_sequence(StarkDevice._device_pointer_map[self.__uuid], action_id.value, rows, ffi.cast("uint16_t**", ptr_array))
 
-    def run_action_sequence(self, action_id: int):
-        if not isinstance(action_id, int) or action_id < 1 or action_id > 15:
-            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid action_id:" + str(action_id)))
-            return
+    def run_action_sequence(self, action_id: ActionSequenceId):
         if self.__uuid in StarkDevice._device_pointer_map:
-            libstark.stark_run_action_sequence(StarkDevice._device_pointer_map[self.__uuid], action_id)
+            libstark.stark_run_action_sequence(StarkDevice._device_pointer_map[self.__uuid], action_id.value)
 
-    def get_action_sequence(self, action_id: int, cb=None):
-        if not isinstance(action_id, int) or action_id < 1 or action_id > 255:
-            self.run_error_callback(StarkError(StarkErrorCode.invalid_params, "Invalid action_id:" + str(action_id)))
-            return
+    def get_action_sequence(self, action_id: ActionSequenceId, cb=None):
         self.__on_action_sequence = cb
         if self.__uuid in StarkDevice._device_pointer_map:
-            libstark.stark_get_action_sequence(StarkDevice._device_pointer_map[self.__uuid], action_id, StarkDevice.__on_action_sequence_internal)     
+            libstark.stark_get_action_sequence(StarkDevice._device_pointer_map[self.__uuid], action_id.value, StarkDevice.__on_action_sequence_internal)     
 
     @staticmethod
     @ffi.callback("void(char*, int)")  
@@ -933,7 +1058,34 @@ class StarkDevice(StarkDeviceListener):
             if device.__listener is not None and device.__listener.on_turbo_mode is not None:
                 device.__listener.on_turbo_mode(in_turbo_mode)
         else:
-            fatal_error("__on_turbo_mode_internal:device unavailable for:" + uuid)        
+            fatal_error("__on_turbo_mode_internal:device unavailable for:" + uuid)  
+
+    @staticmethod
+    @ffi.callback("void(char*, int, int)")
+    def __on_turbo_conf_internal(uuid_ptr, turbo_interval, turbo_duration):
+        uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
+        if uuid in StarkDevice._device_map:
+            device = StarkDevice._device_map[uuid]
+            if device.__on_turbo_conf is not None:
+                device.__on_turbo_conf(turbo_interval, turbo_duration)
+            if device.__listener is not None and device.__listener.on_turbo_conf is not None:
+                device.__listener.on_turbo_conf(turbo_interval, turbo_duration)    
+        else:
+            fatal_error("__on_turbo_conf_internal:device unavailable for:" + uuid)
+
+    @staticmethod
+    @ffi.callback("void(char*, bool)")
+    def __on_auto_calibration_internal(uuid_ptr, auto_calibration):
+        uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
+        if uuid in StarkDevice._device_map:
+            device = StarkDevice._device_map[uuid]
+            auto_calibration_enabled = auto_calibration == 1
+            if device.__on_auto_calibration is not None:
+                device.__on_auto_calibration(auto_calibration_enabled)
+            if device.__listener is not None and device.__listener.on_auto_calibration is not None:
+                device.__listener.on_auto_calibration(auto_calibration_enabled)    
+        else:
+            fatal_error("__on_auto_calibration_internal:device unavailable for:" + uuid)              
 
     @staticmethod
     @ffi.callback("void(char*, FingerStatusData*)")
@@ -1020,6 +1172,48 @@ class StarkDevice(StarkDeviceListener):
             fatal_error("__on_finger_currents_internal:device unavailable for:" + uuid)
 
     @staticmethod
+    @ffi.callback("void(char*, uint16_t*)")
+    def __on_stall_durations_internal(uuid_ptr, c_durations):
+        uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
+        if uuid in StarkDevice._device_map:
+            device = StarkDevice._device_map[uuid]
+            durations = ffi.unpack(c_durations, 6)
+            if device.__on_stall_durations is not None:
+                device.__on_stall_durations(durations)
+            if device.__listener is not None and device.__listener.on_stall_durations is not None:
+                device.__listener.on_stall_durations(durations)    
+        else:
+            fatal_error("__on_stall_durations_internal:device unavailable for:" + uuid)         
+
+    @staticmethod
+    @ffi.callback("void(char*, uint16_t*)")
+    def __on_stall_currents_internal(uuid_ptr, c_currents):
+        uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
+        if uuid in StarkDevice._device_map:
+            device = StarkDevice._device_map[uuid]
+            currents = ffi.unpack(c_currents, 6)
+            if device.__on_stall_currents is not None:
+                device.__on_stall_currents(currents)
+            if device.__listener is not None and device.__listener.on_stall_currents is not None:
+                device.__listener.on_stall_currents(currents)    
+        else:
+            fatal_error("__on_stall_currents_internal:device unavailable for:" + uuid)
+
+    @staticmethod
+    @ffi.callback("void(char*, uint16_t*)")
+    def __on_finger_pwms_internal(uuid_ptr, c_pwms):
+        uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
+        if uuid in StarkDevice._device_map:
+            device = StarkDevice._device_map[uuid]
+            pwms = ffi.unpack(c_pwms, 6)
+            if device.__on_finger_pwms is not None:
+                device.__on_finger_pwms(pwms)
+            if device.__listener is not None and device.__listener.on_finger_pwms is not None:
+                device.__listener.on_finger_pwms(pwms)    
+        else:
+            fatal_error("__on_finger_pwms_internal:device unavailable for:" + uuid)
+
+    @staticmethod
     @ffi.callback("void(char*, LedInfo*)")
     def __on_led_info_internal(uuid_ptr, c_info):
         uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
@@ -1048,13 +1242,13 @@ class StarkDevice(StarkDeviceListener):
             fatal_error("__on_button_event_internal:device unavailable for:" + uuid) 
 
     @staticmethod
-    @ffi.callback("int(char*, uint16_t*, int, int)")
-    def __on_write_registers_internal(uuid_ptr, data, register_address, count):
+    @ffi.callback("int(char*, int, uint16_t*, int)")
+    def __on_write_registers_internal(uuid_ptr, register_address, c_values, count):
         uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
         if uuid in StarkDevice._device_map:
             device = StarkDevice._device_map[uuid]
             if device.__on_write_registers is not None:
-                values = ffi.unpack(data, count)
+                values = ffi.unpack(c_values, count)
                 device.__on_write_registers(register_address, values)
                 return 0
         else:
@@ -1080,7 +1274,7 @@ class StarkDevice(StarkDeviceListener):
             fatal_error("__on_read_holding_registers_internal:device unavailable for:" + uuid)
 
     @staticmethod
-    @ffi.callback("uint16_t(char*, int)")
+    @ffi.callback("int(char*, int)")
     def __on_read_holding_register_internal(uuid_ptr, register_address):
         uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
         if uuid in StarkDevice._device_map:
@@ -1089,7 +1283,7 @@ class StarkDevice(StarkDeviceListener):
                 data = device.__on_read_holding_registers(register_address, count=1)
                 if data is None or len(data) == 0:
                     SKLog.warning(f"Invalid data received")
-                    return 0
+                    return -1
                 return data[0]
         else:
             fatal_error("__on_read_holding_register_internal:device unavailable for:" + uuid)                        
@@ -1114,7 +1308,7 @@ class StarkDevice(StarkDeviceListener):
             fatal_error("__on_read_input_registers_internal:device unavailable for:" + uuid)
 
     @staticmethod
-    @ffi.callback("uint16_t(char*, int)")
+    @ffi.callback("int(char*, int)")
     def __on_read_input_register_internal(uuid_ptr, register_address):
         uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
         if uuid in StarkDevice._device_map:
@@ -1123,7 +1317,7 @@ class StarkDevice(StarkDeviceListener):
                 data = device.__on_read_input_registers(register_address, count=1)
                 if data is None or len(data) == 0:
                     SKLog.warning(f"Invalid data received")
-                    return 0
+                    return -1
                 return data[0]
         else:
             fatal_error("__on_read_input_register_internal:device unavailable for:" + uuid)
@@ -1147,6 +1341,8 @@ class StarkDevice(StarkDeviceListener):
             device = StarkDevice._device_map[uuid]
             if device.__on_dfu_state is not None:
                 device.__on_dfu_state(StarkDfuState(state))
+            if device.__listener is not None and device.__listener.on_dfu_state is not None:
+                device.__listener.on_dfu_state(StarkDfuState(state))    
         else:
             fatal_error("__on_dfu_state_internal:device unavailable for:" + uuid)        
 
@@ -1158,5 +1354,7 @@ class StarkDevice(StarkDeviceListener):
             device = StarkDevice._device_map[uuid]
             if device.__on_dfu_progress is not None:
                 device.__on_dfu_progress(progress)
+            if device.__listener is not None and device.__listener.on_dfu_progress is not None:
+                device.__listener.on_dfu_progress(progress)    
         else:
             fatal_error("__on_dfu_progress_internal:device unavailable for:" + uuid)        
