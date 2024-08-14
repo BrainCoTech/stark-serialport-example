@@ -1,29 +1,18 @@
 {
-    // yapf
-    "python.formatting.provider": "yapf",
-    "python.formatting.yapfArgs": [
-        "--style",
-        "{column_limit: 400}"
-    ],
-    // autopep8
-    "python.formatting.autopep8Args": [
-        "--max-line-length=400"
-    ],
-    // black
-    "python.formatting.blackArgs": [
-        "--line-length",
-        "400"
-    ],
-    "files.autoSave": "afterDelay",
-    "python.analysis.extraPaths": [
-        // 自定义模块的相对路径，可多个，可绝对路径
-        "./python",
-        "./python/lib",
-        "./python/protobuf_example",
-        "./python/modbus_example",
-    ],
-    "cSpell.words": [
-        "BRNC",
-    ],
-    "C_Cpp.errorSquiggles": "disabled",
+  "prettier.printWidth": 120,
+  "editor.defaultFormatter": "ms-python.black-formatter",
+  "python.formatting.provider": "ms-python.black-formatter",
+  "python.formatting.yapfArgs": ["--style", "{column_limit: 120}"],
+  "python.formatting.autopep8Args": ["--max-line-length=120"],
+  "python.formatting.blackArgs": ["--line-length", "120"],
+  "files.autoSave": "afterDelay",
+  "python.analysis.extraPaths": [
+    // 自定义模块的相对路径，可多个，可绝对路径
+    "./python",
+    "./python/lib",
+    "./python/protobuf_example",
+    "./python/modbus_example"
+  ],
+  "cSpell.words": ["BRNC"],
+  "C_Cpp.errorSquiggles": "disabled"
 }
