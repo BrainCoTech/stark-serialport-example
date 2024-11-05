@@ -2,7 +2,7 @@
 
 ## Requirement
 
-- Python 3.0 or later
+- Python 3.8 or later
 - Mac 10.15 or later
 - Windows 10 build 10.0.15063 or later
 - Linux Ubuntu 20.04 LTS or later

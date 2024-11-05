@@ -6,6 +6,7 @@ import sys
 import pathlib
 
 from functools import partial
+from serial.tools import list_ports
 
 current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent.parent
@@ -30,7 +31,7 @@ def serial_ports():
     """
     if sys.platform.startswith("win"):
         # Use list_ports.comports() to get detailed port information
-        ports = serial.tools.list_ports.comports()
+        ports = list_ports.comports()
         # Filter out only ports with 'USB' in the description
         result = [port.device for port in ports if "USB" in port.description]
     elif sys.platform.startswith("linux") or sys.platform.startswith("cygwin"):
