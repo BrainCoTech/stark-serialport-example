@@ -16,11 +16,11 @@ event_loop = None
 def exit_loop():
     SKLog.info(f"exit application")
     if event_loop is not None:
-        event_loop.stop() 
+        event_loop.stop()
 
 def on_dfu_read(serial_port, device: StarkDevice):
     data = serial_read_data(serial_port)
-    if data is not None and len(data) > 0:    
+    if data is not None and len(data) > 0:
         device.did_receive_data(data)
 
 def on_dfu_state_response(state):
@@ -33,10 +33,11 @@ def on_dfu_state_response(state):
 def on_dfu_progress_response(progress):
     global dfu_progress
     dfu_progress = progress
-    SKLog.info(f"OTA progress: {round(progress, 3)}")    
+    SKLog.info(f"OTA progress: {round(progress, 3)}")
 
 def main():
     StarkSDK.set_error_callback(lambda error: SKLog.error(f"Error: {error.message}"))
+    
     ports = serial_ports()
     SKLog.info(f"serial_ports: {ports}")
     if len(ports) == 0:
@@ -66,7 +67,7 @@ def main():
     if not os.path.exists(ota_bin_path):
         SKLog.warning(f"OTA文件不存在: {ota_bin_path}")
     else:
-        device.set_dfu_cfg(dfu_enabling_delay=4, dfu_enabling_interval=10, dfu_applying_delay=5)
+        device.set_dfu_cfg(dfu_enabling_delay=5, dfu_enabling_interval=10, dfu_applying_delay=5)
         global dfu_state, dfu_progress
         dfu_state = StarkDfuState.idle
         dfu_progress = 0
@@ -85,4 +86,4 @@ def main():
             serial_close(serial_port)
 
 if __name__ == "__main__":
-    main()  
+    main()

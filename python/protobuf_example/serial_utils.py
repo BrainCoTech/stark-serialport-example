@@ -63,7 +63,7 @@ def serial_ports():
         SKLog.warning("No serial ports found")
     elif serial_port_name not in result:
         SKLog.warning(f"serial_port_name: {serial_port_name} not found in serial_ports: {result}")
-       
+
     return result
 
 
@@ -114,7 +114,7 @@ def serial_write_data(serial_port, value):
     return 0
 
 
-def _in_waiting(serial_port: serial.Serial):
+def serial_in_waiting(serial_port: serial.Serial):
     in_waiting = "in_waiting" if hasattr(serial_port, "in_waiting") else "inWaiting"
 
     if in_waiting == "in_waiting":
@@ -133,14 +133,14 @@ def _wait_for_data(serial_port: serial.Serial, timeout: int = None):
         condition = partial(lambda start: True)
     start = time.time()
     while condition(start):
-        avaialble = _in_waiting(serial_port)
-        # avaialble = serial_port.in_waiting
+        avaialble = serial_in_waiting(serial_port)
         if (more_data and not avaialble) or (more_data and avaialble == size):
             break
         if avaialble and avaialble != size:
             more_data = True
             size = avaialble
-        time.sleep(0.01)
+        # time.sleep(0.01)
+        time.sleep(0.002)
     return size
 
 

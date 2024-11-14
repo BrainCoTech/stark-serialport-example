@@ -1,6 +1,6 @@
-import inspect 
+import inspect
 import logging
-import os 
+import os
 from binascii import b2a_hex
 
 class CustomFormatter(logging.Formatter):
@@ -13,7 +13,8 @@ class CustomFormatter(logging.Formatter):
         # 获取调用者信息
         frame = inspect.stack()[self.stackIndex] # 前面的栈帧是logging和函数本身
         module = inspect.getmodule(frame[0])
-        record.calling_file = module.__file__ if module else 'unknown'
+        # record.calling_file = module.__file__ if module else 'unknown'
+        record.calling_file = getattr(module, "__file__", "unknown")
         record.calling_line = frame[2]
         if self.addColor:
             record.color_msg = colors_map[record.levelname.upper()] + record.msg + '\033[0m'
@@ -123,7 +124,7 @@ class LCOLORS(object):
     FAIL = '\033[91m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'   
+    UNDERLINE = '\033[4m'
 
 colors_map = {
     'DEBUG': LCOLORS.OKCYAN,

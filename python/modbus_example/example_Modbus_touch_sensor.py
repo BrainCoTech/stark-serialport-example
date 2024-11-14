@@ -6,7 +6,6 @@ from modbus_client_utils import *
 filename = os.path.basename(__file__).split(".")[0]
 StarkSDK.init(isModbus=True, log_level=logging.INFO, log_file_name=f"{filename}.log")
 
-
 async def main():
     setup_shutdown_event()
     StarkSDK.set_error_callback(lambda error: SKLog.error(f"Error: {error.message}"))
@@ -46,29 +45,18 @@ async def main():
         )
     )
 
-    # ----------------- 以下为获取示例代码 -----------------
-    SKLog.info("get_hand_type")  # 获取手类型
-    device.get_hand_type(lambda hand_type: SKLog.info(f"Hand type: {hand_type.name}"))
-    SKLog.info("get_serialport_cfg")  # 获取串口配置，波特率等
-    device.get_serialport_cfg(lambda cfg: SKLog.info(f"Serialport cfg: {cfg}"))
-    SKLog.info("get_motorboard_info")  # 获取固件版本号等信息
-    device.get_motorboard_info(lambda info: SKLog.critical(f"Motorboard info: {info}"))
-    SKLog.info("get_force_level")  # 获取力量等级，大-中-小
-    device.get_force_level(
-        lambda force_level: SKLog.info(f"Force level: {force_level.name}")
-    )
-    SKLog.info("get_voltage")  # 获取电量
-    device.get_voltage(lambda voltage: SKLog.info(f"Voltage: {voltage:.1f} mV"))
+    # 触觉传感器复位，发送传感器采集通道复位指令。在执行该指令时，手指传感器尽量不要受力。
+    SKLog.info("touch_sensor_reset")
+    device.touch_sensor_reset()
+    # device.touch_sensor_reset(finger_bits=0x1f)  # 复位指定手指的传感器采集通道
 
-    device.set_finger_positions([60, 60, 100, 100, 100, 100])  # 设置手指位置
-    SKLog.info("get_finger_status")  # 获取手指状态
-    device.get_finger_status(lambda status: SKLog.info(f"Finger status: {status}"))
+    # 触觉传感器参数校准，参数校准指令。 当空闲状态下的三维力数值不为0时，可通过该寄存器进行校准。该指令的执行时间较长，期间的数据无法作为参考。建议忽略在该参数校准寄存器设置后十秒内的数据。在执行该指令时，手指传感器不能受力， 否则将导致校准后的传感器数据异常。
+    # SKLog.info("touch_sensor_calibrate")
+    # device.touch_sensor_calibrate()
+    # device.touch_sensor_calibrate(finger_bits=0x1b)  # 校准指定手指的传感器采集通道
 
-    # ----------------- 以下为获取触觉手状态 -----------------
-    # SKLog.info("get_touch_sensor_status")  # 获取触觉传感器状态
-    # device.get_touch_sensor_status(
-    #     lambda status: SKLog.info(f"Touch sensor status: {status}")
-    # )
+    # 等待关闭事件
+    # await shutdown_event.wait()
 
     # 关闭资源
     client_close(client)

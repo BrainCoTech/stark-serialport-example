@@ -1,24 +1,14 @@
 import sys
 import pathlib
 from pymodbus.utilities import hexlify_packets
-
-try:
-    if sys.version_info.major == 3 and sys.version_info.minor >= 8:
-        # FIXME: pymodbus 3.5.8 NOT support in python 3.7.x
-        from pymodbus.client.serial import ModbusSerialClient
-        from pymodbus.logging import pymodbus_apply_logging_config
-    else:
-        from pymodbus.client.sync import ModbusSerialClient
-        from pymodbus.logging import pymodbus_apply_logging_config
-except ImportError as e:
-    print(f"ImportError: {e}")
-    sys.exit(1)
+from pymodbus.client.serial import ModbusSerialClient
+from pymodbus.logging import pymodbus_apply_logging_config
 
 current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent.parent
 sys.path.append(str(parent_dir))
 sys.path.append(parent_dir.joinpath("protobuf_example"))
-from lib import *
+from lib import * # import stark lib
 from protobuf_example.serial_utils import *
 
 
@@ -29,8 +19,12 @@ def is_connected(client: ModbusSerialClient):
         return client.connect()
 
 
+def is_idle(client: ModbusSerialClient):
+    return is_connected(client) and not client._in_waiting()
+
+
 def client_connect(
-    port: str, baudrate: BaudRate, broadcast_enable: bool = False
+    port: str, baudrate: BaudRate
 ) -> ModbusSerialClient:
     client = ModbusSerialClient(port=port, baudrate=baudrate.value, timeout=3)
     # pymodbus==3.7.0, broadcast_enable parameters removed. (https://github.com/pymodbus-dev/pymodbus/pull/2272/files)

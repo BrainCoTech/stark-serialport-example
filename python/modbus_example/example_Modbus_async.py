@@ -3,12 +3,40 @@ import os
 import asyncio
 from modbus_client_utils import *
 
+# init logging config
 filename = os.path.basename(__file__).split(".")[0]
 StarkSDK.init(isModbus=True, log_level=logging.INFO, log_file_name=f"{filename}.log")
 
 
+def handle_finger_status(device, index, status):
+    SKLog.info(f"[{index}] Finger status: {status}")
+    if status.is_idle:
+        if status.is_opened:
+            device.set_finger_positions([60, 60, 100, 100, 100, 100])  # 握手
+        elif status.is_closed:
+            device.set_finger_positions([0] * 6)  # 张开
+
+
+# 定期获取手指状态
+async def get_finger_status_periodically(device, client):
+    SKLog.info("get_finger_status_periodically start")
+    index = 0
+    # 等待设备空闲，需要串行读写寄存器
+    while is_idle(client):
+        # 获取手指状态
+        try:
+            SKLog.debug("get_finger_status")
+            device.get_finger_status(
+                lambda status: handle_finger_status(device, index, status)
+            )
+            index += 1
+        except Exception as e:
+            SKLog.error(f"Error getting finger status: {e}")
+        await asyncio.sleep(0.002)
+
+
 async def main():
-    setup_shutdown_event()
+    shutdown_event = setup_shutdown_event()
     StarkSDK.set_error_callback(lambda error: SKLog.error(f"Error: {error.message}"))
 
     ports = serial_ports()
@@ -46,29 +74,19 @@ async def main():
         )
     )
 
-    # ----------------- 以下为获取示例代码 -----------------
-    SKLog.info("get_hand_type")  # 获取手类型
-    device.get_hand_type(lambda hand_type: SKLog.info(f"Hand type: {hand_type.name}"))
-    SKLog.info("get_serialport_cfg")  # 获取串口配置，波特率等
-    device.get_serialport_cfg(lambda cfg: SKLog.info(f"Serialport cfg: {cfg}"))
-    SKLog.info("get_motorboard_info")  # 获取固件版本号等信息
+    # 获取固件版本号等信息
+    SKLog.info("get_motorboard_info")
     device.get_motorboard_info(lambda info: SKLog.critical(f"Motorboard info: {info}"))
-    SKLog.info("get_force_level")  # 获取力量等级，大-中-小
-    device.get_force_level(
-        lambda force_level: SKLog.info(f"Force level: {force_level.name}")
-    )
-    SKLog.info("get_voltage")  # 获取电量
-    device.get_voltage(lambda voltage: SKLog.info(f"Voltage: {voltage:.1f} mV"))
 
-    device.set_finger_positions([60, 60, 100, 100, 100, 100])  # 设置手指位置
-    SKLog.info("get_finger_status")  # 获取手指状态
-    device.get_finger_status(lambda status: SKLog.info(f"Finger status: {status}"))
+    # 设置手指位置
+    device.set_finger_positions([60, 60, 100, 100, 100, 100])  # 握手
 
-    # ----------------- 以下为获取触觉手状态 -----------------
-    # SKLog.info("get_touch_sensor_status")  # 获取触觉传感器状态
-    # device.get_touch_sensor_status(
-    #     lambda status: SKLog.info(f"Touch sensor status: {status}")
-    # )
+    # 创建并启动异步任务
+    asyncio.create_task(get_finger_status_periodically(device, client))
+    SKLog.info("Status task started")
+
+    # 等待关闭事件
+    await shutdown_event.wait()
 
     # 关闭资源
     client_close(client)

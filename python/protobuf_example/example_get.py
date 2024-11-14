@@ -21,9 +21,8 @@ def main():
         exit(1)
 
     # set serial port read/write callback
-    StarkSDK.set_write_data_callback(
-        lambda value: serial_write_data(serial_port, value)
-    )
+    # fmt: off
+    StarkSDK.set_write_data_callback(lambda value: serial_write_data(serial_port, value))
     StarkSDK.set_read_data_callback(lambda: serial_read_data(serial_port))
 
     # new device instance
@@ -31,7 +30,7 @@ def main():
     device = StarkDevice.create_device(device_id, f"{serial_port_name}_{device_id}")
 
     SKLog.debug("get_motorboard_info")
-    device.get_motorboard_info(lambda info: SKLog.info(f"Motorboard info: {info}"))
+    device.get_motorboard_info(lambda info: SKLog.critical(f"Motorboard info: {info}"))
     SKLog.debug("get_serialport_cfg")
     device.get_serialport_cfg(lambda cfg: SKLog.info(f"Serialport cfg: {cfg}"))
     SKLog.debug("get_force_level")
