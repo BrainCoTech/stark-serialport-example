@@ -5,9 +5,12 @@ from serial_utils import *
 # init logging config
 filename = os.path.basename(__file__).split('.')[0]
 StarkSDK.init(log_level=logging.INFO, log_file_name=f'{filename}.log')
-        
+
 def main():
-    SKLog.info(f"serial_ports: {serial_ports()}")
+    ports = serial_ports()
+    SKLog.info(f"serial_ports: {ports}")
+    if len(ports) == 0:
+        return
 
     # open serial port 8N1
     serial_port = serial_open(serial_port_name, BaudRate.baudrate_115200.value)

@@ -9,3 +9,5 @@ test.py
 example_Modbus_RTU.py
 example_Modbus_test.py
 test_recevice_data.py
+c_cpp_properties.json
+launch.json

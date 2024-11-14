@@ -55,7 +55,10 @@ def test_update_baudrate(device, client, baudrate):
 
 def main():
     StarkSDK.set_error_callback(lambda error: SKLog.error(f"Error: {error.message}"))
-    SKLog.info(f"serial_ports: {serial_ports()}")
+    ports = serial_ports()
+    SKLog.info(f"serial_ports: {ports}")
+    if len(ports) == 0:
+        return
 
     # old_baudrate = BaudRate.baudrate_57600
     # new_baudrate = BaudRate.baudrate_115200
@@ -65,11 +68,11 @@ def main():
     if client is None:
         SKLog.error("Failed to open modbus serial port")
         return
-    
+
     # new modbus device instance
     old_slave_id = 1 # default slave_id is 1 in Modbus Firmware
     new_slave_id = 2
-    
+
     device = create_device(client, old_slave_id)
     test_update_slave_id(device, client, new_slave_id)
     exit(0)
@@ -88,7 +91,7 @@ def main():
     SKLog.info(f"set_turbo_conf")
     device.set_turbo_conf(turbo_interval=1000, turbo_duration=2000)
     device.get_turbo_conf(lambda turbo_interval, turbo_duration: SKLog.info(f"get_turbo_conf, turbo_interval: {turbo_interval}, duration: {turbo_duration}"))
-    
+
     SKLog.info(f"set_auto_calibration")
     device.set_auto_calibration(enabled=True)
     device.get_auto_calibration(lambda enabled: SKLog.info(f"auto_calibration_enabled: {enabled}"))
@@ -100,4 +103,3 @@ def main():
 
 if __name__ == "__main__":
     main()      
-

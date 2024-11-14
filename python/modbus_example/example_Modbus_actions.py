@@ -50,13 +50,16 @@ def action_sequence_info_to_list(action):
 
 def main():
     StarkSDK.set_error_callback(lambda error: SKLog.error(f"Error: {error.message}"))
-    SKLog.info(f"serial_ports: {serial_ports()}")
+    ports = serial_ports()
+    SKLog.info(f"serial_ports: {ports}")
+    if len(ports) == 0:
+        return
 
     client = client_connect(port=serial_port_name, baudrate=BaudRate.baudrate_115200)
     if client is None:
         SKLog.error("Failed to open modbus serial port")
         return
-    
+
     # new modbus device instance
     slave_id = 1
     device = StarkDevice.create_device(slave_id, f"{serial_port_name}_{slave_id}")
@@ -73,22 +76,19 @@ def main():
     mapped_sequences = map(lambda action: action_sequence_info_to_list(action), sample_action_sequences)
     action_sequences = list(mapped_sequences)
 
-    action_id = ActionSequenceId.custom_gesture_1
+    action_id = ActionSequenceId.default_gesture_fist
 
     # 测试写入 action sequence
-    device.transfer_action_sequence(action_id, action_sequences=action_sequences)
-    # 测试保存 action sequence
-    device.save_action_sequence(action_id)
+    # device.transfer_action_sequence(action_id, action_sequences=action_sequences)
+    # # 测试保存 action sequence
+    # device.save_action_sequence(action_id)
 
     # 测试读取 action sequence
     device.get_action_sequence(action_id, cb=lambda action_sequences: SKLog.info(f"get Action Sequence: {action_sequences}"))
     # 测试运行 action sequence
     device.run_action_sequence(action_id)
-    
+
     client_close(client) 
 
 if __name__ == "__main__":
     main()      
-
-
-

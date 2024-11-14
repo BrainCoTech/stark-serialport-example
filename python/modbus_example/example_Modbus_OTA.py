@@ -29,18 +29,21 @@ def on_dfu_progress_response(progress):
     global dfu_progress
     dfu_progress = progress
     SKLog.info(f"OTA progress: {round(progress, 3)}")    
-   
+
 def main():
     StarkSDK.set_error_callback(lambda error: SKLog.error(f"Error: {error.message}"))
-    SKLog.info(f"serial_ports: {serial_ports()}")
+    ports = serial_ports()
+    SKLog.info(f"serial_ports: {ports}")
+    if len(ports) == 0:
+        return
 
     broadcast_enable = True
-    
+
     client = client_connect(port=serial_port_name, baudrate=BaudRate.baudrate_115200, broadcast_enable=broadcast_enable)
     if client is None:
         SKLog.error("Failed to open modbus serial port")
         return
-    
+
     # new modbus device instance
     slave_id = 0 if broadcast_enable else 1
     device = StarkDevice.create_device(slave_id, f"{serial_port_name}_{slave_id}")
@@ -59,8 +62,8 @@ def main():
 
     current_dir = pathlib.Path(__file__).resolve()
     parent_dir = current_dir.parent.parent.parent
-    ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'FW_MotorController_Release_SecureOTA_modbus_0.1.6.ota') # Modbus固件
-    # ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'FW_MotorController_Release_SecureOTA_485_9.2.7.ota')  # protobuf固件
+    # ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'modbus/FW_MotorController_Release_SecureOTA_modbus_0.1.7.ota') # Modbus固件
+    ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'protobuf/FW_MotorController_Release_SecureOTA_485_9.2.9.ota')  # protobuf固件
     if not os.path.exists(ota_bin_path):
         SKLog.warning(f"OTA文件不存在: {ota_bin_path}")
     else:
@@ -84,4 +87,3 @@ def main():
 
 if __name__ == "__main__":
     main()  
-

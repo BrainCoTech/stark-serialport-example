@@ -37,14 +37,17 @@ def on_dfu_progress_response(progress):
 
 def main():
     StarkSDK.set_error_callback(lambda error: SKLog.error(f"Error: {error.message}"))
-    SKLog.info(f"serial_ports: {serial_ports()}")
-    
+    ports = serial_ports()
+    SKLog.info(f"serial_ports: {ports}")
+    if len(ports) == 0:
+        return
+
     # open serial port 8N1
     serial_port = serial_open(serial_port_name, BaudRate.baudrate_115200.value)
     if serial_port is None:
         SKLog.error("Failed to open serial port")
         return
-    
+
     # new device instance
     device_id = 254 # broadcast_id=254 in Firmware V9.2.7
     # device_id = 2 # default_device_id=2 in Firmware V1.2.4
@@ -58,8 +61,8 @@ def main():
 
     current_dir = pathlib.Path(__file__).resolve()
     parent_dir = current_dir.parent.parent.parent
-    ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'FW_MotorController_Release_SecureOTA_modbus_0.1.6.ota') # Modbus固件
-    # ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'FW_MotorController_Release_SecureOTA_485_9.2.7.ota')  # 
+    ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'modbus/FW_MotorController_Release_SecureOTA_modbus_0.1.7.ota') # Modbus固件
+    # ota_bin_path = os.path.join(parent_dir, 'ota_bin', 'protobuf/FW_MotorController_Release_SecureOTA_485_9.2.9.ota')  # protobuf固件
     if not os.path.exists(ota_bin_path):
         SKLog.warning(f"OTA文件不存在: {ota_bin_path}")
     else:
@@ -83,4 +86,3 @@ def main():
 
 if __name__ == "__main__":
     main()  
-
