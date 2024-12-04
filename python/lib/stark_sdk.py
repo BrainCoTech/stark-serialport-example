@@ -428,6 +428,26 @@ class TouchStatusData:
             f"touch_status[4]: \n{self.touch_status[4]}"
         )
 
+class TouchRawData:
+    def __init__(self, c_data):
+        # 通道数, 每个通道的数据类型为uint32_t, 有效值为24 bits
+        # 7 + 11 + 11 + 11 + 7
+        self.thumb = ffi.unpack(c_data.thumb, 7)
+        self.index = ffi.unpack(c_data.index, 11)
+        self.middle = ffi.unpack(c_data.middle, 11)
+        self.ring = ffi.unpack(c_data.ring, 11)
+        self.pinky = ffi.unpack(c_data.pinky, 7)
+        
+    def __str__(self):
+        return (
+            f"TouchRawData:\n"
+            f"\t thumb: {self.thumb}, \n"
+            f"\t index: {self.index}, \n"
+            f"\t middle: {self.middle}, \n"
+            f"\t ring: {self.ring}, \n"
+            f"\t pinky: {self.pinky}"
+        )    
+
 
 class StarkFingerStatus:
     def __init__(self, c_status):
@@ -633,7 +653,13 @@ class StarkDeviceListener(abc.ABC):
 
     def on_auto_calibration(self, auto_calibration_enabled):
         pass
+    
+    def on_touch_sensor_enabled(self, finger_bits):
+        pass
 
+    def on_touch_sensor_raw_data(self, touch_raw_data):
+        pass
+    
     def on_touch_sensor_status(self, touch_status):
         pass
 
@@ -1391,6 +1417,36 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice.__on_touch_sensor_firmware_internal,
             )
 
+    def get_touch_sensor_enabled(self, cb=None):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(
+                StarkError(
+                    StarkErrorCode.not_supported,
+                    "Protobuf device not support get_touch_sensor_enabled",
+                )
+            )
+            return
+        self.__on_touch_sensor_enabled = cb
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.stark_get_touch_sensor_enabled(
+                StarkDevice._device_pointer_map[self.__uuid],
+                StarkDevice.__on_touch_sensor_enabled_internal,
+            )
+
+    def set_touch_sensor_enabled(self, finger_bits: int = 0x1F):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(
+                StarkError(
+                    StarkErrorCode.not_supported,
+                    "Protobuf device not support set_touch_sensor_enabled",
+                )
+            )
+            return
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.stark_set_touch_sensor_enabled(
+                StarkDevice._device_pointer_map[self.__uuid], finger_bits
+            )
+        
     # 0x1F: 11111 all fingers
     def touch_sensor_reset(self, finger_bits: int = 0x1F):
         if not StarkSDK.isModbus:
@@ -1437,6 +1493,22 @@ class StarkDevice(StarkDeviceListener):
             libstark.stark_get_touch_sensor_status(
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_touch_sensor_status_internal,
+            )
+            
+    def get_touch_sensor_raw_data(self, cb=None):
+        if not StarkSDK.isModbus:
+            StarkSDK.run_error_callback(
+                StarkError(
+                    StarkErrorCode.not_supported,
+                    "Protobuf device not support get_touch_sensor_raw_data",
+                )
+            )
+            return
+        self.__on_touch_sensor_raw_data = cb
+        if self.__uuid in StarkDevice._device_pointer_map:
+            libstark.stark_get_touch_sensor_raw_data(
+                StarkDevice._device_pointer_map[self.__uuid],
+                StarkDevice.__on_touch_sensor_raw_data_internal,
             )
 
     def get_finger_status(self, cb=None):
@@ -1886,6 +1958,39 @@ class StarkDevice(StarkDeviceListener):
             fatal_error(
                 "__on_touch_sensor_firmware_internal, device unavailable for:" + uuid
             )
+
+    @staticmethod
+    @ffi.callback("void(char*, int)")
+    def __on_touch_sensor_enabled_internal(uuid_ptr, finger_bits):
+        uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
+        if uuid in StarkDevice._device_map:
+            device = StarkDevice._device_map[uuid]
+            if device.__on_touch_sensor_enabled is not None:
+                device.__on_touch_sensor_enabled(finger_bits)
+            if (
+                device.__listener is not None
+                and device.__listener.on_touch_sensor_enabled is not None
+            ):
+                device.__listener.on_touch_sensor_enabled(finger_bits)
+        else:
+            fatal_error("__on_touch_sensor_enabled_internal:device unavailable for:" + uuid)
+
+    @staticmethod
+    @ffi.callback("void(char*, TouchRawData*)")
+    def __on_touch_sensor_raw_data_internal(uuid_ptr, c_data):
+        uuid = ffi.string(uuid_ptr, 40).decode("utf-8")
+        if uuid in StarkDevice._device_map:
+            device = StarkDevice._device_map[uuid]
+            data = TouchRawData(c_data)
+            if device.__on_touch_sensor_raw_data is not None:
+                device.__on_touch_sensor_raw_data(data)
+            if (
+                device.__listener is not None
+                and device.__listener.on_touch_sensor_raw_data is not None
+            ):
+                device.__listener.on_touch_sensor_raw_data(data)
+        else:
+            fatal_error("__on_touch_sensor_raw_data_internal:device unavailable for:" + uuid)
 
     @staticmethod
     @ffi.callback("void(char*, TouchStatusData*)")

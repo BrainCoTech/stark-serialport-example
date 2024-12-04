@@ -44,10 +44,32 @@ async def main():
             client, register_address, count, slave=slave_id
         )
     )
+    
+    # 启用触觉传感器功能
+    SKLog.info("set_touch_sensor_enabled")
+    device.set_touch_sensor_enabled(0x1F)  # 0x1F: 11111, 5个手指传感器全部启用
+    
+    # 获取触觉传感器功能启用状态
+    SKLog.info("get_touch_sensor_enabled")
+    device.get_touch_sensor_enabled(
+        lambda finger_bits: SKLog.info(f"Touch sensor enabled: {(finger_bits & 0x1F):05b}")
+    )
+    
+    # 获取触觉传感器状态、三维力数值
+    SKLog.info("get_touch_sensor_status")  
+    device.get_touch_sensor_status(
+        lambda status: SKLog.info(f"Touch sensor status: {status}")
+    )
+    
+    # 获取触觉传感器raw数据
+    SKLog.info("get_touch_sensor_raw_data")
+    device.get_touch_sensor_raw_data(
+        lambda raw_data: SKLog.info(f"Touch sensor raw data: {raw_data}")
+    )
 
     # 触觉传感器复位，发送传感器采集通道复位指令。在执行该指令时，手指传感器尽量不要受力。
-    SKLog.info("touch_sensor_reset")
-    device.touch_sensor_reset()
+    # SKLog.info("touch_sensor_reset")
+    # device.touch_sensor_reset()
     # device.touch_sensor_reset(finger_bits=0x1f)  # 复位指定手指的传感器采集通道
 
     # 触觉传感器参数校准，参数校准指令。 当空闲状态下的三维力数值不为0时，可通过该寄存器进行校准。该指令的执行时间较长，期间的数据无法作为参考。建议忽略在该参数校准寄存器设置后十秒内的数据。在执行该指令时，手指传感器不能受力， 否则将导致校准后的传感器数据异常。

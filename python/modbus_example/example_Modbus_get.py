@@ -64,12 +64,6 @@ async def main():
     SKLog.info("get_finger_status")  # 获取手指状态
     device.get_finger_status(lambda status: SKLog.info(f"Finger status: {status}"))
 
-    # ----------------- 以下为获取触觉手状态 -----------------
-    # SKLog.info("get_touch_sensor_status")  # 获取触觉传感器状态
-    # device.get_touch_sensor_status(
-    #     lambda status: SKLog.info(f"Touch sensor status: {status}")
-    # )
-
     # 关闭资源
     client_close(client)
     SKLog.info("Modbus client closed")

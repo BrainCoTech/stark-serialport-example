@@ -106,7 +106,7 @@ async def main():
 
     # 写入动作序列，自定义动作序列1~6
     action_id = ActionSequenceId.custom_gesture_1
-    device.transfer_action_sequence(action_id, action_sequences=action_sequences) # 发送自定义手势1
+    device.transfer_action_sequence(action_id, action_sequences=action_sequences)
 
     # 读取动作序列，内置动作序列或自定义动作序列1~6
     device.get_action_sequence(action_id,cb=lambda action_sequences: SKLog.info(f"get Action Sequence: {action_sequences}"))

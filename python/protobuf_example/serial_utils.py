@@ -16,7 +16,7 @@ from lib import *
 if platform.system() == "Windows":
     serial_port_name = "COM3"
 elif sys.platform.startswith("darwin"):
-    serial_port_name = "/dev/tty.usbserial-14120"
+    serial_port_name = "/dev/tty.usbserial-14230"
 else:
     serial_port_name = "/dev/ttyUSB0"
 
@@ -62,7 +62,9 @@ def serial_ports():
     if len(result) == 0:
         SKLog.warning("No serial ports found")
     elif serial_port_name not in result:
-        SKLog.warning(f"serial_port_name: {serial_port_name} not found in serial_ports: {result}")
+        SKLog.warning(
+            f"serial_port_name: {serial_port_name} not found in serial_ports: {result}"
+        )
 
     return result
 
