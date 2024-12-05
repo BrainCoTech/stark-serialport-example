@@ -45,9 +45,14 @@ async def main():
         )
     )
     
+    SKLog.info("get_motorboard_info")  # 获取固件版本号等信息
+    device.get_motorboard_info(lambda info: SKLog.critical(f"Motorboard info: {info}"))
+    
     # 启用触觉传感器功能
     SKLog.info("set_touch_sensor_enabled")
-    device.set_touch_sensor_enabled(0x1F)  # 0x1F: 11111, 5个手指传感器全部启用
+    # device.set_touch_sensor_enabled(0b00000)  # 0b00000: 5个手指传感器全部禁用
+    device.set_touch_sensor_enabled(0b11111)  # 0b11111: 5个手指传感器全部启用
+    await asyncio.sleep(0.5)  # 等待触觉传感器初始化完成
     
     # 获取触觉传感器功能启用状态
     SKLog.info("get_touch_sensor_enabled")
@@ -69,13 +74,11 @@ async def main():
 
     # 触觉传感器复位，发送传感器采集通道复位指令。在执行该指令时，手指传感器尽量不要受力。
     # SKLog.info("touch_sensor_reset")
-    # device.touch_sensor_reset()
-    # device.touch_sensor_reset(finger_bits=0x1f)  # 复位指定手指的传感器采集通道
+    # device.touch_sensor_reset(finger_bits=0b11111)  # 复位指定手指的传感器采集通道
 
     # 触觉传感器参数校准，参数校准指令。 当空闲状态下的三维力数值不为0时，可通过该寄存器进行校准。该指令的执行时间较长，期间的数据无法作为参考。建议忽略在该参数校准寄存器设置后十秒内的数据。在执行该指令时，手指传感器不能受力， 否则将导致校准后的传感器数据异常。
     # SKLog.info("touch_sensor_calibrate")
-    # device.touch_sensor_calibrate()
-    # device.touch_sensor_calibrate(finger_bits=0x1b)  # 校准指定手指的传感器采集通道
+    # device.touch_sensor_calibrate(finger_bits=0b11111)  # 校准指定手指的传感器采集通道
 
     # 等待关闭事件
     # await shutdown_event.wait()

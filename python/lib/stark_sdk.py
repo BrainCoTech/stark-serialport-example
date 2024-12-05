@@ -1433,7 +1433,7 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice.__on_touch_sensor_enabled_internal,
             )
 
-    def set_touch_sensor_enabled(self, finger_bits: int = 0x1F):
+    def set_touch_sensor_enabled(self, finger_bits: int = 0b11111):
         if not StarkSDK.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
@@ -1447,8 +1447,8 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid], finger_bits
             )
         
-    # 0x1F: 11111 all fingers
-    def touch_sensor_reset(self, finger_bits: int = 0x1F):
+    # 0b 11111 all fingers
+    def touch_sensor_reset(self, finger_bits: int = 0b11111):
         if not StarkSDK.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
@@ -1464,7 +1464,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     # 0x1F: 11111 all fingers
-    def touch_sensor_calibrate(self, finger_bits: int = 0x1F):
+    def touch_sensor_calibrate(self, finger_bits: int = 0b11111):
         if not StarkSDK.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
