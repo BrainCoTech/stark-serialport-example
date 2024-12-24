@@ -770,8 +770,8 @@ class StarkDevice(StarkDeviceListener):
 
     def serial_receive_data(self):
         # I want to sleep smaller time to get data faster
-        time.sleep(0.02)
-        # time.sleep(0.05)
+        # time.sleep(0.02) # 会导致个别读取到的响应包不完整, 如get_force_level
+        time.sleep(0.05)
         if StarkSDK.on_read_data is not None:
             data = StarkSDK.on_read_data()
             if data is not None and len(data) > 0:

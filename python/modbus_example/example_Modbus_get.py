@@ -21,10 +21,9 @@ async def main():
     if client is None:
         SKLog.error("Failed to open modbus serial port")
         return
-
-    broadcast_enable = False
+    
     # default slave_id is 1 in Modbus Firmware
-    slave_id = 0 if broadcast_enable else 1
+    slave_id = 1
 
     # new modbus device instance
     device = StarkDevice.create_device(slave_id, f"{serial_port_name}_{slave_id}")
@@ -47,6 +46,7 @@ async def main():
     )
 
     # ----------------- 以下为获取示例代码 -----------------
+    # fmt: off
     SKLog.info("get_hand_type")  # 获取手类型
     device.get_hand_type(lambda hand_type: SKLog.info(f"Hand type: {hand_type.name}"))
     SKLog.info("get_serialport_cfg")  # 获取串口配置，波特率等
@@ -54,9 +54,7 @@ async def main():
     SKLog.info("get_motorboard_info")  # 获取固件版本号等信息
     device.get_motorboard_info(lambda info: SKLog.critical(f"Motorboard info: {info}"))
     SKLog.info("get_force_level")  # 获取力量等级，大-中-小
-    device.get_force_level(
-        lambda force_level: SKLog.info(f"Force level: {force_level.name}")
-    )
+    device.get_force_level(lambda force_level: SKLog.info(f"Force level: {force_level.name}"))
     SKLog.info("get_voltage")  # 获取电量
     device.get_voltage(lambda voltage: SKLog.info(f"Voltage: {voltage:.1f} mV"))
 

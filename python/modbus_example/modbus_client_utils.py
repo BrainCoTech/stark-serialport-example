@@ -64,7 +64,7 @@ def client_write_registers(
     client: ModbusSerialClient, address: int, values: list, slave: int
 ) -> int:
     SKLog.debug(
-        f"client_write_registers, address: {address}, len={len(values)}, {hexlify_packets(values)}"
+        f"client_write_registers, slave: {slave}, address: {address}, len={len(values)}, {hexlify_packets(values)}"
     )
     # SKLog.debug(f"client_write_registers, address: {address}, len={len(values)}, {hexlify_packets_without_0x(values)}")
 

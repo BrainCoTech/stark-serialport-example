@@ -50,9 +50,8 @@ async def main():
         SKLog.error("Failed to open modbus serial port")
         return
 
-    broadcast_enable = False
     # default slave_id is 1 in Modbus Firmware
-    slave_id = 0 if broadcast_enable else 1
+    slave_id = 1
 
     # new modbus device instance
     device = StarkDevice.create_device(slave_id, f"{serial_port_name}_{slave_id}")
@@ -75,7 +74,6 @@ async def main():
     )
 
     # 获取固件版本号等信息
-    SKLog.info("get_motorboard_info")
     device.get_motorboard_info(lambda info: SKLog.critical(f"Motorboard info: {info}"))
 
     # 设置手指位置

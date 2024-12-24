@@ -141,8 +141,8 @@ def _wait_for_data(serial_port: serial.Serial, timeout: int = None):
         if avaialble and avaialble != size:
             more_data = True
             size = avaialble
-        # time.sleep(0.01)
-        time.sleep(0.002)
+        time.sleep(0.01) # OTA通信时需要多等一会
+        # time.sleep(0.002)
     return size
 
 

@@ -137,7 +137,7 @@ colors_map = {
 def hexlify_packets(packet) -> str:
     if not packet:
         return ""
-    return " ".join([hex(int(x)) for x in packet])
+    return ",".join([hex(int(x)) for x in packet])
 
 def hexlify_packets_without_0x(packet) -> str:
     if not packet:

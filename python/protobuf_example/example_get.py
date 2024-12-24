@@ -26,18 +26,16 @@ def main():
     StarkSDK.set_read_data_callback(lambda: serial_read_data(serial_port))
 
     # new device instance
-    device_id = 254  # broadcast_id=254 in Firmware V9.2.7
+    device_id = 10  # broadcast_id=254 in Firmware V9.2.7
     device = StarkDevice.create_device(device_id, f"{serial_port_name}_{device_id}")
 
-    SKLog.debug("get_motorboard_info")
     device.get_motorboard_info(lambda info: SKLog.critical(f"Motorboard info: {info}"))
-    SKLog.debug("get_serialport_cfg")
     device.get_serialport_cfg(lambda cfg: SKLog.info(f"Serialport cfg: {cfg}"))
-    SKLog.debug("get_force_level")
     device.get_force_level(lambda level: SKLog.info(f"Force level: {level.name}"))
-    SKLog.debug("get_finger_status")
+    device.get_voltage(lambda voltage: SKLog.info(f"Voltage: {voltage}"))
+    device.get_max_current(lambda current: SKLog.info(f"Max current: {current}"))
     device.get_finger_status(lambda status: SKLog.info(f"Finger status: {status}"))
-
+    
     SKLog.debug("close serial port")
     serial_close(serial_port)
 

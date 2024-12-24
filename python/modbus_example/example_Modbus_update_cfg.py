@@ -34,7 +34,7 @@ def create_device(client, slave_id):
 
 def test_update_slave_id(device, client, new_slave_id):
     # 1. before set_serial_device_id, get current serialport_cfg, should be old_slave_id
-    device.get_serialport_cfg(lambda cfg: SKLog.info(f"serialport_cfg: {cfg}"))
+    device.get_serialport_cfg(lambda cfg: SKLog.info(f"cur serialport_cfg: {cfg}"))
     # 2. set serial device id, device will reboot after device id changed
     old_slave_id = device.slave_id
     device.set_serial_device_id(new_slave_id)
@@ -45,11 +45,11 @@ def test_update_slave_id(device, client, new_slave_id):
     # 5. get new device id, should be new_slave_id
     device.get_serialport_cfg(lambda cfg: SKLog.info(f"new serialport_cfg: {cfg}"))
 
-    # test revert to old slave_id
+    # 6. revert to old slave_id
     device.set_serial_device_id(old_slave_id)
     device = create_device(client, old_slave_id)
     time.sleep(3)
-    device.get_serialport_cfg(lambda cfg: SKLog.info(f"new serialport_cfg: {cfg}"))
+    device.get_serialport_cfg(lambda cfg: SKLog.info(f"revert serialport_cfg: {cfg}"))
 
 
 def test_update_baudrate(device, client, baudrate):
