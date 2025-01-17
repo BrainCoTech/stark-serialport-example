@@ -5,12 +5,10 @@ import pathlib
 import platform
 import time
 import numpy as np
-from enum import IntEnum  # Enum declarations
-from cffi import FFI
+
 from lib.stark_logging import *
-
-ffi = FFI()
-
+from lib.stark_enums import *
+from lib.stark_class import *
 
 def fatal_error(msg):
     SKLog.error(f"FATAL_ERROR: {msg}")
@@ -60,118 +58,6 @@ libstark = load_library()
 print(f"StarkSDK loaded from {libstark}")
 
 
-class LogLevel(IntEnum):
-    debug = 0
-    info = 1
-    warning = 2
-    error = 3
-    none = 4
-
-
-class BaudRate(IntEnum):
-    baudrate_19200 = 19200
-    baudrate_57600 = 57600
-    baudrate_115200 = 115200
-    baudrate_460800 = 460800
-
-
-class FingerId(IntEnum):
-    thumb = 1
-    thumb_aux = 2
-    index = 3
-    middle = 4
-    ring = 5
-    pinky = 6
-
-
-class HandType(IntEnum):
-    unknown = 0
-    medium_right = 1
-    medium_left = 2
-    small_right = 3
-    small_left = 4
-
-
-class ForceLevel(IntEnum):
-    unknown = 0
-    small = 1
-    normal = 2
-    full = 3
-
-
-class MotorState(IntEnum):
-    unknown = 0
-    idle = 1
-    running = 2
-    protected_zone = 3
-    stall = 4
-
-
-class LedMode(IntEnum):
-    unknown = 0
-    off = 1
-    keep = 2
-    blink = 3
-    one_shot = 4
-    blink0_5hz = 5
-    blink2hz = 6
-
-
-class LedColor(IntEnum):
-    unchanged = 0
-    r = 1
-    g = 2
-    rg = 3
-    b = 4
-    rb = 5
-    gb = 6
-    rgb = 7
-
-
-class ButtonPressState(IntEnum):
-    unknown = 0
-    pressing = 1
-    not_pressing = 2
-
-
-class ActionSequenceId(IntEnum):
-    # 内置手势1~6：张开、握拳、两只捏、三只捏、侧边捏、单指点
-    default_gesture_open = 1
-    default_gesture_fist = 2
-    default_gesture_pinch_two = 3
-    default_gesture_pinch_three = 4
-    default_gesture_pinch_side = 5
-    default_gesture_point = 6
-    # 自定义手势6个: 10~15
-    custom_gesture_1 = 10
-    custom_gesture_2 = 11
-    custom_gesture_3 = 12
-    custom_gesture_4 = 13
-    custom_gesture_5 = 14
-    custom_gesture_6 = 15
-
-
-class StarkErrorCode(IntEnum):
-    none = 0
-    unknown = -1
-    invalid_params = -2
-    invalid_data = -3
-    parse_failed = -4
-    alloc_failed = -5
-    read_failed = -6
-    operation_failed = -7
-    not_supported = -8
-
-
-class StarkDfuState(IntEnum):
-    idle = 0
-    enabling = 1
-    started = 2
-    transfer = 3
-    completed = 4
-    aborted = 5
-
-
 class StarkError:
     def __init__(self, code=None, message=None):
         if code is not None:
@@ -186,7 +72,6 @@ class StarkError:
 
 
 class StarkSDK:
-    isModbus = False
     __on_error = None
     on_read_data = None
 
@@ -197,7 +82,7 @@ class StarkSDK:
         log_file_name: str = None,
         c_log_level: LogLevel = LogLevel.warning,
     ):
-        StarkSDK.isModbus = isModbus
+        StarkConf.isModbus = isModbus
         StarkSDK.set_error_callback(
             lambda error: SKLog.error(f"Error: {error.message}")
         )
@@ -297,7 +182,7 @@ class StarkSDK:
 
     @staticmethod
     def set_finger_positions(finger_positions):
-        if StarkSDK.isModbus:
+        if StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -327,7 +212,7 @@ class StarkSDK:
 
     @staticmethod
     def set_finger_speeds(finger_speeds):
-        if StarkSDK.isModbus:
+        if StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -355,260 +240,6 @@ class StarkSDK:
                 return
         libstark.stark_group_set_finger_speeds(ffi.new("int[]", finger_speeds))
 
-
-class SerialPortCfg:
-    def __init__(self, c_cfg):
-        self.serial_device_id = c_cfg.serial_device_id
-        self.baudrate = c_cfg.baudrate
-
-    def __str__(self):
-        return f"SerialPortCfg(serial_device_id={self.serial_device_id}, baudrate={self.baudrate})"
-
-
-class MotorboardInfo:
-    def __init__(self, c_info):
-        self.hand_type = HandType.unknown
-        if (
-            isinstance(c_info.hand_type, int)
-            and c_info.hand_type >= 0
-            and c_info.hand_type < 5
-        ):
-            self.hand_type = HandType(c_info.hand_type)
-        self.sn = ffi.string(c_info.sn, 20).decode("utf-8")
-        self.fw_version = ffi.string(c_info.fw_version, 20).decode("utf-8")
-
-    def __str__(self):
-        return (
-            f"MotorboardInfo(hand_type={self.hand_type.name}, "
-            f"sn={self.sn}, fw_version={self.fw_version})"
-        )
-
-
-class TouchStatus:
-    def __init__(self, c_status):
-        self.normal_force1 = c_status.normal_force1
-        self.normal_force2 = c_status.normal_force2
-        self.normal_force3 = c_status.normal_force3
-        self.tangential_force1 = c_status.tangential_force1
-        self.tangential_force2 = c_status.tangential_force2
-        self.tangential_force3 = c_status.tangential_force3
-        self.tangential_direction1 = c_status.tangential_direction1
-        self.tangential_direction2 = c_status.tangential_direction2
-        self.tangential_direction3 = c_status.tangential_direction3
-        self.self_close1 = c_status.self_close1
-        self.self_close2 = c_status.self_close2
-        self.mutual_close = c_status.mutual_close
-        self.status = c_status.status
-
-    def __str__(self):
-        return (
-            f"\tnormal_force1: {self.normal_force1}, normal_force2: {self.normal_force2}, normal_force3: {self.normal_force3},\n"
-            f"\ttangential_force1: {self.tangential_force1}, tangential_force2: {self.tangential_force2},\n"
-            f"\ttangential_force3: {self.tangential_force3}, tangential_direction1: {self.tangential_direction1},\n"
-            f"\ttangential_direction2: {self.tangential_direction2}, tangential_direction3: {self.tangential_direction3},\n"
-            f"\tself_close1: {self.self_close1}, self_close2: {self.self_close2},\n"
-            f"\tmutual_close: {self.mutual_close}, status: {self.status}"
-        )
-
-
-class TouchStatusData:
-    def __init__(self, c_data):
-        self.n_touch_status = c_data.n_touch_status
-        self.touch_status = []
-        for i in range(self.n_touch_status):
-            self.touch_status.append(TouchStatus(c_data.touch_status[i]))
-
-    def __str__(self):
-        return (
-            f"n_touch_status: {self.n_touch_status},\n\n"
-            f"touch_status[0]: \n{self.touch_status[0]},\n\n"
-            f"touch_status[1]: \n{self.touch_status[1]},\n\n"
-            f"touch_status[2]: \n{self.touch_status[2]},\n\n"
-            f"touch_status[3]: \n{self.touch_status[3]},\n\n"
-            f"touch_status[4]: \n{self.touch_status[4]}"
-        )
-
-class TouchRawData:
-    def __init__(self, c_data):
-        # 通道数, 每个通道的数据类型为uint32_t, 有效值为24 bits
-        # 7 + 11 + 11 + 11 + 7
-        self.thumb = ffi.unpack(c_data.thumb, 7)
-        self.index = ffi.unpack(c_data.index, 11)
-        self.middle = ffi.unpack(c_data.middle, 11)
-        self.ring = ffi.unpack(c_data.ring, 11)
-        self.pinky = ffi.unpack(c_data.pinky, 7)
-        
-    def __str__(self):
-        return (
-            f"TouchRawData:\n"
-            f"\t thumb: {self.thumb}, \n"
-            f"\t index: {self.index}, \n"
-            f"\t middle: {self.middle}, \n"
-            f"\t ring: {self.ring}, \n"
-            f"\t pinky: {self.pinky}"
-        )    
-
-
-class StarkFingerStatus:
-    def __init__(self, c_status):
-        self.finger_positions = ffi.unpack(c_status.finger_positions, 6)
-        self.finger_speeds = ffi.unpack(c_status.finger_speeds, 6)
-        self.finger_currents = ffi.unpack(c_status.finger_currents, 6)
-
-        # protobuf firmware only
-        self.finger_pwms = ffi.unpack(c_status.finger_pwms, 6)
-
-        # Modbus firmware only
-        self.finger_states = []
-        values = ffi.unpack(c_status.finger_states, 6)
-        for value in values:
-            self.finger_states.append(motorStateFromValue(value))
-
-    def __str__(self):
-        if StarkSDK.isModbus:
-            return (
-                f"\tpositions: {self.finger_positions},\n"
-                f"\tspeeds: {self.finger_speeds},\n"
-                f"\tcurrents: {self.finger_currents},\n"
-                f"\tstates: {[state.name for state in self.finger_states]}"
-            )
-        return (
-            f"\tpositions: {self.finger_positions},\n"
-            f"\tspeeds: {self.finger_speeds},\n"
-            f"\tcurrents: {self.finger_currents},\n"
-            f"\tpwms: {self.finger_pwms}"
-        )
-
-    @property
-    def is_idle(self):
-        # fmt: off
-        if StarkSDK.isModbus and self.finger_currents == [0] * 6 and self.finger_states == [MotorState.idle] * 6:
-            return True
-        if not StarkSDK.isModbus and self.finger_currents == [0] * 6 and self.finger_pwms == [0] * 6:
-            return True
-        return False
-
-    @property
-    def in_open_position(self):
-        required_positions = [0] * 6
-        # fmt: off
-        for finger_position, required_position in zip(self.finger_positions, required_positions):
-            if finger_position > required_position: return False
-        return True
-
-    @property
-    def in_close_position(self):
-        # fmt: off
-        required_positions = [55, 55, 99, 99, 99, 85] # 考虑到惯性及结构误差，这里的值可以根据实际情况调整
-
-        for finger_position, required_position in zip(self.finger_positions, required_positions):
-            if finger_position < required_position: return False
-        return True
-
-
-class FingerStatusData:
-    def __init__(self, c_data):
-        self.n_finger_status = c_data.n_finger_status
-        self.finger_status = []
-        for i in range(self.n_finger_status):
-            self.finger_status.append(StarkFingerStatus(c_data.finger_status[i]))
-
-    def __str__(self):
-        if self.n_finger_status > 0:
-            return f"n_finger_status: {self.n_finger_status}, finger_status:\n{self.finger_status[self.n_finger_status - 1]}"
-        return f"n_finger_status: {self.n_finger_status}, finger_status is empty"
-
-    @property
-    def last_finger_status(self):
-        if self.n_finger_status > 0:
-            return self.finger_status[self.n_finger_status - 1]
-        return None
-
-    @property
-    def is_idle(self):
-        status = self.last_finger_status
-        return status is not None and status.is_idle
-
-    @property
-    def is_opened(self):
-        status = self.last_finger_status
-        return status is not None and status.is_idle and status.in_open_position
-
-    @property
-    def is_closed(self):
-        status = self.last_finger_status
-        return status is not None and status.is_idle and status.in_close_position
-
-
-class ActionSequenceData:
-    def __init__(self, c_data):
-        self.index = c_data.index
-        self.duration = c_data.duration
-        self.positions = ffi.unpack(c_data.motor_positions, 6)
-        self.speeds = ffi.unpack(c_data.motor_speeds, 6)
-        self.strengths = ffi.unpack(c_data.motor_strengths, 6)
-
-
-class ActionSequence:
-    def __init__(self, c_seq):
-        self.action_id = c_seq.action_id
-        self.action_num = c_seq.action_num
-        self.action_sequences = []
-        for i in range(self.action_num):
-            self.action_sequences.append(ActionSequenceData(c_seq.data[i]))
-
-    def __str__(self):
-        return f"action_id: {self.action_id}, action_num: {self.action_num}"
-
-
-def motorStateFromValue(value):
-    if value not in MotorState._value2member_map_:
-        state = MotorState.idle
-    else:
-        if StarkSDK.isModbus:
-            state = MotorState.idle
-            if value == 1:
-                state = MotorState.running
-            elif value == 2:
-                state = MotorState.stall
-            # elif value != 0:
-            #     SKLog.warning("Invalid motor state value: " + str(value))
-        else:
-            state = MotorState(value)
-
-    return state
-
-
-class MotorStatusData:
-    def __init__(self, c_data):
-        self.n_motor_status = c_data.n_motor_status
-        values = ffi.unpack(c_data.motor_status, self.n_motor_status)
-        self.motor_statuses = []
-        for value in values:
-            self.motor_statuses.append(motorStateFromValue(value))
-
-    def __str__(self) -> str:
-        return f"motor_statuses: {', '.join([status.name for status in self.motor_statuses])}"
-
-
-class LedInfo:
-    def __init__(self, c_info):
-        self.led_color = LedColor(c_info.led_color)
-        self.led_mode = LedMode(c_info.led_mode)
-
-    __str__ = (
-        lambda self: f"LedInfo(led_color={self.led_color.name}, led_mode={self.led_mode.name})"
-    )
-
-
-class ButtonPressEvent:
-    def __init__(self, c_info):
-        self.timestamp = c_info.timestamp
-        self.button_id = c_info.button_id
-        self.press_status = ButtonPressState(c_info.press_status)
-
-    def __str__(self):
-        return f"timestamp: {self.timestamp}, button_id: {self.button_id}, press_status: {self.press_status.name}"
 
 
 class StarkDeviceListener(abc.ABC):
@@ -710,7 +341,7 @@ class StarkDevice(StarkDeviceListener):
         uuid_str = uuid.encode("utf-8")
         device_ptr = (
             libstark.stark_create_modbus_device(uuid_str, id)
-            if StarkSDK.isModbus
+            if StarkConf.isModbus
             else libstark.stark_create_serial_device(uuid_str, id)
         )
         if device_ptr is not ffi.NULL:
@@ -790,7 +421,7 @@ class StarkDevice(StarkDeviceListener):
             fatal_error(f"UUID {self.__uuid} not found in device pointer map")
 
     def set_write_registers_callback(self, cb):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -806,7 +437,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def set_read_holding_registers_callback(self, cb):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -826,7 +457,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def set_read_input_registers_callback(self, cb):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -911,7 +542,7 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_serialport_cfg_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def set_serial_baudrate(self, baudrate: BaudRate):
@@ -928,8 +559,8 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def set_serial_device_id(self, device_id):
-        if (not StarkSDK.isModbus and device_id < 10 or device_id > 253) or (
-            StarkSDK.isModbus and device_id < 0 or device_id > 254
+        if (not StarkConf.isModbus and device_id < 10 or device_id > 253) or (
+            StarkConf.isModbus and device_id < 0 or device_id > 254
         ):
             self.run_error_callback(
                 StarkError(
@@ -997,7 +628,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def factory_get_stall_durations(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1013,7 +644,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def factory_set_stall_durations(self, operation_key, durations):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1055,7 +686,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def factory_set_stall_currents(self, operation_key, level: ForceLevel, currents):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1098,7 +729,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def factory_set_finger_pwms(self, operation_key, level: ForceLevel, pwms):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1140,7 +771,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def factory_get_stall_currents(self, level: ForceLevel, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1157,7 +788,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def factory_get_finger_pwms(self, level: ForceLevel, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1180,7 +811,7 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_hand_type_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def get_motorboard_info(self, cb=None):
@@ -1190,11 +821,11 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_motorboard_info_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def get_led_info(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1208,7 +839,7 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_led_info_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def get_voltage(self, cb=None):
@@ -1218,11 +849,11 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_voltage_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def get_max_current(self, cb=None):
-        if StarkSDK.isModbus:
+        if StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1236,11 +867,11 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_limit_current_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def set_max_current(self, max_current):
-        if StarkSDK.isModbus:
+        if StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1269,7 +900,7 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_force_level_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def set_force_level(self, force_level=ForceLevel.normal):
@@ -1287,7 +918,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def get_turbo_mode(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1303,7 +934,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def set_turbo_mode(self, turbo_mode: bool):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1318,7 +949,7 @@ class StarkDevice(StarkDeviceListener):
 
     # 单位：ms
     def set_turbo_conf(self, turbo_interval: int = 500, turbo_duration: int = 500):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1342,7 +973,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def get_turbo_conf(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1358,7 +989,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def set_auto_calibration(self, enabled: bool):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1372,7 +1003,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def get_auto_calibration(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1388,7 +1019,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def send_manual_calibration_cmd(self):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1402,7 +1033,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def get_touch_sensor_firmware(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1418,7 +1049,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def get_touch_sensor_enabled(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1434,7 +1065,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def set_touch_sensor_enabled(self, finger_bits: int = 0b11111):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1449,7 +1080,7 @@ class StarkDevice(StarkDeviceListener):
         
     # 0b 11111 all fingers
     def touch_sensor_reset(self, finger_bits: int = 0b11111):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1465,7 +1096,7 @@ class StarkDevice(StarkDeviceListener):
 
     # 0x1F: 11111 all fingers
     def touch_sensor_calibrate(self, finger_bits: int = 0b11111):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1480,7 +1111,7 @@ class StarkDevice(StarkDeviceListener):
             )
 
     def get_touch_sensor_status(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1496,7 +1127,7 @@ class StarkDevice(StarkDeviceListener):
             )
             
     def get_touch_sensor_raw_data(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1518,7 +1149,7 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_finger_status_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def get_motor_status(self, cb=None):
@@ -1528,12 +1159,12 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_motor_status_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     # 实际位置值为 0-100，0 表示张开手指，100 表示闭合手指
     def get_finger_positions(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1550,7 +1181,7 @@ class StarkDevice(StarkDeviceListener):
 
     # 实际速度值为 -100-100，-100 表示最大张开速度，100 表示最大闭合速度
     def get_finger_speeds(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1567,7 +1198,7 @@ class StarkDevice(StarkDeviceListener):
 
     # 实际电流值为 -100-100，-100 表示最小电流，100 表示最大电流
     def get_finger_currents(self, cb=None):
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             StarkSDK.run_error_callback(
                 StarkError(
                     StarkErrorCode.not_supported,
@@ -1685,7 +1316,7 @@ class StarkDevice(StarkDeviceListener):
                 StarkDevice._device_pointer_map[self.__uuid],
                 StarkDevice.__on_button_event_internal,
             )
-        if not StarkSDK.isModbus:
+        if not StarkConf.isModbus:
             self.serial_receive_data()
 
     def save_action_sequence(self, action_id: ActionSequenceId):

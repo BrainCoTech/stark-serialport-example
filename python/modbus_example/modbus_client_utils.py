@@ -9,6 +9,7 @@ parent_dir = current_dir.parent.parent
 sys.path.append(str(parent_dir))
 sys.path.append(parent_dir.joinpath("protobuf_example"))
 from lib import * # import stark lib
+from lib.stark_sdk import *
 from protobuf_example.serial_utils import *
 
 

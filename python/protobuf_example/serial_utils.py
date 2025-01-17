@@ -12,11 +12,13 @@ current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent.parent
 sys.path.append(str(parent_dir))
 from lib import *
+from lib.stark_sdk import *
 
 if platform.system() == "Windows":
     serial_port_name = "COM3"
 elif sys.platform.startswith("darwin"):
-    serial_port_name = "/dev/tty.usbserial-21230"
+    # serial_port_name = "/dev/tty.usbserial-21230"
+    serial_port_name = "/dev/tty.usbserial-FT9O53VF"
 else:
     serial_port_name = "/dev/ttyUSB0"
 
