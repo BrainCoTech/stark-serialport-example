@@ -15,6 +15,7 @@ async def get_finger_status_periodically(node):
         try:
             SKLog.debug("get_finger_positions")
             positions = get_finger_positions(node)
+            SKLog.info(f"[{index}] finger positions: {positions}")
             if is_finger_closed(positions):
                 set_finger_positions(node, [0] * 6)  # 张开
             elif is_finger_opened(positions):
@@ -29,16 +30,19 @@ async def main():
 
     # Connect to CANopen node
     # network, node = connect_to_canopen_node(node_id=1, interface='socketcan', channel='can0')
-    network, node = connect_to_canopen_node(node_id=1, interface='kvaser', channel=0, bitrate=250000)
+    network, node = connect_to_canopen_node(node_id=1, interface='kvaser', channel=0, bitrate=1000000)
 
-    get_finger_position(node, FingerId.index, wait_for_reception=True)
-    get_finger_positions(node)
+    # set_finger_position(node, FingerId.thumb, 0)
+    set_finger_positions(node, [0] * 6)
 
-    # set_finger_position(node, FingerId.index, 100)
-    # set_finger_positions(node, [0] * 6)
+    # position = get_finger_position(node, FingerId.index, wait_for_reception=True)
+    # SKLog.info(f"index finger position: {position}")
+    # positions = get_finger_positions(node)
+    # SKLog.info(f"finger positions: {positions}")
 
-    asyncio.create_task(get_finger_status_periodically(node))
+    # asyncio.create_task(get_finger_status_periodically(node))
 
+    await asyncio.sleep(100)
     close_canopen(network)
     sys.exit(0)
 

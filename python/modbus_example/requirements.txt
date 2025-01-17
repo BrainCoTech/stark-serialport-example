@@ -3,4 +3,3 @@ numpy>=1.20.1
 pyserial>=3.5
 pymodbus==3.7.0
 six>=1.16.0
-# canopen>=2.3.0
