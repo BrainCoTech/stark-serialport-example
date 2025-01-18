@@ -4,7 +4,7 @@ import asyncio
 from canopen_utils import *
 
 filename = os.path.basename(__file__).split(".")[0]
-SKLog.apply_logging_config(LogLevel.info, log_file_name=f"{filename}.log")
+SKLog.apply_logging_config(logging.INFO, log_file_name=f"{filename}.log")
 
 # 定期获取手指状态
 async def get_finger_status_periodically(node):
@@ -23,15 +23,19 @@ async def get_finger_status_periodically(node):
             index += 1
         except Exception as e:
             SKLog.error(f"Error getting finger status: {e}")
-        await asyncio.sleep(0.002)
+        await asyncio.sleep(0.001)
 
 async def main():
     setup_shutdown_event()
 
-    # Connect to CANopen node
-    # network, node = connect_to_canopen_node(node_id=1, interface='socketcan', channel='can0')
-    network, node = connect_to_canopen_node(node_id=1, interface='kvaser', channel=0, bitrate=1000000)
+    network = canopen_connect(interface='kvaser', channel=0, bitrate=1000000, search_limit=3)
+    node = add_node_to_network(network, node_id=1)
 
+    # set_node_id(node, 1) # 设置节点ID, 需要重启设备
+    node_id = get_node_id(node)
+    SKLog.info(f"node id: {node_id}")
+
+    SKLog.info(f"set_finger_position")
     # set_finger_position(node, FingerId.thumb, 0)
     set_finger_positions(node, [0] * 6)
 
@@ -40,7 +44,7 @@ async def main():
     # positions = get_finger_positions(node)
     # SKLog.info(f"finger positions: {positions}")
 
-    # asyncio.create_task(get_finger_status_periodically(node))
+    asyncio.create_task(get_finger_status_periodically(node))
 
     await asyncio.sleep(100)
     close_canopen(network)
