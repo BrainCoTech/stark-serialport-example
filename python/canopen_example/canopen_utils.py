@@ -11,6 +11,7 @@ from lib import *
 
 timestamp_sync_ms = 0
 rpdo_supported = False
+touch_tpdo_supported = True
 
 # 定义每个 TPDO 的变量和配置
 tpdo_configurations = [
@@ -130,13 +131,13 @@ def canopen_connect(interface: str = None, channel: int | str = None, bitrate: i
     else:
         network.connect()
 
-    if search_limit > 0:
-        search_for_nodes(network, search_limit)
+    # if search_limit > 0:
+    #     search_for_nodes(network, search_limit)
 
     return network
 
 def add_node_to_network(network: canopen.Network, node_id: int) -> canopen.RemoteNode:
-    node = canopen.RemoteNode(node_id, 'BC_hand_thumb_250118.eds')
+    node = canopen.RemoteNode(node_id, 'BC_hand_thumb_250121.eds')
     network.add_node(node)
 
     # Read Device Information, e.g. Vendor ID, Product Code, Revision Number, Serial Number
@@ -151,19 +152,17 @@ def add_node_to_network(network: canopen.Network, node_id: int) -> canopen.Remot
 
     # 重新映射 TPDO
     for i, variables in enumerate(tpdo_configurations, start=1):
-        if i > 2:
-            break
         node.tpdo[i].clear()
         for var, index in variables:
             if i == 1 or i == 2:
-                SKLog.info(f"TPDO[{i}] add_variable: {var} {index}")
+                # SKLog.debug(f"TPDO[{i}] add_variable: {var} {index}")
                 node.tpdo[i].add_variable(var, index)
             elif index == 0:
                 node.tpdo[i].add_variable(var)
             else:    
                 node.tpdo[i].add_variable(f'{var} {index}')
-        node.tpdo[i].cob_id = 0x180 + node_id + (i - 1) # TBD: # confict with NodeId
-        node.tpdo[i].cob_id = 0x180 + node_id + (i-1) * 0x100
+        node.tpdo[i].cob_id = 0x180 + node_id + (i - 1) # TBD: # confict with search response NodeId
+        # node.tpdo[i].cob_id = 0x180 + node_id + (i-1) * 0x100
         SKLog.info(f"TPDO[{i}] cob_id: {hex(node.tpdo[i].cob_id)}")
         node.tpdo[i].trans_type = 254  # 设置传输类型为周期性传输
         node.tpdo[i].event_timer = 50  # 设置事件计时器为50毫秒
@@ -228,7 +227,6 @@ def get_node_cfg(node: canopen.RemoteNode) -> tuple[int, int]:
 def get_node_id(node: canopen.RemoteNode) -> int:
     return node.sdo['NodeId'].raw
 
-# TODO: TEST
 # 设置节点ID, 1-127，重启后生效
 def set_node_id(node: canopen.RemoteNode, node_id: int):
     if node_id < 1 or node_id > 127:
@@ -236,7 +234,7 @@ def set_node_id(node: canopen.RemoteNode, node_id: int):
         return
     node.sdo['NodeId'].raw = node_id
 
-# TODO: TEST
+# TODO: currently not supported
 # 设置波特率, 1000000, 500000, 250000，重启后生效
 def set_baudrate(node: canopen.RemoteNode, baudrate: int):
     if baudrate not in [1000000, 500000, 250000]:
@@ -300,31 +298,71 @@ def set_finger_positions(node: canopen.RemoteNode, positions: list[int]):
 def reset_touch_sensor(node: canopen.RemoteNode):        
     node.sdo['ForceSensorReset'].raw = 1
 
-# 读取触觉数据
-def get_touch_data(node: canopen.RemoteNode):
-    # 传感器分布
-    sensor_mapping = {
-        'ThumbForce': 2,
-        'IndexForce': 3,
-        'MiddleForce': 3,
-        'RingForce': 3,
-        'PinkForce': 2
-    }
-
+def read_touch_data(node: canopen.RemoteNode):
     normal_forces = []
     tangential_forces = []
-    target_directions = []
+    tangential_directions = []
 
-    # TODO: 读取触觉数据 via PDO
-    for finger, count in sensor_mapping.items():
-        for i in range(1, count + 1):
-            normal_forces.append(node.sdo[f'{finger}.NormalForce {i}'].raw)
-            tangential_forces.append(node.sdo[f'{finger}.TangentialForce {i}'].raw)
-            target_directions.append(node.sdo[f'{finger}.TangentDirection {i}'].raw)
+    if touch_tpdo_supported:
+        for i, config in enumerate(tpdo_configurations[2:15], start=3):
+            for var, subindex in config:
+                if 'NormalForce' in var:
+                    SKLog.debug(f"TPDO[{i}], var: {var}, subindex: {subindex}")
+                    normal_forces.append(node.tpdo[i][f'{var} {subindex}'].raw)
+                elif 'TangentialForce' in var:
+                    SKLog.debug(f"TPDO[{i}], var: {var}, subindex: {subindex}")
+                    tangential_forces.append(node.tpdo[i][f'{var} {subindex}'].raw)
+                elif 'TangentDirection' in var:
+                    SKLog.debug(f"TPDO[{i}], var: {var}, subindex: {subindex}")
+                    tangential_directions.append(node.tpdo[i][f'{var} {subindex}'].raw)
+    else:
+        sensor_mapping = {
+            'ThumbForce': 2,
+            'IndexForce': 3,
+            'MiddleForce': 3,
+            'RingForce': 3,
+            'PinkForce': 2
+        }
+        for finger, count in sensor_mapping.items():
+            for i in range(1, count + 1):
+                normal_forces.append(node.sdo[f'{finger}.NormalForce {i}'].raw)
+                tangential_forces.append(node.sdo[f'{finger}.TangentialForce {i}'].raw)
+                tangential_directions.append(node.sdo[f'{finger}.TangentDirection {i}'].raw)
+
+    return normal_forces, tangential_forces, tangential_directions
+
+def get_touch_data(node: canopen.RemoteNode):
+    # 读取触觉数据
+    normal_forces, tangential_forces, tangential_directions = read_touch_data(node)
+     
+    self_proximities = []
+    mutual_proximities = []
+    if touch_tpdo_supported:
+        for i, config in enumerate(tpdo_configurations[15:21], start=16):
+            for var, subindex in config:
+                key = var if subindex == 0 else f'{var} {subindex}'
+                if 'SelfProximity' in var:
+                    self_proximities.append(node.tpdo[i][key].raw)
+                if 'MutualProximity' in var:
+                    mutual_proximities.append(node.tpdo[i][key].raw)
+    else:
+        self_proximities.append(node.sdo[f'SelfProximity.Thumb'].raw)
+        self_proximities.append(node.sdo[f'SelfProximity.Index1'].raw)
+        self_proximities.append(node.sdo[f'SelfProximity.Index2'].raw)
+        self_proximities.append(node.sdo[f'SelfProximity.Middle1'].raw)
+        self_proximities.append(node.sdo[f'SelfProximity.Middle2'].raw)
+        self_proximities.append(node.sdo[f'SelfProximity.Ring1'].raw)
+        self_proximities.append(node.sdo[f'SelfProximity.Ring2'].raw)
+        self_proximities.append(node.sdo[f'SelfProximity.Pink'].raw)
+        mutual_proximities.append(node.sdo[f'MutualProximity.Index'].raw)
+        mutual_proximities.append(node.sdo[f'MutualProximity.Middle'].raw)
+        mutual_proximities.append(node.sdo[f'MutualProximity.Ring'].raw)
+
+    # SKLog.debug(f"\n\tnormal_forces: {normal_forces}, \n\ttangential_forces: {tangential_forces}, \n\ttangential_directions: {tangential_directions} \n\tself_proximities: {self_proximities}, \n\tmutual_proximities: {mutual_proximities}")
 
     from model import TouchStatusData
-    touch_status = TouchStatusData(normal_forces, tangential_forces, target_directions)
-    return touch_status 
+    touch_status = TouchStatusData(normal_forces, tangential_forces, tangential_directions, self_proximities, mutual_proximities)
+    return touch_status
 
 def is_finger_opened(finger_positions):
     required_positions = [0] * 6

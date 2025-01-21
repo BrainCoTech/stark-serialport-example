@@ -15,7 +15,8 @@ async def get_touch_status_periodically(node):
         try:
             SKLog.debug("get_touch_data")
             data = get_touch_data(node)
-            SKLog.info(f"[{index}] Touch data: {data}") 
+            # SKLog.info(f"[{index}] Touch data: \n{data}") 
+            SKLog.info(f"[{index}] Got Touch data") 
             index += 1
         except Exception as e:
             SKLog.error(f"Error getting touch status: {e}")
@@ -27,9 +28,11 @@ async def main():
     network = canopen_connect(interface='kvaser', channel=0, bitrate=1000000, search_limit=3)
     node = add_node_to_network(network, node_id=1)
 
-    data = get_touch_data(node)
-    SKLog.info(f"Touch data: {data}") 
-    # asyncio.create_task(get_touch_status_periodically(node))
+    # data = get_touch_data(node)
+    # SKLog.info(f"Touch data: \n{data}")
+    #  
+    asyncio.create_task(get_touch_status_periodically(node))
+    await asyncio.sleep(100)
 
     close_canopen(network)
     sys.exit(0)

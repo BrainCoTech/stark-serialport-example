@@ -1,5 +1,5 @@
 [FileInfo]
-FileName=BC_hand_thumb_250118.eds
+FileName=BC_hand_thumb_250121.eds
 FileVersion=1
 FileRevision=1
 LastEDS=
@@ -8,15 +8,15 @@ Description=
 CreationTime=7:00PM
 CreationDate=11-23-2020
 CreatedBy=
-ModificationTime=1:48PM
-ModificationDate=01-18-2025
+ModificationTime=11:20AM
+ModificationDate=01-21-2025
 ModifiedBy=
 
 [DeviceInfo]
 VendorName=BrainCO
 VendorNumber=0000
 ProductName=revolimb
-ProductNumber=0
+ProductNumber=1
 RevisionNumber=0
 BaudRate_10=0
 BaudRate_20=0
@@ -61,7 +61,7 @@ ObjectType=0x7
 ;StorageLocation=PERSIST_COMM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x00000000
+DefaultValue=0x00000001
 PDOMapping=0
 
 [1001]
@@ -94,7 +94,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x00000000
+DefaultValue=0x007EC381
 PDOMapping=0
 
 [1018sub2]
@@ -103,7 +103,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x00000000
+DefaultValue=0x00000001
 PDOMapping=0
 
 [1018sub3]
@@ -112,7 +112,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x00000000
+DefaultValue=0x00000001
 PDOMapping=0
 
 [1018sub4]
@@ -121,7 +121,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0007
 AccessType=ro
-DefaultValue=0x00000000
+DefaultValue=0x00000001
 PDOMapping=0
 
 [OptionalObjects]
@@ -891,7 +891,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1800sub3]
@@ -951,7 +951,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1801sub3]
@@ -1011,7 +1011,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1802sub3]
@@ -1071,7 +1071,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1803sub3]
@@ -1131,7 +1131,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1804sub3]
@@ -1191,7 +1191,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1805sub3]
@@ -1251,7 +1251,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1806sub3]
@@ -1311,7 +1311,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1807sub3]
@@ -1371,7 +1371,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1808sub3]
@@ -1431,7 +1431,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1809sub3]
@@ -1491,7 +1491,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [180Asub3]
@@ -1551,7 +1551,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [180Bsub3]
@@ -1611,7 +1611,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [180Csub3]
@@ -1671,7 +1671,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [180Dsub3]
@@ -1731,7 +1731,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [180Esub3]
@@ -1791,7 +1791,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [180Fsub3]
@@ -1851,7 +1851,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1810sub3]
@@ -1911,7 +1911,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1811sub3]
@@ -1971,7 +1971,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1812sub3]
@@ -2031,7 +2031,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1813sub3]
@@ -2091,7 +2091,7 @@ ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
 AccessType=rw
-DefaultValue=254
+DefaultValue=1
 PDOMapping=0
 
 [1814sub3]
@@ -3976,7 +3976,7 @@ DefaultValue=0
 PDOMapping=0
 
 [ManufacturerObjects]
-SupportedObjects=12
+SupportedObjects=11
 1=0x2000
 2=0x2001
 3=0x2002
@@ -3985,10 +3985,9 @@ SupportedObjects=12
 6=0x2009
 7=0x200A
 8=0x200B
-9=0x200C
-10=0x200D
-11=0x200E
-12=0x200F
+9=0x200D
+10=0x200E
+11=0x200F
 
 [2000]
 ParameterName=ThumbForce
@@ -4556,15 +4555,6 @@ PDOMapping=1
 
 [200B]
 ParameterName=NodeId
-ObjectType=0x7
-;StorageLocation=RAM
-DataType=0x0005
-AccessType=rw
-DefaultValue=0
-PDOMapping=0
-
-[200C]
-ParameterName=ForceSensorStart
 ObjectType=0x7
 ;StorageLocation=RAM
 DataType=0x0005
