@@ -11,3 +11,4 @@ example_Modbus_test.py
 test_recevice_data.py
 c_cpp_properties.json
 launch.json
+*.exe.dSYM/

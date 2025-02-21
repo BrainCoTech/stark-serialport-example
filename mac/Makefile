@@ -1,44 +1,41 @@
 # 设置变量
 SCRIPT_DIR := $(shell pwd)
-DIST_DIR := $(abspath $(SCRIPT_DIR)/../dist)
-DEP_DIR := $(abspath $(SCRIPT_DIR)/../deps/libuv)
+DIST_DIR := $(abspath $(SCRIPT_DIR)/dist/shared/mac)
+HEADER_DIR := $(abspath $(SCRIPT_DIR)/dist/include)
 
-# 设置编译器和 pkg-config 工具
+# 设置编译器
 CC := gcc
 CXX := g++
-PKG_CONFIG := pkg-config
 
-# 获取编译选项和链接选项
-CFLAGS := -g -Wall $(shell $(PKG_CONFIG) --cflags libserialport)
-CXXFLAGS := -g -Wall -std=c++17 $(shell $(PKG_CONFIG) --cflags libserialport)
-LIBS := $(shell $(PKG_CONFIG) --libs libserialport) -rdynamic
+# 编译选项
+CFLAGS := -g -Wall
+CXXFLAGS := -g -Wall -std=c++17  # 指定 C++17 标准
 
-SOURCES := $(wildcard *.c) $(wildcard *.cpp)
-BINARIES := $(SOURCES:.c=) $(SOURCES:.cpp=)
-# BINARIES := $(SOURCES:.cpp=)
+# 获取所有 .c 和 .cpp 文件
+C_SOURCES := $(wildcard *.c)
+CPP_SOURCES := $(wildcard *.cpp)
+BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 
-# 编译规则，支持同时编译 .c 和 .cpp 文件
+# 编译 C 文件
 %: %.c
-	$(CC) $(CFLAGS) $< \
-		-I$(DIST_DIR)/include \
-		-I$(DEP_DIR)/include \
-		-L$(DIST_DIR)/mac/static \
-		-lstark \
+	$(CC) $(CFLAGS) -o $@.exe $< \
+		-I$(HEADER_DIR) \
+		-L$(DIST_DIR) \
+		-lbc_device_sdk \
 		-framework Foundation \
-		$(LIBS) \
-		-o $@.exe
-	@echo "\033[1;33m[mac][static] build $@.c done\033[0m"
+		-rdynamic
+	@echo "\033[1;33m[mac] build $@.c done\033[0m"	
 
+# 编译 C++ 文件
 %: %.cpp
-	$(CXX) $(CXXFLAGS) $< \
-		-I$(DIST_DIR)/include \
-		-I$(DEP_DIR)/include \
-		-L$(DIST_DIR)/mac/static \
-		-lstark \
+	$(CXX) $(CXXFLAGS) -o $@.exe $< \
+		-I$(HEADER_DIR) \
+		-L$(DIST_DIR) \
+		-Wl,-rpath,$(DIST_DIR) \
+		-lbc_device_sdk \
 		-framework Foundation \
-		$(LIBS) \
-		-o $@.exe
-	@echo "\033[1;33m[mac][static] build $@.cpp done\033[0m"
+		-rdynamic
+	@echo "\033[1;33m[mac] build $@.cpp done\033[0m"
 
 # 默认目标
 all: $(BINARIES)
@@ -49,11 +46,8 @@ clean:
 	rm -fR $(addsuffix .exe.dSYM,$(BINARIES))
 
 # 运行目标
-run_serial:
-	./rs485.exe
-
-run_ota:
-	./ota.exe
+run:
+	export DYLD_LIBRARY_PATH=$(DIST_DIR):$(DYLD_LIBRARY_PATH) && ./stark_example.exe
 
 # 伪目标声明，确保不会与同名文件冲突
-.PHONY: clean all run run_serial run_ota
+.PHONY: clean all run
