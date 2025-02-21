@@ -3,15 +3,20 @@
 
 int main(int argc, char const *argv[])
 {
-    initialize_logging(LogLevel::DEBUG);
-    // initialize_logging(LogLevel::INFO);
-    auto handle = modbus_open("/dev/tty.usbserial-FT9O53VF", 1, 115200);
+    // initialize_logging(LogLevel::DEBUG);
+    initialize_logging(LogLevel::INFO);
+    list_available_ports();
+
+    // auto handle = modbus_open("COM1", 1, 115200);
+    // auto handle = modbus_open("/dev/tty.usbserial-FT9O53VF", 1, 115200);
+    auto handle = modbus_open("/dev/tty.usbserial-D30JB26J", 1, 115200);
     // auto handle = modbus_open("/dev/tty.usbserial-21220", 1, 115200);
     auto info = modbus_get_device_info(handle);
-    printf("SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", info->sku_type, info->serial_number, info->firmware_version);
+    printf("SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
 
-    // modbus_get_finger_positions(handle, (uint16_t[]){0, 0, 0, 0, 0, 0}, 6);
-    modbus_set_finger_speeds(handle, (int16_t[]){50, 50, 100, 100, 100, 100}, 6);
+    uint16_t positions[] = {50, 50, 100, 100, 100, 100}; // 握拳
+    // uint16_t positions[] = {0, 0, 0, 0, 0, 0}; // 张开
+    modbus_get_finger_positions(handle, positions, 6);
 
     auto finger_status = modbus_get_motor_status(handle);
     printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
@@ -20,21 +25,33 @@ int main(int argc, char const *argv[])
     printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
     free_motor_status_data(finger_status);
 
+    /// 仅支持触觉版本
     // auto status = modbus_get_touch_status(handle);
-    // printf("Touch Sensor Status At Index Finger:\n");
-    // printf("Normal Force 1: %hu\n", status[1]->normal_force1);
-    // printf("Normal Force 2: %hu\n", status[1]->normal_force2);
-    // printf("Normal Force 3: %hu\n", status[1]->normal_force3);
-    // printf("Tangential Force 1: %hu\n", status[1]->tangential_force1);
-    // printf("Tangential Force 2: %hu\n", status[1]->tangential_force2);
-    // printf("Tangential Force 3: %hu\n", status[1]->tangential_force3);
-    // printf("Tangential Direction 1: %hu\n", status[1]->tangential_direction1);
-    // printf("Tangential Direction 2: %hu\n", status[1]->tangential_direction2);
-    // printf("Tangential Direction 3: %hu\n", status[1]->tangential_direction3);
-    // printf("Self Proximity 1: %u\n", status[1]->self_proximity1);
-    // printf("Self Proximity 2: %u\n", status[1]->self_proximity2);
-    // printf("Mutual Proximity: %u\n", status[1]->mutual_proximity);
-    // printf("Status: %hu\n", status[1]->status);
+    // if (status != NULL)
+    // {
+    //     auto data = status->data[1];
+    //     printf("Touch Sensor Status At Index Finger:\n");
+    //     printf("Normal Force 1: %hu\n", data.normal_force1);
+    //     printf("Normal Force 2: %hu\n", data.normal_force2);
+    //     printf("Normal Force 3: %hu\n", data.normal_force3);
+    //     printf("Tangential Force 1: %hu\n", data.tangential_force1);
+    //     printf("Tangential Force 2: %hu\n", data.tangential_force2);
+    //     printf("Tangential Force 3: %hu\n", data.tangential_force3);
+    //     printf("Tangential Direction 1: %hu\n", data.tangential_direction1);
+    //     printf("Tangential Direction 2: %hu\n", data.tangential_direction2);
+    //     printf("Tangential Direction 3: %hu\n", data.tangential_direction3);
+    //     printf("Self Proximity 1: %u\n", data.self_proximity1);
+    //     printf("Self Proximity 2: %u\n", data.self_proximity2);
+    //     printf("Mutual Proximity: %u\n", data.mutual_proximity);
+    //     printf("Status: %hu\n", data.status);
+
+    //     // Free the allocated memory
+    //     free_touch_status_data(status);
+    // }
+    // else
+    // {
+    //     printf("Error: Failed to get touch sensor status\n");
+    // }
 
     // auto baudrate = modbus_get_baudrate(handle);
     // printf("Baudrate: %d\n", baudrate);

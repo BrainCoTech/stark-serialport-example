@@ -5,7 +5,7 @@ cd ${0%/*}
 SCRIPT_DIR=$(pwd)
 
 # libstark settings
-LIB_VERSION="v0.1.2"
+LIB_VERSION="v0.1.3"
 LIB_NAME=""
 URL="https://app.brainco.cn/universal/stark-serialport-prebuild/rs/${LIB_VERSION}"
 

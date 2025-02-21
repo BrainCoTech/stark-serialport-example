@@ -16,7 +16,8 @@ from lib import *
 if platform.system() == "Windows":
     serial_port_name = "COM3"
 elif sys.platform.startswith("darwin"):
-    serial_port_name = "/dev/tty.usbserial-21230"
+    # serial_port_name = "/dev/tty.usbserial-21230"
+    serial_port_name = "/dev/tty.usbserial-D30JB26J"
 else:
     serial_port_name = "/dev/ttyUSB0"
 
