@@ -21,6 +21,7 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 	$(CC) $(CFLAGS) -o $@.exe $< \
 		-I$(HEADER_DIR) \
 		-L$(DIST_DIR) \
+		-Wl,-rpath,$(DIST_DIR) \
 		-lbc_device_sdk \
 		-lm -lpthread -lrt -ldl \
 		-rdynamic
@@ -31,6 +32,7 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 	$(CXX) $(CXXFLAGS) -o $@.exe $< \
 		-I$(HEADER_DIR) \
 		-L$(DIST_DIR) \
+		-Wl,-rpath,$(DIST_DIR) \
 		-lbc_device_sdk \
 		-lm -lpthread -lrt -ldl \
 		-rdynamic
@@ -46,7 +48,7 @@ clean:
 
 # 运行目标
 run:
-	export LD_LIBRARY_PATH=$(DIST_DIR):$(LD_LIBRARY_PATH) && ./stark_example.exe
+	export LD_LIBRARY_PATH=$(DIST_DIR):$(LD_LIBRARY_PATH) && sudo ./stark_example.exe
 
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run
