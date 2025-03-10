@@ -1,6 +1,6 @@
 # 设置变量
 SCRIPT_DIR := $(shell pwd)
-DIST_DIR := $(abspath $(SCRIPT_DIR)/dist/shared/mac)
+LIB_DIR := $(abspath $(SCRIPT_DIR)/dist/shared/mac)
 HEADER_DIR := $(abspath $(SCRIPT_DIR)/dist/include)
 
 # 设置编译器
@@ -20,18 +20,19 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 %: %.c
 	$(CC) $(CFLAGS) -o $@.exe $< \
 		-I$(HEADER_DIR) \
-		-L$(DIST_DIR) \
+		-L$(LIB_DIR) \
+		-Wl,-rpath,$(LIB_DIR) \
 		-lbc_device_sdk \
 		-framework Foundation \
 		-rdynamic
-	@echo "\033[1;33m[mac] build $@.c done\033[0m"	
+	@echo "\033[1;33m[mac] build $@.c done\033[0m"
 
 # 编译 C++ 文件
 %: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@.exe $< \
 		-I$(HEADER_DIR) \
-		-L$(DIST_DIR) \
-		-Wl,-rpath,$(DIST_DIR) \
+		-L$(LIB_DIR) \
+		-Wl,-rpath,$(LIB_DIR) \
 		-lbc_device_sdk \
 		-framework Foundation \
 		-rdynamic
@@ -47,7 +48,7 @@ clean:
 
 # 运行目标
 run:
-	export DYLD_LIBRARY_PATH=$(DIST_DIR):$(DYLD_LIBRARY_PATH) && ./stark_example.exe
+	export DYLD_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) && ./stark_example.exe
 
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run
