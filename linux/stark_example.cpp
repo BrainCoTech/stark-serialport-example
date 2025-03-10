@@ -13,10 +13,11 @@ int main(int argc, char const *argv[])
     // auto handle = modbus_open("/dev/tty.usbserial-21220", 1, 115200);
     auto info = modbus_get_device_info(handle);
     printf("SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
+    free_device_info(info);
 
     uint16_t positions[] = {50, 50, 100, 100, 100, 100}; // 握拳
     // uint16_t positions[] = {0, 0, 0, 0, 0, 0}; // 张开
-    modbus_get_finger_positions(handle, positions, 6);
+    modbus_set_finger_positions(handle, positions, 6);
 
     auto finger_status = modbus_get_motor_status(handle);
     printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
@@ -65,6 +66,6 @@ int main(int argc, char const *argv[])
     // printf("LED Info: %hhu, %hhu\n", led_info->color, led_info->mode);
     // auto button_event = modbus_get_button_event(handle);
     // printf("Button Event: %d, %d, %hhu\n", button_event->timestamp, button_event->button_id, button_event->press_state);
-    free_device_info(info);
+
     return 0;
 }

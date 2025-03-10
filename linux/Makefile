@@ -25,7 +25,7 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 		-lbc_device_sdk \
 		-lm -lpthread -lrt -ldl \
 		-rdynamic
-	@echo "\033[1;33m[mac] build $@.c done\033[0m"	
+	@echo "\033[1;33m[linux] build $@.c done\033[0m"	
 
 # 编译 C++ 文件
 %: %.cpp
@@ -36,7 +36,7 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 		-lbc_device_sdk \
 		-lm -lpthread -lrt -ldl \
 		-rdynamic
-	@echo "\033[1;33m[mac] build $@.cpp done\033[0m"
+	@echo "\033[1;33m[linux] build $@.cpp done\033[0m"
 
 # 默认目标
 all: $(BINARIES)
