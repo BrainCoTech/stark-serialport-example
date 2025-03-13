@@ -5,7 +5,7 @@ cd ${0%/*}
 SCRIPT_DIR=$(pwd)
 
 # libstark settings
-LIB_VERSION="v0.1.6"
+LIB_VERSION="v0.1.7"
 LIB_NAME=""
 BASE_URL="https://app.brainco.cn/universal/bc-device-sdk/libs/${LIB_VERSION}"
 
