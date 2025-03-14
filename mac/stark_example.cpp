@@ -18,48 +18,40 @@ int main(int argc, char const *argv[])
   // auto port_name = "/dev/tty.usbserial-D30JB26J"; // Mac USB HUB
   auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
   uint32_t baudrate = 115200;
-  uint8_t slave_id_1 = 1;
-  uint8_t slave_id_2 = 2;
-  auto handle = modbus_open(port_name, baudrate, slave_id_1);
+  uint8_t slave_id = 1;
+  auto handle = modbus_open(port_name, baudrate, slave_id);
 
-  get_device_info(handle, slave_id_1);
-  get_device_info(handle, slave_id_2);
+  get_device_info(handle, slave_id);
 
   // 启用全部触觉传感器
-  modbus_enable_touch_sensor(handle, slave_id_1, 0x1F);
-  modbus_enable_touch_sensor(handle, slave_id_2, 0x1F);
+  modbus_enable_touch_sensor(handle, slave_id, 0x1F);
 
   uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
 
   useconds_t delay = 1000 * 1000; // 1000ms
-  modbus_set_finger_positions(handle, slave_id_1, positions_fist, 6);
-  modbus_set_finger_positions(handle, slave_id_2, positions_fist, 6);
+  modbus_set_finger_positions(handle, slave_id, positions_fist, 6);
   usleep(delay);
-  modbus_set_finger_positions(handle, slave_id_1, positions_open, 6);
-  modbus_set_finger_positions(handle, slave_id_2, positions_open, 6);
+  modbus_set_finger_positions(handle, slave_id, positions_open, 6);
   usleep(delay);
 
-  auto finger_status = modbus_get_motor_status(handle, slave_id_1);
+  auto finger_status = modbus_get_motor_status(handle, slave_id);
   printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
   printf("Speeds: %hhd, %hhd, %hhd, %hhd, %hhd, %hhd\n", finger_status->speeds[0], finger_status->speeds[1], finger_status->speeds[2], finger_status->speeds[3], finger_status->speeds[4], finger_status->speeds[5]);
   printf("Currents: %hhd, %hhd, %hhd, %hhd, %hhd, %hhd\n", finger_status->currents[0], finger_status->currents[1], finger_status->currents[2], finger_status->currents[3], finger_status->currents[4], finger_status->currents[5]);
   printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
   free_motor_status_data(finger_status);
 
-  get_touch_status(handle, slave_id_1);
+  get_touch_status(handle, slave_id);
 
   // 循环控制手指位置，仅用于测试，delay时间过短会影响电机使用寿命
   while (1)
   {
     printf("set_positions loop start\n");
-    modbus_set_finger_positions(handle, slave_id_1, positions_fist, 6);
-    modbus_set_finger_positions(handle, slave_id_2, positions_fist, 6);
+    modbus_set_finger_positions(handle, slave_id, positions_fist, 6);
     usleep(delay);
-    get_touch_status(handle, slave_id_1); // 调用 get_touch_status 函数
-    get_touch_status(handle, slave_id_2); // 调用 get_touch_status 函数
-    modbus_set_finger_positions(handle, slave_id_1, positions_open, 6);
-    modbus_set_finger_positions(handle, slave_id_2, positions_open, 6);
+    get_touch_status(handle, slave_id); // 调用 get_touch_status 函数
+    modbus_set_finger_positions(handle, slave_id, positions_open, 6);
     usleep(delay);
   }
 
