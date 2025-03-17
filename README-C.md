@@ -1,28 +1,21 @@
-# Build C example
+# Build C Example
 
-The macos, linux directory contains example programs showing how to use libstark for Language C.
+The `macos` and `linux` directories contain example programs demonstrating how to use `libbc_device_sdk` with the C/C++ programming language.
 
-The examples currently included are:
+Currently, the provided examples include:
 
-- list_ports.c - displays a list of ports on the system.
-- rs485.c - get info & control Stark Device by RS-485 bus.
+- `stark_example.cpp` – A `Modbus RTU` example
+- `stark_multi_example.cpp` – A `Modbus RTU` example for multi-device communication on a BUS
 
-The Makefile in this directory will attempt to build all the examples,
-using 'gcc' to compile them and 'pkg-config' to discover the include
-paths and linker settings needed to build with libserialport. It provides
-a minimal example of how to write a Makefile to build a program using
-libstark.
+The provided Makefile is designed to build all examples, using gcc for compilation and pkg-config to determine the necessary include paths and linker settings for libserialport. This serves as a minimal reference on how to structure a Makefile for compiling a program with `libbc_device_sdk`.
 
-If you have make, gcc, pkg-config and libserialport installed correctly
-then running 'make' should build the example programs in this directory.
-If this doesn't work, you may need to modify the Makefile or set necessary
-paths in your environment to suit your system.
-
-You can also build these examples using any other compiler, IDE or build
-system. You just need the libserialport.h & stark-sdk.h header available to compile them,
-and the libserialport & libstark library available to link and run them.
+To build the examples, ensure that `make`, `gcc`, `pkg-config`, and `libbc_device_sdk` are correctly installed. Then, simply run:
 
 ```shell
-cd linux && make && make run_serial
-cd mac && make && make run_serial
+cd linux && make && make run
+cd mac && make && make run
 ```
+
+If the build process fails, you may need to adjust the Makefile or configure your environment variables accordingly.
+
+Alternatively, you can compile these examples using any other compiler, IDE, or build system. Just ensure that the `stark-sdk.h` header is accessible for compilation and the `libbc_device_sdk` library is available for linking and execution.

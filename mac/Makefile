@@ -1,7 +1,8 @@
 # 设置变量
 SCRIPT_DIR := $(shell pwd)
-LIB_DIR := $(abspath $(SCRIPT_DIR)/dist/shared/mac)
-HEADER_DIR := $(abspath $(SCRIPT_DIR)/dist/include)
+DIST_DIR := $(abspath $(SCRIPT_DIR)/../dist)
+LIB_DIR := $(abspath $(DIST_DIR)/shared/mac)
+HEADER_DIR := $(abspath $(DIST_DIR)/include)
 
 # 设置编译器
 CC := gcc

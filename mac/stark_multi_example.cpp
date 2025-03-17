@@ -28,6 +28,7 @@ int main(int argc, char const *argv[])
   // 启用全部触觉传感器
   modbus_enable_touch_sensor(handle, slave_id_1, 0x1F);
   modbus_enable_touch_sensor(handle, slave_id_2, 0x1F);
+  usleep(1000 * 1000); // wait for touch sensor to be ready
 
   uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开

@@ -15,8 +15,8 @@ int main(int argc, char const *argv[])
   // auto port_name = "COM1"; // Windows
   // auto port_name = "/dev/ttyUSB0"; // Linux
   // auto port_name = "/dev/ttyUSB1"; // Linux
-  // auto port_name = "/dev/tty.usbserial-D30JB26J"; // Mac USB HUB
-  auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
+  auto port_name = "/dev/tty.usbserial-D30JB26J"; // Mac USB HUB
+  // auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
   uint32_t baudrate = 115200;
   uint8_t slave_id = 1;
   auto handle = modbus_open(port_name, baudrate, slave_id);
@@ -25,11 +25,14 @@ int main(int argc, char const *argv[])
 
   // 启用全部触觉传感器
   modbus_enable_touch_sensor(handle, slave_id, 0x1F);
+  usleep(1000 * 1000); // wait for touch sensor to be ready
 
   uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
 
   useconds_t delay = 1000 * 1000; // 1000ms
+  // modbus_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);
+  // usleep(delay);
   modbus_set_finger_positions(handle, slave_id, positions_fist, 6);
   usleep(delay);
   modbus_set_finger_positions(handle, slave_id, positions_open, 6);
@@ -45,7 +48,7 @@ int main(int argc, char const *argv[])
   get_touch_status(handle, slave_id);
 
   // 循环控制手指位置，仅用于测试，delay时间过短会影响电机使用寿命
-  while (1)
+  while (0)
   {
     printf("set_positions loop start\n");
     modbus_set_finger_positions(handle, slave_id, positions_fist, 6);

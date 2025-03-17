@@ -1,69 +1,88 @@
 #!/bin/bash
-set -e
+set -e # Exit on error
 
-if [[ "$OSTYPE" == "msys" ]]; then
-    powershell -Command "& '.\download-lib.bat'"
-    exit
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DIST_DIR="${SCRIPT_DIR}/dist"
+VERSION_FILE="${SCRIPT_DIR}/VERSION"
+
+# Configuration
+LIB_VERSION="v0.1.9"
+BASE_URL="https://app.brainco.cn/universal/bc-device-sdk/libs/${LIB_VERSION}"
+
+# Colorful echo functions
+echo_y() { echo -e "\033[1;33m$*\033[0m"; } # Yellow
+echo_r() { echo -e "\033[0;31m$*\033[0m"; } # Red
+
+# Check if version is already installed
+if [ -f "$VERSION_FILE" ] && grep -F --quiet "$LIB_VERSION" "$VERSION_FILE"; then
+  echo_y "[bc-device-sdk] (${LIB_VERSION}) is already installed"
+  cat "$VERSION_FILE"
+  exit 0
 fi
 
-cd ${0%/*}
-SCRIPT_DIR=$(pwd)
-
-# libstark settings
-LIB_VERSION="v0.3.0"
-LIB_NAME=""
-URL="https://app.brainco.cn/universal/stark-serialport-prebuild/${LIB_VERSION}"
-
-# colorful echo functions
-function echo_y() { echo -e "\033[1;33m$@\033[0m"; } # yellow
-function echo_r() { echo -e "\033[0;31m$@\033[0m"; } # red
-
-# 1. check libstark version from VERSION file
-if [ -f VERSION ] && grep --fixed-strings --quiet ${LIB_VERSION} VERSION; then
-    echo_y "[libstark] libstark (${LIB_VERSION}) is already installed"
-    cat VERSION
-    exit
-fi
-
-# clean files
-rm -rf dist
-
-# download libstark library
-platform=$(uname)
-if [ "$platform" == "Darwin" ]; then
-    echo_y "[libstark] download libstark (${LIB_VERSION}) ..."
-    LIB_NAME="mac"
-elif [ "$(uname)" == "Linux" ]; then
-    echo_y "[libstark] download libstark (${LIB_VERSION}) ..."
-    LIB_NAME="linux"
-    # Differentiate between different Linux distributions and versions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [[ "$ID" == "ubuntu" && "$VERSION_ID" == "20.04" ]]; then
-            LIB_NAME="ubuntu-20"
-        elif [[ "$ID" == "ubuntu" && "$VERSION_ID" == "22.04" ]]; then
-            LIB_NAME="ubuntu-22"
-        else
-            echo_r "This script does not support your Linux distribution"
-            exit 1
-        fi
-    else
-        echo_r "Unable to determine your Linux distribution"
-        exit 1
+# Determine platform and library name
+PLATFORM=$(uname)
+case "$PLATFORM" in
+"Linux")
+  LIB_NAME="linux"
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    if [[ "$ID" == "ubuntu" && "$VERSION_ID" == "20.04" ]]; then
+      LIB_NAME="ubuntu-20"
     fi
-else
-    echo_r "This script does not support your platform ($platform)"
-    exit 1
+  fi
+  ;;
+"Darwin")
+  LIB_NAME="mac"
+  ;;
+"msys" | "MINGW"*)
+  LIB_NAME="win"
+  ;;
+*)
+  echo_r "Error: This script does not support your platform ($PLATFORM)"
+  exit 1
+  ;;
+esac
+
+ZIP_NAME="${LIB_NAME}.zip"
+DOWNLOAD_URL="${BASE_URL}/${ZIP_NAME}?$(date +%s)" # Timestamp for uniqueness
+
+# Clean up previous files
+echo_y "[bc-device-sdk] Cleaning up previous distribution..."
+rm -rf "$DIST_DIR" "${SCRIPT_DIR}/__MACOSX" "${SCRIPT_DIR}/${ZIP_NAME}"
+
+# Create dist directory
+mkdir -p "$DIST_DIR"
+
+# Download library
+echo_y "[bc-device-sdk] Downloading (${LIB_VERSION}) for ${LIB_NAME}..."
+if ! command -v wget >/dev/null 2>&1; then
+  echo_r "Error: wget is not installed. Please install it and try again."
+  exit 1
 fi
 
-ZIP_NAME="$LIB_NAME.zip"
-wget ${URL}/$ZIP_NAME?$RANDOM -O $ZIP_NAME
-unzip -o $ZIP_NAME -d .
-rm $ZIP_NAME
-rm -rf __MACOSX
+wget -q --show-progress "$DOWNLOAD_URL" -O "${SCRIPT_DIR}/${ZIP_NAME}" || {
+  echo_r "Error: Failed to download ${ZIP_NAME}"
+  exit 1
+}
 
-# 4. create VERSION file
-echo "libstark Version: ${LIB_VERSION}" >VERSION
-echo "Update Time: $(date)" >>VERSION
+# Extract and clean up
+echo_y "[bc-device-sdk] Extracting ${ZIP_NAME}..."
+unzip -o -q "${SCRIPT_DIR}/${ZIP_NAME}" -d "$SCRIPT_DIR" || {
+  echo_r "Error: Failed to unzip ${ZIP_NAME}"
+  exit 1
+}
+rm -f "${SCRIPT_DIR}/${ZIP_NAME}"
+rm -rf "${SCRIPT_DIR}/__MACOSX"
+rm -rf "${DIST_DIR}/__MACOSX"
+find dist/include -type f ! -name stark-sdk.h -exec rm -f {} \;
 
-echo_y "[libstark] libstark (${LIB_VERSION}) is downloaded"
+# Create VERSION file
+echo_y "[bc-device-sdk] Creating version file..."
+cat >"$VERSION_FILE" <<EOF
+[bc-device-sdk] Version: ${LIB_VERSION}
+Update Time: $(date)
+EOF
+
+echo_y "[bc-device-${LIB_NAME}-sdk] (${LIB_VERSION}) downloaded successfully to ${DIST_DIR}"
