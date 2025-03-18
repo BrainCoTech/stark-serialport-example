@@ -15,7 +15,7 @@ logger = getLogger(logging.INFO)
 
 # 固件升级文件路径
 current_dir = pathlib.Path(__file__).resolve()
-parent_dir = current_dir.parent  # .parent.parent
+parent_dir = current_dir.parent
 logger.info(f"parent_dir: {parent_dir}")
 
 ota_bin_path = os.path.join(

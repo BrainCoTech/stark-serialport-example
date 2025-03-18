@@ -108,19 +108,6 @@ async def main():
     logger.debug("get_device_info")
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.firmware_version}")
-    logger.info(f"Device info: {device_info.serial_number}")
-    logger.info(f"Device info: {device_info.sku_type}")
-    logger.info(f"Device info: {device_info.description}")
-
-    logger.debug("get_serialport_cfg")  # 获取串口配置, 波特率
-    baudrate = await client.get_serialport_baudrate(slave_id)
-    logger.info(f"Baudrate: {baudrate}")
-
-    await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])  # 握手
-
-    logger.debug("get_motor_status")
-    status = await client.get_motor_status(slave_id)
-    logger.info(f"Finger status: {status.description}")
 
     # fmt: off
     # sample_action_sequences = random_action_sequences()
