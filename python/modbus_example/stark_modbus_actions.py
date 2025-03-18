@@ -85,6 +85,7 @@ sample_action_sequences = [
     },
 ]
 
+
 def action_sequence_info_to_list(action):
     return (
         [action["index"]]
@@ -103,7 +104,9 @@ async def main():
     if port_name is None:
         return
     slave_id = 1
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200, slave_id)
+    client = await libstark.modbus_open(
+        port_name, libstark.Baudrate.Baud115200, slave_id
+    )
 
     logger.debug("get_device_info")
     device_info = await client.get_device_info(slave_id)
