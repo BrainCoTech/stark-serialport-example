@@ -1,14 +1,33 @@
 #include <stdio.h>
 #include "stark-sdk.h"
 #include <unistd.h>
+#include <signal.h>
+#include <execinfo.h>
 
 // 声明函数
 void get_touch_status(ModbusHandle *handle, uint8_t slave_id);
 void get_device_info(ModbusHandle *handleint, uint8_t slave_id);
 void get_info(ModbusHandle *handle, uint8_t slave_id);
 
+void handler(int sig)
+{
+  void *array[10];
+  size_t size;
+
+  // 获取堆栈帧
+  size = backtrace(array, 10);
+
+  // 打印所有堆栈帧到 stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
 int main(int argc, char const *argv[])
 {
+  signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
+  signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
+
   init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, LOG_LEVEL_INFO);
   list_available_ports();
 
@@ -39,11 +58,14 @@ int main(int argc, char const *argv[])
   usleep(delay);
 
   auto finger_status = modbus_get_motor_status(handle, slave_id);
-  printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
-  printf("Speeds: %hhd, %hhd, %hhd, %hhd, %hhd, %hhd\n", finger_status->speeds[0], finger_status->speeds[1], finger_status->speeds[2], finger_status->speeds[3], finger_status->speeds[4], finger_status->speeds[5]);
-  printf("Currents: %hhd, %hhd, %hhd, %hhd, %hhd, %hhd\n", finger_status->currents[0], finger_status->currents[1], finger_status->currents[2], finger_status->currents[3], finger_status->currents[4], finger_status->currents[5]);
-  printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
-  free_motor_status_data(finger_status);
+  if (finger_status != NULL)
+  {
+    printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
+    printf("Speeds: %hhd, %hhd, %hhd, %hhd, %hhd, %hhd\n", finger_status->speeds[0], finger_status->speeds[1], finger_status->speeds[2], finger_status->speeds[3], finger_status->speeds[4], finger_status->speeds[5]);
+    printf("Currents: %hhd, %hhd, %hhd, %hhd, %hhd, %hhd\n", finger_status->currents[0], finger_status->currents[1], finger_status->currents[2], finger_status->currents[3], finger_status->currents[4], finger_status->currents[5]);
+    printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
+    free_motor_status_data(finger_status);
+  }
 
   get_touch_status(handle, slave_id);
 
@@ -118,9 +140,16 @@ void get_info(ModbusHandle *handle, uint8_t slave_id)
   auto voltage = modbus_get_voltage(handle, slave_id);
   printf("Slave[%hhu] Voltage: %.2fV\n", slave_id, voltage / 1000.0);
   auto led_info = modbus_get_led_info(handle, slave_id);
-  printf("Slave[%hhu] LED Info: %hhu, %hhu\n", slave_id, led_info->mode, led_info->color);
-  free_led_info(led_info);
+  if (led_info != NULL)
+  {
+    printf("Slave[%hhu] LED Info: %hhu, %hhu\n", slave_id, led_info->mode, led_info->color);
+    free_led_info(led_info);
+  }
   auto button_event = modbus_get_button_event(handle, slave_id);
-  printf("Slave[%hhu] Button Event: %d, %d, %hhu\n", slave_id, button_event->timestamp, button_event->button_id, button_event->press_state);
-  free_button_event(button_event);
+
+  if (button_event != NULL)
+  {
+    printf("Slave[%hhu] Button Event: %d, %d, %hhu\n", slave_id, button_event->timestamp, button_event->button_id, button_event->press_state);
+    free_button_event(button_event);
+  }
 }
