@@ -12,3 +12,4 @@ test_recevice_data.py
 c_cpp_properties.json
 launch.json
 *.exe.dSYM/
+ros2_stark_ws/src/ros2_stark_controller/lib/*.so
