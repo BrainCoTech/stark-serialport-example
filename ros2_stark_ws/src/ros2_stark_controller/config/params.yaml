@@ -1,0 +1,7 @@
+stark_node:
+  ros__parameters:
+    port: "/dev/ttyUSB0"
+    baudrate: 115200
+    slave_id: 1
+    firmware_type: 2  # V1Touch
+    log_level: 2      # Info

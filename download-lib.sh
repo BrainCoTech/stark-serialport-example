@@ -78,6 +78,12 @@ rm -rf "${SCRIPT_DIR}/__MACOSX"
 rm -rf "${DIST_DIR}/__MACOSX"
 find dist/include -type f ! -name stark-sdk.h -exec rm -f {} \;
 
+# copy the files to ros2_stark_ws
+if [ "$PLATFORM" == "Linux" ]; then
+  cp -vf dist/include/stark-sdk.h ros2_stark_ws/src/ros2_stark_controller/include/ros2_stark_controller/
+  cp -vf dist/shared/linux/*.so ros2_stark_ws/src/ros2_stark_controller/lib/
+fi
+
 # Create VERSION file
 echo_y "[bc-device-sdk] Creating version file..."
 cat >"$VERSION_FILE" <<EOF

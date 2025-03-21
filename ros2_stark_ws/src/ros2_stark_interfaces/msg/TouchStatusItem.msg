@@ -1,0 +1,13 @@
+uint16 normal_force1
+uint16 normal_force2
+uint16 normal_force3
+uint16 tangential_force1
+uint16 tangential_force2
+uint16 tangential_force3
+uint16 tangential_direction1
+uint16 tangential_direction2
+uint16 tangential_direction3
+uint32 self_proximity1
+uint32 self_proximity2
+uint32 mutual_proximity
+uint16 status
