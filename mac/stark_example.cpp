@@ -139,14 +139,15 @@ void get_info(ModbusHandle *handle, uint8_t slave_id)
   // printf("Slave[%hhu] Force Level: %d\n", slave_id, force_level);
   auto voltage = modbus_get_voltage(handle, slave_id);
   printf("Slave[%hhu] Voltage: %.2fV\n", slave_id, voltage / 1000.0);
+
   auto led_info = modbus_get_led_info(handle, slave_id);
   if (led_info != NULL)
   {
     printf("Slave[%hhu] LED Info: %hhu, %hhu\n", slave_id, led_info->mode, led_info->color);
     free_led_info(led_info);
   }
-  auto button_event = modbus_get_button_event(handle, slave_id);
 
+  auto button_event = modbus_get_button_event(handle, slave_id);
   if (button_event != NULL)
   {
     printf("Slave[%hhu] Button Event: %d, %d, %hhu\n", slave_id, button_event->timestamp, button_event->button_id, button_event->press_state);

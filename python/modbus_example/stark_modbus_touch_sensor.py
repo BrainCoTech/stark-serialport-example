@@ -32,9 +32,16 @@ async def main():
     touch_fw_versions = await client.get_touch_sensor_fw_versions(slave_id)  # setup之后才能获取到版本号
     logger.info(f"Touch Fw Versions: {touch_fw_versions}")
 
-    # 获取触觉传感器状态、三维力数值
-    touch_status = await client.get_touch_sensor_status(slave_id)
-    logger.info(f"Touch Sensor Status: {touch_status[0].description}")
+    # 获取触觉传感器状态、三维力数值、通道值
+    while True:
+        touch_status = await client.get_touch_sensor_status(slave_id)
+        logger.info(f"Touch Sensor Status: {touch_status[0].description}")
+        logger.warning(f"Thumb normal_force1: {touch_status[0].normal_force1}")
+        touch_raw_data = await client.get_touch_sensor_raw_data(slave_id)
+        logger.info(f"Touch Sensor Raw Data: {touch_raw_data.description}")
+        logger.warning(f"Touch Sensor Raw Data Thumb: {touch_raw_data.thumb}")
+        await asyncio.sleep(0.05)
+        break
 
     # 触觉传感器复位，发送传感器采集通道复位指令。在执行该指令时，手指传感器尽量不要受力。
     # await client.touch_sensor_reset(slave_id, 0x1f)  # 复位指定手指的传感器采集通道
