@@ -1,17 +1,10 @@
 import asyncio
-import logging
 import sys
 import pathlib
 import os
-from logger import getLogger
-from stark_utils import get_stark_port_name
 from utils import setup_shutdown_event
-import bc_device_sdk
-
-libstark = bc_device_sdk.stark
-
-# logger = getLogger(logging.DEBUG)
-logger = getLogger(logging.INFO)
+import asyncio
+from stark_utils import get_stark_port_name, libstark, logger
 
 # 固件升级文件路径
 current_dir = pathlib.Path(__file__).resolve()
@@ -33,6 +26,7 @@ else:
 
 shutdown_event = None
 
+
 def on_dfu_state(_slave_id, state):
     logger.info(f"DFU STATE: {libstark.DfuState(state)}")
     dfu_state = libstark.DfuState(state)
@@ -41,8 +35,10 @@ def on_dfu_state(_slave_id, state):
         shutdown_event.set()
         # sys.exit(0)
 
+
 def on_dfu_progress(_slave_id, progress):
     logger.info(f"progress: {progress * 100.0 :.2f}%")
+
 
 # Main
 async def main():
@@ -53,7 +49,9 @@ async def main():
     if port_name is None:
         return
     slave_id = 1
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200, slave_id)
+    client = await libstark.modbus_open(
+        port_name, libstark.Baudrate.Baud115200, slave_id
+    )
 
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)
