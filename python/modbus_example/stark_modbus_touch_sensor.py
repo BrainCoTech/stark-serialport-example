@@ -1,17 +1,10 @@
 import asyncio
-import logging
 import sys
-from logger import getLogger
-from stark_utils import get_stark_port_name
-import bc_device_sdk
-
-libstark = bc_device_sdk.stark
-
-# logger = getLogger(logging.DEBUG)
-logger = getLogger(logging.INFO)
+from stark_utils import get_stark_port_name, libstark, logger
 
 # Main
 async def main():
+    libstark.init_config(libstark.StarkFirmwareType.V1Touch)
     port_name = get_stark_port_name()
     if port_name is None:
         return

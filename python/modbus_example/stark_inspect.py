@@ -1,12 +1,10 @@
 from utils import inspect_class
-import bc_device_sdk
-
-libstark = bc_device_sdk.stark
+from stark_utils import libstark, logger
 
 inspect_class(libstark.DeviceInfo)
 inspect_class(libstark.ForceLevel)
 
-print(libstark.ForceLevel(1))
-print(libstark.ForceLevel.Small.int_value)
+logger.info(libstark.ForceLevel(1))
+logger.info(libstark.ForceLevel.Small.int_value)
 
 inspect_class(libstark.DfuState)
