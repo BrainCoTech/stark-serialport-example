@@ -1,6 +1,19 @@
 # ros2 humble
 
 ```shell
+# First download libs
+rm VERSION
+./download-lib.sh
+
+# 下载完成后目录包含如下
+ros2_stark_ws/src/ros2_stark_controller/lib
+└── libbc_device_sdk.so
+
+ros2_stark_ws/src/ros2_stark_controller/include
+└── ros2_stark_controller
+    ├── stark-sdk.h
+    └── stark_node.hpp
+
 # Replace ".bash" with your shell if you're not using bash
 # Possible values are: setup.bash, setup.sh, setup.zsh
 source /opt/ros/humble/setup.bash

@@ -35,6 +35,7 @@ case "$PLATFORM" in
   ;;
 "Darwin")
   LIB_NAME="mac"
+  # LIB_NAME="linux" # Force to linux for macOS
   ;;
 "msys" | "MINGW"*)
   LIB_NAME="win"
@@ -80,6 +81,8 @@ find dist/include -type f ! -name stark-sdk.h -exec rm -f {} \;
 
 # copy the files to ros2_stark_ws
 if [ "$PLATFORM" == "Linux" ]; then
+  mkdir -p ros2_stark_ws/src/ros2_stark_controller/include/ros2_stark_controller
+  mkdir -p ros2_stark_ws/src/ros2_stark_controller/lib
   cp -vf dist/include/stark-sdk.h ros2_stark_ws/src/ros2_stark_controller/include/ros2_stark_controller/
   cp -vf dist/shared/linux/*.so ros2_stark_ws/src/ros2_stark_controller/lib/
 fi
