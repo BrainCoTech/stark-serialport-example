@@ -3,5 +3,6 @@ stark_node:
     port: "/dev/ttyUSB0"
     baudrate: 115200
     slave_id: 1
-    firmware_type: 2  # V1Touch
+    firmware_type: 2  # V1Touch 触觉版
+    # firmware_type: 1  # V1Standard 标准版
     log_level: 2      # Info

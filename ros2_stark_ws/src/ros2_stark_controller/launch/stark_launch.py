@@ -7,7 +7,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'params_file',
-            default_value='~/projects/ros2_stark_ws/src/ros2_stark_controller/config/params.yaml',
+            default_value='path/to/ros2_stark_ws/src/ros2_stark_controller/config/params.yaml', # Update with the correct path
             description='Path to the ROS2 parameters file'
         ),
         
