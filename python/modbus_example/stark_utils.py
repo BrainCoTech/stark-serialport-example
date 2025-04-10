@@ -5,8 +5,8 @@ import json
 
 libstark = bc_device_sdk.stark
 
-logger = getLogger(logging.DEBUG)
-# logger = getLogger(logging.INFO)
+# logger = getLogger(logging.DEBUG)
+logger = getLogger(logging.INFO)
 
 
 def get_stark_port_name():

@@ -10,7 +10,7 @@ async def main():
     if port_name is None:
         return
 
-    slave_id = 0x7F  # 左手默认ID为0x7e，右手默认ID为0x7f
+    slave_id = 0x7E  # 左手默认ID为0x7e，右手默认ID为0x7f
     # fmt: off
     client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800, slave_id)
 
@@ -51,7 +51,7 @@ async def main():
     # max_position = await client.get_finger_max_position(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] max position: {max_position}")
 
-    # await client.set_finger_max_speed(slave_id, finger_id, 150)
+    # await client.set_finger_max_speed(slave_id, finger_id, 130)
     # max_speed = await client.get_finger_max_speed(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] max speed: {max_speed}")
 
@@ -59,8 +59,8 @@ async def main():
     # max_current = await client.get_finger_max_current(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] max current: {max_current}")
 
-    # await client.set_finger_protected_current(slave_id, finger_id,  500)
-    # protected_current = await client.get_finger_protected_current(slave_id, finger_id)
+    # await client.set_finger_protect_current(slave_id, finger_id,  500)
+    # protected_current = await client.get_finger_protect_current(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] protected current: {protected_current}")
 
     # 单个手指，按速度/电流/PWM控制

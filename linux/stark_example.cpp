@@ -34,7 +34,7 @@ int main(int argc, char const *argv[])
   // auto port_name = "COM1"; // Windows
   // auto port_name = "/dev/ttyUSB0"; // Linux
   // auto port_name = "/dev/ttyUSB1"; // Linux
-  auto port_name = "/dev/tty.usbserial-D30JB26J"; // Mac USB HUB
+  auto port_name = "/dev/tty.usbserial-D30JCEP2"; // Mac USB HUB
   // auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
   uint32_t baudrate = 115200;
   uint8_t slave_id = 1;
@@ -139,7 +139,7 @@ void get_info(ModbusHandle *handle, uint8_t slave_id)
   // printf("Slave[%hhu] Force Level: %d\n", slave_id, force_level);
   auto voltage = modbus_get_voltage(handle, slave_id);
   printf("Slave[%hhu] Voltage: %.2fV\n", slave_id, voltage / 1000.0);
-  
+
   auto led_info = modbus_get_led_info(handle, slave_id);
   if (led_info != NULL)
   {

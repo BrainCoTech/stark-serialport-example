@@ -48,11 +48,14 @@ clean:
 	rm -fR $(addsuffix .exe.dSYM,$(BINARIES))
 
 # 运行目标
-run:
+run_v1:
 	export DYLD_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) && ./stark_example.exe
 
 run_multi:
 	export DYLD_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) && ./stark_multi_example.exe
+
+run:
+	export DYLD_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) && ./stark_v2.exe
 
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run
