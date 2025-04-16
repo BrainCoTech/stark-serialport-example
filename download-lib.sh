@@ -7,7 +7,7 @@ DIST_DIR="${SCRIPT_DIR}/dist"
 VERSION_FILE="${SCRIPT_DIR}/VERSION"
 
 # Configuration
-LIB_VERSION="v0.1.9"
+LIB_VERSION="v0.3.6"
 BASE_URL="https://app.brainco.cn/universal/bc-device-sdk/libs/${LIB_VERSION}"
 
 # Colorful echo functions

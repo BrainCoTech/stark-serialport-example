@@ -1,16 +1,8 @@
 import asyncio
-import logging
 import sys
 import time
-from logger import getLogger
-from stark_utils import get_stark_port_name
 from utils import setup_shutdown_event
-import bc_device_sdk
-
-libstark = bc_device_sdk.stark
-
-# logger = getLogger(logging.DEBUG)
-logger = getLogger(logging.INFO)
+from stark_utils import get_stark_port_name, libstark, logger
 
 
 # 定期获取手指状态
@@ -32,7 +24,9 @@ async def get_motor_status_periodically(client, slave_id):
             if status.is_idle:
                 if status.is_opened:
                     # 握手
-                    await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])
+                    await client.set_finger_positions(
+                        slave_id, [60, 60, 100, 100, 100, 100]
+                    )
                 elif status.is_closed:
                     # 张开
                     await client.set_finger_positions(slave_id, [0] * 6)
@@ -43,13 +37,16 @@ async def get_motor_status_periodically(client, slave_id):
 
 # Main
 async def main():
+    libstark.init_config(libstark.StarkFirmwareType.V1Standard)
     shutdown_event = setup_shutdown_event(logger)
 
     port_name = get_stark_port_name()
     if port_name is None:
         return
     slave_id = 1
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200, slave_id)
+    client = await libstark.modbus_open(
+        port_name, libstark.Baudrate.Baud115200, slave_id
+    )
 
     await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])  # 握手
 

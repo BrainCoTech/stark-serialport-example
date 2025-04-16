@@ -1,16 +1,7 @@
 import asyncio
-import logging
 import sys
-
-from logger import getLogger
-from stark_utils import get_stark_port_name
 from utils import setup_shutdown_event
-import bc_device_sdk
-
-libstark = bc_device_sdk.stark
-
-# logger = getLogger(logging.DEBUG)
-logger = getLogger(logging.INFO)
+from stark_utils import get_stark_port_name, libstark, logger
 
 sample_action_sequences = [
     {
@@ -98,6 +89,7 @@ def action_sequence_info_to_list(action):
 
 ### main.py
 async def main():
+    libstark.init_config(libstark.StarkFirmwareType.V1Standard)
     shutdown_event = setup_shutdown_event(logger)
 
     port_name = get_stark_port_name()

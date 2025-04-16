@@ -1,29 +1,34 @@
 import asyncio
-import logging
 import sys
 import pathlib
 import os
-from logger import getLogger
-from stark_utils import get_stark_port_name
 from utils import setup_shutdown_event
-import bc_device_sdk
-
-libstark = bc_device_sdk.stark
-
-# logger = getLogger(logging.DEBUG)
-logger = getLogger(logging.INFO)
+import asyncio
+from stark_utils import get_stark_port_name, libstark, logger
 
 # 固件升级文件路径
 current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent
 logger.info(f"parent_dir: {parent_dir}")
 
-ota_bin_path = os.path.join(
-    parent_dir,
-    "ota_bin",
-    "modbus",
-    "FW_MotorController_Release_SecureOTA_modbus_0.1.7.ota",
-)  # Modbus固件
+stark_v2 = True
+
+if stark_v2:
+    # ModbusV2固件
+    ota_bin_path = os.path.join(
+        parent_dir,
+        "ota_bin",
+        "stark2",
+        "stark2_fw_V0.0.7_20250409094916.bin",
+    )
+else:
+    # ModbusV1固件
+    ota_bin_path = os.path.join(
+        parent_dir,
+        "ota_bin",
+        "modbus",
+        "FW_MotorController_Release_SecureOTA_modbus_0.1.7.ota",
+    )
 
 if not os.path.exists(ota_bin_path):
     logger.warning(f"OTA文件不存在: {ota_bin_path}")
@@ -33,27 +38,46 @@ else:
 
 shutdown_event = None
 
+
 def on_dfu_state(_slave_id, state):
     logger.info(f"DFU STATE: {libstark.DfuState(state)}")
     dfu_state = libstark.DfuState(state)
     if state == libstark.DfuState.Completed or dfu_state == libstark.DfuState.Aborted:
-        logger.info(f"ota done")
+        logger.info(f"DFU Stopped")
         shutdown_event.set()
         # sys.exit(0)
+
 
 def on_dfu_progress(_slave_id, progress):
     logger.info(f"progress: {progress * 100.0 :.2f}%")
 
+
 # Main
 async def main():
+    libstark.init_config(
+        libstark.StarkFirmwareType.V2Standard
+        if stark_v2
+        else libstark.StarkFirmwareType.V1Standard
+    )
+
     global shutdown_event
     shutdown_event = setup_shutdown_event(logger)
 
     port_name = get_stark_port_name()
     if port_name is None:
         return
-    slave_id = 1
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200, slave_id)
+
+    # 一代手默认ID为1
+    # 左手默认ID为0x7e，右手默认ID为0x7f
+    slave_id = 0x7E if stark_v2 else 1
+    # 一代手默认波特率115200
+    # 二代手默认波特率460800
+    baurate = libstark.Baudrate.Baud460800 if stark_v2 else libstark.Baudrate.Baud115200
+    logger.info(f"slave_id: {slave_id}, baurate: {baurate}")
+    logger.info(f"port_name: {port_name}")
+    # 打开串口
+    # fmt: off
+    client = await libstark.modbus_open(port_name, baurate, slave_id)
 
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)

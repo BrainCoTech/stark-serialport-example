@@ -1,14 +1,6 @@
 import asyncio
-import logging
 import sys
-from logger import getLogger
-from stark_utils import get_stark_port_name
-import bc_device_sdk
-
-libstark = bc_device_sdk.stark
-
-# logger = getLogger(logging.DEBUG)
-logger = getLogger(logging.INFO)
+from stark_utils import get_stark_port_name, libstark, logger
 
 
 async def set_slave_id(client, slave_id, new_slave_id):
@@ -37,10 +29,11 @@ async def set_baudrate(client, slave_id, new_baudrate):
 
 # Main
 async def main():
+    # libstark.init_config(libstark.StarkFirmwareType.V1Standard)
     port_name = get_stark_port_name()
     if port_name is None:
         return
-    slave_id = 1 # default slave_id is 1
+    slave_id = 1  # default slave_id is 1
     baudrate = libstark.Baudrate.Baud115200
     client = await libstark.modbus_open(port_name, baudrate, slave_id)
 
