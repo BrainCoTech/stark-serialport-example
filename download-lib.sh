@@ -25,14 +25,11 @@ fi
 PLATFORM=$(uname)
 case "$PLATFORM" in
 "Linux")
-  LIB_NAME="linux"
-  if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    if [[ "$ID" == "ubuntu" && "$VERSION_ID" == "20.04" ]]; then
-      LIB_NAME="ubuntu-20"
-    fi
+  if [[ "$(uname -m)" == "aarch64" ]]; then
+    ZIP_NAME=linux-arm64
+  else
+    ZIP_NAME=linux
   fi
-  ;;
 "Darwin")
   LIB_NAME="mac"
   # LIB_NAME="linux" # Force to linux for macOS
