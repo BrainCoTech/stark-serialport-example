@@ -30,6 +30,7 @@ case "$PLATFORM" in
   else
     ZIP_NAME=linux
   fi
+  ;;
 "Darwin")
   LIB_NAME="mac"
   # LIB_NAME="linux" # Force to linux for macOS
