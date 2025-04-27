@@ -2,6 +2,7 @@ import asyncio
 import sys
 from stark_utils import get_stark_port_name, libstark, logger
 
+
 # Main
 async def main():
     libstark.init_config(libstark.StarkFirmwareType.V1Touch)
@@ -9,30 +10,42 @@ async def main():
     if port_name is None:
         return
     slave_id = 1
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200, slave_id)
+    client = await libstark.modbus_open(
+        port_name, libstark.Baudrate.Baud460800, slave_id
+    )
 
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device Firmware: {device_info.firmware_version}")  # 固件版本
     logger.info(f"Device info: {device_info.description}")
 
+    # 电流控制，试验接口
+    # finger_id = libstark.FingerId.Middle
+    # await client.set_finger_current(slave_id, finger_id, 100) # 设置手指电流, 范围-100~100, 正数表示闭合方向
+    await client.set_finger_currents(slave_id, [100] * 6) # 设置手指电流, 范围-100~100, 正数表示闭合方向
+
     # 启用触觉传感器功能
-    bits = 0x1f  # 0x1f: 5个手指上的触觉传感器都使能
+    bits = 0x1F  # 0x1f: 5个手指上的触觉传感器都使能
     await client.touch_sensor_setup(slave_id, bits)
-    await asyncio.sleep(1) # // wait for touch sensor to be ready
+    await asyncio.sleep(1)  # // wait for touch sensor to be ready
     bits = await client.get_touch_sensor_enabled(slave_id)
     logger.info(f"Touch Sensor Enabled: {(bits & 0x1F):05b}")
-    touch_fw_versions = await client.get_touch_sensor_fw_versions(slave_id)  # setup之后才能获取到版本号
+    touch_fw_versions = await client.get_touch_sensor_fw_versions(
+        slave_id
+    )  # setup之后才能获取到版本号
     logger.info(f"Touch Fw Versions: {touch_fw_versions}")
 
     # 获取触觉传感器状态、三维力数值、通道值
     while True:
         touch_status = await client.get_touch_sensor_status(slave_id)
         logger.info(f"Touch Sensor Status: {touch_status[0].description}")
-        logger.warning(f"Thumb normal_force1: {touch_status[0].normal_force1}")
+        logger.debug(f"Thumb normal_force1: {touch_status[0].normal_force1}")
+        logger.debug(f"Index self_proximity1: {touch_status[1].self_proximity1}")
+        logger.debug(f"Index self_proximity2: {touch_status[1].self_proximity2}")
+        logger.debug(f"Index mutual_proximity: {touch_status[1].mutual_proximity}")
         touch_raw_data = await client.get_touch_sensor_raw_data(slave_id)
         logger.info(f"Touch Sensor Raw Data: {touch_raw_data.description}")
-        logger.warning(f"Touch Sensor Raw Data Thumb: {touch_raw_data.thumb}")
+        logger.debug(f"Touch Sensor Raw Data Thumb: {touch_raw_data.thumb}")
         await asyncio.sleep(0.05)
         break
 

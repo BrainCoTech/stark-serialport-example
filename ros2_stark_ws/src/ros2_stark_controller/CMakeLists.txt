@@ -18,13 +18,13 @@ target_include_directories(stark_node PUBLIC
   $<INSTALL_INTERFACE:include>)
 
 # 生产阶段  
-# target_link_libraries(stark_node bc_device_sdk)
-# find_library(STARK_SDK_LIBRARY NAMES bc_device_sdk PATHS /usr/local/lib)
+# target_link_libraries(stark_node bc_stark_sdk)
+# find_library(STARK_SDK_LIBRARY NAMES bc_stark_sdk PATHS /usr/local/lib)
 # target_link_libraries(stark_node ${STARK_SDK_LIBRARY})
 
 # 开发阶段，放在项目内的 lib 目录
 target_link_libraries(stark_node
-  ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_device_sdk.so
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
 )
 
 # 避免每次手动设置 LD_LIBRARY_PATH，可以在链接时嵌入 RPATH（运行时库搜索路径）
@@ -46,7 +46,7 @@ install(TARGETS stark_node
 install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}/)
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_device_sdk.so
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
   DESTINATION lib/${PROJECT_NAME}
 )
 

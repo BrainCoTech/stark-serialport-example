@@ -11,9 +11,20 @@ current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent
 logger.info(f"parent_dir: {parent_dir}")
 
-stark_v2 = True
+stark_toch = True
+stark_v2 = False
 
-if stark_v2:
+if stark_toch:
+    # 触觉固件
+    ota_bin_path = os.path.join(
+        parent_dir,
+        "ota_bin",
+        "touch",
+        "FW_MotorController_Release_SecureOTA_V1.8.24F.ota",
+        # "FW_MotorController_Release_SecureOTA_V1.8.21F.ota",
+    )
+
+elif stark_v2:
     # ModbusV2固件
     ota_bin_path = os.path.join(
         parent_dir,
@@ -55,7 +66,10 @@ def on_dfu_progress(_slave_id, progress):
 # Main
 async def main():
     libstark.init_config(
-        libstark.StarkFirmwareType.V2Standard
+            libstark.StarkFirmwareType.V1Touch
+        if stark_toch
+        else
+            libstark.StarkFirmwareType.V2Standard
         if stark_v2
         else libstark.StarkFirmwareType.V1Standard
     )
@@ -72,7 +86,7 @@ async def main():
     slave_id = 0x7E if stark_v2 else 1
     # 一代手默认波特率115200
     # 二代手默认波特率460800
-    baurate = libstark.Baudrate.Baud460800 if stark_v2 else libstark.Baudrate.Baud115200
+    baurate = libstark.Baudrate.Baud460800 if stark_v2 or stark_toch else libstark.Baudrate.Baud115200
     logger.info(f"slave_id: {slave_id}, baurate: {baurate}")
     logger.info(f"port_name: {port_name}")
     # 打开串口

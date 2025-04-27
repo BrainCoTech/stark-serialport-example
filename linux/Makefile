@@ -23,7 +23,7 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 		-I$(HEADER_DIR) \
 		-L$(LIB_DIR) \
 		-Wl,-rpath,$(LIB_DIR) \
-		-lbc_device_sdk \
+		-lbc_stark_sdk \
 		-lm -lpthread -lrt -ldl \
 		-rdynamic
 	@echo "\033[1;33m[linux] build $@.c done\033[0m"
@@ -34,7 +34,7 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 		-I$(HEADER_DIR) \
 		-L$(LIB_DIR) \
 		-Wl,-rpath,$(LIB_DIR) \
-		-lbc_device_sdk \
+		-lbc_stark_sdk \
 		-lm -lpthread -lrt -ldl \
 		-rdynamic
 	@echo "\033[1;33m[linux] build $@.cpp done\033[0m"

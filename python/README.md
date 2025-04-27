@@ -30,4 +30,10 @@ python3 stark_modbus_actions.py
 python3 stark_modbus_update_cfg.py
 # 升级设备
 python3 stark_modbus_dfu.py
+
+# 二代灵巧手-ModbusRTU
+python3 stark_modbus_v2.py
+
+# 二代灵巧手-CAN-FD-智嵌物联
+python3 zqwl_canfd.py
 ```

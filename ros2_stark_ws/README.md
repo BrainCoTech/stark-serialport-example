@@ -7,7 +7,7 @@ rm VERSION
 
 # 下载完成后目录包含如下
 ros2_stark_ws/src/ros2_stark_controller/lib
-└── libbc_device_sdk.so
+└── libbc_stark_sdk.so
 
 ros2_stark_ws/src/ros2_stark_controller/include
 └── ros2_stark_controller

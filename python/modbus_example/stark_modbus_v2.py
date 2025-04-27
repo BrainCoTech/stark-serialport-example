@@ -20,9 +20,9 @@ async def main():
 
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device info: {device_info.firmware_version}")  # 固件版本
-    logger.info(f"Device info: {device_info.serial_number}")  # 序列号
-    logger.info(f"Device info: {device_info.sku_type}")  # 获取手类型, 左右手
+    # logger.info(f"Device info: {device_info.firmware_version}")  # 固件版本
+    # logger.info(f"Device info: {device_info.serial_number}")  # 序列号
+    # logger.info(f"Device info: {device_info.sku_type}")  # 获取手类型, 左右手
     logger.info(f"Device info: {device_info.description}")
 
     # TODO: NOT IMPLEMENTED
@@ -98,9 +98,9 @@ async def main():
 
     logger.debug("get_motor_status")  # 获取手指状态, 位置，电流，motor状态
     status = await client.get_motor_status(slave_id)
-    logger.info(f"positions: {list(status.positions)}")
-    logger.info(f"currents: {list(status.currents)}")
-    logger.info(f"states: {list(status.states)}")
+    # logger.info(f"positions: {list(status.positions)}")
+    # logger.info(f"currents: {list(status.currents)}")
+    # logger.info(f"states: {list(status.states)}")
     logger.info(f"Finger status: {status.description}")
 
     # 关闭资源

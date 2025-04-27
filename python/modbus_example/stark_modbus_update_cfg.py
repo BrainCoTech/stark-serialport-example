@@ -48,8 +48,8 @@ async def main():
 
     # logger.debug("set_baudrate")  # 修改波特率，设置后，会执行重启操作
     # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud115200) # 修改波特率为115200
-    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud57600)  # 修改波特率为57600
-    # exit(0)
+    await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # 修改波特率为460800
+    exit(0)
 
     # ------------------- 设置力量等级，大-中-小 -------------------
     # 触觉版本废弃了该功能

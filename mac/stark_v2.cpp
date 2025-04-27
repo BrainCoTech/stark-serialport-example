@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V2_STANDARD, LOG_LEVEL_INFO);
+  init_cfg(STARK_FIRMWARE_TYPE_V2_STANDARD, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
   list_available_ports();
 
   // auto port_name = "COM1"; // Windows
@@ -146,7 +146,7 @@ void get_device_info(ModbusHandle *handle, uint8_t slave_id)
 void get_info(ModbusHandle *handle, uint8_t slave_id)
 {
   // RS485串口波特率
-  auto baudrate = modbus_get_baudrate(handle, slave_id);
+  auto baudrate = modbus_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
 
   // CANFD波特率

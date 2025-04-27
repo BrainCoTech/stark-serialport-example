@@ -1,16 +1,16 @@
 import logging
 from logger import getLogger
-import bc_device_sdk
+import bc_stark_sdk
 import json
 
-libstark = bc_device_sdk.stark
+libstark = bc_stark_sdk.stark
 
 # logger = getLogger(logging.DEBUG)
 logger = getLogger(logging.INFO)
 
 
 def get_stark_port_name():
-    ports = bc_device_sdk.stark.list_available_ports()
+    ports = bc_stark_sdk.stark.list_available_ports()
     logger.info(f"available_ports: {ports}")
 
     # 解码字节对象并解析 JSON

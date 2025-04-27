@@ -28,7 +28,7 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, LOG_LEVEL_INFO);
+  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
   list_available_ports();
 
   // auto port_name = "COM1"; // Windows
@@ -132,7 +132,7 @@ void get_touch_status(ModbusHandle *handle, uint8_t slave_id)
 // 获取设备信息, 串口波特率, 从机地址, 电压, LED信息, 按键事件
 void get_info(ModbusHandle *handle, uint8_t slave_id)
 {
-  auto baudrate = modbus_get_baudrate(handle, slave_id);
+  auto baudrate = modbus_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
   // 触觉版 deprecated
   // auto force_level = modbus_get_force_level(handle, slave_id);
