@@ -42,6 +42,7 @@ private:
     std::string port_;
     uint32_t baudrate_;
     StarkFirmwareType fw_type_;
+    StarkProtocolType protocol_type_;
     LogLevel log_level_;
 
     // Callback functions

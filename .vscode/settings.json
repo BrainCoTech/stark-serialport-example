@@ -12,6 +12,6 @@
   ],
   "C_Cpp.errorSquiggles": "disabled",
   "C_Cpp_Runner.msvcBatchPath": "",
-  "serialPort.availableTips": true,
-  "cmake.ignoreCMakeListsMissing": true, // 添加这一行启用串口提示
+  "serialPort.availableTips": true,  // 添加这一行启用串口提示
+  "cmake.ignoreCMakeListsMissing": true,
 }

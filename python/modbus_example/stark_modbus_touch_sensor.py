@@ -19,11 +19,6 @@ async def main():
     logger.info(f"Device Firmware: {device_info.firmware_version}")  # 固件版本
     logger.info(f"Device info: {device_info.description}")
 
-    # 电流控制，试验接口
-    # finger_id = libstark.FingerId.Middle
-    # await client.set_finger_current(slave_id, finger_id, 100) # 设置手指电流, 范围-100~100, 正数表示闭合方向
-    await client.set_finger_currents(slave_id, [100] * 6) # 设置手指电流, 范围-100~100, 正数表示闭合方向
-
     # 启用触觉传感器功能
     bits = 0x1F  # 0x1f: 5个手指上的触觉传感器都使能
     await client.touch_sensor_setup(slave_id, bits)
