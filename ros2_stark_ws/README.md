@@ -36,6 +36,7 @@ source install/setup.bash
 
 # 使用 launch 文件运行Stak节点
 ros2 launch ros2_stark_controller stark_launch.py 
+ros2 run ros2_stark_controller stark_node --ros-args --params-file /home/hailong/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml
 
 # 测试位置控制
 ros2 run ros2_stark_controller stark_position_control.py --positions 0.5 0.5 0.5 0.5 0.5 0.5
