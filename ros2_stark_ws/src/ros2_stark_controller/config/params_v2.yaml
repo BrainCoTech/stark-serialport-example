@@ -1,11 +1,8 @@
 stark_node:
   ros__parameters:
     port: "/dev/ttyUSB0"
-    # baudrate: 115200 # 一代灵巧手默认波特率
     baudrate: 460800 # 二代灵巧手默认波特率
     slave_id: 0x7e # 二代灵巧手默认左手为0x7e, 右手为0x7f
     firmware_type: 3  # V2tandard 二代灵巧手
-    # firmware_type: 2  # V1Touch 一代灵巧手触觉版
-    # firmware_type: 1  # V1Standard 一代灵巧手标准版
     protocol_type: 1  # 1: Modbus RTU, 2: CANFD
     log_level: 2      # Info

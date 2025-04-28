@@ -1,23 +1,15 @@
 #include "ros2_stark_controller/stark_node.hpp"
 
 StarkNode::StarkNode() : Node("stark_node") {
-    // Declare parameters
-    declare_parameter("port", "/dev/ttyUSB1");
-    declare_parameter("baudrate", 115200);
-    declare_parameter("slave_id", 1);
-    declare_parameter("firmware_type", STARK_FIRMWARE_TYPE_V1_TOUCH);  // Default V1Touch
-    declare_parameter("protocol_type", STARK_PROTOCOL_TYPE_MODBUS);  // Default Mobbus
-    declare_parameter("log_level", LOG_LEVEL_INFO);      // Default Info
+    // Declare and Get parameters
+    port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB1");
+    baudrate_ = this->declare_parameter<int>("baudrate", 115200);
+    slave_id_ = this->declare_parameter<int>("slave_id", 1);
+    fw_type_ = static_cast<StarkFirmwareType>(this->declare_parameter<int>("firmware_type", 2));
+    protocol_type_ = static_cast<StarkProtocolType>(this->declare_parameter<int>("protocol_type", 1));
+    log_level_ = static_cast<LogLevel>(this->declare_parameter<int>("log_level", 2));
 
-    // Get parameters
-    port_ = get_parameter("port").as_string();
-    baudrate_ = get_parameter("baudrate").as_int();
-    slave_id_ = get_parameter("slave_id").as_int();
-    fw_type_ = static_cast<StarkFirmwareType>(get_parameter("firmware_type").as_int());
-    protocol_type_ = static_cast<StarkProtocolType>(get_parameter("protocol_type").as_int());
-    log_level_ = static_cast<LogLevel>(get_parameter("log_level").as_int());
-
-    RCLCPP_INFO(this->get_logger(), "Port: %s, Baudrate: %d, slave_id: %d, firmware_type: %d, protocol_type: %d, log_level: %d",
+    RCLCPP_INFO(this->get_logger(), "aaa Port: %s, Baudrate: %d, slave_id: %d, firmware_type: %d, protocol_type: %d, log_level: %d",
                 port_.c_str(), baudrate_, slave_id_, fw_type_, protocol_type_, log_level_);
 
     // Initialize Stark SDK

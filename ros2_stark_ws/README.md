@@ -17,16 +17,22 @@ ros2_stark_ws/src/ros2_stark_controller/include
 # Replace ".bash" with your shell if you're not using bash
 # Possible values are: setup.bash, setup.sh, setup.zsh
 source /opt/ros/humble/setup.bash
+# source /opt/ros/humble/setup.zsh
 
 cd ros2_stark_ws
 rm -rf build install log
 
 # 编译
-colcon build --packages-select --allow-overriding ros2_stark_interfaces 
-colcon build --packages-select ros2_stark_controller
+colcon build --symlink-install
+# colcon build --packages-select ros2_stark_interfaces 
+# colcon build --packages-select ros2_stark_controller
 
 # 设置本地环境
 source install/setup.bash
+# source install/setup.zsh
+
+# FIXME: 需要设置动态链接库路径
+# export LD_LIBRARY_PATH=/home/hailong/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
 
 # 使用 launch 文件运行Stak节点
 ros2 launch ros2_stark_controller stark_launch.py 

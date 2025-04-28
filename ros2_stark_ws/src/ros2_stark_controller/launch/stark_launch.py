@@ -7,7 +7,10 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'params_file',
-            default_value='path/to/ros2_stark_ws/src/ros2_stark_controller/config/params.yaml', # Update with the correct path
+            # default_value='path/to/ros2_stark_ws/src/ros2_stark_controller/config/params.yaml', # Update with the correct path
+            # default_value='/home/hailong/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v1_touch.yaml',
+            # default_value='/home/hailong/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v1.yaml',
+            default_value='/home/hailong/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml',
             description='Path to the ROS2 parameters file'
         ),
         # 多只手

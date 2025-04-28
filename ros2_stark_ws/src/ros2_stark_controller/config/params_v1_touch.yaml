@@ -1,0 +1,9 @@
+stark_node:
+  ros__parameters:
+    port: "/dev/ttyUSB0"
+    # baudrate: 115200 # 一代触觉版灵巧手默认波特率
+    baudrate: 460800 # 触觉版支持460800波特率
+    slave_id: 1 # 默认ID为1
+    firmware_type: 2  # V1Touch 一代灵巧手触觉版
+    protocol_type: 1  # 1: Modbus RTU
+    log_level: 2      # Info
