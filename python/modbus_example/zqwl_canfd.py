@@ -4,7 +4,7 @@ import sys
 import bc_stark_sdk
 from stark_utils import libstark, logger
 # from zlgcan import ZCAN_USBCANFD_100U
-from zqwl_win import zcan_open, zcan_close, zcan_send_message, zcan_read_messages
+from zqwl_win import zcan_open, zcan_close, zcan_send_message, zcan_receive_message
 
 def canfd_send(slave_id: int, can_id: int, data: list):
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
@@ -13,7 +13,7 @@ def canfd_send(slave_id: int, can_id: int, data: list):
         return
 
 def canfd_read(slave_id: int):
-    recv_msg = zcan_read_messages()
+    recv_msg = zcan_receive_message()
     if recv_msg is None:
         logger.error("No message received")
         return 0, bytes([])

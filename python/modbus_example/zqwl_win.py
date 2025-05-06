@@ -76,35 +76,55 @@ def zcan_send_message(slave_id: int, can_id: int, data: bytes):
     logger.debug(f"data: {data.hex()}")
 
     msg = ZCAN_TransmitFD_Data()
-    msg.transmit_type = 0  # 0: 正常发送, 1: 单次发送, 2: 自发自收
-    msg.frame.eff = 1
-    msg.frame.rtr = 0
+    msg.transmit_type = 0  # 0: 正常发送, 1: 单次发送, 2: 自发自收 3: 单次自发自收
+    msg.frame.eff = 1 # is extended frame
+    msg.frame.rtr = 0 # is remote frame
     msg.frame.can_id = can_id
-    msg.frame.brs = 0
-    msg.frame.len = 64
+    msg.frame.brs = 1 # is BRS frame, 使用更高的波特率发送数据
+    msg.frame.len = len(data) # 固件使用CANfd扩展帧
     for i in range(msg.frame.len):
         msg.frame.data[i] = data[i]
 
-    ret = zcan.TransmitFD(zcan_handler, msg, 1) # write_num
+    ret = zcan.TransmitFD(zcan_handler, msg, 1) # write_num=1
     if ret != 1:
         logger.error("发送数据失败!")
         return False
     logger.debug(f"发送数据成功: {ret}")
     return True
 
-def zcan_read_messages(retry: int = 2):
+def zcan_receive_message(quick_retries: int = 2, dely_retries: int = 0):
+    """
+    接收CAN总线消息，先尝试快速接收，若失败则尝试DFU模式下的慢速接收。
+    
+    参数:
+        quick_retries (int): 快速接收尝试次数，默认2次。
+        dely_retries (int): DFU模式下的慢速接收尝试次数，默认0次。
+    
+    返回:
+        接收到的消息或None(接收失败)
+    """
     if zcan_handler is None:
         logger.error("CANFD handler is None")
         return None
     
-    idx = 0
-    while idx < retry:
-        time.sleep(0.001)
-        msg = _zcan_read_messages(idx)
-        if msg is not None:
-            return msg
-        idx += 1
-    logger.error("接收数据失败!")
+    # 快速接收尝试
+    for attempt in range(quick_retries):
+        time.sleep(0.0000001)  # 极短延时
+        message = _zcan_read_messages(attempt)
+        if message is not None:
+            return message
+    
+    logger.warning("快速接收超时")
+    
+    # 慢速接收尝试
+    for attempt in range(dely_retries):
+        time.sleep(0.5)  # 较长延时，适用于DFU模式
+        message = _zcan_read_messages(attempt)
+        if message is not None:
+            return message
+    
+    if dely_retries > 0:
+        logger.error("慢速接收尝试也超时!")
     return None
 
 def _zcan_read_messages(index: int = 0):
