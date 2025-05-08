@@ -10,13 +10,13 @@ def generate_launch_description():
             package='ros2_stark_controller',
             executable='stark_node',
             output='screen',
-            parameters=['/home/hailong/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v1.yaml'],  # 直接传递路径
+            parameters=['/home/nvidia/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v1_touch.yaml'],  # 直接传递路径
         ),
         # 灵巧手2
-        Node(
-            package='ros2_stark_controller',
-            executable='stark_node',
-            output='screen',
-            parameters=['/home/hailong/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml'],  # 直接传递路径
-        ),
+        # Node(
+        #     package='ros2_stark_controller',
+        #     executable='stark_node',
+        #     output='screen',
+        #     parameters=['/home/nvidia/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml'],  # 直接传递路径
+        # ),
     ])

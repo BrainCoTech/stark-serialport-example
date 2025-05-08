@@ -16,14 +16,22 @@ ros2_stark_ws/src/ros2_stark_controller/include
 
 # Replace ".bash" with your shell if you're not using bash
 # Possible values are: setup.bash, setup.sh, setup.zsh
+# Ubuntu 22.04
 source /opt/ros/humble/setup.bash
 # source /opt/ros/humble/setup.zsh
+
+# Ubuntu 20.04
+# source /opt/ros/galactic/setup.bash
 
 cd ros2_stark_ws
 rm -rf build install log
 
 # 编译
+# pip install empy==3.3.4
+# pip install catkin_pkg numpy lark
+# export PYTHON_EXECUTABLE=/home/nvidia/miniconda3/envs/py310/bin/python
 colcon build --symlink-install
+# colcon build --symlink-install --cmake-args -DPYTHON_EXECUTABLE=/home/nvidia/miniconda3/envs/py310/bin/python
 # colcon build --packages-select ros2_stark_interfaces 
 # colcon build --packages-select ros2_stark_controller
 
@@ -31,12 +39,12 @@ colcon build --symlink-install
 source install/setup.bash
 # source install/setup.zsh
 
-# FIXME: 需要设置动态链接库路径
-# export LD_LIBRARY_PATH=/home/hailong/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
+# FIXME: 需要设置动态链接库路径, 更新为实际路径
+# export LD_LIBRARY_PATH=/home/nvidia/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
 
 # 使用 launch 文件运行Stak节点
 ros2 launch ros2_stark_controller stark_launch.py 
-ros2 run ros2_stark_controller stark_node --ros-args --params-file /home/hailong/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml
+ros2 run ros2_stark_controller stark_node --ros-args --params-file /home/nvidia/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml
 
 # 测试位置控制
 ros2 run ros2_stark_controller stark_position_control.py --positions 0.5 0.5 0.5 0.5 0.5 0.5

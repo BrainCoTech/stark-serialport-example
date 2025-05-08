@@ -57,6 +57,12 @@ bool StarkNode::initialize_modbus() {
         RCLCPP_ERROR(this->get_logger(), "Failed to open Modbus on %s", port_.c_str());
         return false;
     }
+    auto info = modbus_get_device_info(handle_, slave_id_);
+    if (info != NULL)
+    {
+        RCLCPP_INFO(this->get_logger(), "Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id_, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
+        free_device_info(info);
+    }
     return true;
 }
 
