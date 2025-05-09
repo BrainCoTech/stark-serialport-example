@@ -19,30 +19,33 @@ StarkNode::StarkNode() : Node("stark_node") {
         throw std::runtime_error("Modbus initialization failed");
     }
 
+    // Initialize services
+    std::string slave_id = std::to_string(slave_id_);
+    get_device_info_service_ = create_service<ros2_stark_interfaces::srv::GetDeviceInfo>(
+        "get_device_info_" + slave_id, std::bind(&StarkNode::handle_get_device_info, this, 
+        std::placeholders::_1, std::placeholders::_2));
+    set_motor_multi_service_ = create_service<ros2_stark_interfaces::srv::SetMotorMulti>(
+        "set_motor_multi_" + slave_id, std::bind(&StarkNode::handle_set_motor_multi, this, 
+        std::placeholders::_1, std::placeholders::_2));
+    set_motor_single_service_ = create_service<ros2_stark_interfaces::srv::SetMotorSingle>(
+        "set_motor_single_" + slave_id, std::bind(&StarkNode::handle_set_motor_single, this, 
+        std::placeholders::_1, std::placeholders::_2));    
+
     // Initialize publishers
-    // joint_state_pub_ = create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
     motor_status_pub_ = create_publisher<ros2_stark_interfaces::msg::MotorStatus>("motor_status", 10);
     touch_status_pub_ = create_publisher<ros2_stark_interfaces::msg::TouchStatus>("touch_status", 10);
-    turbo_mode_pub_ = create_publisher<std_msgs::msg::Bool>("turbo_mode", 10);
-    voltage_pub_ = create_publisher<std_msgs::msg::UInt16>("voltage", 10);
 
     // Initialize subscribers
-    joint_cmd_sub_ = create_subscription<sensor_msgs::msg::JointState>(
-        "joint_commands", 10, std::bind(&StarkNode::joint_cmd_callback, this, std::placeholders::_1));
-    force_level_sub_ = create_subscription<std_msgs::msg::Int8>(
-        "force_level", 10, std::bind(&StarkNode::force_level_callback, this, std::placeholders::_1));
-    turbo_mode_sub_ = create_subscription<std_msgs::msg::Bool>(
-        "turbo_mode_cmd", 10, std::bind(&StarkNode::turbo_mode_callback, this, std::placeholders::_1));
 
     // Initialize timer
     timer_ = create_wall_timer(
-        std::chrono::milliseconds(50),
+        std::chrono::milliseconds(100),
         std::bind(&StarkNode::timer_callback, this));
 
     // 设备电量等信息，不需要频繁更新    
-    info_timer_ = create_wall_timer(
-        std::chrono::seconds(30),
-        std::bind(&StarkNode::info_timer_callback, this));
+    // info_timer_ = create_wall_timer(
+    //     std::chrono::seconds(30),
+    //     std::bind(&StarkNode::info_timer_callback, this));
 }
 
 StarkNode::~StarkNode() {
@@ -60,6 +63,9 @@ bool StarkNode::initialize_modbus() {
     auto info = modbus_get_device_info(handle_, slave_id_);
     if (info != NULL)
     {
+        sku_type_ = info->sku_type;
+        sn_ = std::string(info->serial_number); 
+        fw_version_ = std::string(info->firmware_version);
         RCLCPP_INFO(this->get_logger(), "Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id_, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
         free_device_info(info);
     }
@@ -67,34 +73,13 @@ bool StarkNode::initialize_modbus() {
 }
 
 void StarkNode::timer_callback() {
-    // publish_joint_state();
     publish_motor_status();
     publish_touch_status();
 }
 
-void StarkNode::info_timer_callback() {
-    publish_device_status();
-}
-
-void StarkNode::publish_joint_state() {
-    auto motor_status = modbus_get_motor_status(handle_, slave_id_);
-    if (!motor_status) {
-        RCLCPP_WARN(this->get_logger(), "Failed to get motor status");
-        return;
-    }
-
-    auto msg = sensor_msgs::msg::JointState();
-    msg.header.stamp = this->now();
-    msg.name = {"thumb", "thumb_aux", "index", "middle", "ring", "pinky"};
-    for (int i = 0; i < 6; i++) {
-        msg.position.push_back(motor_status->positions[i] / 100.0);  // Normalize to 0-1
-        msg.velocity.push_back(motor_status->speeds[i] / 100.0);     // Normalize to -1-1
-        msg.effort.push_back(motor_status->currents[i]);
-    }
-
-    joint_state_pub_->publish(msg);
-    free_motor_status_data(motor_status);
-}
+// void StarkNode::() {
+//     publish_device_status();
+// }
 
 void StarkNode::publish_motor_status() {
     auto motor_status = modbus_get_motor_status(handle_, slave_id_);
@@ -104,7 +89,7 @@ void StarkNode::publish_motor_status() {
     }
 
     auto msg = ros2_stark_interfaces::msg::MotorStatus();
-    // 使用 std::copy 填充 std::array
+    msg.slave_id = slave_id_;
     std::copy(motor_status->positions, motor_status->positions + 6, msg.positions.begin());
     std::copy(motor_status->speeds, motor_status->speeds + 6, msg.speeds.begin());
     std::copy(motor_status->currents, motor_status->currents + 6, msg.currents.begin());
@@ -128,6 +113,7 @@ void StarkNode::publish_touch_status() {
     }
 
     auto msg = ros2_stark_interfaces::msg::TouchStatus();
+    msg.slave_id = slave_id_;
     // 填充固定 5 个元素的数组, 代表 5个手指上对应的传感器信息
     for (int i = 0; i < 5; i++) {
         msg.data[i].normal_force1 = touch_status->data[i].normal_force1;
@@ -149,42 +135,125 @@ void StarkNode::publish_touch_status() {
     free_touch_status_data(touch_status);
 }
 
-void StarkNode::publish_device_status() {
-    // 电量
-    auto voltage = modbus_get_voltage(handle_, slave_id_);
-    auto voltage_msg = std_msgs::msg::UInt16();
-    voltage_msg.data = voltage;
-    voltage_pub_->publish(voltage_msg);
-
-    // Turbo mode
-    // auto turbo_mode = modbus_get_turbo_mode_enabled(handle_, slave_id_);
-    // auto turbo_msg = std_msgs::msg::Bool();
-    // turbo_msg.data = turbo_mode;
-    // turbo_mode_pub_->publish(turbo_msg);
+void StarkNode::handle_get_device_info(
+    const std::shared_ptr<ros2_stark_interfaces::srv::GetDeviceInfo::Request> request,
+    std::shared_ptr<ros2_stark_interfaces::srv::GetDeviceInfo::Response> response) {
+    response->sku_type = static_cast<uint8_t>(sku_type_);
+    response->serial_number = sn_;
+    response->firmware_version = fw_version_;
+    if (request->get_voltage) {
+        voltage_ = modbus_get_voltage(handle_, slave_id_);
+        response->voltage = voltage_;
+    }
+    if (request->get_turbo_mode) {
+        is_turbo_mode_enabled_ = modbus_get_turbo_mode_enabled(handle_, slave_id_);
+        response->turbo_mode = is_turbo_mode_enabled_;
+    }
+    response->success = true;
 }
 
-void StarkNode::joint_cmd_callback(const sensor_msgs::msg::JointState::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "Received joint commands");
-    if (msg->position.size() >= 6) {
+void StarkNode::handle_set_motor_multi(
+    const std::shared_ptr<ros2_stark_interfaces::srv::SetMotorMulti::Request> request,
+    std::shared_ptr<ros2_stark_interfaces::srv::SetMotorMulti::Response> response) {
+    response->success = true;
+    switch (request->mode)
+    {
+    case 1: 
+    {
         uint16_t positions[6];
         for (int i = 0; i < 6; i++) {
-            positions[i] = static_cast<uint16_t>(msg->position[i] * 100);  // Scale to 0-100
+            positions[i] = static_cast<uint16_t>(request->positions[i]);
         }
-        RCLCPP_INFO(this->get_logger(), "Joint positions: %d, %d, %d, %d, %d, %d",
-                    positions[0], positions[1], positions[2], positions[3], positions[4], positions[5]);
         modbus_set_finger_positions(handle_, slave_id_, positions, 6);
     }
-}
-
-void StarkNode::force_level_callback(const std_msgs::msg::Int8::SharedPtr msg) {
-    auto level = static_cast<ForceLevel>(msg->data);
-    if (level >= FORCE_LEVEL_SMALL && level <= FORCE_LEVEL_FULL) {
-        modbus_set_force_level(handle_, slave_id_, level);
+    break;
+    case 2:
+        int16_t speeds[6];
+        for (int i = 0; i < 6; i++) {
+            speeds[i] = static_cast<int16_t>(request->speeds[i]);
+        }
+        modbus_set_finger_speeds(handle_, slave_id_, speeds, 6);
+    break;
+    case 3: // 仅支持二代手
+        int16_t currents[6];
+        for (int i = 0; i < 6; i++) {
+            currents[i] = static_cast<int16_t>(request->currents[i]);
+        }
+        modbus_set_finger_currents(handle_, slave_id_, currents, 6);
+    break;
+    case 4: // 仅支持二代手
+        int16_t pwms[6];
+        for (int i = 0; i < 6; i++) {
+            pwms[i] = static_cast<int16_t>(request->pwms[i]);
+        }
+        modbus_set_finger_pwms(handle_, slave_id_, pwms, 6);
+    break;      
+    case 5: // 仅支持二代手
+    {
+        uint16_t positions[6];
+        for (int i = 0; i < 6; i++) {
+            positions[i] = static_cast<uint16_t>(request->positions[i]);
+        }
+        uint16_t durations[6];
+        for (int i = 0; i < 6; i++) {
+            durations[i] = static_cast<uint16_t>(request->durations[i]);
+        }
+        modbus_set_finger_positions_and_durations(handle_, slave_id_, positions, durations, 6);
+    }
+    break;   
+    case 6: // 仅支持二代手
+    {
+        uint16_t positions[6];
+        for (int i = 0; i < 6; i++) {
+            positions[i] = static_cast<uint16_t>(request->positions[i]);
+        }
+        uint16_t speeds[6];
+        for (int i = 0; i < 6; i++) {
+            speeds[i] = static_cast<uint16_t>(request->speeds[i]);
+        }
+        modbus_set_finger_positions_and_speeds(handle_, slave_id_, positions, speeds, 6);
+    }   
+    break;    
+    default:
+        response->success = false;
+        break;
     }
 }
 
-void StarkNode::turbo_mode_callback(const std_msgs::msg::Bool::SharedPtr msg) {
-    modbus_set_turbo_mode_enabled(handle_, slave_id_, msg->data);
+void StarkNode::handle_set_motor_single(
+    const std::shared_ptr<ros2_stark_interfaces::srv::SetMotorSingle::Request> request,
+    std::shared_ptr<ros2_stark_interfaces::srv::SetMotorSingle::Response> response) {
+    StarkFingerId finger_id = static_cast<StarkFingerId>(request->motor_id);
+    response->success = true;
+    switch (request->mode) {
+    case 1:
+        modbus_set_finger_position(handle_, slave_id_, finger_id, request->position);
+        break;
+    case 2:
+        modbus_set_finger_speed(handle_, slave_id_, finger_id, request->speed);
+        break;
+    case 3: // 仅支持二代手
+        /// 范围为-1000~1000或-最大电流~最大电流mA
+        modbus_set_finger_current(handle_, slave_id_, finger_id, request->current);
+        break;  
+    case 4: // 仅支持二代手
+        /// 范围为-1000~1000
+        modbus_set_finger_pwm(handle_, slave_id_, finger_id, request->pwm);    
+        break;
+    case 5: // 仅支持二代手
+        /// 位置范围为0~1000或最小-最大位置（°）
+        /// 期望时间范围为1~2000ms
+        modbus_set_finger_position_with_millis(handle_, slave_id_, finger_id, request->position, request->duration);
+        break;   
+    case 6: // 仅支持二代手
+        /// 位置范围为0~1000或最小-最大位置（°）
+        /// 速度范围为1~1000或最小-最大速度(°/s）
+        modbus_set_finger_position_with_speed(handle_, slave_id_, finger_id, request->position, request->speed);
+        break;
+    default:
+        response->success = false;
+        break;        
+    }
 }
 
 int main(int argc, char** argv) {

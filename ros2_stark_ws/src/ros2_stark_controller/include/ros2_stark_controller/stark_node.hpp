@@ -7,8 +7,10 @@
 #include <std_msgs/msg/u_int16.hpp>
 #include <std_msgs/msg/u_int8.hpp>
 #include <std_msgs/msg/int8.hpp>
+#include "ros2_stark_interfaces/srv/get_device_info.hpp"
+#include "ros2_stark_interfaces/srv/set_motor_multi.hpp"
+#include "ros2_stark_interfaces/srv/set_motor_single.hpp"
 #include "ros2_stark_interfaces/msg/motor_status.hpp"
-// #include "ros2_stark_interfaces/msg/touch_status_item.hpp"
 #include "ros2_stark_interfaces/msg/touch_status.hpp"
 #include "ros2_stark_controller/stark-sdk.h"
 
@@ -18,17 +20,17 @@ public:
     ~StarkNode();
 
 private:
+    // ROS 2 Services
+    rclcpp::Service<ros2_stark_interfaces::srv::GetDeviceInfo>::SharedPtr get_device_info_service_;
+    rclcpp::Service<ros2_stark_interfaces::srv::SetMotorMulti>::SharedPtr set_motor_multi_service_;
+    rclcpp::Service<ros2_stark_interfaces::srv::SetMotorSingle>::SharedPtr set_motor_single_service_;
+    
     // ROS 2 Publishers
-    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
     rclcpp::Publisher<ros2_stark_interfaces::msg::MotorStatus>::SharedPtr motor_status_pub_;
     rclcpp::Publisher<ros2_stark_interfaces::msg::TouchStatus>::SharedPtr touch_status_pub_;
-    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr turbo_mode_pub_;
-    rclcpp::Publisher<std_msgs::msg::UInt16>::SharedPtr voltage_pub_;
 
     // ROS 2 Subscribers
-    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_cmd_sub_;
-    rclcpp::Subscription<std_msgs::msg::Int8>::SharedPtr force_level_sub_;
-    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr turbo_mode_sub_;
+    // rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_cmd_sub_;
 
     // ROS 2 Timer
     rclcpp::TimerBase::SharedPtr timer_;
@@ -45,17 +47,31 @@ private:
     StarkProtocolType protocol_type_;
     LogLevel log_level_;
 
-    // Callback functions
+    // device information
+    SkuType sku_type_;
+    std::string sn_;
+    std::string fw_version_;
+    uint32_t voltage_;
+    bool is_turbo_mode_enabled_;
+
+    // Callback functions for timers
     void timer_callback();
-    void info_timer_callback();
-    void joint_cmd_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
-    void force_level_callback(const std_msgs::msg::Int8::SharedPtr msg);
-    void turbo_mode_callback(const std_msgs::msg::Bool::SharedPtr msg);
+    // void info_timer_callback();
+
+    // Callback functions for services
+    void handle_get_device_info(
+        const std::shared_ptr<ros2_stark_interfaces::srv::GetDeviceInfo::Request> request,
+        std::shared_ptr<ros2_stark_interfaces::srv::GetDeviceInfo::Response> response);
+    void handle_set_motor_multi(
+        const std::shared_ptr<ros2_stark_interfaces::srv::SetMotorMulti::Request> request,
+        std::shared_ptr<ros2_stark_interfaces::srv::SetMotorMulti::Response> response);
+    void handle_set_motor_single(
+        const std::shared_ptr<ros2_stark_interfaces::srv::SetMotorSingle::Request> request,
+        std::shared_ptr<ros2_stark_interfaces::srv::SetMotorSingle::Response> response);    
 
     // Helper functions
     bool initialize_modbus();
-    void publish_joint_state();
-    void publish_device_status();
+    // void publish_device_status();
     void publish_motor_status();
     void publish_touch_status();
 };

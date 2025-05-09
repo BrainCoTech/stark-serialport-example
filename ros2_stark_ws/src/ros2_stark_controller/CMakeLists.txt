@@ -52,7 +52,7 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
 
 # 安装 Python 脚本
 install(PROGRAMS
-  scripts/stark_position_control.py
+  scripts/stark_node_client.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

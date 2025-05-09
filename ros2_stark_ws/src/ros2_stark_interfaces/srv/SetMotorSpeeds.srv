@@ -1,3 +1,0 @@
-int8[6] speeds  # 目标电机速度，固定6个电机
----
-bool success        # 执行结果

@@ -1,3 +1,0 @@
-uint8[6] positions  # 目标电机位置，固定6个电机
----
-bool success        # 执行结果

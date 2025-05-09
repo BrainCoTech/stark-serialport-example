@@ -28,13 +28,6 @@ IS_ARM64=$([[ "$ARCH" == "aarch64" ]] && echo 1 || echo 0)
 echo_y "OS type: $OS_TYPE, ARCH: $ARCH"
 case "$OS_TYPE" in
 "Linux")
-  LIB_NAME="linux"
-  if [ "$(uname -m)" == "aarch64" ]; then
-    LIB_NAME=linux-arm64
-  else
-    LIB_NAME=linux
-  fi
-
   # 加载系统发行版信息
   if [ -f /etc/os-release ]; then
     . /etc/os-release
