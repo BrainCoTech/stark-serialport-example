@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
   // auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
   uint32_t baudrate = 115200;
   uint8_t slave_id = 1;
-  auto handle = modbus_open(port_name, baudrate, slave_id);
+  auto handle = modbus_open(port_name, baudrate);
 
   get_device_info(handle, slave_id);
 
@@ -104,7 +104,7 @@ void get_touch_status(ModbusHandle *handle, uint8_t slave_id)
   auto status = modbus_get_touch_status(handle, slave_id);
   if (status != NULL)
   {
-    auto data = status->data[1];
+    auto data = status->items[1];
     printf("Slave[%hhu] Touch Sensor Status At Index Finger:\n", slave_id);
     printf("Normal Force 1: %hu\n", data.normal_force1);
     printf("Normal Force 2: %hu\n", data.normal_force2);
@@ -121,7 +121,7 @@ void get_touch_status(ModbusHandle *handle, uint8_t slave_id)
     printf("Status: %hu\n", data.status);
 
     // Free the allocated memory
-    free_touch_status_data(status);
+    free_touch_finger_data(status);
   }
   else
   {

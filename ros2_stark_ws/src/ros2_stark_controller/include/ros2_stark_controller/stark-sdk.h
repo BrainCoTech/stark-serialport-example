@@ -144,7 +144,7 @@ struct TouchRawData {
 
 /// 触觉传感器数据
 /// 三维力数值、自接近、互接近电容值，以及传感器状态
-struct TouchSensorStatus {
+struct TouchFingerItem {
   uint16_t normal_force1;
   uint16_t normal_force2;
   uint16_t normal_force3;
@@ -160,8 +160,8 @@ struct TouchSensorStatus {
   uint16_t status;
 };
 
-struct TouchStatusData {
-  TouchSensorStatus data[5];
+struct TouchFingerData {
+  TouchFingerItem items[5];
 };
 
 struct TurboConfig {
@@ -199,8 +199,7 @@ void list_available_ports();
 /// 返回 ModbusHandle 结构体指针，关闭时需要调用 modbus_close 释放内存
 /// 如果失败，返回 NULL
 ModbusHandle *modbus_open(const char *port,
-                          uint32_t baudrate,
-                          uint8_t slave_id);
+                          uint32_t baudrate);
 
 /// 关闭串口
 void modbus_close(ModbusHandle *handle);
@@ -245,16 +244,17 @@ void set_canfd_send_callback(CanFdSendCallback cb);
 
 /// 设置设备ID，默认为1，范围为1~247, 0 为广播地址，一代手默认为1，二代手左手默认ID为0x7e，右手默认ID为0x7f
 /// 当需要在一条总线上同时控制多只设备时，需要将设备ID设置为不同的值
-/// 例如：设备1的ID为1，设备2的ID为2，设备3的ID为3
+/// 例如：设置左手ID为1，右手ID为2
 /// 通过广播地址0，可以同时控制总线上的所有设备，Mobbus协议规定广播地址的设备不会回复
 void modbus_set_slave_id(ModbusHandle *handle,
                          uint8_t slave_id,
                          uint8_t new_id);
 
-/// 获取设备ID
+/// Deprecated
 /// 设置力量等级，仅支持标准版一代手
 void modbus_set_force_level(ModbusHandle *handle, uint8_t slave_id, ForceLevel level);
 
+/// Deprecated
 /// 获取力量等级，仅支持标准版一代手
 uint8_t modbus_get_force_level(ModbusHandle *handle, uint8_t slave_id);
 
@@ -360,55 +360,6 @@ void modbus_set_finger_position(ModbusHandle *handle,
                                 StarkFingerId finger_id,
                                 uint16_t position);
 
-/// 设置单个手指位置+期望时间
-/// 仅支持二代手
-/// 位置范围为0~1000或最小-最大位置（°）
-/// 期望时间范围为1~2000ms
-void modbus_set_finger_position_with_millis(ModbusHandle *handle,
-                                            uint8_t slave_id,
-                                            StarkFingerId finger_id,
-                                            uint16_t position,
-                                            uint16_t millis);
-
-/// 设置单个手指位置+期望速度
-/// 仅支持二代手
-/// 位置范围为0~1000或最小最大位置（°）
-/// 速度范围为1~1000或最小~最大速度(°/s）
-void modbus_set_finger_position_with_speed(ModbusHandle *handle,
-                                           uint8_t slave_id,
-                                           StarkFingerId finger_id,
-                                           uint16_t position,
-                                           uint16_t speed);
-
-/// 设置多个手指位置
-/// positions: 位置值数组，长度为6，范围为0~100, 对应比分比位置
-void modbus_set_finger_positions(ModbusHandle *handle,
-                                 uint8_t slave_id,
-                                 const uint16_t *positions,
-                                 uintptr_t len);
-
-/// 设置多个手指位置+期望时间
-/// 仅支持二代手
-/// positions: 位置值数组，长度为6，范围为0~1000或最小~最大位置（°）
-/// millis: 期望时间值数组，长度为6，范围为1~2000ms
-/// 其中位置值和期望时间值一一对应
-void modbus_set_finger_positions_and_durations(ModbusHandle *handle,
-                                               uint8_t slave_id,
-                                               const uint16_t *positions,
-                                               const uint16_t *millis,
-                                               uintptr_t len);
-
-/// 设置多个手指位置+期望速度
-/// 仅支持二代手
-/// positions: 位置值数组，长度为6，范围为0~1000或最小最大位置（°）
-/// speeds: 速度值数组，长度为6，范围为1~1000或最小~最大速度(°/s)
-/// 其中位置值和速度值一一对应
-void modbus_set_finger_positions_and_speeds(ModbusHandle *handle,
-                                            uint8_t slave_id,
-                                            const uint16_t *positions,
-                                            const uint16_t *speeds,
-                                            uintptr_t len);
-
 /// 设置单个手指速度
 /// speed: 速度值，一代手范围为-100~100
 /// 二代手范围为-1000~1000或-最大速度~最大速度°/s
@@ -436,6 +387,33 @@ void modbus_set_finger_pwm(ModbusHandle *handle,
                            StarkFingerId finger_id,
                            int16_t pwm);
 
+/// 设置单个手指位置+期望时间
+/// 仅支持二代手
+/// 位置范围为0~1000或最小-最大位置（°）
+/// 期望时间范围为1~2000ms
+void modbus_set_finger_position_with_millis(ModbusHandle *handle,
+                                            uint8_t slave_id,
+                                            StarkFingerId finger_id,
+                                            uint16_t position,
+                                            uint16_t millis);
+
+/// 设置单个手指位置+期望速度
+/// 仅支持二代手
+/// 位置范围为0~1000或最小最大位置（°）
+/// 速度范围为1~1000或最小~最大速度(°/s）
+void modbus_set_finger_position_with_speed(ModbusHandle *handle,
+                                           uint8_t slave_id,
+                                           StarkFingerId finger_id,
+                                           uint16_t position,
+                                           uint16_t speed);
+
+/// 设置多个手指位置
+/// positions: 位置值数组，长度为6，范围为0~100, 对应比分比位置
+void modbus_set_finger_positions(ModbusHandle *handle,
+                                 uint8_t slave_id,
+                                 const uint16_t *positions,
+                                 uintptr_t len);
+
 /// 设置多个手指速度
 /// speeds: 速度值数组，长度为6，一代手范围为-100~100
 /// 二代手范围为-1000~1000或-最大速度~最大速度°/s
@@ -462,6 +440,28 @@ void modbus_set_finger_pwms(ModbusHandle *handle,
                             uint8_t slave_id,
                             const int16_t *pwms,
                             uintptr_t len);
+
+/// 设置多个手指位置+期望时间
+/// 仅支持二代手
+/// positions: 位置值数组，长度为6，范围为0~1000或最小~最大位置（°）
+/// millis: 期望时间值数组，长度为6，范围为1~2000ms
+/// 其中位置值和期望时间值一一对应
+void modbus_set_finger_positions_and_durations(ModbusHandle *handle,
+                                               uint8_t slave_id,
+                                               const uint16_t *positions,
+                                               const uint16_t *millis,
+                                               uintptr_t len);
+
+/// 设置多个手指位置+期望速度
+/// 仅支持二代手
+/// positions: 位置值数组，长度为6，范围为0~1000或最小最大位置（°）
+/// speeds: 速度值数组，长度为6，范围为1~1000或最小~最大速度(°/s)
+/// 其中位置值和速度值一一对应
+void modbus_set_finger_positions_and_speeds(ModbusHandle *handle,
+                                            uint8_t slave_id,
+                                            const uint16_t *positions,
+                                            const uint16_t *speeds,
+                                            uintptr_t len);
 
 /// 获取手指状态
 /// 位置、速度、电流、马达运行状态
@@ -517,11 +517,20 @@ void modbus_set_action_sequence(ModbusHandle *handle,
 /// 如果失败，返回 NULL
 TouchRawData *modbus_get_touch_raw_data(ModbusHandle *handle, uint8_t slave_id);
 
-/// 获取触觉传感器状态
-/// 返回5个手指的触觉三维力数据
-/// 使用完毕后需要调用 free_touch_status_data 释放内存
+/// 获取单个手指上的触觉传感器状态
+/// 返回单个手指的触觉三维力数据、电容值、传感器状态
+/// index: 0~4，分别对应大拇指、食指、中指、无名指、小拇指
+/// 使用完毕后需要调用 free_touch_finger_item 释放内存
 /// 如果失败，返回 NULL
-TouchStatusData *modbus_get_touch_status(ModbusHandle *handle, uint8_t slave_id);
+TouchFingerItem *modbus_get_single_touch_status(ModbusHandle *handle,
+                                                uint8_t slave_id,
+                                                uint8_t index);
+
+/// 获取触觉传感器状态
+/// 返回5个手指的触觉三维力数据、电容值、传感器状态
+/// 使用完毕后需要调用 free_touch_finger_data 释放内存
+/// 如果失败，返回 NULL
+TouchFingerData *modbus_get_touch_status(ModbusHandle *handle, uint8_t slave_id);
 
 /// 启用触觉传感器
 /// bits: 启用的触觉传感器位，范围为0~31
@@ -592,7 +601,9 @@ void free_motor_status_data(MotorStatusData *data);
 
 void free_touch_raw_data(TouchRawData *data);
 
-void free_touch_status_data(TouchStatusData *status);
+void free_touch_finger_data(TouchFingerData *status);
+
+void free_touch_finger_item(TouchFingerItem *item);
 
 void free_turbo_config(TurboConfig *config);
 

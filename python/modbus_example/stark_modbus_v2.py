@@ -12,7 +12,7 @@ async def main():
 
     slave_id = 0x7E  # 左手默认ID为0x7e，右手默认ID为0x7f
     # fmt: off
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800, slave_id)
+    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
 
     logger.debug("get_serialport_baudrate")  # 获取串口配置, 波特率
     baudrate = await client.get_serialport_baudrate(slave_id)

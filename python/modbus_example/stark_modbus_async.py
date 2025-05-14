@@ -44,9 +44,7 @@ async def main():
     if port_name is None:
         return
     slave_id = 1
-    client = await libstark.modbus_open(
-        port_name, libstark.Baudrate.Baud115200, slave_id
-    )
+    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200)
 
     await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])  # 握手
 

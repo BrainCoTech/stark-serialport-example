@@ -91,7 +91,7 @@ async def main():
     logger.info(f"port_name: {port_name}")
     # 打开串口
     # fmt: off
-    client = await libstark.modbus_open(port_name, baurate, slave_id)
+    client = await libstark.modbus_open(port_name, baurate)
 
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)

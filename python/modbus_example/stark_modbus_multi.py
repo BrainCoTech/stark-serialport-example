@@ -41,12 +41,10 @@ async def main():
     if port_name is None:
         return
 
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200, 1)
+    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200)
 
     for slave_id in slave_ids:
-        await client.set_finger_positions(
-            slave_id, [60, 60, 100, 100, 100, 100]
-        )  # 握手
+        await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])  # 握手
 
     # 创建并启动异步任务
     asyncio.create_task(get_motor_status_periodically(client))

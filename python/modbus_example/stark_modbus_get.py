@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from stark_utils import get_stark_port_name, libstark, logger
+from stark_utils import convert_to_mA, convert_to_position, get_stark_port_name, libstark, logger, convert_to_angle
 
 
 # Main
@@ -10,9 +10,7 @@ async def main():
     if port_name is None:
         return
     slave_id = 1
-    client = await libstark.modbus_open(
-        port_name, libstark.Baudrate.Baud115200, slave_id
-    )
+    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200)
 
     logger.debug("get_serialport_cfg")  # 获取串口配置, 波特率
     baudrate = await client.get_serialport_baudrate(slave_id)
@@ -34,11 +32,32 @@ async def main():
     voltage = await client.get_voltage(slave_id)
     logger.info(f"Voltage: {voltage:.1f} mV")
 
+    # await client.set_finger_speeds(slave_id, [100] * 6)  # 设置手指速度，速度环, 手指闭合
+    # await client.set_finger_speeds(slave_id, [-100] * 6)  # 设置手指速度，速度环, 手指张开
+
+    # 设置手指位置, 按物理角度
+    angles = [20] * 6 # 一代手角度范围 [55, 90, 70, 70, 70, 70]
+    await client.set_finger_positions(slave_id, convert_to_position(angles))
+    await asyncio.sleep(1.0)
+
+    # 握手
+    await client.set_finger_positions(slave_id, [100, 100, 100, 100, 100, 100])
+
+    # 等待手指到达目标位置
+    await asyncio.sleep(1.0)
+
+    # 张开
+    await client.set_finger_positions(slave_id, [0] * 6)
+    await asyncio.sleep(1.5)
+
     logger.debug("get_motor_status")  # 获取手指状态, 位置，电流，motor状态
     status = await client.get_motor_status(slave_id)
-    logger.info(f"positions: {list(status.positions)}")
+    logger.info(f"positions(0~100): {list(status.positions)}")
+    logger.info(f"angles(角度): {convert_to_angle(list(status.positions))}") # 角度
+    logger.info(f"currents: {list(status.currents)}")
+    logger.info(f"currents(mA): {convert_to_mA(list(status.currents))}") # mA
     logger.info(f"states: {list(status.states)}")
-    logger.info(f"Finger status: {status.description}")
+    logger.debug(f"motor status: {status.description}")
 
     # 关闭资源
     libstark.modbus_close(client)

@@ -96,9 +96,7 @@ async def main():
     if port_name is None:
         return
     slave_id = 1
-    client = await libstark.modbus_open(
-        port_name, libstark.Baudrate.Baud115200, slave_id
-    )
+    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200)
 
     logger.debug("get_device_info")
     device_info = await client.get_device_info(slave_id)

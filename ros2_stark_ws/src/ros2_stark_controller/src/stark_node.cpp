@@ -55,7 +55,7 @@ StarkNode::~StarkNode() {
 }
 
 bool StarkNode::initialize_modbus() {
-    handle_ = modbus_open(port_.c_str(), baudrate_, slave_id_);
+    handle_ = modbus_open(port_.c_str(), baudrate_);
     if (!handle_) {
         RCLCPP_ERROR(this->get_logger(), "Failed to open Modbus on %s", port_.c_str());
         return false;
@@ -116,23 +116,23 @@ void StarkNode::publish_touch_status() {
     msg.slave_id = slave_id_;
     // 填充固定 5 个元素的数组, 代表 5个手指上对应的传感器信息
     for (int i = 0; i < 5; i++) {
-        msg.data[i].normal_force1 = touch_status->data[i].normal_force1;
-        msg.data[i].normal_force2 = touch_status->data[i].normal_force2;
-        msg.data[i].normal_force3 = touch_status->data[i].normal_force3;
-        msg.data[i].tangential_force1 = touch_status->data[i].tangential_force1;
-        msg.data[i].tangential_force2 = touch_status->data[i].tangential_force2;
-        msg.data[i].tangential_force3 = touch_status->data[i].tangential_force3;
-        msg.data[i].tangential_direction1 = touch_status->data[i].tangential_direction1;
-        msg.data[i].tangential_direction2 = touch_status->data[i].tangential_direction2;
-        msg.data[i].tangential_direction3 = touch_status->data[i].tangential_direction3;
-        msg.data[i].self_proximity1 = touch_status->data[i].self_proximity1;
-        msg.data[i].self_proximity2 = touch_status->data[i].self_proximity2;
-        msg.data[i].mutual_proximity = touch_status->data[i].mutual_proximity;
-        msg.data[i].status = touch_status->data[i].status;
+        msg.data[i].normal_force1 = touch_status->items[i].normal_force1;
+        msg.data[i].normal_force2 = touch_status->items[i].normal_force2;
+        msg.data[i].normal_force3 = touch_status->items[i].normal_force3;
+        msg.data[i].tangential_force1 = touch_status->items[i].tangential_force1;
+        msg.data[i].tangential_force2 = touch_status->items[i].tangential_force2;
+        msg.data[i].tangential_force3 = touch_status->items[i].tangential_force3;
+        msg.data[i].tangential_direction1 = touch_status->items[i].tangential_direction1;
+        msg.data[i].tangential_direction2 = touch_status->items[i].tangential_direction2;
+        msg.data[i].tangential_direction3 = touch_status->items[i].tangential_direction3;
+        msg.data[i].self_proximity1 = touch_status->items[i].self_proximity1;
+        msg.data[i].self_proximity2 = touch_status->items[i].self_proximity2;
+        msg.data[i].mutual_proximity = touch_status->items[i].mutual_proximity;
+        msg.data[i].status = touch_status->items[i].status;
     }
 
     touch_status_pub_->publish(msg);
-    free_touch_status_data(touch_status);
+    free_touch_finger_data(touch_status);
 }
 
 void StarkNode::handle_get_device_info(

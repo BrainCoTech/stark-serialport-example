@@ -35,7 +35,7 @@ async def main():
         return
     slave_id = 1  # default slave_id is 1
     baudrate = libstark.Baudrate.Baud115200
-    client = await libstark.modbus_open(port_name, baudrate, slave_id)
+    client = await libstark.modbus_open(port_name, baudrate)
 
     logger.debug("get_serialport_cfg")  # 获取串口配置, slave_id, 波特率
     serialport_cfg = await client.get_serialport_cfg(slave_id)
@@ -48,8 +48,8 @@ async def main():
 
     # logger.debug("set_baudrate")  # 修改波特率，设置后，会执行重启操作
     # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud115200) # 修改波特率为115200
-    await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # 修改波特率为460800
-    exit(0)
+    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # 修改波特率为460800
+    # exit(0)
 
     # ------------------- 设置力量等级，大-中-小 -------------------
     # 触觉版本废弃了该功能
@@ -63,10 +63,14 @@ async def main():
     # logger.info(f"Force level: {level}")
 
     # ------------------- 设置Turbo模式及参数 -------------------
-    logger.debug(f"set_turbo_mode")
-    await client.set_turbo_mode_enabled(slave_id, False)
-    turbo_mode = await client.get_turbo_mode_enabled(slave_id)
-    logger.info(f"Turbo mode: {turbo_mode}")
+    # await client.set_turbo_mode_enabled(slave_id, True)  # 开启Turbo模式
+    await client.set_turbo_mode_enabled(slave_id, False) # 关闭Turbo模式
+    turbo_mode = await client.get_turbo_mode_enabled(slave_id) # 读取Turbo模式是否开启
+    # 打印Turbo模式状态
+    if turbo_mode:
+        logger.info("Turbo mode: enabled")
+    else:
+        logger.info("Turbo mode: disabled")
 
     logger.debug(f"set_turbo_conf")
     turbo_interval = 2000
@@ -84,7 +88,7 @@ async def main():
 
     # await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100]) # 握手
     # 位置校准
-    await client.calibrate_position(slave_id)
+    # await client.calibrate_position(slave_id)
 
     # 关闭资源
     libstark.modbus_close(client)

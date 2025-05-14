@@ -7,7 +7,7 @@ DIST_DIR="${SCRIPT_DIR}/dist"
 VERSION_FILE="${SCRIPT_DIR}/VERSION"
 
 # Configuration
-LIB_VERSION="v0.4.4"
+LIB_VERSION="v0.4.5"
 BASE_URL="https://app.brainco.cn/universal/bc-stark-sdk/libs/${LIB_VERSION}"
 
 # Colorful echo functions
@@ -36,7 +36,7 @@ case "$OS_TYPE" in
   # 根据系统和架构设置ZIP文件名
   if [[ "$ID" == "ubuntu" && "$VERSION_ID" == "22.04" ]]; then
     LIB_PREFIX="linux"
-    # ZIP_PREFIX="ubuntu-22"
+    # LIB_PREFIX="ubuntu-22"
   else
     LIB_PREFIX="linux"
   fi
@@ -47,7 +47,6 @@ case "$OS_TYPE" in
   ;;
 "Darwin")
   LIB_NAME="mac"
-  # LIB_NAME="linux" # Force to linux for macOS
   ;;
 "msys" | "MINGW"*)
   LIB_NAME="win"
@@ -106,4 +105,4 @@ cat >"$VERSION_FILE" <<EOF
 Update Time: $(date)
 EOF
 
-echo_y "[bc-device-${LIB_NAME}-sdk] (${LIB_VERSION}) downloaded successfully to ${DIST_DIR}"
+echo_y "[bc-stark-${LIB_NAME}-sdk] (${LIB_VERSION}) downloaded successfully to ${DIST_DIR}"
