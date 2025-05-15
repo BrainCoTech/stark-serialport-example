@@ -19,6 +19,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MotorStatus.msg"
   "msg/TouchStatusItem.msg"
   "msg/TouchStatus.msg"
+  "msg/SetMotorSingle.msg"
+  "msg/SetMotorMulti.msg"
   "srv/GetDeviceInfo.srv"
   "srv/SetMotorSingle.srv"
   "srv/SetMotorMulti.srv"

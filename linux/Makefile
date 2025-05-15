@@ -48,11 +48,20 @@ clean:
 	rm -fR $(addsuffix .exe.dSYM,$(BINARIES))
 
 # 运行目标
-run:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_example.exe
+run_v1:
+	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_v1.exe
+
+run_v1_touch:
+	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_v1_touch.exe
+
+run_v2:
+	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_v2.exe
 
 run_multi:
 	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_multi_example.exe
+
+run_customed_modbus:
+	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_customed_modbus.exe
 
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run

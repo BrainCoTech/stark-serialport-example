@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "stark-sdk.h"
 #include <unistd.h>
+#include "stark-sdk.h"
 
 // 声明函数
 void get_touch_status(ModbusHandle *handle, uint8_t slave_id);

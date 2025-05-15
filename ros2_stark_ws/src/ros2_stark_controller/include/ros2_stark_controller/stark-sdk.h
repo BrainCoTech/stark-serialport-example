@@ -26,6 +26,12 @@ enum ActionSequenceId : uint8_t {
   ACTION_SEQUENCE_ID_CUSTOM_GESTURE6 = 15,
 };
 
+enum ContactState : uint8_t {
+  CONTACT_STATE_NO_CONTACT = 0,
+  CONTACT_STATE_CONTACT = 1,
+  CONTACT_STATE_CONTACT_SLIDING = 2,
+};
+
 enum FingerUnitMode : uint8_t {
   FINGER_UNIT_MODE_NORMALIZED = 0,
   FINGER_UNIT_MODE_PHYSICAL = 1,
@@ -112,21 +118,6 @@ struct DeviceInfo {
   const char *firmware_version;
 };
 
-/// CAN FD接收回调
-/// 注意data_out 长度最多为 64
-/// 返回值为 0 成功，其他值失败
-using CanFdReadCallback = int32_t(*)(uint8_t slave_id,
-                                     uint32_t *can_id_out,
-                                     uint8_t *data_out,
-                                     uintptr_t *data_len_out);
-
-/// CAN FD发送回调
-/// 返回值为 0 成功，其他值失败
-using CanFdSendCallback = int32_t(*)(uint8_t slave_id,
-                                     uint32_t can_id,
-                                     const uint8_t *data,
-                                     uintptr_t data_len);
-
 struct MotorStatusData {
   uint8_t positions[6];
   int8_t speeds[6];
@@ -180,6 +171,50 @@ struct ButtonPressEvent {
   PressState press_state;
 };
 
+/// Modbus接收回调
+/// 返回值为 0 成功，其他值失败
+using ModbusReadCallback = int32_t(*)(uint8_t slave_id,
+                                      uint16_t register_address,
+                                      uint16_t *data_out,
+                                      uint16_t count);
+
+/// Modbus发送回调
+/// 返回值为 0 成功，其他值失败
+using ModbusSendCallback = int32_t(*)(uint8_t slave_id,
+                                      uint16_t register_address,
+                                      const uint16_t *data,
+                                      uint16_t count);
+
+/// CAN FD接收回调
+/// 注意data_out 长度最多为 64
+/// 返回值为 0 成功，其他值失败
+using CanFdReadCallback = int32_t(*)(uint8_t slave_id,
+                                     uint32_t *can_id_out,
+                                     uint8_t *data_out,
+                                     uintptr_t *data_len_out);
+
+/// CAN FD发送回调
+/// 返回值为 0 成功，其他值失败
+using CanFdSendCallback = int32_t(*)(uint8_t slave_id,
+                                     uint32_t can_id,
+                                     const uint8_t *data,
+                                     uintptr_t data_len);
+
+/// ALGO OUTPUT
+struct TouchSensorItem {
+  ContactState state;
+  float force;
+  float sliding_mag;
+};
+
+struct TouchSensorData {
+  uint8_t slave_id;
+  TouchSensorItem items[13];
+};
+
+/// 触觉感知回调处理类型
+using TouchSensorDataCallback = void(*)(const TouchSensorData *sensor_data);
+
 extern "C" {
 
 /// 初始化选项
@@ -200,6 +235,9 @@ void list_available_ports();
 /// 如果失败，返回 NULL
 ModbusHandle *modbus_open(const char *port,
                           uint32_t baudrate);
+
+/// 自定义Modbus读写，与set_modbus_read_callback/set_modbus_write_callback结合使用
+ModbusHandle *modbus_init();
 
 /// 关闭串口
 void modbus_close(ModbusHandle *handle);
@@ -235,12 +273,6 @@ uint32_t modbus_get_canfd_baudrate(ModbusHandle *handle, uint8_t slave_id);
 /// 设置CANFD设备波特率
 /// 1M, 2M, 4M, 5M
 void modbus_set_canfd_baudrate(ModbusHandle *handle, uint8_t slave_id, uint32_t baudrate);
-
-/// 设置CAN FD读回调
-void set_canfd_read_callback(CanFdReadCallback cb);
-
-/// 设置CAN FD写回调
-void set_canfd_send_callback(CanFdSendCallback cb);
 
 /// 设置设备ID，默认为1，范围为1~247, 0 为广播地址，一代手默认为1，二代手左手默认ID为0x7e，右手默认ID为0x7f
 /// 当需要在一条总线上同时控制多只设备时，需要将设备ID设置为不同的值
@@ -512,6 +544,11 @@ void modbus_set_action_sequence(ModbusHandle *handle,
                                 const uint16_t *sequences,
                                 uintptr_t len);
 
+/// 启用触觉传感器
+/// bits: 启用的触觉传感器位，范围为0~31
+/// 例如：0b00000001 表示仅启用大拇指位置的触觉传感器
+void modbus_enable_touch_sensor(ModbusHandle *handle, uint8_t slave_id, uint8_t bits);
+
 /// 获取触觉传感器通道数据
 /// 返回 TouchRawData 结构体指针，需要调用 free_touch_raw_data 释放内存
 /// 如果失败，返回 NULL
@@ -532,10 +569,16 @@ TouchFingerItem *modbus_get_single_touch_status(ModbusHandle *handle,
 /// 如果失败，返回 NULL
 TouchFingerData *modbus_get_touch_status(ModbusHandle *handle, uint8_t slave_id);
 
-/// 启用触觉传感器
-/// bits: 启用的触觉传感器位，范围为0~31
-/// 例如：0b00000001 表示仅启用大拇指位置的触觉传感器
-void modbus_enable_touch_sensor(ModbusHandle *handle, uint8_t slave_id, uint8_t bits);
+/// 检测是否有接触及滑移幅度，持续获取touch_status
+/// interval_read: 读取触觉传感器的间隔，单位毫秒
+/// interval_cb: 检测间隔：1表示每次都执行，2表示每隔一次执行一次
+void modbus_start_detect_contact(ModbusHandle *handle,
+                                 uint8_t slave_id,
+                                 uintptr_t interval_read,
+                                 uintptr_t interval_cb);
+
+/// 停止检测是否有接触及滑移幅度
+void modbus_stop_detect_contact(ModbusHandle *handle, uint8_t slave_id);
 
 /// 重置触觉传感器采集通道
 /// 在执行该指令时，手指传感器尽量不要受力。
@@ -612,6 +655,24 @@ void free_led_info(LedInfo *info);
 void free_button_event(ButtonPressEvent *event);
 
 void free_string(const char *s);
+
+/// 设置Modbus读回调, input_registers
+void set_modbus_read_input_callback(ModbusReadCallback cb);
+
+/// 设置Modbus读回调, holding_registers
+void set_modbus_read_holding_callback(ModbusReadCallback cb);
+
+/// 设置Modbus写回调
+void set_modbus_write_callback(ModbusSendCallback cb);
+
+/// 设置CAN FD读回调
+void set_canfd_read_callback(CanFdReadCallback cb);
+
+/// 设置CAN FD写回调
+void set_canfd_send_callback(CanFdSendCallback cb);
+
+/// 设置触觉检测回调，检测是否有接触及滑移幅度
+void set_touch_sensor_callback(TouchSensorDataCallback cb);
 
 }  // extern "C"
 
