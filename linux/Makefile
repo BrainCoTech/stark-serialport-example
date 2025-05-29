@@ -63,5 +63,8 @@ run_multi:
 run_customed_modbus:
 	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_customed_modbus.exe
 
+run_customed_modbus_async:
+	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_customed_modbus_async.exe
+
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run

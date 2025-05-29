@@ -5,9 +5,7 @@
 #include <execinfo.h>
 
 // 声明函数
-void get_touch_status(ModbusHandle *handle, uint8_t slave_id);
 void get_device_info(ModbusHandle *handleint, uint8_t slave_id);
-void get_info(ModbusHandle *handle, uint8_t slave_id);
 
 void handler(int sig)
 {

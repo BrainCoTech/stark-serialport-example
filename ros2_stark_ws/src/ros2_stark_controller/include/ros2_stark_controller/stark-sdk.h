@@ -171,6 +171,18 @@ struct ButtonPressEvent {
   PressState press_state;
 };
 
+/// Modbus异步读写回调
+/// 该回调函数用于处理Modbus异步操作的结果。
+/// 返回值为 0 成功，其他值失败
+using ModbusOperationResultCallback = void(*)(uint8_t*, int, int, void*);
+
+/// Modbus异步读写回调
+/// 返回值为 0 成功，其他值失败
+using ModbusOperationCallback = int32_t(*)(const uint8_t *values,
+                                           int len,
+                                           ModbusOperationResultCallback callback,
+                                           void *user_data);
+
 /// Modbus接收回调
 /// 返回值为 0 成功，其他值失败
 using ModbusReadCallback = int32_t(*)(uint8_t slave_id,
@@ -655,6 +667,9 @@ void free_led_info(LedInfo *info);
 void free_button_event(ButtonPressEvent *event);
 
 void free_string(const char *s);
+
+/// 设置Modbus异步读写回调
+void set_modbus_operation_callback(ModbusOperationCallback cb);
 
 /// 设置Modbus读回调, input_registers
 void set_modbus_read_input_callback(ModbusReadCallback cb);

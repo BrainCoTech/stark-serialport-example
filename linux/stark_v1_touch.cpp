@@ -88,6 +88,13 @@ void get_device_info(ModbusHandle *handle, uint8_t slave_id)
   }
 }
 
+void test_auto_calibration(ModbusHandle *handle, uint8_t slave_id)
+{
+  modbus_set_auto_calibration(handle, slave_id, false); // 设置上电后是否启用自动校准
+  bool auto_calibration_enabled = modbus_get_auto_calibration(handle, slave_id);
+  printf("Slave[%hhu] Auto Calibration Enabled: %s\n", slave_id, auto_calibration_enabled ? "true" : "false");
+}
+
 // 获取触觉传感器状态，三维力数值、自接近、互接近电容值，以及传感器状态
 void get_touch_status(ModbusHandle *handle, uint8_t slave_id)
 {

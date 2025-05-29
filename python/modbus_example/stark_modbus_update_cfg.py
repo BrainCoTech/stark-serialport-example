@@ -64,27 +64,27 @@ async def main():
 
     # ------------------- 设置Turbo模式及参数 -------------------
     # await client.set_turbo_mode_enabled(slave_id, True)  # 开启Turbo模式
-    await client.set_turbo_mode_enabled(slave_id, False) # 关闭Turbo模式
-    turbo_mode = await client.get_turbo_mode_enabled(slave_id) # 读取Turbo模式是否开启
-    # 打印Turbo模式状态
-    if turbo_mode:
-        logger.info("Turbo mode: enabled")
-    else:
-        logger.info("Turbo mode: disabled")
+    # await client.set_turbo_mode_enabled(slave_id, False) # 关闭Turbo模式
+    # turbo_mode = await client.get_turbo_mode_enabled(slave_id) # 读取Turbo模式是否开启
+    # # 打印Turbo模式状态
+    # if turbo_mode:
+    #     logger.info("Turbo mode: enabled")
+    # else:
+    #     logger.info("Turbo mode: disabled")
 
-    logger.debug(f"set_turbo_conf")
-    turbo_interval = 2000
-    turbo_duration = 3000
-    turbo_conf = libstark.TurboConfig(turbo_interval, turbo_duration)
-    await client.set_turbo_config(slave_id, turbo_conf)
-    turbo_conf = await client.get_turbo_config(slave_id)
-    logger.info(f"Turbo conf: {turbo_conf.description}")
+    # logger.debug(f"set_turbo_conf")
+    # turbo_interval = 2000
+    # turbo_duration = 3000
+    # turbo_conf = libstark.TurboConfig(turbo_interval, turbo_duration)
+    # await client.set_turbo_config(slave_id, turbo_conf)
+    # turbo_conf = await client.get_turbo_config(slave_id)
+    # logger.info(f"Turbo conf: {turbo_conf.description}")
 
     # ------------------- 位置校准设置 -------------------
     # 设置是否在上电后自动执行位置校准
-    # await client.set_position_auto_calibration(slave_id, True) # 设置后，会执行重启操作
-    calibration_enabled = await client.get_auto_calibration_enabled(slave_id)
-    logger.info(f"Auto calibration enabled: {calibration_enabled}")
+    # await client.set_position_auto_calibration(slave_id, False) # 设置后，会执行重启操作
+    # calibration_enabled = await client.get_auto_calibration_enabled(slave_id)
+    # logger.info(f"Auto calibration enabled: {calibration_enabled}")
 
     # await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100]) # 握手
     # 位置校准
