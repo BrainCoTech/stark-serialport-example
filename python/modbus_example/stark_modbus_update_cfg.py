@@ -30,7 +30,6 @@ async def set_baudrate(client, slave_id, new_baudrate):
 # Main
 async def main():
     # libstark.init_config(libstark.StarkFirmwareType.V1Basic)
-    # libstark.init_config(libstark.StarkFirmwareType.V2Basic)
     port_name = get_stark_port_name()
     if port_name is None:
         return
