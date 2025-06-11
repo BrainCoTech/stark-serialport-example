@@ -5,12 +5,12 @@ from stark_utils import get_stark_port_name, libstark, logger
 
 # Main
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V2Standard)
+    libstark.init_config(libstark.StarkFirmwareType.V2Basic)
     port_name = get_stark_port_name()
     if port_name is None:
         return
 
-    slave_id = 0x7E  # 左手默认ID为0x7e，右手默认ID为0x7f
+    slave_id = 0x7f  # 左手默认ID为0x7e，右手默认ID为0x7f
     # fmt: off
     client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
 
@@ -25,10 +25,15 @@ async def main():
     # logger.info(f"Device info: {device_info.sku_type}")  # 获取手类型, 左右手
     logger.info(f"Device info: {device_info.description}")
 
-    # TODO: NOT IMPLEMENTED
-    # logger.debug("get_voltage")  # 获取电量
-    # voltage = await client.get_voltage(slave_id)
-    # logger.info(f"Voltage: {voltage:.1f} mV")
+    # await client.set_led_enabled(slave_id, True)  # 开启LED灯
+    # await client.set_buzzer_enabled(slave_id, True)  # 开启蜂鸣器
+    # await client.set_vibration_enabled(slave_id, True)  # 开启振动
+    led_enabled = await client.get_led_enabled(slave_id)  # 获取LED灯状态
+    logger.info(f"LED Enabled: {led_enabled}")
+    buzzer_enabled = await client.get_buzzer_enabled(slave_id)  # 获取蜂鸣器状态
+    logger.info(f"Buzzer Enabled: {buzzer_enabled}")
+    vibration_enabled = await client.get_vibration_enabled(slave_id)  # 获取振动状态
+    logger.info(f"Vibration Enabled: {vibration_enabled}")
 
     # set_finger_unit_mode
     logger.debug("set_finger_unit_mode")  # 设置手指控制参数的单位模式

@@ -21,7 +21,7 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
+  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
   auto handle = modbus_init();
   set_modbus_operation_callback(modbus_operation_async);
 

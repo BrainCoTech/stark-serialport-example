@@ -26,10 +26,10 @@ def canfd_read(slave_id: int):
 # Main
 async def main():
     # fmt: off
-    libstark.init_config(libstark.StarkFirmwareType.V2Standard, libstark.StarkProtocolType.CanFd)
+    libstark.init_config(libstark.StarkFirmwareType.V2Basic, libstark.StarkProtocolType.CanFd)
     slave_id = 0x7e # 左手默认ID为0x7e，右手默认ID为0x7f
     client = await libstark.canfd_open(libstark.BaudrateCAN.Baud5Mbps, slave_id)
-    
+
     # ZCAN_USBCANFD_100U
     zcan_open(device_type=42, channel=0, baudrate=5000000)
     bc_stark_sdk.set_canfd_tx_callback(canfd_send)

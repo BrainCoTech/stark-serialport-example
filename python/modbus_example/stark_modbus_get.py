@@ -5,7 +5,7 @@ from stark_utils import convert_to_mA, convert_to_position, get_stark_port_name,
 
 # Main
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V1Standard)
+    libstark.init_config(libstark.StarkFirmwareType.V1Basic)
     port_name = get_stark_port_name()
     if port_name is None:
         return

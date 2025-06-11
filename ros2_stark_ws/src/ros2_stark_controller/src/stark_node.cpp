@@ -13,7 +13,7 @@ StarkNode::StarkNode() : Node("stark_node") {
               port_.c_str(), baudrate_, slave_id_, fw_type_, protocol_type_, log_level_);
 
   // Initialize Stark SDK
-  init_cfg(fw_type_, protocol_type_, log_level_);
+  init_cfg(fw_type_, protocol_type_, log_level_, 1024);
   // list_available_ports();
   if (!initialize_modbus()) {
     RCLCPP_ERROR(this->get_logger(), "Failed to initialize Modbus");

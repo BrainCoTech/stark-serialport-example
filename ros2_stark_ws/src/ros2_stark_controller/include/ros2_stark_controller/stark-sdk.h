@@ -96,9 +96,9 @@ enum StarkFingerId : uint8_t {
 
 enum StarkFirmwareType : uint8_t {
   STARK_FIRMWARE_TYPE_RS485_PROTOBUF = 0,
-  STARK_FIRMWARE_TYPE_V1_STANDARD = 1,
+  STARK_FIRMWARE_TYPE_V1_BASIC = 1,
   STARK_FIRMWARE_TYPE_V1_TOUCH = 2,
-  STARK_FIRMWARE_TYPE_V2_STANDARD = 3,
+  STARK_FIRMWARE_TYPE_V2_BASIC = 3,
 };
 
 enum StarkProtocolType : uint8_t {
@@ -233,7 +233,11 @@ extern "C" {
 /// fw_type: 固件类型，默认为 V1Touch
 /// protocol_type: 协议类型，默认为 Modbus
 /// log_level: 日志级别，默认为 Info
-void init_cfg(StarkFirmwareType fw_type, StarkProtocolType protocol_type, LogLevel log_level);
+/// max_response_bytes: 自定义Modbus回调读取寄存器内容时，单次响应的最大字节数，默认为 1024
+void init_cfg(StarkFirmwareType fw_type,
+              StarkProtocolType protocol_type,
+              LogLevel log_level,
+              uintptr_t max_response_bytes);
 
 /// 列出可用的串口
 /// 用于列出所有的 Stark 串口
@@ -305,6 +309,24 @@ uint8_t modbus_get_force_level(ModbusHandle *handle, uint8_t slave_id);
 /// 获取电压值，单位mV
 uint16_t modbus_get_voltage(ModbusHandle *handle, uint8_t slave_id);
 
+/// 获取LED开关
+bool get_led_enabled(ModbusHandle *handle, uint8_t slave_id);
+
+/// 获取蜂鸣器开关
+bool get_buzzer_enabled(ModbusHandle *handle, uint8_t slave_id);
+
+/// 获取震动开关
+bool get_vibration_enabled(ModbusHandle *handle, uint8_t slave_id);
+
+/// 设置LED开关
+void set_led_enabled(ModbusHandle *handle, uint8_t slave_id, bool enabled);
+
+/// 设置蜂鸣器开关
+void set_buzzer_enabled(ModbusHandle *handle, uint8_t slave_id, bool enabled);
+
+/// 设置震动开关
+void set_vibration_enabled(ModbusHandle *handle, uint8_t slave_id, bool enabled);
+
 /// 二代手设置单位模式，手指参数，上电后重置
 /// 参数范围详见文档
 /// https://brainco.yuque.com/tykrbo/hws0nr/pynh5qnmfa1bgamc
@@ -318,7 +340,7 @@ void modbus_set_finger_unit_mode(ModbusHandle *handle, uint8_t slave_id, FingerU
 FingerUnitMode modbus_get_finger_unit_mode(ModbusHandle *handle, uint8_t slave_id);
 
 /// 设置最大角度
-/// max_pos: 最大角度值，默认为 75 94 88 88 88 88
+/// max_pos: 最大角度值，默认为 60 87 84 84 84 84
 void modbus_set_finger_max_position(ModbusHandle *handle,
                                     uint8_t slave_id,
                                     StarkFingerId finger_id,
@@ -365,7 +387,7 @@ uint16_t modbus_get_finger_min_position(ModbusHandle *handle,
                                         StarkFingerId finger_id);
 
 /// 读取最大速度
-/// max_speed: 最大速度值，单位(°/s)，默认值为 150 150 160 160 160 160
+/// max_speed: 最大速度值，单位(°/s)，默认值为 145 150 130 130 130 130
 /// 读取失败时返回0
 uint16_t modbus_get_finger_max_speed(ModbusHandle *handle,
                                      uint8_t slave_id,
@@ -379,7 +401,7 @@ uint16_t modbus_get_finger_max_current(ModbusHandle *handle,
                                        StarkFingerId finger_id);
 
 /// 读取保护电流
-/// protect_current: 保护电流值，单位(mA), 范围为 100~1500，默认值为 500 200 500 500 500 500
+/// protect_current: 保护电流值，单位(mA), 范围为 100~1500，默认值为 500 500 500 500 500 500
 /// 读取失败时返回0
 uint16_t modbus_get_finger_protect_current(ModbusHandle *handle,
                                            uint8_t slave_id,
@@ -522,7 +544,9 @@ void modbus_run_action_sequence(ModbusHandle *handle, uint8_t slave_id, ActionSe
 /// 该函数用于传输多个动作序列。每个动作序列包含 20 个元素，依次为：
 ///
 /// - action_id: 动作序列的 ID，用于唯一标识该动作序列
-/// - sequences: 动作序列数组，包含多个动作序列，每个动作序列包含 20 个 u16 元素。每个序列包括以下信息：
+/// - sequences: 动作序列参数数组，包含多个动作序列
+///
+/// 一代灵巧手每个动作序列包含 20 个 u16 元素。每个序列包括以下信息：
 ///   - 动作序列索引 (u16)：动作序列的索引，用于标识该动作序列在队列中的位置
 ///   - 持续时间 (u16)：该动作序列的执行时间，单位为毫秒
 ///   - 手指位置 (u16): 6 个手指位置的值，范围为 0~100
@@ -540,6 +564,14 @@ void modbus_run_action_sequence(ModbusHandle *handle, uint8_t slave_id, ActionSe
 /// - `10, 20, 30, 40, 50, 60`: 6 个手指速度
 /// - `5, 10, 15, 20, 25, 30`: 6 个手指力量
 ///
+/// 二代灵巧手每个动作序列包含 27 个 u16 元素。每个序列包括以下信息：
+///   - 动作序列索引 (u16)：动作序列的索引，用于标识该动作序列在队列中的位置
+///   - 持续时间 (u16)：该动作序列的执行时间，单位为毫秒
+///   - 控制模式 (u16), 位置时间控制：1，位置速度控制：2，电流控制：3，速度控制：4
+///   - 手指位置 (u16): 6 个手指位置的物理量（°）, 值为65535时候表示手指保持原来角度
+///   - 手指速度 (u16): 6 个手指速度的物理量，值为手指转动速度（°/s）
+///   - 手指电流 (u16): 6 个手指电流的物理量，值为电流(mA)
+///
 /// - len: 动作序列的数量，指定 sequences 数组的行数，即动作序列的数量
 ///
 /// # 参数说明
@@ -549,7 +581,7 @@ void modbus_run_action_sequence(ModbusHandle *handle, uint8_t slave_id, ActionSe
 ///
 /// # 错误处理
 /// - 如果 `handle` 或 `sequences` 为 NULL，将直接返回，不进行处理
-/// - 如果 `len` 大于最大限制（例如 32），会输出警告并提前返回
+/// - 如果 `len` 大于最大限制（一代灵巧手为32，二代灵巧手为8），会输出警告并提前返回
 void modbus_set_action_sequence(ModbusHandle *handle,
                                 uint8_t slave_id,
                                 ActionSequenceId action_id,

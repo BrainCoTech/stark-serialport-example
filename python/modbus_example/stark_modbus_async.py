@@ -37,7 +37,7 @@ async def get_motor_status_periodically(client, slave_id):
 
 # Main
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V1Standard)
+    libstark.init_config(libstark.StarkFirmwareType.V1Basic)
     shutdown_event = setup_shutdown_event(logger)
 
     port_name = get_stark_port_name()
@@ -46,6 +46,7 @@ async def main():
     slave_id = 1
     client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200)
 
+    await client.set_finger_position(slave_id, libstark.FingerId.Pinky, 100)  # 设置单个手指，小指闭合
     await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])  # 握手
 
     # 创建并启动异步任务

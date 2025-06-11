@@ -69,9 +69,9 @@ async def main():
             libstark.StarkFirmwareType.V1Touch
         if stark_touch
         else
-            libstark.StarkFirmwareType.V2Standard
+            libstark.StarkFirmwareType.V2Basic
         if stark_v2
-        else libstark.StarkFirmwareType.V1Standard
+        else libstark.StarkFirmwareType.V1Basic
     )
 
     global shutdown_event

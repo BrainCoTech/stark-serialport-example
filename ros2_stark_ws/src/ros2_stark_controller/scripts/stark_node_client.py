@@ -533,7 +533,7 @@ class StarkClientNode(Node):
         return False
 
     def set_single_finger_position_with_mills(
-        self, finger_id, position, mills, usePublish=True
+        self, finger_id, position, mills=1000, usePublish=True
     ):
         """设置单个手指位置+期望时间
 
@@ -583,7 +583,7 @@ class StarkClientNode(Node):
         return False
 
     def set_single_finger_position_with_speed(
-        self, finger_id, position, speed, usePublish=True
+        self, finger_id, position, speed=500, usePublish=True
     ):
         """设置单个手指位置+速度
 

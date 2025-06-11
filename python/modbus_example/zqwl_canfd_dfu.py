@@ -64,7 +64,7 @@ async def main():
     global shutdown_event
     shutdown_event = setup_shutdown_event(logger)
 
-    libstark.init_config(libstark.StarkFirmwareType.V2Standard, libstark.StarkProtocolType.CanFd)
+    libstark.init_config(libstark.StarkFirmwareType.V2Basic, libstark.StarkProtocolType.CanFd)
     slave_id = 0x7e # 左手默认ID为0x7e，右手默认ID为0x7f
     client = await libstark.canfd_open(libstark.BaudrateCAN.Baud5Mbps, slave_id)
 

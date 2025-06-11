@@ -3,6 +3,7 @@ import sys
 from utils import setup_shutdown_event
 from stark_utils import get_stark_port_name, libstark, logger
 
+# 一代灵巧手动作序列，只有positions实际生效
 sample_action_sequences = [
     {
         "index": 0,
@@ -89,7 +90,7 @@ def action_sequence_info_to_list(action):
 
 ### main.py
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V1Standard)
+    libstark.init_config(libstark.StarkFirmwareType.V1Basic)
     shutdown_event = setup_shutdown_event(logger)
 
     port_name = get_stark_port_name()

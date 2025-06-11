@@ -28,7 +28,7 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_STANDARD, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
+  init_cfg(STARK_FIRMWARE_TYPE_V1_BASIC, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
   list_available_ports();
 
   // auto port_name = "COM1"; // Windows

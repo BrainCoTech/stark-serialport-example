@@ -9,7 +9,7 @@ void get_info(ModbusHandle *handle, uint8_t slave_id);
 
 int main(int argc, char const *argv[])
 {
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
+  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
   list_available_ports();
 
   // auto port_name = "COM1"; // Windows

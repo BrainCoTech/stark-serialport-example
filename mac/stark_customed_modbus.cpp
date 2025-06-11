@@ -26,8 +26,7 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
-
+  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
 
   set_modbus_read_holding_callback([](uint8_t slave_id, uint16_t register_address, uint16_t *data_out, uint16_t count) -> int {
     printf("Read holding registers: Slave ID: %d, Address: %d\n", slave_id, register_address);

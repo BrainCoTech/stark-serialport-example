@@ -96,3 +96,9 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+async def set_finger_current(client, slave_id: int):
+    # 电流控制, 参数范围-100~-20, 20~100, 正数表示闭合方向
+    finger_id = libstark.FingerId.Middle
+    await client.set_finger_current(slave_id, finger_id, 100) # 设置单个手指电流
+    await client.set_finger_currents(slave_id, [100] * 6) # 设置全部手指电流
