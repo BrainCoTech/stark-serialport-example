@@ -84,7 +84,7 @@ async def main():
     # 一代手默认ID为1
     # 左手默认ID为0x7e，右手默认ID为0x7f
     slave_id = 0x7f if stark_v2 else 1
-    # 一代手默认波特率115200
+    # 一代手默认波特率115200, 注意：一代手升级仅支持115200波特率
     # 二代手默认波特率460800
     baurate = libstark.Baudrate.Baud460800 if stark_v2 or stark_touch else libstark.Baudrate.Baud115200
     logger.info(f"slave_id: {slave_id}, baurate: {baurate}")

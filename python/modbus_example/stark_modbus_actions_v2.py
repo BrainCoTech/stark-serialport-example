@@ -7,7 +7,7 @@ from stark_utils import get_stark_port_name, libstark, logger
 # - 动作序列索引 (index)：动作序列的索引，用于标识该动作序列在队列中的位置
 # - 持续时间 (duration_ms)：该动作序列的执行时间，单位为毫秒
 # - 控制模式 (u16), 位置时间控制：1，位置速度控制：2，电流控制：3，速度控制：4
-# - 手指位置 (u16): 6 个手指位置的物理量（°）, 值为65535时候表示手指保持原来角度
+# - 手指位置 (u16): 6 个手指位置的物理量（°）, 值为65535 (0xFFFF)时, 表示手指保持原来角度
 # - 手指速度 (u16): 6 个手指速度的物理量，值为手指转动速度（°/s）
 # - 手指电流 (u16): 6 个手指电流的物理量，值为电流(mA)
 sample_action_sequences = [
@@ -76,6 +76,7 @@ async def main():
     logger.debug("get_device_info")
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.firmware_version}")
+    logger.info(f"Device info: {device_info.description}")
 
     # fmt: off
     mapped_sequences = map(lambda action: action_sequence_info_to_list(action), sample_action_sequences)
