@@ -1,21 +1,19 @@
 import asyncio
 import sys
 from utils import setup_shutdown_event
-from stark_utils import get_stark_port_name, libstark, logger
+from revo2_utils import get_stark_port_name, libstark, logger
 
-slave_ids = [1, 2]  # 灵巧手的设备ID, 多个设备在同一个BUS上
-
+slave_ids = [0x7f]
+# slave_ids = [0x7e, 0x7f]  # 灵巧手的设备ID, 多个设备在同一个BUS上, 左手默认ID为0x7e，右手默认ID为0x7f
 
 async def handle_finger_status(client, slave_id, index):
     status = await client.get_motor_status(slave_id)
     logger.info(f"[{index}] [{slave_id}] Finger status: {status.description}")
     if status.is_idle:
-        if status.is_opened:
-            # 握手
-            await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])
-        elif status.is_closed:
-            # 张开
-            await client.set_finger_positions(slave_id, [0] * 6)
+        if all(pos >= target for pos, target in zip(status.positions, [500, 300, 400, 900, 900, 900])):
+            await client.set_finger_positions(slave_id, [0] * 6) # 张开
+        elif all(pos <= target for pos, target in zip(status.positions, [50] * 6)):
+            await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100]) # 握拳
 
 
 # 定期获取手指状态
@@ -34,17 +32,19 @@ async def get_motor_status_periodically(client):
 
 # Main
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V1Basic)
+    libstark.init_config(libstark.StarkFirmwareType.V2Basic)
     shutdown_event = setup_shutdown_event(logger)
 
     port_name = get_stark_port_name()
     if port_name is None:
         return
 
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200)
+    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
 
     for slave_id in slave_ids:
-        await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])  # 握手
+        await client.run_action_sequence(slave_id, libstark.ActionSequenceId.DefaultGestureFist)
+
+    await asyncio.sleep(2.0)  # 等待动作执行
 
     # 创建并启动异步任务
     asyncio.create_task(get_motor_status_periodically(client))

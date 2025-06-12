@@ -4,7 +4,7 @@ import pathlib
 import os
 from utils import setup_shutdown_event
 import asyncio
-from stark_utils import get_stark_port_name, libstark, logger
+from revo2_utils import get_stark_port_name, libstark, logger
 
 # 固件升级文件路径
 current_dir = pathlib.Path(__file__).resolve()
@@ -15,17 +15,16 @@ stark_touch = False
 stark_v2 = True
 
 if stark_touch:
-    # 触觉固件
+    # Modbus固件，一代灵巧手触觉版
     ota_bin_path = os.path.join(
         parent_dir,
         "ota_bin",
         "touch",
-        "FW_MotorController_Release_SecureOTA_V1.8.24F.ota",
-        # "FW_MotorController_Release_SecureOTA_V1.8.21F.ota",
+        "FW_MotorController_Release_SecureOTA_V1.8.32F.ota",
     )
 
 elif stark_v2:
-    # ModbusV2固件
+    # Modbus固件，二代灵巧手基础版
     ota_bin_path = os.path.join(
         parent_dir,
         "ota_bin",
@@ -33,7 +32,7 @@ elif stark_v2:
         "stark2_fw_V0.0.10_20250513154323.bin",
     )
 else:
-    # ModbusV1固件
+    # Modbus固件, 一代灵巧手基础版
     ota_bin_path = os.path.join(
         parent_dir,
         "ota_bin",

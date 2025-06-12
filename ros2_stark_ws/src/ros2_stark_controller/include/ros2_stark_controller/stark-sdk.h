@@ -99,6 +99,7 @@ enum StarkFirmwareType : uint8_t {
   STARK_FIRMWARE_TYPE_V1_BASIC = 1,
   STARK_FIRMWARE_TYPE_V1_TOUCH = 2,
   STARK_FIRMWARE_TYPE_V2_BASIC = 3,
+  STARK_FIRMWARE_TYPE_V2_TOUCH = 4,
 };
 
 enum StarkProtocolType : uint8_t {
@@ -119,9 +120,9 @@ struct DeviceInfo {
 };
 
 struct MotorStatusData {
-  uint8_t positions[6];
-  int8_t speeds[6];
-  int8_t currents[6];
+  uint16_t positions[6];
+  int16_t speeds[6];
+  int16_t currents[6];
   uint8_t states[6];
 };
 
@@ -135,6 +136,7 @@ struct TouchRawData {
 
 /// 触觉传感器数据
 /// 三维力数值、自接近、互接近电容值，以及传感器状态
+/// 二代触觉手只有法向力，切向力，切向力方向，接近值，四个值，其他值为0
 struct TouchFingerItem {
   uint16_t normal_force1;
   uint16_t normal_force2;
@@ -436,8 +438,8 @@ void modbus_set_finger_speed(ModbusHandle *handle,
                              int16_t speed);
 
 /// 设置单个手指电流
-/// 仅支持二代手
-/// 范围为-1000~1000或-最大电流~最大电流mA
+/// 二代基础版，参数范围为-1000~1000或-最大电流~最大电流mA
+/// 一代触觉版，参数范围为-100~-20, 20~100，单位mA
 /// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
 void modbus_set_finger_current(ModbusHandle *handle,
                                uint8_t slave_id,
@@ -490,8 +492,8 @@ void modbus_set_finger_speeds(ModbusHandle *handle,
                               uintptr_t len);
 
 /// 设置多个手指电流
-/// 仅支持二代手
-/// currents: 电流值数组，长度为6，范围为-1000~1000或-最大电流~最大电流mA
+/// 二代基础版，参数范围为-1000~1000或-最大电流~最大电流mA
+/// 一代触觉版，参数范围为-100~-20, 20~100，单位mA
 /// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
 void modbus_set_finger_currents(ModbusHandle *handle,
                                 uint8_t slave_id,
@@ -568,7 +570,7 @@ void modbus_run_action_sequence(ModbusHandle *handle, uint8_t slave_id, ActionSe
 ///   - 动作序列索引 (u16)：动作序列的索引，用于标识该动作序列在队列中的位置
 ///   - 持续时间 (u16)：该动作序列的执行时间，单位为毫秒
 ///   - 控制模式 (u16), 位置时间控制：1，位置速度控制：2，电流控制：3，速度控制：4
-///   - 手指位置 (u16): 6 个手指位置的物理量（°）, 值为65535时候表示手指保持原来角度
+///   - 手指位置 (u16): 6 个手指位置的物理量（°）, 值为 65535 (0xFFFF) 表示手指保持原来角度
 ///   - 手指速度 (u16): 6 个手指速度的物理量，值为手指转动速度（°/s）
 ///   - 手指电流 (u16): 6 个手指电流的物理量，值为电流(mA)
 ///
@@ -598,8 +600,8 @@ void modbus_enable_touch_sensor(ModbusHandle *handle, uint8_t slave_id, uint8_t 
 /// 如果失败，返回 NULL
 TouchRawData *modbus_get_touch_raw_data(ModbusHandle *handle, uint8_t slave_id);
 
-/// 获取单个手指上的触觉传感器状态
-/// 返回单个手指的触觉三维力数据、电容值、传感器状态
+/// 读取单个手指三维力、接近值、触觉传感器状态
+/// 返回单个手指三维力、接近值、触觉传感器状态
 /// index: 0~4，分别对应大拇指、食指、中指、无名指、小拇指
 /// 使用完毕后需要调用 free_touch_finger_item 释放内存
 /// 如果失败，返回 NULL
@@ -607,8 +609,8 @@ TouchFingerItem *modbus_get_single_touch_status(ModbusHandle *handle,
                                                 uint8_t slave_id,
                                                 uint8_t index);
 
-/// 获取触觉传感器状态
-/// 返回5个手指的触觉三维力数据、电容值、传感器状态
+/// 读取五指触觉传感器三维力、接近值、触觉传感器状态
+/// 返回五指的触觉三维力数据、接近值、触觉传感器状态
 /// 使用完毕后需要调用 free_touch_finger_data 释放内存
 /// 如果失败，返回 NULL
 TouchFingerData *modbus_get_touch_status(ModbusHandle *handle, uint8_t slave_id);

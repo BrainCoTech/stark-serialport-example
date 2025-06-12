@@ -2,7 +2,7 @@ import asyncio
 import sys
 # import time
 import bc_stark_sdk
-from stark_utils import libstark, logger
+from revo2_utils import libstark, logger
 # from zlgcan import ZCAN_USBCANFD_100U
 from zqwl_win import zcan_open, zcan_close, zcan_send_message, zcan_receive_message
 

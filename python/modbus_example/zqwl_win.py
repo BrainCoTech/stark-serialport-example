@@ -1,7 +1,7 @@
 
 import os
 import pathlib
-from stark_utils import logger
+from revo2_utils import logger
 from zlgcan import *
 
 current_dir = pathlib.Path(__file__).resolve()

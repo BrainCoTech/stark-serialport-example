@@ -34,7 +34,7 @@ int main(int argc, char const *argv[])
   // auto port_name = "/dev/ttyUSB0"; // Linux
   auto port_name = "/dev/tty.usbserial-D30JAQW9"; // Mac USB HUB
   uint32_t baudrate = 460800;
-  uint8_t slave_id = 0x7e; // 左手默认ID为0x7e，右手默认ID为0x7f
+  uint8_t slave_id = 0x7f; // 左手默认ID为0x7e，右手默认ID为0x7f
   auto handle = modbus_open(port_name, baudrate);
   get_device_info(handle, slave_id);
 

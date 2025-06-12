@@ -1,7 +1,7 @@
 import asyncio
 import sys
 from utils import setup_shutdown_event
-from stark_utils import get_stark_port_name, libstark, logger
+from revo2_utils import get_stark_port_name, libstark, logger
 
 # 二代灵巧手动作序列
 # - 动作序列索引 (index)：动作序列的索引，用于标识该动作序列在队列中的位置

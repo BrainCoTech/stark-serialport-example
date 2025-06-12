@@ -21,11 +21,11 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
+  init_cfg(STARK_FIRMWARE_TYPE_V2_BASIC, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
   auto handle = modbus_init();
   set_modbus_operation_callback(modbus_operation_async);
 
-  uint8_t slave_id = 1;
+  uint8_t slave_id = 0x7f; // 左手默认ID为0x7e，右手默认ID为0x7f
   get_device_info(handle, slave_id);
 
   while (true)
@@ -46,9 +46,6 @@ void *get_device_info_thread(void *arg)
 
   uint32_t baudrate = modbus_get_rs485_baudrate(modbus_handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
-
-  auto voltage = modbus_get_voltage(modbus_handle, slave_id);
-  printf("Slave[%hhu] Voltage: %.2fV\n", slave_id, voltage / 1000.0);
 
   free(arg); // 释放参数内存
   pthread_exit(NULL);

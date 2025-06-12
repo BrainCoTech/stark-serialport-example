@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from stark_utils import get_stark_port_name, libstark, logger
+from revo2_utils import get_stark_port_name, libstark, logger
 
 
 async def set_slave_id(client, slave_id, new_slave_id):
@@ -29,13 +29,13 @@ async def set_baudrate(client, slave_id, new_baudrate):
 
 # Main
 async def main():
-    # libstark.init_config(libstark.StarkFirmwareType.V1Basic)
+    libstark.init_config(libstark.StarkFirmwareType.V2Basic)
     port_name = get_stark_port_name()
     if port_name is None:
         return
-    slave_id = 1  # default slave_id is 1
-    baudrate = libstark.Baudrate.Baud115200
-    client = await libstark.modbus_open(port_name, baudrate)
+    
+    slave_id = 0x7f  # 左手默认ID为0x7e，右手默认ID为0x7f
+    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
 
     logger.debug("get_serialport_cfg")  # 获取串口配置, slave_id, 波特率
     serialport_cfg = await client.get_serialport_cfg(slave_id)
@@ -51,16 +51,15 @@ async def main():
     # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # 修改波特率为460800
     # exit(0)
 
-    # ------------------- 设置力量等级，大-中-小 -------------------
-    # 触觉版本废弃了该功能
-    # logger.debug(f"set_force_level")
-    # # level = await client.get_force_level()
-    # # logger.info(f"Force level: {level}")
-    # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Full)
-    # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Normal)
-    # # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Small)
-    # level = await client.get_force_level(slave_id)
-    # logger.info(f"Force level: {level}")
+    # await client.set_led_enabled(slave_id, True)  # 开启LED灯
+    # await client.set_buzzer_enabled(slave_id, True)  # 开启蜂鸣器
+    # await client.set_vibration_enabled(slave_id, True)  # 开启振动
+    led_enabled = await client.get_led_enabled(slave_id)  # 获取LED灯状态
+    logger.info(f"LED Enabled: {led_enabled}")
+    buzzer_enabled = await client.get_buzzer_enabled(slave_id)  # 获取蜂鸣器状态
+    logger.info(f"Buzzer Enabled: {buzzer_enabled}")
+    vibration_enabled = await client.get_vibration_enabled(slave_id)  # 获取振动状态
+    logger.info(f"Vibration Enabled: {vibration_enabled}")
 
     # ------------------- 设置Turbo模式及参数 -------------------
     # await client.set_turbo_mode_enabled(slave_id, True)  # 开启Turbo模式
