@@ -45,7 +45,6 @@ all: $(BINARIES)
 # 清理目标
 clean:
 	rm -f $(addsuffix .exe,$(BINARIES))
-	rm -fR $(addsuffix .exe.dSYM,$(BINARIES))
 
 # 运行目标
 run_v1:
@@ -53,9 +52,6 @@ run_v1:
 
 run_v1_touch:
 	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_v1_touch.exe
-
-run_v2:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_v2.exe
 
 run_multi:
 	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_multi_example.exe

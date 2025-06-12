@@ -12,7 +12,7 @@ parent_dir = current_dir.parent
 logger.info(f"parent_dir: {parent_dir}")
 
 stark_touch = False
-stark_v2 = True
+stark_v2 = False
 
 if stark_touch:
     # 触觉固件
@@ -20,8 +20,7 @@ if stark_touch:
         parent_dir,
         "ota_bin",
         "touch",
-        "FW_MotorController_Release_SecureOTA_V1.8.24F.ota",
-        # "FW_MotorController_Release_SecureOTA_V1.8.21F.ota",
+        "FW_MotorController_Release_SecureOTA_V1.8.32F.ota",
     )
 
 elif stark_v2:
