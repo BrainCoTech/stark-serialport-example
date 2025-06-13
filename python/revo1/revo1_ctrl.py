@@ -2,7 +2,7 @@ import asyncio
 import sys
 import time
 from utils import setup_shutdown_event
-from stark_utils import get_stark_port_name, libstark, logger
+from revo1_utils import get_stark_port_name, libstark, logger
 
 
 # 定期获取手指状态

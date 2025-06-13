@@ -1,10 +1,10 @@
 import asyncio
 import sys
 from utils import setup_shutdown_event
-from stark_utils import get_stark_port_name, libstark, logger
+from revo1_utils import get_stark_port_name, libstark, logger
 
-slave_ids = [1, 2]  # 灵巧手的设备ID, 多个设备在同一个BUS上
-
+slave_ids = [1]
+# slave_ids = [1, 2]  # 灵巧手的设备ID, 2个不同ID设备在同一个BUS上
 
 async def handle_finger_status(client, slave_id, index):
     status = await client.get_motor_status(slave_id)

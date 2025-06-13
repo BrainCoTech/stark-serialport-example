@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from stark_utils import get_stark_port_name, libstark, logger
+from revo1_utils import get_stark_port_name, libstark, logger
 
 
 async def set_slave_id(client, slave_id, new_slave_id):

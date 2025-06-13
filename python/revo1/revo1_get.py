@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from stark_utils import convert_to_mA, convert_to_position, get_stark_port_name, libstark, logger, convert_to_angle
+from revo1_utils import convert_to_mA, convert_to_position, get_stark_port_name, libstark, logger, convert_to_angle
 
 
 # Main
@@ -23,7 +23,7 @@ async def main():
     logger.info(f"Device info: {device_info.sku_type}")  # 获取手类型, 左右手
     logger.info(f"Device info: {device_info.description}")
 
-    # 触觉版本废弃了该功能
+    # 基础版使用该功能，触觉版可以直接使用电流控制
     # logger.debug("get_force_level")  # 获取力量等级，大-中-小
     # force_level = await client.get_force_level(slave_id)
     # logger.info(f"Force level: {force_level}")
