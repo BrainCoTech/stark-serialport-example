@@ -8,6 +8,14 @@ libstark = bc_stark_sdk.stark
 # logger = getLogger(logging.DEBUG)
 logger = getLogger(logging.INFO)
 
+# 打印属性，方法
+def print_class():
+  from utils import inspect_class
+  inspect_class(libstark.DeviceInfo)
+  logger.info(libstark.DfuState(1))
+  logger.info(libstark.DfuState.Idle.int_value)
+  inspect_class(libstark.DfuState)
+
 def get_stark_port_name():
     ports = bc_stark_sdk.stark.list_available_ports()
     logger.info(f"available_ports: {ports}")

@@ -2,12 +2,16 @@ import asyncio
 import sys
 import pathlib
 import os
-from utils import setup_shutdown_event
 import asyncio
 import bc_stark_sdk
-from revo2_utils import libstark, logger
 # from zlgcan import ZCAN_USBCANFD_100U
 from zqwl_win import zcan_open, zcan_close, zcan_send_message, zcan_receive_message
+
+current_dir = pathlib.Path(__file__).resolve()
+parent_dir = current_dir.parent.parent
+sys.path.append(str(parent_dir))
+from revo2.utils import setup_shutdown_event
+from revo2.revo2_utils import libstark, logger
 
 # 固件升级文件路径
 current_dir = pathlib.Path(__file__).resolve()

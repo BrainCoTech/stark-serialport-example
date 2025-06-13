@@ -3,16 +3,16 @@ import sys
 import pathlib
 import os
 from utils import setup_shutdown_event
-import asyncio
 from revo2_utils import get_stark_port_name, libstark, logger
 
+# 重要：不同设备，请使用相应固件升级，否则需要拆设备，重新烧录固件
 # 固件升级文件路径
 current_dir = pathlib.Path(__file__).resolve()
-parent_dir = current_dir.parent
+parent_dir = current_dir.parent.parent
 logger.info(f"parent_dir: {parent_dir}")
 
-stark_touch = False
-stark_v2 = True
+stark_touch = True
+stark_v2 = False
 
 if stark_touch:
     # Modbus固件，一代灵巧手触觉版
@@ -20,7 +20,7 @@ if stark_touch:
         parent_dir,
         "ota_bin",
         "touch",
-        "FW_MotorController_Release_SecureOTA_V1.8.32F.ota",
+        "FW_MotorController_Release_SecureOTA_V1.8.32.F.ota",
     )
 
 elif stark_v2:
@@ -85,11 +85,11 @@ async def main():
     slave_id = 0x7f if stark_v2 else 1
     # 一代手默认波特率115200, 注意：一代手升级仅支持115200波特率
     # 二代手默认波特率460800
-    baurate = libstark.Baudrate.Baud460800 if stark_v2 or stark_touch else libstark.Baudrate.Baud115200
+    baurate = libstark.Baudrate.Baud460800 if stark_v2 else libstark.Baudrate.Baud115200
     logger.info(f"slave_id: {slave_id}, baurate: {baurate}")
     logger.info(f"port_name: {port_name}")
     # 打开串口
-    # fmt: off
+
     client = await libstark.modbus_open(port_name, baurate)
 
     logger.debug("get_device_info")  # 获取设备信息

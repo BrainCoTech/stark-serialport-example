@@ -1,11 +1,12 @@
-
 import os
+import sys
 import pathlib
-from revo2_utils import logger
 from zlgcan import *
 
 current_dir = pathlib.Path(__file__).resolve()
-parent_dir = current_dir.parent
+parent_dir = current_dir.parent.parent
+sys.path.append(str(parent_dir))
+from revo2.revo2_utils import logger
 logger.info(f"parent_dir: {parent_dir}")
 
 read_timeout_ms = 50
@@ -95,34 +96,34 @@ def zcan_send_message(slave_id: int, can_id: int, data: bytes):
 def zcan_receive_message(quick_retries: int = 2, dely_retries: int = 0):
     """
     接收CAN总线消息，先尝试快速接收，若失败则尝试DFU模式下的慢速接收。
-    
+
     参数:
         quick_retries (int): 快速接收尝试次数，默认2次。
         dely_retries (int): DFU模式下的慢速接收尝试次数，默认0次。
-    
+
     返回:
         接收到的消息或None(接收失败)
     """
     if zcan_handler is None:
         logger.error("CANFD handler is None")
         return None
-    
+
     # 快速接收尝试
     for attempt in range(quick_retries):
         time.sleep(0.0000001)  # 极短延时
         message = _zcan_read_messages(attempt)
         if message is not None:
             return message
-    
+
     logger.warning("快速接收超时")
-    
+
     # 慢速接收尝试
     for attempt in range(dely_retries):
         time.sleep(0.5)  # 较长延时，适用于DFU模式
         message = _zcan_read_messages(attempt)
         if message is not None:
             return message
-    
+
     if dely_retries > 0:
         logger.error("慢速接收尝试也超时!")
     return None
@@ -140,7 +141,7 @@ def _zcan_read_messages(index: int = 0):
     if act_num == 0:
         logger.error("接收数据失败!")
         return None
-    
+
     logger.debug(f"接收数据量: {act_num}")
     debug_text = "CANFD接收数据: "
     for i in range(act_num):

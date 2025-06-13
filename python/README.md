@@ -15,7 +15,7 @@ cd python
 # 安装依赖
 pip3 install -r requirements.txt
 
-cd modbus_example
+cd revo2
 # 控制设备-单个灵巧手
 python3 revo2_ctrl.py
 # 控制设备-一个总线上控制多个手
@@ -27,6 +27,7 @@ python3 revo2_cfg.py
 # 升级设备
 python3 dfu.py
 
+cd revo2_canfd
 # CANFD-智嵌物联
 python3 zqwl_canfd.py
 ```

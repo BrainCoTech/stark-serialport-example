@@ -1,10 +1,14 @@
 import asyncio
 import sys
-# import time
+import pathlib
 import bc_stark_sdk
-from revo2_utils import libstark, logger
 # from zlgcan import ZCAN_USBCANFD_100U
 from zqwl_win import zcan_open, zcan_close, zcan_send_message, zcan_receive_message
+
+current_dir = pathlib.Path(__file__).resolve()
+parent_dir = current_dir.parent.parent
+sys.path.append(str(parent_dir))
+from revo2.revo2_utils import libstark, logger
 
 def canfd_send(slave_id: int, can_id: int, data: list):
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
