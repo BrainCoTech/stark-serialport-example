@@ -1,5 +1,5 @@
 uint8 slave_id
-uint8[6] positions
-int8[6] speeds
-int8[6] currents
+uint16[6] positions
+int16[6] speeds
+int16[6] currents
 uint8[6] states
