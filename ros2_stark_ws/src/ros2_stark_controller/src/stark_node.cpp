@@ -20,6 +20,12 @@ StarkNode::StarkNode() : Node("stark_node") {
     throw std::runtime_error("Modbus initialization failed");
   }
 
+  if (fw_type_ == StarkFirmwareType::STARK_FIRMWARE_TYPE_V1_TOUCH) {
+    // 启用全部触觉传感器
+    modbus_enable_touch_sensor(handle_, slave_id_, 0x1F);
+    // usleep(1000 * 1000); // wait for touch sensor to be ready
+  }
+
   // Initialize services
   std::string slave_id = std::to_string(slave_id_);
   get_device_info_service_ = create_service<ros2_stark_interfaces::srv::GetDeviceInfo>(
@@ -77,7 +83,9 @@ bool StarkNode::initialize_modbus() {
 
 void StarkNode::timer_callback() {
   publish_motor_status();
-  publish_touch_status();
+  if (fw_type_ == StarkFirmwareType::STARK_FIRMWARE_TYPE_V1_TOUCH) {
+    publish_touch_status();
+  }
 }
 
 // void StarkNode::() {
