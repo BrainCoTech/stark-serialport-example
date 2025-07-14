@@ -5,8 +5,8 @@
 #include <execinfo.h>
 
 // 声明函数
-void get_device_info(ModbusHandle *handleint, uint8_t slave_id);
-void get_info(ModbusHandle *handle, uint8_t slave_id);
+void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
+void get_info(DeviceHandler *handle, uint8_t slave_id);
 
 void handler(int sig)
 {
@@ -74,9 +74,9 @@ int main(int argc, char const *argv[])
   // auto max_current = modbus_get_finger_max_current(handle, slave_id, finger_id);
   // printf("Finger[%hhu] max current: %hu\n", finger_id, max_current);
 
-  // modbus_set_finger_protect_current(handle, slave_id, finger_id, 500);
-  // auto protect_current = modbus_get_finger_protect_current(handle, slave_id, finger_id);
-  // printf("Finger[%hhu] protect current: %hu\n", finger_id, protect_current);
+  // modbus_set_finger_protected_current(handle, slave_id, finger_id, 500);
+  // auto protected_current = modbus_get_finger_protected_current(handle, slave_id, finger_id);
+  // printf("Finger[%hhu] protect current: %hu\n", finger_id, protected_current);
 
   useconds_t delay = 1000 * 1000; // 1000ms
 
@@ -122,8 +122,8 @@ int main(int argc, char const *argv[])
   if (finger_status != NULL)
   {
     printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
-    printf("Speeds: %hhd, %hhd, %hhd, %hhd, %hhd, %hhd\n", finger_status->speeds[0], finger_status->speeds[1], finger_status->speeds[2], finger_status->speeds[3], finger_status->speeds[4], finger_status->speeds[5]);
-    printf("Currents: %hhd, %hhd, %hhd, %hhd, %hhd, %hhd\n", finger_status->currents[0], finger_status->currents[1], finger_status->currents[2], finger_status->currents[3], finger_status->currents[4], finger_status->currents[5]);
+    printf("Speeds: %hd, %hd, %hd, %hd, %hd, %hd\n", finger_status->speeds[0], finger_status->speeds[1], finger_status->speeds[2], finger_status->speeds[3], finger_status->speeds[4], finger_status->speeds[5]);
+    printf("Currents: %hd, %hd, %hd, %hd, %hd, %hd\n", finger_status->currents[0], finger_status->currents[1], finger_status->currents[2], finger_status->currents[3], finger_status->currents[4], finger_status->currents[5]);
     printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
     free_motor_status_data(finger_status);
   }
@@ -132,7 +132,7 @@ int main(int argc, char const *argv[])
 }
 
 // 获取设备序列号、固件版本等信息
-void get_device_info(ModbusHandle *handle, uint8_t slave_id)
+void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto info = modbus_get_device_info(handle, slave_id);
   if (info != NULL)
@@ -143,7 +143,7 @@ void get_device_info(ModbusHandle *handle, uint8_t slave_id)
 }
 
 // 获取设备信息, 波特率, LED信息, 按键事件
-void get_info(ModbusHandle *handle, uint8_t slave_id)
+void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
   // RS485串口波特率
   auto baudrate = modbus_get_rs485_baudrate(handle, slave_id);

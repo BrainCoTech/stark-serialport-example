@@ -62,14 +62,13 @@ def action_sequence_info_to_list(action):
 
 ### main.py
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V2Basic)
     shutdown_event = setup_shutdown_event(logger)
 
     port_name = get_stark_port_name()
     if port_name is None:
         return
 
-    slave_id = 0x7f  # 左手默认ID为0x7e，右手默认ID为0x7f
+    slave_id = 0x7e  # 左手默认ID为0x7e，右手默认ID为0x7f
     # fmt: off
     client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
 

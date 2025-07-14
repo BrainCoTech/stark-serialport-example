@@ -1,14 +1,9 @@
 import asyncio
 import sys
 import pathlib
-import bc_stark_sdk
 # from zlgcan import ZCAN_USBCANFD_100U
 from zqwl_win import zcan_open, zcan_close, zcan_send_message, zcan_receive_message
-
-current_dir = pathlib.Path(__file__).resolve()
-parent_dir = current_dir.parent.parent
-sys.path.append(str(parent_dir))
-from revo2.revo2_utils import libstark, logger
+from canfd_utils import libstark, logger, setup_shutdown_event
 
 def canfd_send(slave_id: int, can_id: int, data: list):
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
@@ -30,14 +25,13 @@ def canfd_read(slave_id: int):
 # Main
 async def main():
     # fmt: off
-    libstark.init_config(libstark.StarkFirmwareType.V2Basic, libstark.StarkProtocolType.CanFd)
     slave_id = 0x7e # 左手默认ID为0x7e，右手默认ID为0x7f
     client = await libstark.canfd_open(libstark.BaudrateCAN.Baud5Mbps, slave_id)
 
     # ZCAN_USBCANFD_100U
     zcan_open(device_type=42, channel=0, baudrate=5000000)
-    bc_stark_sdk.set_canfd_tx_callback(canfd_send)
-    bc_stark_sdk.set_canfd_rx_callback(canfd_read)
+    libstark.set_canfd_tx_callback(canfd_send)
+    libstark.set_canfd_rx_callback(canfd_read)
 
     baudrate = await client.get_canfd_baudrate(slave_id)
     logger.info(f"CANFD, Baudrate: {baudrate}")
@@ -57,7 +51,7 @@ async def main():
     logger.debug("get_finger_unit_mode")  # 获取手指单位模式
     finger_unit_mode = await client.get_finger_unit_mode(slave_id)
     logger.info(f"Finger unit mode: {finger_unit_mode}")
-    # https://brainco.yuque.com/tykrbo/hws0nr/pynh5qnmfa1bgamc#EyHBW
+    # https://www.brainco-hz.com/docs/revolimb-hand/protocol/stark_v2.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
 
     finger_id = libstark.FingerId.Middle
 
@@ -78,8 +72,8 @@ async def main():
     max_current = await client.get_finger_max_current(slave_id, finger_id)
     logger.info(f"Finger[{finger_id}] max current: {max_current}")
 
-    await client.set_finger_protect_current(slave_id, finger_id,  500)
-    protected_current = await client.get_finger_protect_current(slave_id, finger_id)
+    await client.set_finger_protected_current(slave_id, finger_id,  500)
+    protected_current = await client.get_finger_protected_current(slave_id, finger_id)
     logger.info(f"Finger[{finger_id}] protected current: {protected_current}")
 
     # 单个手指，按速度/电流/PWM控制

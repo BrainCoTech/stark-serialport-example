@@ -6,7 +6,7 @@ from zlgcan import *
 current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent.parent
 sys.path.append(str(parent_dir))
-from revo2.revo2_utils import logger
+from canfd_utils import logger
 logger.info(f"parent_dir: {parent_dir}")
 
 read_timeout_ms = 50

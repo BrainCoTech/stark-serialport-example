@@ -6,12 +6,11 @@ from revo2_utils import get_stark_port_name, libstark, logger
 # Main
 async def main():
     # fmt: off
-    libstark.init_config(libstark.StarkFirmwareType.V2Basic)
     port_name = get_stark_port_name()
     if port_name is None:
         return
 
-    slave_id = 0x7f  # 左手默认ID为0x7e，右手默认ID为0x7f
+    slave_id = 0x7e  # 左手默认ID为0x7e，右手默认ID为0x7f
     client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
 
     logger.debug("get_device_info")  # 获取设备信息
@@ -23,10 +22,10 @@ async def main():
     await client.set_finger_unit_mode(slave_id, libstark.FingerUnitMode.Normalized) # 千分比模式
     # await client.set_finger_unit_mode(slave_id, libstark.FingerUnitMode.Physical) # 物理量模式
     # 获取手指控制模式
-    logger.debug("get_finger_unit_mode")  
+    logger.debug("get_finger_unit_mode")
     finger_unit_mode = await client.get_finger_unit_mode(slave_id)
     logger.info(f"Finger unit mode: {finger_unit_mode}")
-    # https://brainco.yuque.com/tykrbo/hws0nr/pynh5qnmfa1bgamc#EyHBW
+    # https://www.brainco-hz.com/docs/revolimb-hand/protocol/stark_v2.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
 
     finger_id = libstark.FingerId.Middle
 
@@ -52,8 +51,8 @@ async def main():
     # logger.info(f"Finger[{finger_id}] max current: {max_current}")
 
     # 设置保护电流
-    # await client.set_finger_protect_current(slave_id, finger_id,  500)
-    # protected_current = await client.get_finger_protect_current(slave_id, finger_id)
+    # await client.set_finger_protected_current(slave_id, finger_id,  500)
+    # protected_current = await client.get_finger_protected_current(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] protected current: {protected_current}")
 
     # 控制单个手指，速度控制，其中符号表示方向，正表示为握紧方向，负表示为松开方向
@@ -100,8 +99,8 @@ async def main():
     await client.set_finger_positions_and_speeds(slave_id, positions, speeds)
     await asyncio.sleep(1.0)  # 等待手指到达目标位置
 
-    # 获取手指状态, 位置，电流，motor状态   
-    logger.debug("get_motor_status")  
+    # 获取手指状态, 位置，电流，motor状态
+    logger.debug("get_motor_status")
     status = await client.get_motor_status(slave_id)
     # logger.info(f"positions: {list(status.positions)}") # 位置
     # logger.info(f"positions: {list(status.speeds)}") # 速度

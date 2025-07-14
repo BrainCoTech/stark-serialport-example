@@ -32,7 +32,6 @@ async def get_motor_status_periodically(client):
 
 # Main
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V2Basic)
     shutdown_event = setup_shutdown_event(logger)
 
     port_name = get_stark_port_name()

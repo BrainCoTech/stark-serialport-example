@@ -1,6 +1,18 @@
 import asyncio
-import platform
+import sys
 import signal
+import os
+import platform
+import pathlib
+import logging
+from logger import getLogger
+# logger = getLogger(logging.DEBUG)
+logger = getLogger(logging.INFO)
+
+from bc_stark_sdk import main_mod
+libethercat = main_mod.ethercat
+libstark = main_mod.stark
+libstark.init_config(libstark.StarkFirmwareType.V2Basic, libstark.StarkProtocolType.EtherCAT)
 
 def setup_shutdown_event(logger):
     # 创建一个事件用于关闭
@@ -17,5 +29,3 @@ def setup_shutdown_event(logger):
         loop.add_signal_handler(signal.SIGTERM, shutdown_handler)
 
     return shutdown_event
-
-

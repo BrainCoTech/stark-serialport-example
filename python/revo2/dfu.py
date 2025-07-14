@@ -11,34 +11,15 @@ current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent.parent
 logger.info(f"parent_dir: {parent_dir}")
 
-stark_touch = True
+# stark_touch = True
 stark_v2 = False
-
-if stark_touch:
-    # Modbus固件，一代灵巧手触觉版
-    ota_bin_path = os.path.join(
-        parent_dir,
-        "ota_bin",
-        "touch",
-        "FW_MotorController_Release_SecureOTA_V1.8.32.F.ota",
-    )
-
-elif stark_v2:
-    # Modbus固件，二代灵巧手基础版
-    ota_bin_path = os.path.join(
-        parent_dir,
-        "ota_bin",
-        "stark2",
-        "stark2_fw_V0.0.10_20250513154323.bin",
-    )
-else:
-    # Modbus固件, 一代灵巧手基础版
-    ota_bin_path = os.path.join(
-        parent_dir,
-        "ota_bin",
-        "modbus",
-        "FW_MotorController_Release_SecureOTA_modbus_0.1.7.ota",
-    )
+# Modbus固件，二代灵巧手基础版
+ota_bin_path = os.path.join(
+    parent_dir,
+    "ota_bin",
+    "stark2",
+    "stark2_fw_V0.0.10_20250513154323.bin",
+)
 
 if not os.path.exists(ota_bin_path):
     logger.warning(f"OTA文件不存在: {ota_bin_path}")
@@ -64,15 +45,6 @@ def on_dfu_progress(_slave_id, progress):
 
 # Main
 async def main():
-    libstark.init_config(
-            libstark.StarkFirmwareType.V1Touch
-        if stark_touch
-        else
-            libstark.StarkFirmwareType.V2Basic
-        if stark_v2
-        else libstark.StarkFirmwareType.V1Basic
-    )
-
     global shutdown_event
     shutdown_event = setup_shutdown_event(logger)
 
