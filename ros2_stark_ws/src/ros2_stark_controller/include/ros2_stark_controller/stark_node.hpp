@@ -40,7 +40,7 @@ private:
     rclcpp::TimerBase::SharedPtr info_timer_;
 
     // Stark SDK handle
-    ModbusHandle* handle_;
+    DeviceHandler* handle_;
     uint8_t slave_id_;
 
     // Configuration parameters

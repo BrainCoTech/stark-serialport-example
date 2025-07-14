@@ -32,6 +32,11 @@ enum ContactState : uint8_t {
   CONTACT_STATE_CONTACT_SLIDING = 2,
 };
 
+enum EtherCATFoeType : uint8_t {
+  ETHER_CAT_FOE_TYPE_WRIST = 1,
+  ETHER_CAT_FOE_TYPE_CONTROL = 2,
+};
+
 enum FingerUnitMode : uint8_t {
   FINGER_UNIT_MODE_NORMALIZED = 0,
   FINGER_UNIT_MODE_PHYSICAL = 1,
@@ -99,14 +104,16 @@ enum StarkFirmwareType : uint8_t {
   STARK_FIRMWARE_TYPE_V1_BASIC = 1,
   STARK_FIRMWARE_TYPE_V1_TOUCH = 2,
   STARK_FIRMWARE_TYPE_V2_BASIC = 3,
+  STARK_FIRMWARE_TYPE_V2_TOUCH = 4,
 };
 
 enum StarkProtocolType : uint8_t {
   STARK_PROTOCOL_TYPE_MODBUS = 1,
   STARK_PROTOCOL_TYPE_CAN_FD = 2,
+  STARK_PROTOCOL_TYPE_ETHER_CAT = 3,
 };
 
-struct ModbusHandle;
+struct DeviceHandler;
 
 /// 设备信息
 /// sku_type: 设备类型，1: 右手 2: 左手
@@ -119,9 +126,9 @@ struct DeviceInfo {
 };
 
 struct MotorStatusData {
-  uint8_t positions[6];
-  int8_t speeds[6];
-  int8_t currents[6];
+  uint16_t positions[6];
+  int16_t speeds[6];
+  int16_t currents[6];
   uint8_t states[6];
 };
 
@@ -135,6 +142,7 @@ struct TouchRawData {
 
 /// 触觉传感器数据
 /// 三维力数值、自接近、互接近电容值，以及传感器状态
+/// 二代触觉手只有法向力，切向力，切向力方向，接近值，四个值，其他值为0
 struct TouchFingerItem {
   uint16_t normal_force1;
   uint16_t normal_force2;
@@ -245,183 +253,211 @@ void list_available_ports();
 
 /// 打开串口
 /// port: 串口名称，例如："/dev/ttyUSB0", "COM1"
-/// baudrate: 波特率，115200, 57600, 19200, 460800，一代手默认为115200，二代手默认为480000
+/// baudrate: 波特率，115200, 57600, 19200, 460800，一代手默认为115200，二代手默认为460800, 二代手支持1M, 2M, 5M
 /// slave_id: 设备ID，范围为1~247, 0 为广播地址，一代手默认为1，二代手左手默认ID为0x7e，右手默认ID为0x7f
-/// 返回 ModbusHandle 结构体指针，关闭时需要调用 modbus_close 释放内存
+/// 返回 DeviceHandler 结构体指针，关闭时需要调用 modbus_close 释放内存
 /// 如果失败，返回 NULL
-ModbusHandle *modbus_open(const char *port,
-                          uint32_t baudrate);
+DeviceHandler *modbus_open(const char *port,
+                           uint32_t baudrate);
 
 /// 自定义Modbus读写，与set_modbus_read_callback/set_modbus_write_callback结合使用
-ModbusHandle *modbus_init();
+DeviceHandler *modbus_init();
 
 /// 关闭串口
-void modbus_close(ModbusHandle *handle);
+void modbus_close(DeviceHandler *handle);
 
 /// 打开CAN FD设备
 /// baudrate: 波特率，1M, 2M, 4M, 5M
 /// 仅支持二代手
 /// slave_id: 设备ID，范围为1~247, 二代手左手默认ID为0x7e，右手默认ID为0x7f
-/// 返回 ModbusHandle 结构体指针，关闭时需要调用 canfd_close 释放内存
+/// 返回 DeviceHandler 结构体指针，关闭时需要调用 canfd_close 释放内存
 /// 如果失败，返回 NULL
-ModbusHandle *canfd_open(uint32_t baudrate, uint8_t slave_id);
+DeviceHandler *canfd_open(uint32_t baudrate, uint8_t slave_id);
 
 /// 关闭CAN FD设备
-void canfd_close(ModbusHandle *handle);
+void canfd_close(DeviceHandler *handle);
+
+/// 打开EtherCAT设备
+DeviceHandler *ethercat_open_master(uint32_t master_pos);
+
+/// 关闭EtherCAT设备
+void ethercat_close(DeviceHandler *handle);
+
+/// 设置EtherCAT设备的SDO
+void ethercat_setup_sdo(DeviceHandler *handle, uint16_t slave_pos);
+
+/// 开始EtherCAT循环, PDO通信控制&读取
+/// cycle_time: 周期时间，单位为微秒
+void ethercat_start_loop(DeviceHandler *handle,
+                         uint64_t cycle_time,
+                         const uint16_t *slave_positions,
+                         int count);
+
+/// 停止EtherCAT循环
+void ethercat_stop_loop(DeviceHandler *handle);
+
+/// EtherCAT DFU, 通过Foe协议进行固件升级
+/// slave_pos: 从站位置
+/// dfu_type: DFU类型，Control或Wrist
+/// file_path: 固件文件路径
+void ethercat_start_dfu(DeviceHandler *handle,
+                        uint16_t slave_pos,
+                        EtherCATFoeType dfu_type,
+                        const char *file_path);
 
 /// 获取设备信息
 /// 返回 DeviceInfo 结构体指针，需要调用 free_device_info 释放内存
 /// 如果失败，返回 NULL
-DeviceInfo *modbus_get_device_info(ModbusHandle *handle, uint8_t slave_id);
+DeviceInfo *modbus_get_device_info(DeviceHandler *handle, uint8_t slave_id);
 
 /// 获取RS485串口设备波特率
 /// 115200, 57600, 19200, 460800
-uint32_t modbus_get_rs485_baudrate(ModbusHandle *handle, uint8_t slave_id);
+uint32_t modbus_get_rs485_baudrate(DeviceHandler *handle, uint8_t slave_id);
 
 /// 设置RS485串口设备波特率
 /// 115200, 57600, 19200, 460800
-void modbus_set_rs485_baudrate(ModbusHandle *handle, uint8_t slave_id, uint32_t baudrate);
+void modbus_set_rs485_baudrate(DeviceHandler *handle, uint8_t slave_id, uint32_t baudrate);
 
 /// 获取CANFD设备波特率
 /// 1M, 2M, 4M, 5M
-uint32_t modbus_get_canfd_baudrate(ModbusHandle *handle, uint8_t slave_id);
+uint32_t modbus_get_canfd_baudrate(DeviceHandler *handle, uint8_t slave_id);
 
 /// 设置CANFD设备波特率
 /// 1M, 2M, 4M, 5M
-void modbus_set_canfd_baudrate(ModbusHandle *handle, uint8_t slave_id, uint32_t baudrate);
+void modbus_set_canfd_baudrate(DeviceHandler *handle, uint8_t slave_id, uint32_t baudrate);
 
 /// 设置设备ID，默认为1，范围为1~247, 0 为广播地址，一代手默认为1，二代手左手默认ID为0x7e，右手默认ID为0x7f
 /// 当需要在一条总线上同时控制多只设备时，需要将设备ID设置为不同的值
 /// 例如：设置左手ID为1，右手ID为2
 /// 通过广播地址0，可以同时控制总线上的所有设备，Mobbus协议规定广播地址的设备不会回复
-void modbus_set_slave_id(ModbusHandle *handle,
+void modbus_set_slave_id(DeviceHandler *handle,
                          uint8_t slave_id,
                          uint8_t new_id);
 
 /// Deprecated
 /// 设置力量等级，仅支持标准版一代手
-void modbus_set_force_level(ModbusHandle *handle, uint8_t slave_id, ForceLevel level);
+void modbus_set_force_level(DeviceHandler *handle, uint8_t slave_id, ForceLevel level);
 
 /// Deprecated
 /// 获取力量等级，仅支持标准版一代手
-uint8_t modbus_get_force_level(ModbusHandle *handle, uint8_t slave_id);
+uint8_t modbus_get_force_level(DeviceHandler *handle, uint8_t slave_id);
 
 /// 获取电压值，单位mV
-uint16_t modbus_get_voltage(ModbusHandle *handle, uint8_t slave_id);
+uint16_t modbus_get_voltage(DeviceHandler *handle, uint8_t slave_id);
 
 /// 获取LED开关
-bool get_led_enabled(ModbusHandle *handle, uint8_t slave_id);
+bool get_led_enabled(DeviceHandler *handle, uint8_t slave_id);
 
 /// 获取蜂鸣器开关
-bool get_buzzer_enabled(ModbusHandle *handle, uint8_t slave_id);
+bool get_buzzer_enabled(DeviceHandler *handle, uint8_t slave_id);
 
 /// 获取震动开关
-bool get_vibration_enabled(ModbusHandle *handle, uint8_t slave_id);
+bool get_vibration_enabled(DeviceHandler *handle, uint8_t slave_id);
 
 /// 设置LED开关
-void set_led_enabled(ModbusHandle *handle, uint8_t slave_id, bool enabled);
+void set_led_enabled(DeviceHandler *handle, uint8_t slave_id, bool enabled);
 
 /// 设置蜂鸣器开关
-void set_buzzer_enabled(ModbusHandle *handle, uint8_t slave_id, bool enabled);
+void set_buzzer_enabled(DeviceHandler *handle, uint8_t slave_id, bool enabled);
 
 /// 设置震动开关
-void set_vibration_enabled(ModbusHandle *handle, uint8_t slave_id, bool enabled);
+void set_vibration_enabled(DeviceHandler *handle, uint8_t slave_id, bool enabled);
 
 /// 二代手设置单位模式，手指参数，上电后重置
 /// 参数范围详见文档
 /// https://brainco.yuque.com/tykrbo/hws0nr/pynh5qnmfa1bgamc
 /// 设置控制的单位模式
 /// 无极模式，物理量模式
-void modbus_set_finger_unit_mode(ModbusHandle *handle, uint8_t slave_id, FingerUnitMode mode);
+void modbus_set_finger_unit_mode(DeviceHandler *handle, uint8_t slave_id, FingerUnitMode mode);
 
 /// 获取控制的单位模式
 /// 返回 FingerUnitMode
 /// 如果失败，返回 FingerUnitMode::Normalized
-FingerUnitMode modbus_get_finger_unit_mode(ModbusHandle *handle, uint8_t slave_id);
+FingerUnitMode modbus_get_finger_unit_mode(DeviceHandler *handle, uint8_t slave_id);
 
 /// 设置最大角度
 /// max_pos: 最大角度值，默认为 60 87 84 84 84 84
-void modbus_set_finger_max_position(ModbusHandle *handle,
+void modbus_set_finger_max_position(DeviceHandler *handle,
                                     uint8_t slave_id,
                                     StarkFingerId finger_id,
                                     uint16_t max_pos);
 
 /// 设置最小角度
 /// min_pos: 最小角度值，单位(°)，默认为 0 0 0 0 0 0
-void modbus_set_finger_min_position(ModbusHandle *handle,
+void modbus_set_finger_min_position(DeviceHandler *handle,
                                     uint8_t slave_id,
                                     StarkFingerId finger_id,
                                     uint16_t min_pos);
 
 /// 设置最大速度
 /// max_speed: 最大速度值，单位(°/s)，默认值为 145 150 130 130 130 130
-void modbus_set_finger_max_speed(ModbusHandle *handle,
+void modbus_set_finger_max_speed(DeviceHandler *handle,
                                  uint8_t slave_id,
                                  StarkFingerId finger_id,
                                  uint16_t max_speed);
 
 /// 设置最大电流
 /// max_current: 最大电流值，单位(mA)，默认值为 1000
-void modbus_set_finger_max_current(ModbusHandle *handle,
+void modbus_set_finger_max_current(DeviceHandler *handle,
                                    uint8_t slave_id,
                                    StarkFingerId finger_id,
                                    uint16_t max_current);
 
 /// 设置保护电流
-/// protect_current: 保护电流值，单位(mA), 范围为 100~1500，默认值为 500 500 500 500 500 500
-void modbus_set_finger_protect_current(ModbusHandle *handle,
-                                       uint8_t slave_id,
-                                       StarkFingerId finger_id,
-                                       uint16_t protect_current);
+/// protected_current: 保护电流值，单位(mA), 范围为 100~1500，默认值为 500 500 500 500 500 500
+void modbus_set_finger_protected_current(DeviceHandler *handle,
+                                         uint8_t slave_id,
+                                         StarkFingerId finger_id,
+                                         uint16_t protected_current);
 
 /// 读取最大角度
 /// 读取失败时返回0
-uint16_t modbus_get_finger_max_position(ModbusHandle *handle,
+uint16_t modbus_get_finger_max_position(DeviceHandler *handle,
                                         uint8_t slave_id,
                                         StarkFingerId finger_id);
 
 /// 读取最小角度
 /// min_pos: 最小角度值，单位(°)，默认为 0 0 0 0 0 0
-uint16_t modbus_get_finger_min_position(ModbusHandle *handle,
+uint16_t modbus_get_finger_min_position(DeviceHandler *handle,
                                         uint8_t slave_id,
                                         StarkFingerId finger_id);
 
 /// 读取最大速度
 /// max_speed: 最大速度值，单位(°/s)，默认值为 145 150 130 130 130 130
 /// 读取失败时返回0
-uint16_t modbus_get_finger_max_speed(ModbusHandle *handle,
+uint16_t modbus_get_finger_max_speed(DeviceHandler *handle,
                                      uint8_t slave_id,
                                      StarkFingerId finger_id);
 
 /// 读取最大电流
 /// max_current: 最大电流值，单位(mA)，默认值为 1000
 /// 读取失败时返回0
-uint16_t modbus_get_finger_max_current(ModbusHandle *handle,
+uint16_t modbus_get_finger_max_current(DeviceHandler *handle,
                                        uint8_t slave_id,
                                        StarkFingerId finger_id);
 
 /// 读取保护电流
-/// protect_current: 保护电流值，单位(mA), 范围为 100~1500，默认值为 500 500 500 500 500 500
+/// protected_current: 保护电流值，单位(mA), 范围为 100~1500，默认值为 500 500 500 500 500 500
 /// 读取失败时返回0
-uint16_t modbus_get_finger_protect_current(ModbusHandle *handle,
-                                           uint8_t slave_id,
-                                           StarkFingerId finger_id);
+uint16_t modbus_get_finger_protected_current(DeviceHandler *handle,
+                                             uint8_t slave_id,
+                                             StarkFingerId finger_id);
 
 /// 拇指 AUX 锁定电流设置
 /// aux_lock_current: 单位(mA), 范围为 100~500，默认值为 200
 /// 仅支持二代手
-void modbus_set_thumb_aux_lock_current(ModbusHandle *handle,
+void modbus_set_thumb_aux_lock_current(DeviceHandler *handle,
                                        uint8_t slave_id,
                                        uint16_t aux_lock_current);
 
 /// 读取拇指 AUX 锁定电流设置
 /// 仅支持二代手
-uint16_t modbus_get_thumb_aux_lock_current(ModbusHandle *handle, uint8_t slave_id);
+uint16_t modbus_get_thumb_aux_lock_current(DeviceHandler *handle, uint8_t slave_id);
 
 /// 设置单个手指位置
 /// position: 位置值，一代手范围为0~100
 /// 二代手范围为0~1000或最小-最大位置（°）
-void modbus_set_finger_position(ModbusHandle *handle,
+void modbus_set_finger_position(DeviceHandler *handle,
                                 uint8_t slave_id,
                                 StarkFingerId finger_id,
                                 uint16_t position);
@@ -430,16 +466,16 @@ void modbus_set_finger_position(ModbusHandle *handle,
 /// speed: 速度值，一代手范围为-100~100
 /// 二代手范围为-1000~1000或-最大速度~最大速度°/s
 /// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
-void modbus_set_finger_speed(ModbusHandle *handle,
+void modbus_set_finger_speed(DeviceHandler *handle,
                              uint8_t slave_id,
                              StarkFingerId finger_id,
                              int16_t speed);
 
 /// 设置单个手指电流
-/// 仅支持二代手
-/// 范围为-1000~1000或-最大电流~最大电流mA
+/// 二代基础版，参数范围为-1000~1000或-最大电流~最大电流mA
+/// 一代触觉版，参数范围为-100~-20, 20~100，单位mA
 /// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
-void modbus_set_finger_current(ModbusHandle *handle,
+void modbus_set_finger_current(DeviceHandler *handle,
                                uint8_t slave_id,
                                StarkFingerId finger_id,
                                int16_t current);
@@ -448,7 +484,7 @@ void modbus_set_finger_current(ModbusHandle *handle,
 /// 仅支持二代手
 /// 范围为-1000~1000
 /// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
-void modbus_set_finger_pwm(ModbusHandle *handle,
+void modbus_set_finger_pwm(DeviceHandler *handle,
                            uint8_t slave_id,
                            StarkFingerId finger_id,
                            int16_t pwm);
@@ -457,7 +493,7 @@ void modbus_set_finger_pwm(ModbusHandle *handle,
 /// 仅支持二代手
 /// 位置范围为0~1000或最小-最大位置（°）
 /// 期望时间范围为1~2000ms
-void modbus_set_finger_position_with_millis(ModbusHandle *handle,
+void modbus_set_finger_position_with_millis(DeviceHandler *handle,
                                             uint8_t slave_id,
                                             StarkFingerId finger_id,
                                             uint16_t position,
@@ -467,7 +503,7 @@ void modbus_set_finger_position_with_millis(ModbusHandle *handle,
 /// 仅支持二代手
 /// 位置范围为0~1000或最小最大位置（°）
 /// 速度范围为1~1000或最小~最大速度(°/s）
-void modbus_set_finger_position_with_speed(ModbusHandle *handle,
+void modbus_set_finger_position_with_speed(DeviceHandler *handle,
                                            uint8_t slave_id,
                                            StarkFingerId finger_id,
                                            uint16_t position,
@@ -475,7 +511,7 @@ void modbus_set_finger_position_with_speed(ModbusHandle *handle,
 
 /// 设置多个手指位置
 /// positions: 位置值数组，长度为6，范围为0~100, 对应比分比位置
-void modbus_set_finger_positions(ModbusHandle *handle,
+void modbus_set_finger_positions(DeviceHandler *handle,
                                  uint8_t slave_id,
                                  const uint16_t *positions,
                                  uintptr_t len);
@@ -484,16 +520,16 @@ void modbus_set_finger_positions(ModbusHandle *handle,
 /// speeds: 速度值数组，长度为6，一代手范围为-100~100
 /// 二代手范围为-1000~1000或-最大速度~最大速度°/s
 /// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
-void modbus_set_finger_speeds(ModbusHandle *handle,
+void modbus_set_finger_speeds(DeviceHandler *handle,
                               uint8_t slave_id,
                               const int16_t *speeds,
                               uintptr_t len);
 
 /// 设置多个手指电流
-/// 仅支持二代手
-/// currents: 电流值数组，长度为6，范围为-1000~1000或-最大电流~最大电流mA
+/// 二代基础版，参数范围为-1000~1000或-最大电流~最大电流mA
+/// 一代触觉版，参数范围为-100~-20, 20~100，单位mA
 /// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
-void modbus_set_finger_currents(ModbusHandle *handle,
+void modbus_set_finger_currents(DeviceHandler *handle,
                                 uint8_t slave_id,
                                 const int16_t *currents,
                                 uintptr_t len);
@@ -502,7 +538,7 @@ void modbus_set_finger_currents(ModbusHandle *handle,
 /// 仅支持二代手
 /// pwms: PWM值数组，长度为6，范围为-1000~1000
 /// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
-void modbus_set_finger_pwms(ModbusHandle *handle,
+void modbus_set_finger_pwms(DeviceHandler *handle,
                             uint8_t slave_id,
                             const int16_t *pwms,
                             uintptr_t len);
@@ -512,7 +548,7 @@ void modbus_set_finger_pwms(ModbusHandle *handle,
 /// positions: 位置值数组，长度为6，范围为0~1000或最小~最大位置（°）
 /// millis: 期望时间值数组，长度为6，范围为1~2000ms
 /// 其中位置值和期望时间值一一对应
-void modbus_set_finger_positions_and_durations(ModbusHandle *handle,
+void modbus_set_finger_positions_and_durations(DeviceHandler *handle,
                                                uint8_t slave_id,
                                                const uint16_t *positions,
                                                const uint16_t *millis,
@@ -523,7 +559,7 @@ void modbus_set_finger_positions_and_durations(ModbusHandle *handle,
 /// positions: 位置值数组，长度为6，范围为0~1000或最小最大位置（°）
 /// speeds: 速度值数组，长度为6，范围为1~1000或最小~最大速度(°/s)
 /// 其中位置值和速度值一一对应
-void modbus_set_finger_positions_and_speeds(ModbusHandle *handle,
+void modbus_set_finger_positions_and_speeds(DeviceHandler *handle,
                                             uint8_t slave_id,
                                             const uint16_t *positions,
                                             const uint16_t *speeds,
@@ -533,11 +569,13 @@ void modbus_set_finger_positions_and_speeds(ModbusHandle *handle,
 /// 位置、速度、电流、马达运行状态
 /// 返回 MotorStatusData 结构体指针，需要调用 free_motor_status_data 释放内存
 /// 如果失败，返回 NULL
-MotorStatusData *modbus_get_motor_status(ModbusHandle *handle, uint8_t slave_id);
+MotorStatusData *modbus_get_motor_status(DeviceHandler *handle, uint8_t slave_id);
 
 /// 运行动作序列
 /// action_id: 动作序列ID
-void modbus_run_action_sequence(ModbusHandle *handle, uint8_t slave_id, ActionSequenceId action_id);
+void modbus_run_action_sequence(DeviceHandler *handle,
+                                uint8_t slave_id,
+                                ActionSequenceId action_id);
 
 /// 传输动作序列
 ///
@@ -568,7 +606,7 @@ void modbus_run_action_sequence(ModbusHandle *handle, uint8_t slave_id, ActionSe
 ///   - 动作序列索引 (u16)：动作序列的索引，用于标识该动作序列在队列中的位置
 ///   - 持续时间 (u16)：该动作序列的执行时间，单位为毫秒
 ///   - 控制模式 (u16), 位置时间控制：1，位置速度控制：2，电流控制：3，速度控制：4
-///   - 手指位置 (u16): 6 个手指位置的物理量（°）, 值为65535时候表示手指保持原来角度
+///   - 手指位置 (u16): 6 个手指位置的物理量（°）, 值为 65535 (0xFFFF) 表示手指保持原来角度
 ///   - 手指速度 (u16): 6 个手指速度的物理量，值为手指转动速度（°/s）
 ///   - 手指电流 (u16): 6 个手指电流的物理量，值为电流(mA)
 ///
@@ -582,7 +620,7 @@ void modbus_run_action_sequence(ModbusHandle *handle, uint8_t slave_id, ActionSe
 /// # 错误处理
 /// - 如果 `handle` 或 `sequences` 为 NULL，将直接返回，不进行处理
 /// - 如果 `len` 大于最大限制（一代灵巧手为32，二代灵巧手为8），会输出警告并提前返回
-void modbus_set_action_sequence(ModbusHandle *handle,
+void modbus_set_action_sequence(DeviceHandler *handle,
                                 uint8_t slave_id,
                                 ActionSequenceId action_id,
                                 const uint16_t *sequences,
@@ -591,96 +629,96 @@ void modbus_set_action_sequence(ModbusHandle *handle,
 /// 启用触觉传感器
 /// bits: 启用的触觉传感器位，范围为0~31
 /// 例如：0b00000001 表示仅启用大拇指位置的触觉传感器
-void modbus_enable_touch_sensor(ModbusHandle *handle, uint8_t slave_id, uint8_t bits);
+void modbus_enable_touch_sensor(DeviceHandler *handle, uint8_t slave_id, uint8_t bits);
 
 /// 获取触觉传感器通道数据
 /// 返回 TouchRawData 结构体指针，需要调用 free_touch_raw_data 释放内存
 /// 如果失败，返回 NULL
-TouchRawData *modbus_get_touch_raw_data(ModbusHandle *handle, uint8_t slave_id);
+TouchRawData *modbus_get_touch_raw_data(DeviceHandler *handle, uint8_t slave_id);
 
-/// 获取单个手指上的触觉传感器状态
-/// 返回单个手指的触觉三维力数据、电容值、传感器状态
+/// 读取单个手指三维力、接近值、触觉传感器状态
+/// 返回单个手指三维力、接近值、触觉传感器状态
 /// index: 0~4，分别对应大拇指、食指、中指、无名指、小拇指
 /// 使用完毕后需要调用 free_touch_finger_item 释放内存
 /// 如果失败，返回 NULL
-TouchFingerItem *modbus_get_single_touch_status(ModbusHandle *handle,
+TouchFingerItem *modbus_get_single_touch_status(DeviceHandler *handle,
                                                 uint8_t slave_id,
                                                 uint8_t index);
 
-/// 获取触觉传感器状态
-/// 返回5个手指的触觉三维力数据、电容值、传感器状态
+/// 读取五指触觉传感器三维力、接近值、触觉传感器状态
+/// 返回五指的触觉三维力数据、接近值、触觉传感器状态
 /// 使用完毕后需要调用 free_touch_finger_data 释放内存
 /// 如果失败，返回 NULL
-TouchFingerData *modbus_get_touch_status(ModbusHandle *handle, uint8_t slave_id);
+TouchFingerData *modbus_get_touch_status(DeviceHandler *handle, uint8_t slave_id);
 
 /// 检测是否有接触及滑移幅度，持续获取touch_status
 /// interval_read: 读取触觉传感器的间隔，单位毫秒
 /// interval_cb: 检测间隔：1表示每次都执行，2表示每隔一次执行一次
-void modbus_start_detect_contact(ModbusHandle *handle,
+void modbus_start_detect_contact(DeviceHandler *handle,
                                  uint8_t slave_id,
                                  uintptr_t interval_read,
                                  uintptr_t interval_cb);
 
 /// 停止检测是否有接触及滑移幅度
-void modbus_stop_detect_contact(ModbusHandle *handle, uint8_t slave_id);
+void modbus_stop_detect_contact(DeviceHandler *handle, uint8_t slave_id);
 
 /// 重置触觉传感器采集通道
 /// 在执行该指令时，手指传感器尽量不要受力。
 /// bits: 重置的触觉传感器位，范围为0~31
 /// 例如：0b00000001 表示重置第一个传感器
-void modbus_reset_touch_sensor(ModbusHandle *handle, uint8_t slave_id, uint8_t bits);
+void modbus_reset_touch_sensor(DeviceHandler *handle, uint8_t slave_id, uint8_t bits);
 
 /// 触觉传感器参数校准
 /// bits: 校准的触觉传感器位，范围为0~31
 /// 例如：0b00000001 表示校准第一个传感器
 /// 当空闲状态下的三维力数值不为0时，可通过该方法进行校准
 /// https://www.brainco-hz.com/docs/revolimb-hand/protocol/modbus_protocol_touch.html#_5-3-%E5%8F%82%E6%95%B0%E6%A0%A1%E5%87%864105
-void modbus_calibrate_touch_sensor(ModbusHandle *handle,
+void modbus_calibrate_touch_sensor(DeviceHandler *handle,
                                    uint8_t slave_id,
                                    uint8_t bits);
 
 /// 在设备上电时，启用/禁用 位置自动校准
-bool modbus_get_auto_calibration(ModbusHandle *handle, uint8_t slave_id);
+bool modbus_get_auto_calibration(DeviceHandler *handle, uint8_t slave_id);
 
 /// 在设备上电时，启用/禁用 位置自动校准
-void modbus_set_auto_calibration(ModbusHandle *handle, uint8_t slave_id, bool enabled);
+void modbus_set_auto_calibration(DeviceHandler *handle, uint8_t slave_id, bool enabled);
 
 /// 发送校准位置指令
 /// 用于手动校准位置
-void modbus_send_calibrate_position(ModbusHandle *handle, uint8_t slave_id);
+void modbus_send_calibrate_position(DeviceHandler *handle, uint8_t slave_id);
 
 /// 重置默认手势
 /// 该指令会将所有手势恢复为出厂默认值
-void modbus_reset_default_gesture(ModbusHandle *handle, uint8_t slave_id);
+void modbus_reset_default_gesture(DeviceHandler *handle, uint8_t slave_id);
 
 /// 重置默认设置
 /// 该指令会将所有设置恢复为出厂默认值
 /// ● 默认ID：左手 → 恢复为 0x7E（126）；右手 → 恢复为 0x7F（127）
 /// ● RS485 波特率：恢复为 460800 bps。
 /// ● CAN FD 波特率：恢复为 5 Mbps
-void modbus_reset_default_settings(ModbusHandle *handle, uint8_t slave_id);
+void modbus_reset_default_settings(DeviceHandler *handle, uint8_t slave_id);
 
 /// 是否开启了 Turbo 模式
 /// 开启之后会持续握紧
-bool modbus_get_turbo_mode_enabled(ModbusHandle *handle, uint8_t slave_id);
+bool modbus_get_turbo_mode_enabled(DeviceHandler *handle, uint8_t slave_id);
 
 /// 设置 Turbo 模式
-void modbus_set_turbo_mode_enabled(ModbusHandle *handle, uint8_t slave_id, bool enabled);
+void modbus_set_turbo_mode_enabled(DeviceHandler *handle, uint8_t slave_id, bool enabled);
 
 /// 获取 Turbo 模式配置
 /// 返回 TurboConfig 结构体指针，需要调用 free_turbo_config 释放内存
 /// 如果失败，返回 NULL
-TurboConfig *modbus_get_turbo_config(ModbusHandle *handle, uint8_t slave_id);
+TurboConfig *modbus_get_turbo_config(DeviceHandler *handle, uint8_t slave_id);
 
 /// 获取 LED 灯信息
 /// 返回 LedInfo 结构体指针，需要调用 free_led_info 释放内存
 /// 如果失败，返回 NULL
-LedInfo *modbus_get_led_info(ModbusHandle *handle, uint8_t slave_id);
+LedInfo *modbus_get_led_info(DeviceHandler *handle, uint8_t slave_id);
 
 /// 获取按键事件
 /// 返回 ButtonPressEvent 结构体指针，需要调用 free_button_event 释放内存
 /// 如果失败，返回 NULL
-ButtonPressEvent *modbus_get_button_event(ModbusHandle *handle, uint8_t slave_id);
+ButtonPressEvent *modbus_get_button_event(DeviceHandler *handle, uint8_t slave_id);
 
 void free_device_info(DeviceInfo *info);
 

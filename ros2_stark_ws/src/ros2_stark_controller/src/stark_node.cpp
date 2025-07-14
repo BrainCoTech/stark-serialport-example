@@ -1,6 +1,6 @@
 #include "ros2_stark_controller/stark_node.hpp"
 
-StarkNode::StarkNode() : Node("stark_node") {
+StarkNode::StarkNode() : Node("stark_node"), handle_(nullptr) {
   // Declare and Get parameters
   port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB1");
   baudrate_ = this->declare_parameter<int>("baudrate", 115200);
@@ -20,7 +20,8 @@ StarkNode::StarkNode() : Node("stark_node") {
     throw std::runtime_error("Modbus initialization failed");
   }
 
-  if (fw_type_ == StarkFirmwareType::STARK_FIRMWARE_TYPE_V1_TOUCH) {
+  if (fw_type_ == StarkFirmwareType::STARK_FIRMWARE_TYPE_V1_TOUCH || 
+      fw_type_ == StarkFirmwareType::STARK_FIRMWARE_TYPE_V2_TOUCH) {
     // 启用全部触觉传感器
     modbus_enable_touch_sensor(handle_, slave_id_, 0x1F);
     // usleep(1000 * 1000); // wait for touch sensor to be ready
@@ -83,7 +84,7 @@ bool StarkNode::initialize_modbus() {
 
 void StarkNode::timer_callback() {
   publish_motor_status();
-  if (fw_type_ == StarkFirmwareType::STARK_FIRMWARE_TYPE_V1_TOUCH) {
+  if (fw_type_ == StarkFirmwareType::STARK_FIRMWARE_TYPE_V1_TOUCH || fw_type_ == StarkFirmwareType::STARK_FIRMWARE_TYPE_V2_TOUCH) {
     publish_touch_status();
   }
 }
