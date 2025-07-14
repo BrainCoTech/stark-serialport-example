@@ -5,9 +5,9 @@
 #include <execinfo.h>
 
 // 声明函数
-void get_touch_status(ModbusHandle *handle, uint8_t slave_id);
-void get_device_info(ModbusHandle *handleint, uint8_t slave_id);
-void get_info(ModbusHandle *handle, uint8_t slave_id);
+void get_touch_status(DeviceHandler *handle, uint8_t slave_id);
+void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
+void get_info(DeviceHandler *handle, uint8_t slave_id);
 
 void handler(int sig)
 {
@@ -74,7 +74,7 @@ int main(int argc, char const *argv[])
 }
 
 // 获取设备序列号、固件版本等信息
-void get_device_info(ModbusHandle *handle, uint8_t slave_id)
+void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto info = modbus_get_device_info(handle, slave_id);
   if (info != NULL)
@@ -88,7 +88,7 @@ void get_device_info(ModbusHandle *handle, uint8_t slave_id)
   }
 }
 
-void test_auto_calibration(ModbusHandle *handle, uint8_t slave_id)
+void test_auto_calibration(DeviceHandler *handle, uint8_t slave_id)
 {
   modbus_set_auto_calibration(handle, slave_id, false); // 设置上电后是否启用自动校准
   bool auto_calibration_enabled = modbus_get_auto_calibration(handle, slave_id);
@@ -96,7 +96,7 @@ void test_auto_calibration(ModbusHandle *handle, uint8_t slave_id)
 }
 
 // 获取触觉传感器状态，三维力数值、自接近、互接近电容值，以及传感器状态
-void get_touch_status(ModbusHandle *handle, uint8_t slave_id)
+void get_touch_status(DeviceHandler *handle, uint8_t slave_id)
 {
   auto status = modbus_get_touch_status(handle, slave_id);
   if (status != NULL)
@@ -139,7 +139,7 @@ void get_touch_status(ModbusHandle *handle, uint8_t slave_id)
 }
 
 // 获取设备信息, 串口波特率, 从机地址, 电压, LED信息, 按键事件
-void get_info(ModbusHandle *handle, uint8_t slave_id)
+void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto baudrate = modbus_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);

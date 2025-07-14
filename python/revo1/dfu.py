@@ -12,7 +12,6 @@ parent_dir = current_dir.parent.parent
 logger.info(f"parent_dir: {parent_dir}")
 
 stark_touch = True
-stark_v2 = False
 
 if stark_touch:
     # Modbus固件，一代灵巧手触觉版
@@ -21,15 +20,6 @@ if stark_touch:
         "ota_bin",
         "touch",
         "FW_MotorController_Release_SecureOTA_V1.8.32.F.ota",
-    )
-
-elif stark_v2:
-    # Modbus固件，二代灵巧手基础版
-    ota_bin_path = os.path.join(
-        parent_dir,
-        "ota_bin",
-        "stark2",
-        "stark2_fw_V0.0.10_20250513154323.bin",
     )
 else:
     # Modbus固件, 一代灵巧手基础版
@@ -67,9 +57,6 @@ async def main():
     libstark.init_config(
             libstark.StarkFirmwareType.V1Touch
         if stark_touch
-        else
-            libstark.StarkFirmwareType.V2Basic
-        if stark_v2
         else libstark.StarkFirmwareType.V1Basic
     )
 
@@ -81,11 +68,9 @@ async def main():
         return
 
     # 一代手默认ID为1
-    # 左手默认ID为0x7e，右手默认ID为0x7f
-    slave_id = 0x7f if stark_v2 else 1
+    slave_id = 1
     # 一代手默认波特率115200, 注意：一代手升级仅支持115200波特率
-    # 二代手默认波特率460800
-    baurate = libstark.Baudrate.Baud460800 if stark_v2 else libstark.Baudrate.Baud115200
+    baurate = libstark.Baudrate.Baud115200
     logger.info(f"slave_id: {slave_id}, baurate: {baurate}")
     logger.info(f"port_name: {port_name}")
     # 打开串口

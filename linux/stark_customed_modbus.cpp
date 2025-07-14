@@ -5,7 +5,7 @@
 #include <execinfo.h>
 
 // 声明函数
-void get_device_info(ModbusHandle *handleint, uint8_t slave_id);
+void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 
 void handler(int sig)
 {
@@ -65,7 +65,7 @@ int main(int argc, char const *argv[])
   return 0;
 }
 
-void get_device_info(ModbusHandle *handle, uint8_t slave_id)
+void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   uint32_t baudrate = modbus_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);

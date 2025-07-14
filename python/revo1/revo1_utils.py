@@ -1,23 +1,15 @@
+import json
 import logging
 from logger import getLogger
-import bc_stark_sdk
-import json
-
-libstark = bc_stark_sdk.stark
 
 # logger = getLogger(logging.DEBUG)
 logger = getLogger(logging.INFO)
 
-# 打印属性，方法
-def print_class():
-  from utils import inspect_class
-  inspect_class(libstark.DeviceInfo)
-  logger.info(libstark.DfuState(1))
-  logger.info(libstark.DfuState.Idle.int_value)
-  inspect_class(libstark.DfuState)
+from bc_stark_sdk import main_mod
+libstark = main_mod.stark
 
 def get_stark_port_name():
-    ports = bc_stark_sdk.stark.list_available_ports()
+    ports = libstark.list_available_ports()
     logger.info(f"available_ports: {ports}")
 
     # 解码字节对象并解析 JSON

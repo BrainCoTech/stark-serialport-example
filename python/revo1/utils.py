@@ -1,19 +1,6 @@
 import asyncio
 import platform
 import signal
-import inspect
-
-
-def inspect_class(cls):
-    print(f"{cls} methods and attributes:")
-    for name, member in inspect.getmembers(cls):
-        if inspect.isfunction(member):
-            print(f"Method: {name}")
-        elif not name.startswith("__"):
-            print(f"Attribute: {name} = {member}")
-        # else:
-        #     print(f"name: {name}, member:{member}")
-
 
 def setup_shutdown_event(logger):
     # 创建一个事件用于关闭

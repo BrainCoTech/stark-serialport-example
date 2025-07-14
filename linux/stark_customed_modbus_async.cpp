@@ -8,11 +8,11 @@
 void print_hex(unsigned char *data, int len);
 void handler(int sig);
 int modbus_operation_async(const uint8_t *values, int len, ModbusOperationResultCallback callback, void *user_data);
-void get_device_info(ModbusHandle *handleint, uint8_t slave_id);
+void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 
 struct
 {
-  ModbusHandle *handle;
+  DeviceHandler *handle;
   uint8_t slave_id;
 } set_modbus_operation_params;
 
@@ -41,7 +41,7 @@ int main(int argc, char const *argv[])
 void *get_device_info_thread(void *arg)
 {
   auto params = static_cast<decltype(set_modbus_operation_params) *>(arg);
-  ModbusHandle *modbus_handle = params->handle;
+  DeviceHandler *modbus_handle = params->handle;
   uint8_t slave_id = params->slave_id;
 
   uint32_t baudrate = modbus_get_rs485_baudrate(modbus_handle, slave_id);
@@ -55,7 +55,7 @@ void *get_device_info_thread(void *arg)
   return NULL;
 }
 
-void get_device_info(ModbusHandle *handler, uint8_t slave_id)
+void get_device_info(DeviceHandler *handler, uint8_t slave_id)
 {
   if (!handler)
   {
