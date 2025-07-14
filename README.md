@@ -15,6 +15,8 @@ download-lib.dat
 
 [Documentation](https://www.brainco-hz.com/docs/revolimb-hand/)
 
+[URDF](https://app.brainco.cn/universal/bc-stark-sdk/assets/revo2/URDF.zip)
+
 ## Python example
 
 [See Python example](https://github.com/BrainCoTech/stark-serialport-example/blob/main/python/README.md)
