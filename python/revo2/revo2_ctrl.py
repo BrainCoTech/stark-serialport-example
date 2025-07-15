@@ -1,21 +1,12 @@
 import asyncio
 import sys
-from revo2_utils import get_stark_port_name, libstark, logger
+from revo2_utils import libstark, logger, open_modbus_revo2
 
 
 # Main
 async def main():
     # fmt: off
-    port_name = get_stark_port_name()
-    if port_name is None:
-        return
-
-    slave_id = 0x7e  # 左手默认ID为0x7e，右手默认ID为0x7f
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
-
-    logger.debug("get_device_info")  # 获取设备信息
-    device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device info: {device_info.description}")
+    (client, slave_id) = await open_modbus_revo2()
 
     # 控制模式：千分比模式/物理量模式
     logger.debug("set_finger_unit_mode")  # 设置手指控制参数的单位模式

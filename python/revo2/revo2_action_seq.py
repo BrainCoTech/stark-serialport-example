@@ -1,7 +1,7 @@
 import asyncio
 import sys
 from utils import setup_shutdown_event
-from revo2_utils import get_stark_port_name, libstark, logger
+from revo2_utils import libstark, logger, open_modbus_revo2
 
 # 二代灵巧手动作序列
 # - 动作序列索引 (index)：动作序列的索引，用于标识该动作序列在队列中的位置
@@ -63,19 +63,7 @@ def action_sequence_info_to_list(action):
 ### main.py
 async def main():
     shutdown_event = setup_shutdown_event(logger)
-
-    port_name = get_stark_port_name()
-    if port_name is None:
-        return
-
-    slave_id = 0x7e  # 左手默认ID为0x7e，右手默认ID为0x7f
-    # fmt: off
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
-
-    logger.debug("get_device_info")
-    device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device info: {device_info.firmware_version}")
-    logger.info(f"Device info: {device_info.description}")
+    (client, slave_id) = await open_modbus_revo2()
 
     # fmt: off
     mapped_sequences = map(lambda action: action_sequence_info_to_list(action), sample_action_sequences)

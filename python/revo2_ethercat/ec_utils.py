@@ -12,7 +12,7 @@ logger = getLogger(logging.INFO)
 from bc_stark_sdk import main_mod
 libethercat = main_mod.ethercat
 libstark = main_mod.stark
-libstark.init_config(libstark.StarkFirmwareType.V2Basic, libstark.StarkProtocolType.EtherCAT)
+libstark.init_config(libstark.StarkHardwareType.Revo2Basic, libstark.StarkProtocolType.EtherCAT)
 
 def setup_shutdown_event(logger):
     # 创建一个事件用于关闭

@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from revo2_utils import get_stark_port_name, libstark, logger
+from revo2_utils import libstark, logger, open_modbus_revo2
 
 
 async def set_slave_id(client, slave_id, new_slave_id):
@@ -29,27 +29,23 @@ async def set_baudrate(client, slave_id, new_baudrate):
 
 # Main
 async def main():
-    port_name = get_stark_port_name()
-    if port_name is None:
-        return
-
-    slave_id = 0x7e  # 左手默认ID为0x7e，右手默认ID为0x7f
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
-    # client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud2Mbps)
+    (client, slave_id) = await open_modbus_revo2()
 
     logger.debug("get_serialport_cfg")  # 获取串口配置, slave_id, 波特率
     serialport_cfg = await client.get_serialport_cfg(slave_id)
     logger.info(f"Slave ID: {serialport_cfg.description}")
+    exit(0)
 
     # logger.debug("set_slave_id")  # 修改slave_id，设置后，会执行重启操作
-    # await set_slave_id(client, slave_id, new_slave_id=1) # 修改slave_id为1
-    # await set_slave_id(client, slave_id, new_slave_id=2) # 修改slave_id为2
+    # await set_slave_id(client, slave_id, new_slave_id=0x7e) # 修改slave_id为0x7e
+    # await set_slave_id(client, slave_id, new_slave_id=0x7f) # 修改slave_id为0x7f
     # exit(0)
 
     # logger.debug("set_baudrate")  # 修改波特率，设置后，会执行重启操作
     # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud5Mbps) # 修改波特率为5Mbps
-    await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud2Mbps) # 修改波特率为2Mbps
-    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # 修改波特率为460800
+    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud2Mbps) # 修改波特率为2Mbps
+    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud1Mbps)  # 修改波特率为1Mbps
+    await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # 修改波特率为460800
     exit(0)
 
     # await client.set_led_enabled(slave_id, True)  # 开启LED灯

@@ -67,16 +67,15 @@ async def main():
 
     # ZCAN_USBCANFD_100U
     zcan_open(device_type=42, channel=0, baudrate=5000000)
-    bc_stark_sdk.set_canfd_tx_callback(canfd_send)
-    bc_stark_sdk.set_canfd_rx_callback(canfd_read)
-
-    baudrate = await client.get_canfd_baudrate(slave_id)
-    logger.info(f"CANFD, Baudrate: {baudrate}")
+    libstark.set_canfd_tx_callback(canfd_send)
+    libstark.set_canfd_rx_callback(canfd_read)
 
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device info: {device_info.firmware_version}")  # 固件版本
     logger.info(f"Device info: {device_info.description}")
+
+    baudrate = await client.get_canfd_baudrate(slave_id)
+    logger.info(f"CANFD, Baudrate: {baudrate}")
 
     # 固件升级
     logger.info("start_dfu")

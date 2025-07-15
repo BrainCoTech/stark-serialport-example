@@ -33,15 +33,12 @@ async def main():
     libstark.set_canfd_tx_callback(canfd_send)
     libstark.set_canfd_rx_callback(canfd_read)
 
-    baudrate = await client.get_canfd_baudrate(slave_id)
-    logger.info(f"CANFD, Baudrate: {baudrate}")
-
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)
-    # logger.info(f"Device info: {device_info.firmware_version}")  # 固件版本
-    # logger.info(f"Device info: {device_info.serial_number}")  # 序列号
-    # logger.info(f"Device info: {device_info.sku_type}")  # 获取手类型, 左右手
     logger.info(f"Device info: {device_info.description}")
+
+    baudrate = await client.get_canfd_baudrate(slave_id)
+    logger.info(f"CANFD, Baudrate: {baudrate}")
 
     # set_finger_unit_mode
     logger.debug("set_finger_unit_mode")  # 设置手指控制参数的单位模式

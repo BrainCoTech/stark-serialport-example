@@ -2,12 +2,12 @@ import asyncio
 import sys
 import math
 import time
-from revo2_utils import get_stark_port_name, libstark, logger
+from revo2_utils import libstark, logger, open_modbus_revo2
 import matplotlib.pyplot as plt
 
 TRAJ_LEN = 200  # 轨迹点数
 CTRL_INTERVAL = 0.005  # 控制间隔 5ms (200Hz)
-TEST_DURATION = 4.0  # 测试时长 4秒
+TEST_DURATION = 6.0  # 测试时长 6秒
 
 # 1. 初始化余弦轨迹
 def init_trajectory():
@@ -21,24 +21,12 @@ plt.figure(figsize=(12, 6))
 plt.xlabel('Time (s)')
 plt.ylabel('Position (%)')
 plt.title('Motor Response Performance')
-plt.legend()
 plt.grid(True)
 
 # Main
 async def main():
     # fmt: off
-    port_name = '/dev/ttyUSB0'
-    # port_name = get_stark_port_name()
-    if port_name is None:
-        return
-
-    slave_id = 0x7e  # 左手默认ID为0x7e，右手默认ID为0x7f
-    # client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud2Mbps)
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800) # 默认波特率460800
-
-    logger.debug("get_device_info")  # 获取设备信息
-    device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device info: {device_info.description}")
+    (client, slave_id) = await open_modbus_revo2()
 
     # 控制模式：千分比模式/物理量模式
     logger.debug("set_finger_unit_mode")  # 设置手指控制参数的单位模式
@@ -73,7 +61,7 @@ async def main():
             target = trajectory[index]
             await client.set_finger_position_with_millis(slave_id, finger_id, target, 1) # 1ms, 固件将以最快速度响应
             elapsed = time.perf_counter() - start_time
-            logger.debug(f"[{index}] Target: {target}, Elapsed: {elapsed:.3f}s")
+            logger.info(f"[{index}] Target Index: {target}, Elapsed: {elapsed:.3f}s")
             if elapsed < CTRL_INTERVAL:
                 await asyncio.sleep(CTRL_INTERVAL - elapsed)
 
@@ -114,6 +102,7 @@ async def main():
     # 3. 绘图分析
     plt.plot(timestamps, target_positions, label='Target Position (0~1000)') # , linestyle='--')
     plt.plot(timestamps, measured_positions, label='Measured Position (0~1000)', alpha=0.7)
+    plt.legend()
     plt.show()
     plt.savefig("motor_response.png")
     logger.info("Test completed, timestamps length: %d", len(timestamps))

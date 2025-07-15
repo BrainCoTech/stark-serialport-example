@@ -1,7 +1,7 @@
 import asyncio
 import sys
 from utils import setup_shutdown_event
-from revo2_utils import get_stark_port_name, libstark, logger
+from revo2_utils import libstark, logger, open_modbus_revo2
 
 slave_ids = [0x7f]
 # slave_ids = [0x7e, 0x7f]  # 灵巧手的设备ID, 多个设备在同一个BUS上, 左手默认ID为0x7e，右手默认ID为0x7f
@@ -33,17 +33,14 @@ async def get_motor_status_periodically(client):
 # Main
 async def main():
     shutdown_event = setup_shutdown_event(logger)
-
-    port_name = get_stark_port_name()
-    if port_name is None:
-        return
-
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud460800)
+    (client, _slave_id) = await open_modbus_revo2()
 
     for slave_id in slave_ids:
+        device_info = await client.get_device_info(slave_id)
+        logger.info(f"[{slave_id}] Device info: {device_info.description}")
         await client.run_action_sequence(slave_id, libstark.ActionSequenceId.DefaultGestureFist)
 
-    await asyncio.sleep(2.0)  # 等待动作执行
+    await asyncio.sleep(1.0)  # 等待动作执行
 
     # 创建并启动异步任务
     asyncio.create_task(get_motor_status_periodically(client))
