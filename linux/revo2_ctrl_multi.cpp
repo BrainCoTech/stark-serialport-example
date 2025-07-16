@@ -8,17 +8,11 @@ void get_info(DeviceHandler *handle, uint8_t slave_id);
 
 int main(int argc, char const *argv[])
 {
-  init_cfg(STARK_FIRMWARE_TYPE_V2_BASIC, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
-  list_available_ports();
-
-  // auto port_name = "COM1"; // Windows
-  // auto port_name = "/dev/ttyUSB0"; // Linux
-  auto port_name = "/dev/tty.usbserial-D30JAQW9"; // Mac USB HUB
-  uint32_t baudrate = 460800;
+  auto cfg = auto_detect_modbus_revo2(NULL, true);
+  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  if (cfg != NULL) free_device_config(cfg);
   uint8_t slave_id_1 = 0x7e; // 左手默认ID为0x7e，右手默认ID为0x7f
   uint8_t slave_id_2 = 0x7f;
-  auto handle = modbus_open(port_name, baudrate);
-
   get_device_info(handle, slave_id_1);
   get_device_info(handle, slave_id_2);
 
@@ -62,6 +56,12 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   if (info != NULL)
   {
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
+    if (info->hardware_type == STARK_HARDWARE_TYPE_REVO1_TOUCH || info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
+      // 启用全部触觉传感器
+      modbus_enable_touch_sensor(handle, slave_id, 0x1F);
+      usleep(1000 * 1000); // wait for touch sensor to be ready
+    }
     free_device_info(info);
   }
   else

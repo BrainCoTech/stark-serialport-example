@@ -47,6 +47,7 @@ async def main():
       device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
       logger.info(f"Device info: {device_info.description}")
       if device_info.is_revo2():
+          # ota_bin_path = revo2_basic_ota_bin_path
           if device_info.is_revo2_touch():
               logger.error("Revo2 Touch firmware is not supported in this script.")
               sys.exit(1)

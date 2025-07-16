@@ -5,6 +5,7 @@
 #include <execinfo.h>
 
 // 声明函数
+void get_touch_status(DeviceHandler *handle, uint8_t slave_id);
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
@@ -166,5 +167,40 @@ void get_info(DeviceHandler *handle, uint8_t slave_id)
   {
     printf("Slave[%hhu] Button Event: %d, %d, %hhu\n", slave_id, button_event->timestamp, button_event->button_id, button_event->press_state);
     free_button_event(button_event);
+  }
+}
+
+// 获取触觉传感器状态，三维力数值、接近值，以及传感器状态
+void get_touch_status(DeviceHandler *handle, uint8_t slave_id)
+{
+  auto status = modbus_get_touch_status(handle, slave_id);
+  if (status != NULL)
+  {
+    auto data = status->items[1];
+    printf("Slave[%hhu] Touch Sensor Status At Index Finger:\n", slave_id);
+    printf("Normal Force: %hu\n", data.normal_force1);
+    printf("Tangential Force: %hu\n", data.tangential_force1);
+    printf("Tangential Direction: %hu\n", data.tangential_direction1);
+    printf("Proximity: %u\n", data.self_proximity1);
+    printf("Status: %hu\n", data.status);
+
+    // Free the allocated memory
+    free_touch_finger_data(status);
+  }
+  else
+  {
+    printf("Error: Failed to get touch sensor status\n");
+  }
+
+  auto raw_data = modbus_get_touch_raw_data(handle, slave_id);
+  if (raw_data != NULL)
+  {
+    printf("Slave[%hhu] Touch Raw Data:\n", slave_id);
+    printf("Thumb: %u, %u, %u, %u, %u, %u, %u\n", raw_data->thumb[0], raw_data->thumb[1], raw_data->thumb[2], raw_data->thumb[3], raw_data->thumb[4], raw_data->thumb[5], raw_data->thumb[6]);
+    printf("Index: %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u\n", raw_data->index[0], raw_data->index[1], raw_data->index[2], raw_data->index[3], raw_data->index[4], raw_data->index[5], raw_data->index[6], raw_data->index[7], raw_data->index[8], raw_data->index[9], raw_data->index[10]);
+    printf("Middle: %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u\n", raw_data->middle[0], raw_data->middle[1], raw_data->middle[2], raw_data->middle[3], raw_data->middle[4], raw_data->middle[5], raw_data->middle[6], raw_data->middle[7], raw_data->middle[8], raw_data->middle[9], raw_data->middle[10]);
+    printf("Ring: %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u\n", raw_data->ring[0], raw_data->ring[1], raw_data->ring[2], raw_data->ring[3], raw_data->ring[4], raw_data->ring[5], raw_data->ring[6], raw_data->ring[7], raw_data->ring[8], raw_data->ring[9], raw_data->ring[10]);
+    printf("Pinky: %u, %u, %u, %u, %u, %u, %u\n", raw_data->pinky[0], raw_data->pinky[1], raw_data->pinky[2], raw_data->pinky[3], raw_data->pinky[4], raw_data->pinky[5], raw_data->pinky[6]);
+    free_touch_raw_data(raw_data);
   }
 }

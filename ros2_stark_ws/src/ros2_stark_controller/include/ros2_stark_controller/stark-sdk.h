@@ -107,18 +107,19 @@ enum StarkFingerId : uint8_t {
   STARK_FINGER_ID_PINKY = 6,
 };
 
-enum StarkFirmwareType : uint8_t {
-  STARK_FIRMWARE_TYPE_RS485_PROTOBUF = 0,
-  STARK_FIRMWARE_TYPE_V1_BASIC = 1,
-  STARK_FIRMWARE_TYPE_V1_TOUCH = 2,
-  STARK_FIRMWARE_TYPE_V2_BASIC = 3,
-  STARK_FIRMWARE_TYPE_V2_TOUCH = 4,
+enum StarkHardwareType : uint8_t {
+  STARK_HARDWARE_TYPE_RS485_PROTOBUF = 0,
+  STARK_HARDWARE_TYPE_REVO1_BASIC = 1,
+  STARK_HARDWARE_TYPE_REVO1_TOUCH = 2,
+  STARK_HARDWARE_TYPE_REVO2_BASIC = 3,
+  STARK_HARDWARE_TYPE_REVO2_TOUCH = 4,
 };
 
 enum StarkProtocolType : uint8_t {
   STARK_PROTOCOL_TYPE_MODBUS = 1,
   STARK_PROTOCOL_TYPE_CAN_FD = 2,
   STARK_PROTOCOL_TYPE_ETHER_CAT = 3,
+  STARK_PROTOCOL_TYPE_PROTOBUF = 4,
 };
 
 enum TouchSensorStatus : uint8_t {
@@ -130,11 +131,20 @@ enum TouchSensorStatus : uint8_t {
 
 struct DeviceHandler;
 
+/// 设备配置
+struct DeviceConfig {
+  StarkProtocolType protocol;
+  const char *port_name;
+  uint32_t baudrate;
+  uint8_t slave_id;
+};
+
 /// 设备信息
 /// sku_type: 设备类型，1: 右手 2: 左手
 /// serial_number: 序列号
 /// firmware_version: 固件版本
 struct DeviceInfo {
+  StarkHardwareType hardware_type;
   SkuType sku_type;
   const char *serial_number;
   const char *firmware_version;
@@ -253,11 +263,11 @@ using TouchSensorDataCallback = void(*)(const TouchSensorData *sensor_data);
 extern "C" {
 
 /// 初始化选项
-/// fw_type: 固件类型，默认为 V1Touch
+/// fw_type: 固件类型，默认为 Revo1Touch
 /// protocol_type: 协议类型，默认为 Modbus
 /// log_level: 日志级别，默认为 Info
 /// max_response_bytes: 自定义Modbus回调读取寄存器内容时，单次响应的最大字节数，默认为 1024
-void init_cfg(StarkFirmwareType fw_type,
+void init_cfg(StarkHardwareType fw_type,
               StarkProtocolType protocol_type,
               LogLevel log_level,
               uintptr_t max_response_bytes);
@@ -265,6 +275,33 @@ void init_cfg(StarkFirmwareType fw_type,
 /// 列出可用的串口
 /// 用于列出所有的 Stark 串口
 void list_available_ports();
+
+/// 自动检测串口设备，先检测二代灵巧手，再检测一代灵巧手
+/// port: 串口名称，传入 None 时自动检测
+/// quick: 是否快速检测，默认为 true, 默认只检测集中特定波特率及设备ID
+/// 返回 DeviceConfig 结构体指针，包含协议类型、端口名称、波特率和设备ID，，关闭时需要调用 free_device_config 释放内存
+/// 如果失败，返回 NULL
+/// 注意：quick传false时，此函数会自动检测设备ID范围1~247，可能需要较长时间
+DeviceConfig *auto_detect_device(const char *port,
+                                 bool quick);
+
+/// 自动检测一代灵巧手设备
+/// port: 串口名称，传入 None 时自动检测
+/// quick: 是否快速检测，默认为 true, 默认只检测集中特定波特率及设备ID
+/// 返回 DeviceConfig 结构体指针，包含协议类型、端口名称、波特率和设备ID，，关闭时需要调用 free_device_config 释放内存
+/// 如果失败，返回 NULL
+/// 注意：quick传false时，此函数会自动检测设备ID范围1~247，可能需要较长时间
+DeviceConfig *auto_detect_modbus_revo1(const char *port,
+                                       bool quick);
+
+/// 自动检测二代灵巧手设备
+/// port: 串口名称，传入 None 时自动检测
+/// quick: 是否快速检测，默认为 true, 默认只检测集中特定波特率及设备ID
+/// 返回 DeviceConfig 结构体指针，包含协议类型、端口名称、波特率和设备ID，，关闭时需要调用 free_device_config 释放内存
+/// 如果失败，返回 NULL
+/// 注意：quick传false时，此函数会自动检测设备ID范围1~247，可能需要较长时间
+DeviceConfig *auto_detect_modbus_revo2(const char *port,
+                                       bool quick);
 
 /// 打开串口
 /// port: 串口名称，例如："/dev/ttyUSB0", "COM1"
@@ -666,17 +703,6 @@ TouchFingerItem *modbus_get_single_touch_status(DeviceHandler *handle,
 /// 如果失败，返回 NULL
 TouchFingerData *modbus_get_touch_status(DeviceHandler *handle, uint8_t slave_id);
 
-/// 检测是否有接触及滑移幅度，持续获取touch_status
-/// interval_read: 读取触觉传感器的间隔，单位毫秒
-/// interval_cb: 检测间隔：1表示每次都执行，2表示每隔一次执行一次
-void modbus_start_detect_contact(DeviceHandler *handle,
-                                 uint8_t slave_id,
-                                 uintptr_t interval_read,
-                                 uintptr_t interval_cb);
-
-/// 停止检测是否有接触及滑移幅度
-void modbus_stop_detect_contact(DeviceHandler *handle, uint8_t slave_id);
-
 /// 重置触觉传感器采集通道
 /// 在执行该指令时，手指传感器尽量不要受力。
 /// bits: 重置的触觉传感器位，范围为0~31
@@ -734,6 +760,8 @@ LedInfo *modbus_get_led_info(DeviceHandler *handle, uint8_t slave_id);
 /// 返回 ButtonPressEvent 结构体指针，需要调用 free_button_event 释放内存
 /// 如果失败，返回 NULL
 ButtonPressEvent *modbus_get_button_event(DeviceHandler *handle, uint8_t slave_id);
+
+void free_device_config(DeviceConfig *config);
 
 void free_device_info(DeviceInfo *info);
 

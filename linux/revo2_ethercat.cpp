@@ -6,7 +6,8 @@
 
 // 声明函数
 void *pdo_thread(void *arg);
-void handler(int sig) {
+void handler(int sig)
+{
   void *array[10];
   size_t size;
 
@@ -22,11 +23,13 @@ void handler(int sig) {
 DeviceHandler *device_handle;
 uint16_t slave_pos = 0; // 设备位置
 
-void start_pdo_thread() {
+void start_pdo_thread()
+{
   // 创建线程
   pthread_t thread_id;
   int result = pthread_create(&thread_id, NULL, pdo_thread, NULL);
-  if (result != 0) {
+  if (result != 0)
+  {
     fprintf(stderr, "Failed to create thread: %d\n", result);
     return;
   }
@@ -36,13 +39,14 @@ void start_pdo_thread() {
   printf("Async thread started.\n");
 }
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[])
+{
   printf("main\n");
   signal(SIGSEGV,
-         handler); // Install our handler for SIGSEGV (segmentation fault)
+         handler);          // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V2_BASIC, STARK_PROTOCOL_TYPE_ETHER_CAT,
+  init_cfg(STARK_HARDWARE_TYPE_REVO2_BASIC, STARK_PROTOCOL_TYPE_ETHER_CAT,
            LOG_LEVEL_INFO, 1024);
   printf("ethercat_open_master...\n");
   device_handle = ethercat_open_master(0);
@@ -51,13 +55,16 @@ int main(int argc, char const *argv[]) {
 
   uint8_t slave_pos_i = (uint8_t)slave_pos;
   auto info = modbus_get_device_info(device_handle, slave_pos_i);
-  if (info != NULL) {
+  if (info != NULL)
+  {
     printf(
         "Slave[%hu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n",
         slave_pos, (uint8_t)info->sku_type, info->serial_number,
         info->firmware_version);
     free_device_info(info);
-  } else {
+  }
+  else
+  {
     printf("modbus_get_device_info empty\n");
   }
 
@@ -98,7 +105,8 @@ int main(int argc, char const *argv[]) {
 // }
 
 // 获取设备序列号、固件版本等信息
-void *pdo_thread(void *arg) {
+void *pdo_thread(void *arg)
+{
   useconds_t delay = 50 * 1000; // 1000ms
 
   // 单个手指，按速度/电流/PWM控制
@@ -147,9 +155,11 @@ void *pdo_thread(void *arg) {
                                          speeds2, 6);
   usleep(delay); // 等待手指到达目标位置
 
-  while (1) {
+  while (1)
+  {
     auto finger_status = modbus_get_motor_status(device_handle, slave_pos);
-    if (finger_status != NULL) {
+    if (finger_status != NULL)
+    {
       printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n",
              finger_status->positions[0], finger_status->positions[1],
              finger_status->positions[2], finger_status->positions[3],
