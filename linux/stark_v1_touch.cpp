@@ -28,23 +28,11 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
-  list_available_ports();
-
-  // auto port_name = "COM1"; // Windows
-  // auto port_name = "/dev/ttyUSB0"; // Linux
-  // auto port_name = "/dev/ttyUSB1"; // Linux
-  auto port_name = "/dev/tty.usbserial-D30JCEP2"; // Mac USB HUB
-  // auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
-  uint32_t baudrate = 115200;
-  uint8_t slave_id = 1;
-  auto handle = modbus_open(port_name, baudrate);
-
+  auto cfg = auto_detect_modbus_revo1(NULL, true);
+  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  uint8_t slave_id = cfg->slave_id;
   get_device_info(handle, slave_id);
-
-  // 启用全部触觉传感器
-  modbus_enable_touch_sensor(handle, slave_id, 0x1F);
-  usleep(1000 * 1000); // wait for touch sensor to be ready
+  if (cfg != NULL) free_device_config(cfg);
 
   uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
@@ -80,6 +68,12 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   if (info != NULL)
   {
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
+    if (info->hardware_type == STARK_HARDWARE_TYPE_REVO1_TOUCH || info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
+      // 启用全部触觉传感器
+      modbus_enable_touch_sensor(handle, slave_id, 0x1F);
+      usleep(1000 * 1000); // wait for touch sensor to be ready
+    }
     free_device_info(info);
   }
   else

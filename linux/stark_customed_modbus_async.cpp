@@ -21,13 +21,13 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
-  auto handle = modbus_init();
-  set_modbus_operation_callback(modbus_operation_async);
-
-  uint8_t slave_id = 1;
+  auto cfg = auto_detect_modbus_revo1(NULL, true);
+  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  uint8_t slave_id = cfg->slave_id;
   get_device_info(handle, slave_id);
+  if (cfg != NULL) free_device_config(cfg);
 
+  set_modbus_operation_callback(modbus_operation_async);
   while (true)
   {
     printf("Performing periodic operations...\n");

@@ -5,7 +5,6 @@
 #include <execinfo.h>
 
 // 声明函数
-void get_touch_status(DeviceHandler *handle, uint8_t slave_id);
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
@@ -28,23 +27,11 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
-  list_available_ports();
-
-  // auto port_name = "COM1"; // Windows
-  // auto port_name = "/dev/ttyUSB0"; // Linux
-  // auto port_name = "/dev/ttyUSB1"; // Linux
-  auto port_name = "/dev/tty.usbserial-D30JCEP2"; // Mac USB HUB
-  // auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
-  uint32_t baudrate = 115200;
-  uint8_t slave_id = 1;
-  auto handle = modbus_open(port_name, baudrate);
-
+  auto cfg = auto_detect_modbus_revo1(NULL, true);
+  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  uint8_t slave_id = cfg->slave_id;
   get_device_info(handle, slave_id);
-
-  // 启用全部触觉传感器
-  modbus_enable_touch_sensor(handle, slave_id, 0x1F);
-  usleep(1000 * 1000); // wait for touch sensor to be ready
+  if (cfg != NULL) free_device_config(cfg);
 
   uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
@@ -67,15 +54,12 @@ int main(int argc, char const *argv[])
     free_motor_status_data(finger_status);
   }
 
-  get_touch_status(handle, slave_id);
-
   // 循环控制手指位置，仅用于测试，delay时间过短会影响电机使用寿命
   while (0)
   {
     printf("set_positions loop start\n");
     modbus_set_finger_positions(handle, slave_id, positions_fist, 6);
     usleep(delay);
-    get_touch_status(handle, slave_id); // 调用 get_touch_status 函数
     modbus_set_finger_positions(handle, slave_id, positions_open, 6);
     usleep(delay);
   }
@@ -95,37 +79,6 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   else
   {
     printf("Error: Failed to get device info\n");
-  }
-}
-
-// 获取触觉传感器状态，三维力数值、自接近、互接近电容值，以及传感器状态
-void get_touch_status(DeviceHandler *handle, uint8_t slave_id)
-{
-  auto status = modbus_get_touch_status(handle, slave_id);
-  if (status != NULL)
-  {
-    auto data = status->items[1];
-    printf("Slave[%hhu] Touch Sensor Status At Index Finger:\n", slave_id);
-    printf("Normal Force 1: %hu\n", data.normal_force1);
-    printf("Normal Force 2: %hu\n", data.normal_force2);
-    printf("Normal Force 3: %hu\n", data.normal_force3);
-    printf("Tangential Force 1: %hu\n", data.tangential_force1);
-    printf("Tangential Force 2: %hu\n", data.tangential_force2);
-    printf("Tangential Force 3: %hu\n", data.tangential_force3);
-    printf("Tangential Direction 1: %hu\n", data.tangential_direction1);
-    printf("Tangential Direction 2: %hu\n", data.tangential_direction2);
-    printf("Tangential Direction 3: %hu\n", data.tangential_direction3);
-    printf("Self Proximity 1: %u\n", data.self_proximity1);
-    printf("Self Proximity 2: %u\n", data.self_proximity2);
-    printf("Mutual Proximity: %u\n", data.mutual_proximity);
-    printf("Status: %hu\n", data.status);
-
-    // Free the allocated memory
-    free_touch_finger_data(status);
-  }
-  else
-  {
-    printf("Error: Failed to get touch sensor status\n");
   }
 }
 

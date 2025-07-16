@@ -99,12 +99,12 @@ enum StarkFingerId : uint8_t {
   STARK_FINGER_ID_PINKY = 6,
 };
 
-enum StarkFirmwareType : uint8_t {
-  STARK_FIRMWARE_TYPE_RS485_PROTOBUF = 0,
-  STARK_FIRMWARE_TYPE_V1_BASIC = 1,
-  STARK_FIRMWARE_TYPE_V1_TOUCH = 2,
-  STARK_FIRMWARE_TYPE_V2_BASIC = 3,
-  STARK_FIRMWARE_TYPE_V2_TOUCH = 4,
+enum StarkHardwareType : uint8_t {
+  STARK_HARDWARE_TYPE_RS485_PROTOBUF = 0,
+  STARK_HARDWARE_TYPE_REVO1_BASIC = 1,
+  STARK_HARDWARE_TYPE_REVO1_TOUCH = 2,
+  STARK_HARDWARE_TYPE_REVO2_BASIC = 3,
+  STARK_HARDWARE_TYPE_REVO2_TOUCH = 4,
 };
 
 enum StarkProtocolType : uint8_t {
@@ -242,7 +242,7 @@ extern "C" {
 /// protocol_type: 协议类型，默认为 Modbus
 /// log_level: 日志级别，默认为 Info
 /// max_response_bytes: 自定义Modbus回调读取寄存器内容时，单次响应的最大字节数，默认为 1024
-void init_cfg(StarkFirmwareType fw_type,
+void init_cfg(StarkHardwareType fw_type,
               StarkProtocolType protocol_type,
               LogLevel log_level,
               uintptr_t max_response_bytes);

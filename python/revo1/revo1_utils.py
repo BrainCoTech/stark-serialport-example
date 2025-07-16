@@ -8,6 +8,15 @@ logger = getLogger(logging.INFO)
 from bc_stark_sdk import main_mod
 libstark = main_mod.stark
 
+async def open_modbus_revo1():
+    port_name = None
+    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo1(port_name)
+    assert (protocol == libstark.StarkProtocolType.Modbus), "Only Modbus protocol is supported for Revo1"
+    client = await libstark.modbus_open(port_name, baudrate)
+    device_info = await client.get_device_info(slave_id)
+    logger.info(f"Device info: {device_info.description}")
+    return (client, slave_id)
+
 def get_stark_port_name():
     ports = libstark.list_available_ports()
     logger.info(f"available_ports: {ports}")

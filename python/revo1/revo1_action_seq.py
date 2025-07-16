@@ -1,7 +1,7 @@
 import asyncio
 import sys
 from utils import setup_shutdown_event
-from revo1_utils import get_stark_port_name, libstark, logger
+from revo1_utils import libstark, logger, open_modbus_revo1
 
 # 一代灵巧手动作序列，只有positions实际生效
 sample_action_sequences = [
@@ -90,18 +90,8 @@ def action_sequence_info_to_list(action):
 
 ### main.py
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V1Basic)
     shutdown_event = setup_shutdown_event(logger)
-
-    port_name = get_stark_port_name()
-    if port_name is None:
-        return
-    slave_id = 1
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200)
-
-    logger.debug("get_device_info")
-    device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device info: {device_info.firmware_version}")
+    (client, slave_id) = await open_modbus_revo1()
 
     # fmt: off
     # sample_action_sequences = random_action_sequences()

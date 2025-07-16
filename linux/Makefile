@@ -1,6 +1,7 @@
 # 设置变量
 SCRIPT_DIR := $(shell pwd)
-DIST_DIR := $(abspath $(SCRIPT_DIR)/../../dist)
+DIST_DIR := $(abspath $(SCRIPT_DIR)/../../lib)
+# DIST_DIR := $(abspath $(SCRIPT_DIR)/../../dist)
 LIB_DIR := $(abspath $(DIST_DIR)/shared/linux)
 HEADER_DIR := $(abspath $(DIST_DIR)/include)
 

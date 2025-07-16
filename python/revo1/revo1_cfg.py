@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from revo1_utils import get_stark_port_name, libstark, logger
+from revo1_utils import libstark, logger, open_modbus_revo1
 
 
 async def set_slave_id(client, slave_id, new_slave_id):
@@ -29,17 +29,12 @@ async def set_baudrate(client, slave_id, new_baudrate):
 
 # Main
 async def main():
-    # libstark.init_config(libstark.StarkFirmwareType.V1Basic)
-    port_name = get_stark_port_name()
-    if port_name is None:
-        return
-    slave_id = 1  # default slave_id is 1
-    baudrate = libstark.Baudrate.Baud115200
-    client = await libstark.modbus_open(port_name, baudrate)
+    (client, slave_id) = await open_modbus_revo1()
 
     logger.debug("get_serialport_cfg")  # 获取串口配置, slave_id, 波特率
     serialport_cfg = await client.get_serialport_cfg(slave_id)
-    logger.info(f"Slave ID: {serialport_cfg.description}")
+    logger.info(f"serialport_cfg: {serialport_cfg.description}")
+    exit(0)
 
     # logger.debug("set_slave_id")  # 修改slave_id，设置后，会执行重启操作
     # await set_slave_id(client, slave_id, new_slave_id=1) # 修改slave_id为1
@@ -52,7 +47,8 @@ async def main():
     # exit(0)
 
     # ------------------- 设置力量等级，大-中-小 -------------------
-    # 触觉版本废弃了该功能
+    # 触觉版本可直接使用电流控制
+    # 基础版使用该功能，设置力量等级
     # logger.debug(f"set_force_level")
     # # level = await client.get_force_level()
     # # logger.info(f"Force level: {level}")

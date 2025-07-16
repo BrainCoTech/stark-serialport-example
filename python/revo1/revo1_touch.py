@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from revo1_utils import get_stark_port_name, libstark, logger
+from revo1_utils import libstark, logger, open_modbus_revo1
 
 async def set_finger_current(client, slave_id: int):
     # 电流控制, 参数范围-100~-20, 20~100, 正数表示闭合方向
@@ -16,22 +16,14 @@ async def set_finger_current(client, slave_id: int):
 
 # Main
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V1Touch)
-    port_name = get_stark_port_name()
-    if port_name is None:
-        return
-    slave_id = 1 # 默认设备ID
-    # baudrate = libstark.Baudrate.Baud460800
-    baudrate = libstark.Baudrate.Baud115200 # 默认波特率
-    client = await libstark.modbus_open(port_name, baudrate)
+    (client, slave_id) = await open_modbus_revo1()
+    device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
+    if not device_info.is_revo1_touch():
+        logger.error("This example is only for Revo1 Touch hardware")
+        sys.exit(1)
 
-    logger.debug("get_device_info")  # 获取设备信息
-    device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device Firmware: {device_info.firmware_version}")  # 固件版本
-    logger.info(f"Device info: {device_info.description}")
-
-    await set_finger_current(client, slave_id=slave_id)  # 设置手指电流
-    return
+    # await set_finger_current(client, slave_id=slave_id)  # 设置手指电流
+    # return
 
     # 启用触觉传感器功能, 开机默认是关闭的
     bits = 0x1F  # 0x1f: 5个手指上的触觉传感器都使能
@@ -50,12 +42,14 @@ async def main():
     # 互接近：互电容变化值
     # 触觉传感器状态，0表示正常，1表示数据异常，2表示与传感器通信异常
     while True:
-        touch_status = await client.get_touch_sensor_status(slave_id) # 获取全部手指处的触觉传感器三维力数值
-        thumb = touch_status[0]
-        index = touch_status[1]
-        # middle = touch_status[2]
-        # ring = touch_status[3]
-        # pinky = touch_status[4]
+        # 获取全部手指处的三维力数值、接近值、状态
+        touch_status = await client.get_touch_sensor_status(slave_id)
+        thumb: libstark.TouchFingerItem = touch_status[0]
+        index: libstark.TouchFingerItem = touch_status[1]
+        middle: libstark.TouchFingerItem = touch_status[2]
+        ring: libstark.TouchFingerItem = touch_status[3]
+        pinky: libstark.TouchFingerItem = touch_status[4]
+
         logger.debug(f"Index Sensor Desc: {index.description}")
         logger.info(f"Index Sensor status: {index.status}") # 触觉传感器状态
         logger.info(f"Index normal_force1: {index.normal_force1}") # 法向力1
@@ -71,11 +65,12 @@ async def main():
         logger.info(f"Index self_proximity2: {index.self_proximity2}") # 自接近2
         logger.info(f"Index mutual_proximity: {index.mutual_proximity}") # 互接近
 
-        thumb = await client.get_single_touch_sensor_status(slave_id, 0)  # 0~4 获取单个手指处的触觉传感器三维力数值
-        # index = await client.get_single_touch_sensor_status(slave_id, 1)  # 0~4 获取单个手指处的触觉传感器三维力数值
-        # middle = await client.get_single_touch_sensor_status(slave_id, 2)  # 0~4 获取单个手指处的触觉传感器三维力数值
-        # ring = await client.get_single_touch_sensor_status(slave_id, 3)  # 0~4 获取单个手指处的触觉传感器三维力数值
-        # pinky = await client.get_single_touch_sensor_status(slave_id, 4)  # 0~4 获取单个手指处的触觉传感器三维力数值
+        # 获取单个手指处的三维力数值、接近值、状态
+        thumb = await client.get_single_touch_sensor_status(slave_id, 0)
+        index = await client.get_single_touch_sensor_status(slave_id, 1)
+        middle = await client.get_single_touch_sensor_status(slave_id, 2)
+        ring = await client.get_single_touch_sensor_status(slave_id, 3)
+        pinky = await client.get_single_touch_sensor_status(slave_id, 4)
 
         logger.debug(f"Thumb Sensor Desc: {thumb.description}")
         logger.info(f"Thumb Sensor status: {thumb.status}")
@@ -87,7 +82,8 @@ async def main():
         logger.info(f"Thumb tangential_direction2: {thumb.tangential_direction2}") # 切向力方向2
         logger.info(f"Thumb self_proximity1: {thumb.self_proximity1}") # 自接近1
 
-        # touch_raw_data = await client.get_touch_sensor_raw_data(slave_id) # 获取触觉传感器原始通道值
+        # 获取传感器原始通道值
+        # touch_raw_data = await client.get_touch_sensor_raw_data(slave_id)
         # logger.info(f"Touch Sensor Raw Data: {touch_raw_data.description}")
         # logger.debug(f"Touch Sensor Raw Data Thumb: {touch_raw_data.thumb}")
         # logger.debug(f"Touch Sensor Raw Data Index: {touch_raw_data.index}")

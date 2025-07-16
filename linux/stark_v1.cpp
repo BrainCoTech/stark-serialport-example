@@ -5,7 +5,6 @@
 #include <execinfo.h>
 
 // 声明函数
-void get_touch_status(DeviceHandler *handle, uint8_t slave_id);
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
@@ -28,19 +27,11 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_FIRMWARE_TYPE_V1_BASIC, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
-  list_available_ports();
-
-  // auto port_name = "COM1"; // Windows
-  // auto port_name = "/dev/ttyUSB0"; // Linux
-  // auto port_name = "/dev/ttyUSB1"; // Linux
-  auto port_name = "/dev/tty.usbserial-D30JCEP2"; // Mac USB HUB
-  // auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
-  uint32_t baudrate = 115200;
-  uint8_t slave_id = 1;
-  auto handle = modbus_open(port_name, baudrate);
-
+  auto cfg = auto_detect_modbus_revo1(NULL, true);
+  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  uint8_t slave_id = cfg->slave_id;
   get_device_info(handle, slave_id);
+  if (cfg != NULL) free_device_config(cfg);
 
   uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开

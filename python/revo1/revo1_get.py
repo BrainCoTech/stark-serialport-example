@@ -1,27 +1,15 @@
 import asyncio
 import sys
-from revo1_utils import convert_to_mA, convert_to_position, get_stark_port_name, libstark, logger, convert_to_angle
+from revo1_utils import convert_to_mA, convert_to_position, get_stark_port_name, libstark, logger, convert_to_angle, open_modbus_revo1
 
 
 # Main
 async def main():
-    libstark.init_config(libstark.StarkFirmwareType.V1Basic)
-    port_name = get_stark_port_name()
-    if port_name is None:
-        return
-    slave_id = 1
-    client = await libstark.modbus_open(port_name, libstark.Baudrate.Baud115200)
+    (client, slave_id) = await open_modbus_revo1()
 
     logger.debug("get_serialport_cfg")  # 获取串口配置, 波特率
     baudrate = await client.get_serialport_baudrate(slave_id)
     logger.info(f"Baudrate: {baudrate}")
-
-    logger.debug("get_device_info")  # 获取设备信息
-    device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device info: {device_info.firmware_version}")  # 固件版本
-    logger.info(f"Device info: {device_info.serial_number}")  # 序列号
-    logger.info(f"Device info: {device_info.sku_type}")  # 获取手类型, 左右手
-    logger.info(f"Device info: {device_info.description}")
 
     # 基础版使用该功能，触觉版可以直接使用电流控制
     # logger.debug("get_force_level")  # 获取力量等级，大-中-小

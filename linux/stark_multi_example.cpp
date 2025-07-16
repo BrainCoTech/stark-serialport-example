@@ -9,26 +9,17 @@ void get_info(DeviceHandler *handle, uint8_t slave_id);
 
 int main(int argc, char const *argv[])
 {
-  init_cfg(STARK_FIRMWARE_TYPE_V1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
-  list_available_ports();
-
   // auto port_name = "COM1"; // Windows
   // auto port_name = "/dev/ttyUSB0"; // Linux
-  // auto port_name = "/dev/ttyUSB1"; // Linux
-  // auto port_name = "/dev/tty.usbserial-D30JCEP2"; // Mac USB HUB
-  auto port_name = "/dev/tty.usbserial-FT9O53VF"; // Mac USB HUB
-  uint32_t baudrate = 115200;
+
+  auto cfg = auto_detect_modbus_revo1(NULL, true);
+  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  if (cfg != NULL) free_device_config(cfg);
+
   uint8_t slave_id_1 = 1;
   uint8_t slave_id_2 = 2;
-  auto handle = modbus_open(port_name, baudrate);
-
   get_device_info(handle, slave_id_1);
   get_device_info(handle, slave_id_2);
-
-  // 启用全部触觉传感器
-  modbus_enable_touch_sensor(handle, slave_id_1, 0x1F);
-  modbus_enable_touch_sensor(handle, slave_id_2, 0x1F);
-  usleep(1000 * 1000); // wait for touch sensor to be ready
 
   uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
@@ -48,21 +39,21 @@ int main(int argc, char const *argv[])
   printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
   free_motor_status_data(finger_status);
 
-  get_touch_status(handle, slave_id_1);
+  // get_touch_status(handle, slave_id_1);
 
-  // 循环控制手指位置，仅用于测试，delay时间过短会影响电机使用寿命
-  while (1)
-  {
-    printf("set_positions loop start\n");
-    modbus_set_finger_positions(handle, slave_id_1, positions_fist, 6);
-    modbus_set_finger_positions(handle, slave_id_2, positions_fist, 6);
-    usleep(delay);
-    get_touch_status(handle, slave_id_1); // 调用 get_touch_status 函数
-    get_touch_status(handle, slave_id_2); // 调用 get_touch_status 函数
-    modbus_set_finger_positions(handle, slave_id_1, positions_open, 6);
-    modbus_set_finger_positions(handle, slave_id_2, positions_open, 6);
-    usleep(delay);
-  }
+  // // 循环控制手指位置，仅用于测试，delay时间过短会影响电机使用寿命
+  // while (1)
+  // {
+  //   printf("set_positions loop start\n");
+  //   modbus_set_finger_positions(handle, slave_id_1, positions_fist, 6);
+  //   modbus_set_finger_positions(handle, slave_id_2, positions_fist, 6);
+  //   usleep(delay);
+  //   get_touch_status(handle, slave_id_1); // 调用 get_touch_status 函数
+  //   get_touch_status(handle, slave_id_2); // 调用 get_touch_status 函数
+  //   modbus_set_finger_positions(handle, slave_id_1, positions_open, 6);
+  //   modbus_set_finger_positions(handle, slave_id_2, positions_open, 6);
+  //   usleep(delay);
+  // }
 
   return 0;
 }
@@ -74,6 +65,12 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   if (info != NULL)
   {
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
+    if (info->hardware_type == STARK_HARDWARE_TYPE_REVO1_TOUCH || info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
+      // 启用全部触觉传感器
+      modbus_enable_touch_sensor(handle, slave_id, 0x1F);
+      usleep(1000 * 1000); // wait for touch sensor to be ready
+    }
     free_device_info(info);
   }
   else
