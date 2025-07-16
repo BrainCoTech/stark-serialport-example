@@ -84,7 +84,8 @@ bool StarkNode::initialize_modbus() {
 
 void StarkNode::timer_callback() {
   publish_motor_status();
-  if (fw_type_ == StarkHardwareType::STARK_HARDWARE_TYPE_REVO1_TOUCH || fw_type_ == StarkHardwareType::STARK_HARDWARE_TYPE_REVO2_TOUCH) {
+  if (fw_type_ == StarkHardwareType::STARK_HARDWARE_TYPE_REVO1_TOUCH || 
+      fw_type_ == StarkHardwareType::STARK_HARDWARE_TYPE_REVO2_TOUCH) {
     publish_touch_status();
   }
 }
