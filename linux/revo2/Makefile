@@ -1,7 +1,7 @@
 # 设置变量
 SCRIPT_DIR := $(shell pwd)
-DIST_DIR := $(abspath $(SCRIPT_DIR)/../../lib)
-# DIST_DIR := $(abspath $(SCRIPT_DIR)/../../dist)
+# DIST_DIR := $(abspath $(SCRIPT_DIR)/../../lib)
+DIST_DIR := $(abspath $(SCRIPT_DIR)/../../dist)
 LIB_DIR := $(abspath $(DIST_DIR)/shared/linux)
 HEADER_DIR := $(abspath $(DIST_DIR)/include)
 
@@ -61,7 +61,7 @@ run_customed_modbus_async:
 	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./revo2_customed_modbus_async.exe
 
 run_ethercat:
-	export DYLD_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) && sudo setcap cap_sys_nice,cap_net_raw=eip revo2_ethercat.exe && ./revo2_ethercat.exe	
+	export DYLD_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) && sudo setcap cap_sys_nice,cap_net_raw=eip revo2_ethercat.exe && ./revo2_ethercat.exe
 
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run
