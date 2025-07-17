@@ -12,9 +12,9 @@ async def get_motor_status_periodically(client, slave_id):
     while True:
         try:
             logger.debug("get_motor_status")
-            start = time.time()
+            start = time.perf_counter()
             status = await client.get_motor_status(slave_id)
-            cost_ms = (time.time() - start) * 1000
+            cost_ms = (time.perf_counter() - start) * 1000
             logger.info(
                 f"[{index}] Finger status, cost: {cost_ms:.2f} ms, is_idle: {status.is_idle}, is_closed: {status.is_closed}, is_opened: {status.is_opened}"
             )
