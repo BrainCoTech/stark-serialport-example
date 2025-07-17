@@ -35,14 +35,18 @@ revo1_protobuf_ota_bin_path = os.path.join(
 )
 
 shutdown_event = None
+main_loop = None
+
 
 def on_dfu_state(_slave_id, state):
     logger.info(f"DFU STATE: {libstark.DfuState(state)}")
     dfu_state = libstark.DfuState(state)
     if state == libstark.DfuState.Completed or dfu_state == libstark.DfuState.Aborted:
-        logger.info(f"DFU Stopped")
-        shutdown_event.set()
-        # sys.exit(0)
+        if main_loop and shutdown_event:
+            if not shutdown_event.is_set():
+                logger.info("Using call_soon_threadsafe to set event")
+                main_loop.call_soon_threadsafe(shutdown_event.set)
+                logger.info("call_soon_threadsafe called")
 
 
 def on_dfu_progress(_slave_id, progress):
@@ -51,33 +55,39 @@ def on_dfu_progress(_slave_id, progress):
 
 # Main
 async def main():
-    global shutdown_event
+    global shutdown_event, main_loop
+    main_loop = asyncio.get_running_loop()
     shutdown_event = setup_shutdown_event(logger)
 
     (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device()
-    logger.info(f"Detected protocol: {protocol}, port: {port_name}, baudrate: {baudrate}, slave_id: {slave_id}")
+    logger.info(
+        f"Detected protocol: {protocol}, port: {port_name}, baudrate: {baudrate}, slave_id: {slave_id}"
+    )
     client = await libstark.modbus_open(port_name, baudrate)
 
     ota_bin_path = ""
     # 重要！！！：不同硬件需使用相应固件，否则需要拆设备重新烧录
     if protocol == libstark.StarkProtocolType.Modbus:
-      device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
-      logger.info(f"Device info: {device_info.description}")
-      if device_info.is_revo1():
-          if device_info.is_revo1_touch():
-              ota_bin_path = revo1_touch_ota_bin_path
-          else:
-              ota_bin_path = revo1_basic_ota_bin_path
-              # ota_bin_path = revo1_protobuf_ota_bin_path
+        device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
+        logger.info(f"Device info: {device_info.description}")
+        if device_info.is_revo1():
+            if device_info.is_revo1_touch():
+                ota_bin_path = revo1_touch_ota_bin_path
+            else:
+                ota_bin_path = revo1_basic_ota_bin_path
+                # ota_bin_path = revo1_protobuf_ota_bin_path
     elif protocol == libstark.StarkProtocolType.Protobuf:
         ota_bin_path = revo1_basic_ota_bin_path
-
 
     if not os.path.exists(ota_bin_path):
         logger.warning(f"OTA文件不存在: {ota_bin_path}")
         exit(0)
     else:
         logger.info(f"OTA文件路径: {ota_bin_path}")
+
+    import time
+
+    start_time = time.perf_counter()
 
     # 固件升级
     logger.info("start_dfu")
@@ -92,12 +102,13 @@ async def main():
 
     # 等待关闭事件
     await shutdown_event.wait()
+    elapsed = time.perf_counter() - start_time
+    logger.info(f"Elapsed: {elapsed:.1f}s")
 
     # 关闭资源
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     sys.exit(0)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
