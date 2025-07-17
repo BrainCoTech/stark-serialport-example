@@ -2,6 +2,7 @@ import asyncio
 import sys
 import pathlib
 import os
+import time
 from utils import setup_shutdown_event
 from revo2_utils import libstark, logger
 
@@ -20,39 +21,48 @@ revo2_basic_ota_bin_path = os.path.join(
 )
 
 shutdown_event = None
+main_loop = None
+
 
 def on_dfu_state(_slave_id, state):
     logger.info(f"DFU STATE: {libstark.DfuState(state)}")
     dfu_state = libstark.DfuState(state)
     if state == libstark.DfuState.Completed or dfu_state == libstark.DfuState.Aborted:
-        logger.info(f"DFU Stopped")
-        shutdown_event.set()
-        # sys.exit(0)
+        if main_loop and shutdown_event:
+            if not shutdown_event.is_set():
+                logger.info("Using call_soon_threadsafe to set event")
+                main_loop.call_soon_threadsafe(shutdown_event.set)
+                logger.info("call_soon_threadsafe called")
+
 
 def on_dfu_progress(_slave_id, progress):
     logger.info(f"progress: {progress * 100.0 :.2f}%")
 
+
 # Main
 async def main():
-    global shutdown_event
+    global shutdown_event, main_loop
+    main_loop = asyncio.get_running_loop()
     shutdown_event = setup_shutdown_event(logger)
 
     (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device()
-    logger.info(f"Detected protocol: {protocol}, port: {port_name}, baudrate: {baudrate}, slave_id: {slave_id}")
+    logger.info(
+        f"Detected protocol: {protocol}, port: {port_name}, baudrate: {baudrate}, slave_id: {slave_id}"
+    )
     client = await libstark.modbus_open(port_name, baudrate)
 
     ota_bin_path = ""
     # 重要！！！：不同硬件需使用相应固件，否则需要拆设备重新烧录
     if protocol == libstark.StarkProtocolType.Modbus:
-      device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
-      logger.info(f"Device info: {device_info.description}")
-      if device_info.is_revo2():
-          # ota_bin_path = revo2_basic_ota_bin_path
-          if device_info.is_revo2_touch():
-              logger.error("Revo2 Touch firmware is not supported in this script.")
-              sys.exit(1)
-          else:
-              ota_bin_path = revo2_basic_ota_bin_path
+        device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
+        logger.info(f"Device info: {device_info.description}")
+        if device_info.is_revo2():
+            # ota_bin_path = revo2_basic_ota_bin_path
+            if device_info.is_revo2_touch():
+                logger.error("Revo2 Touch firmware is not supported in this script.")
+                sys.exit(1)
+            else:
+                ota_bin_path = revo2_basic_ota_bin_path
     else:
         logger.error(f"Unsupported protocol: {protocol}")
         sys.exit(1)

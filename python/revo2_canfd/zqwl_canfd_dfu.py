@@ -28,14 +28,17 @@ else:
     logger.info(f"OTA文件路径: {ota_bin_path}")
 
 shutdown_event = None
+main_loop = None
 
 def on_dfu_state(_slave_id, state):
     logger.info(f"DFU STATE: {libstark.DfuState(state)}")
     dfu_state = libstark.DfuState(state)
     if state == libstark.DfuState.Completed or dfu_state == libstark.DfuState.Aborted:
-        logger.info(f"DFU Stopped")
-        shutdown_event.set()
-        # sys.exit(0)
+        if main_loop and shutdown_event:
+            if not shutdown_event.is_set():
+                logger.info("Using call_soon_threadsafe to set event")
+                main_loop.call_soon_threadsafe(shutdown_event.set)
+                logger.info("call_soon_threadsafe called")
 
 def on_dfu_progress(_slave_id, progress):
     logger.info(f"progress: {progress * 100.0 :.2f}%")
@@ -59,7 +62,8 @@ def canfd_read(slave_id: int):
 
 # Main
 async def main():
-    global shutdown_event
+    global shutdown_event, main_loop
+    main_loop = asyncio.get_running_loop()
     shutdown_event = setup_shutdown_event(logger)
 
     slave_id = 0x7e # 左手默认ID为0x7e，右手默认ID为0x7f
