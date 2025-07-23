@@ -66,8 +66,9 @@ async def main():
     main_loop = asyncio.get_running_loop()
     shutdown_event = setup_shutdown_event(logger)
 
+    master_id = 1
     slave_id = 0x7e # 左手默认ID为0x7e，右手默认ID为0x7f
-    client = await libstark.canfd_open(libstark.BaudrateCAN.Baud5Mbps, slave_id)
+    client = await libstark.canfd_open(libstark.BaudrateCAN.Baud5Mbps, master_id, slave_id)
 
     # ZCAN_USBCANFD_100U
     zcan_open(device_type=42, channel=0, baudrate=5000000)
