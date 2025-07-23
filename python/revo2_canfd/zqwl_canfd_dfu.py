@@ -3,13 +3,15 @@ import sys
 import pathlib
 import os
 import asyncio
+import time
+
 # from zlgcan import ZCAN_USBCANFD_100U
 from zqwl_win import zcan_open, zcan_close, zcan_send_message, zcan_receive_message
 from canfd_utils import libstark, logger, setup_shutdown_event
 
 # 固件升级文件路径
 current_dir = pathlib.Path(__file__).resolve()
-parent_dir = current_dir.parent
+parent_dir = current_dir.parent.parent
 logger.info(f"parent_dir: {parent_dir}")
 
 # ModbusV2固件
@@ -17,37 +19,43 @@ ota_bin_path = os.path.join(
     parent_dir,
     "ota_bin",
     "stark2",
-    # "stark2_fw_V0.0.7_20250403131952.bin",
-    "stark2_fw_V0.0.7_20250409094916.bin",
+    "stark2_fw_V0.0.14_20250723135853.bin",
 )
 
 if not os.path.exists(ota_bin_path):
     logger.warning(f"OTA文件不存在: {ota_bin_path}")
-    exit(0)
+    sys.exit(0)
 else:
     logger.info(f"OTA文件路径: {ota_bin_path}")
 
 shutdown_event = None
 main_loop = None
 
+
 def on_dfu_state(_slave_id, state):
     logger.info(f"DFU STATE: {libstark.DfuState(state)}")
     dfu_state = libstark.DfuState(state)
-    if state == libstark.DfuState.Completed or dfu_state == libstark.DfuState.Aborted:
+    # 当升级完成或中止时，设置关闭事件
+    if (
+        dfu_state == libstark.DfuState.Completed
+        or dfu_state == libstark.DfuState.Aborted
+    ):
         if main_loop and shutdown_event:
             if not shutdown_event.is_set():
                 logger.info("Using call_soon_threadsafe to set event")
                 main_loop.call_soon_threadsafe(shutdown_event.set)
-                logger.info("call_soon_threadsafe called")
+
 
 def on_dfu_progress(_slave_id, progress):
     logger.info(f"progress: {progress * 100.0 :.2f}%")
+
 
 def canfd_send(slave_id: int, can_id: int, data: list):
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
     if not zcan_send_message(slave_id, can_id, bytes(data)):
         logger.error("Failed to send CANFD message")
         return
+
 
 def canfd_read(slave_id: int):
     recv_msg = zcan_receive_message(dely_retries=10)
@@ -60,15 +68,36 @@ def canfd_read(slave_id: int):
     logger.debug(f"Received CAN ID: {can_id:029b}, Data: {bytes(data).hex()}")
     return can_id, data
 
+
+def exception_hook(exc_type, exc_value, exc_traceback):
+    """全局异常处理函数"""
+    import traceback
+
+    error_msg = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    print(f"发生错误:\n{error_msg}")
+
+    # 将错误写入文件
+    with open("error_log.txt", "a", encoding="utf-8") as f:
+        f.write(f"\n--- {os.path.basename(__file__)} 错误 ---\n")
+        f.write(error_msg)
+        f.write("\n--- 错误结束 ---\n")
+
+    # 调用原始的异常处理器
+    sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+
 # Main
 async def main():
+    sys.excepthook = exception_hook
     global shutdown_event, main_loop
     main_loop = asyncio.get_running_loop()
     shutdown_event = setup_shutdown_event(logger)
 
     master_id = 1
-    slave_id = 0x7e # 左手默认ID为0x7e，右手默认ID为0x7f
-    client = await libstark.canfd_open(libstark.BaudrateCAN.Baud5Mbps, master_id, slave_id)
+    slave_id = 0x7F  # 左手默认ID为0x7e，右手默认ID为0x7f
+    client: libstark.PyDeviceContext = await libstark.canfd_open(
+        libstark.BaudrateCAN.Baud5Mbps, master_id, slave_id
+    )
 
     # ZCAN_USBCANFD_100U
     zcan_open(device_type=42, channel=0, baudrate=5000000)
@@ -83,22 +112,38 @@ async def main():
     logger.info(f"CANFD, Baudrate: {baudrate}")
 
     # 固件升级
-    logger.info("start_dfu")
-    wait_seconds = 5  # wait device enter DFU mode
-    await client.start_dfu(
-        slave_id,
-        ota_bin_path,
-        wait_seconds,
-        on_dfu_state,
-        on_dfu_progress,
-    )
+    try:
+        logger.info("start_dfu")
+        start_time = time.perf_counter()
+        wait_seconds = 5  # wait device enter DFU mode
+        await client.start_dfu(
+            slave_id,
+            ota_bin_path,
+            wait_seconds,
+            on_dfu_state,
+            on_dfu_progress,
+        )
 
-    # 等待关闭事件
-    await shutdown_event.wait()
+        # 等待升级完成
+        logger.info("Waiting for DFU to complete...")
+        await shutdown_event.wait()
+        logger.info("DFU completed, shutdown event received!")
+        elapsed = time.perf_counter() - start_time
+        logger.info(f"Elapsed: {elapsed:.1f}s")
 
-    # 关闭资源
-    zcan_close()
-    sys.exit(0)
+    except Exception as e:
+        logger.error(f"Program terminated with error: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+    finally:
+        try:
+            # 关闭资源
+            zcan_close()
+            sys.exit(0)
+        except:
+            pass
+        logger.info("Cleanup completed")
 
 
 if __name__ == "__main__":

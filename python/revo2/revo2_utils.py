@@ -16,6 +16,7 @@ from logger import getLogger
 logger = getLogger(logging.INFO)
 
 from bc_stark_sdk import main_mod
+
 libstark = main_mod.stark
 
 
@@ -35,7 +36,7 @@ async def open_modbus_revo2():
     Example:
         client, slave_id = await open_modbus_revo2()
         # 或者手动指定参数:
-        # client = await libstark.modbus_open(port_name, baudrate)
+        # client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
     """
     # 指定端口名称，None表示自动检测第一个可用端口
     # 多设备连接时可指定具体端口，例如: "/dev/ttyUSB0"
@@ -47,13 +48,17 @@ async def open_modbus_revo2():
     quick = True
 
     # 自动检测第一个可用从机
-    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo2(port_name, quick)
+    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo2(
+        port_name, quick
+    )
 
     # 验证检测到的协议类型
-    assert (protocol == libstark.StarkProtocolType.Modbus), "Only Modbus protocol is supported for Revo2"
+    assert (
+        protocol == libstark.StarkProtocolType.Modbus
+    ), "Only Modbus protocol is supported for Revo2"
 
     # 建立Modbus连接
-    client = await libstark.modbus_open(port_name, baudrate)
+    client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
 
     # 获取并记录设备信息
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
@@ -61,9 +66,9 @@ async def open_modbus_revo2():
 
     if device_info.is_revo2():
         if device_info.is_revo2_touch():
-          logger.info(f"触觉版")
+            logger.info(f"触觉版")
         else:
-          logger.info(f"标准版")
+            logger.info(f"标准版")
 
     return (client, slave_id)
 

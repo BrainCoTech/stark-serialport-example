@@ -57,7 +57,10 @@ def on_dfu_state(_slave_id, state):
     dfu_state = libstark.DfuState(state)
 
     # 当升级完成或中止时，设置关闭事件
-    if dfu_state == libstark.DfuState.Completed or dfu_state == libstark.DfuState.Aborted:
+    if (
+        dfu_state == libstark.DfuState.Completed
+        or dfu_state == libstark.DfuState.Aborted
+    ):
         if main_loop and shutdown_event:
             if not shutdown_event.is_set():
                 logger.info("Using call_soon_threadsafe to set event")
@@ -86,7 +89,9 @@ async def main():
 
     # 自动检测设备协议和连接参数
     (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device()
-    logger.info(f"Detected protocol: {protocol}, port: {port_name}, baudrate: {baudrate}, slave_id: {slave_id}")
+    logger.info(
+        f"Detected protocol: {protocol}, port: {port_name}, baudrate: {baudrate}, slave_id: {slave_id}"
+    )
 
     # 使用Revo2基础版固件
     ota_bin_path = revo2_basic_ota_bin_path
@@ -122,7 +127,7 @@ async def start_dfu(port_name, baudrate, slave_id, ota_bin_path):
     shutdown_event = setup_shutdown_event(logger)
 
     # 建立Modbus连接
-    client = await libstark.modbus_open(port_name, baudrate)
+    client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
 
     # 获取设备信息
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
@@ -136,8 +141,8 @@ async def start_dfu(port_name, baudrate, slave_id, ota_bin_path):
         slave_id,
         ota_bin_path,
         wait_seconds,
-        on_dfu_state,      # 状态变化回调
-        on_dfu_progress,   # 进度更新回调
+        on_dfu_state,  # 状态变化回调
+        on_dfu_progress,  # 进度更新回调
     )
 
     # 等待升级完成

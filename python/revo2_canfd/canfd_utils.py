@@ -6,12 +6,17 @@ import platform
 import pathlib
 import logging
 from logger import getLogger
-logger = getLogger(logging.DEBUG)
-# logger = getLogger(logging.INFO)
+
+# logger = getLogger(logging.DEBUG)
+logger = getLogger(logging.INFO)
 
 from bc_stark_sdk import main_mod
+
 libstark = main_mod.stark
-libstark.init_config(libstark.StarkHardwareType.Revo2Basic, libstark.StarkProtocolType.CanFd)
+libstark.init_config(
+    libstark.StarkHardwareType.Revo2Basic, libstark.StarkProtocolType.CanFd
+)
+
 
 def setup_shutdown_event(logger):
     # 创建一个事件用于关闭
