@@ -37,7 +37,7 @@ async def get_motor_status_periodically(client, slave_id):
             # 获取电机状态
             logger.debug("get_motor_status")
             start = time.perf_counter()
-            status = await client.get_motor_status(slave_id)
+            status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
             cost_ms = (time.perf_counter() - start) * 1000
 
             # 记录状态信息

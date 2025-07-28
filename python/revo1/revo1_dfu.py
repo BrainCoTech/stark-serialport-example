@@ -106,7 +106,7 @@ async def main():
     )
 
     # 建立Modbus连接
-    client = await libstark.modbus_open(port_name, baudrate)
+    client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
 
     # 根据设备类型选择对应的固件文件
     ota_bin_path = ""
@@ -138,6 +138,7 @@ async def main():
         logger.info(f"OTA文件路径: {ota_bin_path}")
 
     import time
+
     start_time = time.perf_counter()
 
     # 开始固件升级
@@ -147,8 +148,8 @@ async def main():
         slave_id,
         ota_bin_path,
         wait_seconds,
-        on_dfu_state,      # 状态变化回调
-        on_dfu_progress,   # 进度更新回调
+        on_dfu_state,  # 状态变化回调
+        on_dfu_progress,  # 进度更新回调
     )
 
     # 等待升级完成或关闭事件

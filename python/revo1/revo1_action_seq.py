@@ -133,7 +133,7 @@ async def main():
     logger.info(f"Custom action sequence uploaded to {custom_action_id}")
 
     # 读取并验证已上传的动作序列
-    action_result = await client.get_action_sequence(slave_id, custom_action_id)
+    action_result: libstark.ActionSequenceItem = await client.get_action_sequence(slave_id, custom_action_id)
     logger.info(f"Action sequence: {action_result.description}")
 
     # 执行内置动作序列：握拳动作

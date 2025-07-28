@@ -6,7 +6,9 @@ from logger import getLogger
 logger = getLogger(logging.INFO)
 
 from bc_stark_sdk import main_mod
+
 libstark = main_mod.stark
+
 
 async def open_modbus_revo1():
     """
@@ -24,7 +26,7 @@ async def open_modbus_revo1():
     Example:
         client, slave_id = await open_modbus_revo1()
         # 或者手动指定参数:
-        # client = await libstark.modbus_open(port_name, baudrate)
+        # client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
     """
     # 指定端口名称，None表示自动检测第一个可用端口
     # 多设备连接时可指定具体端口，例如: "/dev/ttyUSB0"
@@ -36,13 +38,17 @@ async def open_modbus_revo1():
     quick = True
 
     # 自动检测第一个可用从机
-    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo1(port_name, quick)
+    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo1(
+        port_name, quick
+    )
 
     # 验证检测到的协议类型
-    assert (protocol == libstark.StarkProtocolType.Modbus), "Only Modbus protocol is supported for Revo1"
+    assert (
+        protocol == libstark.StarkProtocolType.Modbus
+    ), "Only Modbus protocol is supported for Revo1"
 
     # 建立Modbus连接
-    client = await libstark.modbus_open(port_name, baudrate)
+    client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
 
     # 获取并记录设备信息
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
@@ -50,11 +56,12 @@ async def open_modbus_revo1():
 
     if device_info.is_revo1():
         if device_info.is_revo1_touch():
-          logger.info(f"触觉版")
+            logger.info(f"触觉版")
         else:
-          logger.info(f"标准版")
+            logger.info(f"标准版")
 
     return (client, slave_id)
+
 
 def get_stark_port_name():
     """
@@ -87,9 +94,11 @@ def get_stark_port_name():
     logger.info(f"Using port: {port_name}")
     return port_name
 
+
 # 各关节最大角度限制 (单位: 度)
 # 索引对应关节: [拇指, 食指, 中指, 无名指, 小指, 手腕]
 MAX_ANGLES = [55, 90, 70, 70, 70, 70]
+
 
 def convert_to_position(angles):
     """
@@ -108,9 +117,12 @@ def convert_to_position(angles):
         positions = convert_to_position(angles)  # [55, 50, 50, 50, 50, 50]
     """
     # 将角度按比例映射到[0, 100]范围并限制边界
-    mapped = [max(0, min(100, round(angle * 100.0 / max_angle)))
-              for angle, max_angle in zip(angles, MAX_ANGLES)]
+    mapped = [
+        max(0, min(100, round(angle * 100.0 / max_angle)))
+        for angle, max_angle in zip(angles, MAX_ANGLES)
+    ]
     return mapped
+
 
 def convert_to_angle(positions):
     """
@@ -129,9 +141,12 @@ def convert_to_angle(positions):
         angles = convert_to_angle(positions)  # [27.5, 45.0, 35.0, 35.0, 35.0, 35.0]
     """
     # 将位置值限制在[0, 100]范围内并按比例映射到角度
-    mapped = [min(max(0, pos), 100) * max_angle / 100.0
-              for pos, max_angle in zip(positions, MAX_ANGLES)]
+    mapped = [
+        min(max(0, pos), 100) * max_angle / 100.0
+        for pos, max_angle in zip(positions, MAX_ANGLES)
+    ]
     return mapped
+
 
 def convert_to_mA(currents):
     """

@@ -127,7 +127,7 @@ async def get_touch_status(client, slave_id):
         slave_id: 设备ID
     """
     # 获取所有手指的触觉传感器状态
-    touch_status = await client.get_touch_sensor_status(slave_id)
+    touch_status: list[libstark.TouchFingerItem] = await client.get_touch_sensor_status(slave_id)
     thumb = touch_status[0]   # 拇指
     index = touch_status[1]   # 食指
     middle = touch_status[2]  # 中指
@@ -204,7 +204,7 @@ async def get_motor_status_periodically(client, slave_id):
             # 获取电机状态
             logger.debug(f"Getting motor status for device {slave_id}...")
             start = time.perf_counter()
-            status = await client.get_motor_status(slave_id)
+            status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
             cost_ms = (time.perf_counter() - start) * 1000
 
             # 记录状态信息

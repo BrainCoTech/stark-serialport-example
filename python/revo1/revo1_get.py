@@ -95,7 +95,7 @@ async def get_and_display_motor_status(client, slave_id):
         slave_id: 设备ID
     """
     logger.debug("get_motor_status")  # 获取手指状态：位置、电流、motor状态
-    status = await client.get_motor_status(slave_id)
+    status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
 
     # 显示位置信息
     logger.info(f"positions(0~100): {list(status.positions)}")
