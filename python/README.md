@@ -13,7 +13,7 @@
 cd python
 
 # 安装依赖
-pip3 install -r requirements.txt
+pip install -r requirements.txt --index-url https://pypi.org/simple/
 
 cd revo2
 # 控制设备-单个灵巧手
