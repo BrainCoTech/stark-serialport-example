@@ -85,7 +85,7 @@ async def monitor_touch_sensors(client, slave_id):
     """
     while True:
         # 获取所有手指的触觉传感器状态
-        touch_status = await client.get_touch_sensor_status(slave_id)
+        touch_status: list[libstark.TouchFingerItem] = await client.get_touch_sensor_status(slave_id)
         thumb: libstark.TouchFingerItem = touch_status[0]   # 拇指
         index: libstark.TouchFingerItem = touch_status[1]   # 食指
         middle: libstark.TouchFingerItem = touch_status[2]  # 中指

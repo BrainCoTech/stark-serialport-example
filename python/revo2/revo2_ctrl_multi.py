@@ -94,7 +94,7 @@ async def setup_touch_sensor(client, slave_id):
         slave_id: 设备ID
     """
     # 验证设备类型
-    device_info = await client.get_device_info(slave_id)
+    device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
     logger.info(f"Device {slave_id:02x} info: {device_info.description}")
     is_revo2_touch = device_info.is_revo2_touch()
     slave_is_touch[slave_id] = is_revo2_touch
@@ -132,7 +132,7 @@ async def get_touch_status(client, slave_id):
         slave_id: 设备ID
     """
     # 获取所有手指的触觉传感器状态
-    touch_status = await client.get_touch_sensor_status(slave_id)
+    touch_status: list[libstark.TouchFingerItem] = await client.get_touch_sensor_status(slave_id)
     thumb: libstark.TouchFingerItem = touch_status[0]   # 拇指
     index: libstark.TouchFingerItem = touch_status[1]   # 食指
     middle: libstark.TouchFingerItem = touch_status[2]  # 中指
@@ -198,7 +198,7 @@ async def get_motor_status_periodically(client, slave_id):
             # 获取电机状态
             logger.debug(f"Getting motor status for device {slave_id:02x}...")
             start = time.perf_counter()
-            status = await client.get_motor_status(slave_id)
+            status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
             cost_ms = (time.perf_counter() - start) * 1000
 
             # 记录状态信息

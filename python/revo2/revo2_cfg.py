@@ -67,7 +67,7 @@ async def set_baudrate(client, slave_id, new_baudrate):
     sys.exit(0)
 
 
-async def configure_device_features(client, slave_id):
+async def configure_device_features(client: libstark.PyDeviceContext, slave_id: int):
     """
     配置设备功能特性
 
@@ -81,17 +81,17 @@ async def configure_device_features(client, slave_id):
     # await client.set_vibration_enabled(slave_id, True)  # 开启振动
 
     # 获取并显示设备功能状态
-    led_enabled = await client.get_led_enabled(slave_id)
+    led_enabled: bool = await client.get_led_enabled(slave_id)
     logger.info(f"LED Enabled: {led_enabled}")
 
-    buzzer_enabled = await client.get_buzzer_enabled(slave_id)
+    buzzer_enabled: bool = await client.get_buzzer_enabled(slave_id)
     logger.info(f"Buzzer Enabled: {buzzer_enabled}")
 
-    vibration_enabled = await client.get_vibration_enabled(slave_id)
+    vibration_enabled: bool = await client.get_vibration_enabled(slave_id)
     logger.info(f"Vibration Enabled: {vibration_enabled}")
 
 
-async def configure_turbo_mode(client, slave_id):
+async def configure_turbo_mode(client: libstark.PyDeviceContext, slave_id: int):
     """
     配置Turbo模式
 
@@ -106,8 +106,8 @@ async def configure_turbo_mode(client, slave_id):
     # await client.set_turbo_mode_enabled(slave_id, False)  # 关闭Turbo模式
 
     # 获取并显示Turbo模式状态
-    turbo_mode = await client.get_turbo_mode_enabled(slave_id)
-    if turbo_mode:
+    turbo_mode_enabled: bool = await client.get_turbo_mode_enabled(slave_id)
+    if turbo_mode_enabled:
         logger.info("Turbo mode: enabled")
     else:
         logger.info("Turbo mode: disabled")
@@ -120,11 +120,11 @@ async def configure_turbo_mode(client, slave_id):
     # await client.set_turbo_config(slave_id, turbo_conf)
     #
     # # 获取并显示Turbo配置
-    # turbo_conf = await client.get_turbo_config(slave_id)
+    # turbo_conf: libstark.TurboConfig = await client.get_turbo_config(slave_id)
     # logger.info(f"Turbo conf: {turbo_conf.description}")
 
 
-async def configure_position_calibration(client, slave_id):
+async def configure_position_calibration(client: libstark.PyDeviceContext, slave_id: int):
     """
     配置位置校准
 
@@ -139,8 +139,8 @@ async def configure_position_calibration(client, slave_id):
     await client.set_position_auto_calibration(slave_id, True)
 
     # 获取并显示自动校准状态
-    # calibration_enabled = await client.get_auto_calibration_enabled(slave_id)
-    # logger.info(f"Auto calibration enabled: {calibration_enabled}")
+    # auto_calibration_enabled: bool = await client.get_auto_calibration_enabled(slave_id)
+    # logger.info(f"Auto calibration enabled: {auto_calibration_enabled}")
 
     # 手动执行位置校准（可选）
     # 建议在执行校准前先将手指移动到合适的位置
@@ -158,7 +158,7 @@ async def main():
 
     # 获取并显示串口配置信息
     logger.debug("get_serialport_cfg")
-    serialport_cfg = await client.get_serialport_cfg(slave_id)
+    serialport_cfg: libstark.SerialPortCfg = await client.get_serialport_cfg(slave_id)
     logger.info(f"Serial Port Config: {serialport_cfg.description}")
 
     # 根据需要选择以下配置操作之一：

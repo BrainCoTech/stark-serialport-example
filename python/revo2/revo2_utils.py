@@ -9,6 +9,7 @@ Revo2灵巧手工具函数模块
 """
 
 import json
+import sys
 import logging
 from logger import getLogger
 
@@ -41,21 +42,26 @@ async def open_modbus_revo2():
     # 指定端口名称，None表示自动检测第一个可用端口
     # 多设备连接时可指定具体端口，例如: "/dev/ttyUSB0"
     port_name = None
+    # port_name = "/dev/ttyUSB0"
+    # port_name = "/dev/ttyUSB1"
 
     # 快速检测模式配置
     # True: 仅检测常用波特率和默认设备ID，速度快
     # False: 检测设备ID范围1~247，覆盖更全面但耗时较长
     quick = True
 
-    # 自动检测第一个可用从机
-    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo2(
-        port_name, quick
-    )
-
-    # 验证检测到的协议类型
-    assert (
-        protocol == libstark.StarkProtocolType.Modbus
-    ), "Only Modbus protocol is supported for Revo2"
+    try:
+      # 自动检测第一个可用从机
+      (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo2(
+          port_name, quick
+      )
+      # 验证检测到的协议类型
+      assert (
+          protocol == libstark.StarkProtocolType.Modbus
+      ), "Only Modbus protocol is supported for Revo2"
+    except Exception as e:
+        logger.error(e)
+        sys.exit(1)
 
     # 建立Modbus连接
     client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)

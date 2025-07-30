@@ -107,7 +107,7 @@ async def main():
 
     # 读取并验证已上传的动作序列
     # 可以读取6个内置动作序列和最多24个自定义动作序列
-    action_result = await client.get_action_sequence(slave_id, custom_action_id)
+    action_result: libstark.ActionSequenceItem = await client.get_action_sequence(slave_id, custom_action_id)
     logger.info(f"Action sequence: {action_result.description}")
 
     # 执行内置动作序列示例（可选）

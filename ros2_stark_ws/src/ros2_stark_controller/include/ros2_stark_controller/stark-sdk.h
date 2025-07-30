@@ -321,10 +321,11 @@ void modbus_close(DeviceHandler *handle);
 /// 打开CAN FD设备
 /// baudrate: 波特率，1M, 2M, 4M, 5M
 /// 仅支持二代手
+/// master_id: 主设备ID，范围为1~255
 /// slave_id: 设备ID，范围为1~247, 二代手左手默认ID为0x7e，右手默认ID为0x7f
 /// 返回 DeviceHandler 结构体指针，关闭时需要调用 canfd_close 释放内存
 /// 如果失败，返回 NULL
-DeviceHandler *canfd_open(uint32_t baudrate, uint8_t slave_id);
+DeviceHandler *canfd_open(uint32_t baudrate, uint8_t master_id, uint8_t slave_id);
 
 /// 关闭CAN FD设备
 void canfd_close(DeviceHandler *handle);

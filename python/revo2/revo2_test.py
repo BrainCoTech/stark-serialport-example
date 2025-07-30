@@ -174,7 +174,7 @@ async def run_concurrent_tasks(client, slave_id, finger_id, trajectory, traj_len
         while not stop_flag:
             try:
                 # 获取电机状态
-                status = await client.get_motor_status(slave_id)
+                status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
                 pos = status.positions[4]  # 读取无名指位置（索引4）
 
                 current_time = time.perf_counter() - start_time
