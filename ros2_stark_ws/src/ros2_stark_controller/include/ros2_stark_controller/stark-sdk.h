@@ -340,11 +340,19 @@ void ethercat_close(DeviceHandler *handle);
 void ethercat_setup_sdo(DeviceHandler *handle, uint16_t slave_pos);
 
 /// 开始EtherCAT循环, PDO通信控制&读取
-/// cycle_time: 周期时间，单位为微秒
+/// dc_assign_activate: DC分配激活标志，0x0000表示不分配，0x0100 = 只使用 SYNC0, 0x0300 = 使用 SYNC0 + SYNC1
+/// sync0_cycle_time: SYNC0周期时间，单位为微秒, loop循环周期和 SYNC0周期时间一致
+/// sync0_shift_time: SYNC0相位偏移时间，单位为微秒
+/// sync1_cycle_time: SYNC1周期时间，单位为微秒
+/// sync1_shift_time: SYNC1相位偏移时间，单位为微秒
 void ethercat_start_loop(DeviceHandler *handle,
-                         uint64_t cycle_time,
                          const uint16_t *slave_positions,
-                         int count);
+                         int count,
+                         uint16_t dc_assign_activate,
+                         uint32_t sync0_cycle_time,
+                         int32_t sync0_shift_time,
+                         uint32_t sync1_cycle_time,
+                         int32_t sync1_shift_time);
 
 /// 停止EtherCAT循环
 void ethercat_stop_loop(DeviceHandler *handle);
@@ -563,7 +571,7 @@ void modbus_set_finger_position_with_speed(DeviceHandler *handle,
                                            uint16_t speed);
 
 /// 设置多个手指位置
-/// positions: 位置值数组，长度为6，范围为0~100, 对应比分比位置
+/// positions: 位置值数组，长度为6，范围为0~100, 对应百分比位置
 void modbus_set_finger_positions(DeviceHandler *handle,
                                  uint8_t slave_id,
                                  const uint16_t *positions,

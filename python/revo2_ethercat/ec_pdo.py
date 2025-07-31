@@ -1,5 +1,4 @@
 import asyncio
-import sys
 import math
 import time
 from ec_utils import logger, libstark, setup_shutdown_event
@@ -49,7 +48,6 @@ async def main():
     trajectory = init_trajectory()
     traj_len = len(trajectory)
 
-    import time
     index = 0
     stop_flag = False
 
@@ -71,7 +69,10 @@ async def main():
         while not stop_flag:
             try:
                 logger.debug(f"get_motor_status")
+                start_time = time.perf_counter()
                 status = await ctx.get_motor_status(slave_pos)
+                elapsed = (time.perf_counter() - start_time) * 1000
+                logger.debug(f"get_motor_status, elapsed:  {elapsed:.2f}ms")
                 logger.info(f"Motor status: {status.description}")
 
             except Exception as e:
@@ -79,7 +80,10 @@ async def main():
 
             await asyncio.sleep(0.001)  # 尽可能快，但防止过载
 
-    await ctx.ec_start_loop(500, [slave_pos])  # 启动PDO循环Thread
+    await ctx.ec_start_loop([slave_pos], 0x1000, 500, 0, 0, 0)     # 启动PDO循环Thread, 只启用 SYNC0
+    # await ctx.ec_start_loop([slave_pos], 0x3000, 500, 0, 1000, 0)  # 启动PDO循环Thread, 同时启用 SYNC0 和 SYNC1
+    # await ctx.ec_start_loop([slave_pos], 0, 500, 0, 0, 0)  # 启动PDO循环Thread，不启用DC时钟同步
+
     control = asyncio.create_task(control_task())
     reader = asyncio.create_task(read_task())
 

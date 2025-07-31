@@ -86,7 +86,12 @@ int main(int argc, char const *argv[])
 
   // usleep(1 * 1000 * 1000); // wait test
   const uint16_t slave_positions[] = {slave_pos}; // 设备位置数组
-  ethercat_start_loop(device_handle, 500, slave_positions, 1);
+  printf("start_loop...\n");
+  ethercat_start_loop(device_handle, slave_positions, 1, 0x1000, 500, 0, 0, 0); // 启动PDO循环Thread, 只启用 SYNC0
+  // ethercat_start_loop(device_handle, slave_positions, 1, 0x3000, 500, 0, 1000, 0); // 启动PDO循环Thread, 同时启用 SYNC0 和 SYNC1
+  // ethercat_start_loop(device_handle, slave_positions, 1, 0, 500, 0, 0, 0); // 启动PDO循环Thread，不启用DC时钟同步
+  printf("start_loop done\n");
+
   start_pdo_thread();
   usleep(500 * 1000 * 1000); // wait test
   printf("test done\n");
