@@ -42,8 +42,6 @@ async def open_modbus_revo2():
     # 指定端口名称，None表示自动检测第一个可用端口
     # 多设备连接时可指定具体端口，例如: "/dev/ttyUSB0"
     port_name = None
-    # port_name = "/dev/ttyUSB0"
-    # port_name = "/dev/ttyUSB1"
 
     # 快速检测模式配置
     # True: 仅检测常用波特率和默认设备ID，速度快
@@ -66,7 +64,7 @@ async def open_modbus_revo2():
     # 建立Modbus连接
     client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
 
-    # 获取并记录设备信息
+    # 获取设备信息
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
 

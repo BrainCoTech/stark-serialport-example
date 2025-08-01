@@ -17,8 +17,6 @@ def init_trajectory():
 
 # Main
 async def main():
-    # shutdown_event = setup_shutdown_event(logger)
-    # fmt: off
     master_pos = 0
     ctx = libstark.PyDeviceContext.open_ethercat_master(master_pos)
     slave_pos = 0
@@ -80,9 +78,20 @@ async def main():
 
             await asyncio.sleep(0.001)  # 尽可能快，但防止过载
 
-    await ctx.ec_start_loop([slave_pos], 0x1000, 500, 0, 0, 0)     # 启动PDO循环Thread, 只启用 SYNC0
-    # await ctx.ec_start_loop([slave_pos], 0x3000, 500, 0, 1000, 0)  # 启动PDO循环Thread, 同时启用 SYNC0 和 SYNC1
-    # await ctx.ec_start_loop([slave_pos], 0, 500, 0, 0, 0)  # 启动PDO循环Thread，不启用DC时钟同步
+    # 常见 assign_activate 位定义：
+    # 位位置	掩码（十六进制）	功能说明
+    # bit 0	0x0001	启用 SYNC0 事件
+    # bit 1	0x0002	启用 SYNC1 事件
+    # bit 2	0x0004	启用 Latch0
+    # bit 3	0x0008	启用 Latch1
+    # bit 4	0x0010	启用时间启动（STARTTIME）同步
+    # bit 5	0x0020	启用应用层时间过滤
+    # bit 8	0x0100	启用周期同步
+    # bit 9	0x0200	启用周期和起始时间
+    # await ctx.ec_start_loop([slave_pos], 0x300, 1000_000, 0, 0, 0)     # 启用周期同步，常配合 DC 使用
+    # await ctx.ec_start_loop([slave_pos], 0x301, 1000_000, 0, 0, 0)     # 启动PDO循环Thread, 同时启用周期同步 + SYNC0（推荐用于主同步）
+    # await ctx.ec_start_loop([slave_pos], 0x303, 1000_000, 0, 1000, 0)  # 启动PDO循环Thread, 同时启用 SYNC0/SYNC1 和周期同步
+    await ctx.ec_start_loop([slave_pos], 0, 1000_000, 0, 0, 0)  # 启动PDO循环Thread，不启用DC时钟同步
 
     control = asyncio.create_task(control_task())
     reader = asyncio.create_task(read_task())
