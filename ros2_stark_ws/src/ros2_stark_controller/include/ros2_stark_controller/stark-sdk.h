@@ -245,20 +245,11 @@ using CanFdSendCallback = int32_t(*)(uint8_t slave_id,
                                      const uint8_t *data,
                                      uintptr_t data_len);
 
-/// ALGO OUTPUT
-struct TouchSensorItem {
-  ContactState state;
-  float force;
-  float sliding_mag;
-};
+/// DFU状态回调, state: DfuState
+using DfuStateCallback = void(*)(uint8_t slave_id, uint8_t state);
 
-struct TouchSensorData {
-  uint8_t slave_id;
-  TouchSensorItem items[13];
-};
-
-/// 触觉感知回调处理类型
-using TouchSensorDataCallback = void(*)(const TouchSensorData *sensor_data);
+/// DFU进度回调
+using DfuProgressCallback = void(*)(uint8_t slave_id, float progress);
 
 extern "C" {
 
@@ -341,10 +332,10 @@ void ethercat_setup_sdo(DeviceHandler *handle, uint16_t slave_pos);
 
 /// 开始EtherCAT循环, PDO通信控制&读取
 /// dc_assign_activate: DC分配激活标志，0x0000表示不分配，0x0100 = 只使用 SYNC0, 0x0300 = 使用 SYNC0 + SYNC1
-/// sync0_cycle_time: SYNC0周期时间，单位为微秒, loop循环周期和 SYNC0周期时间一致
-/// sync0_shift_time: SYNC0相位偏移时间，单位为微秒
-/// sync1_cycle_time: SYNC1周期时间，单位为微秒
-/// sync1_shift_time: SYNC1相位偏移时间，单位为微秒
+/// sync0_cycle_time: SYNC0周期时间，单位为纳秒, loop循环周期和 SYNC0周期时间一致
+/// sync0_shift_time: SYNC0相位偏移时间，单位为纳秒
+/// sync1_cycle_time: SYNC1周期时间，单位为纳秒
+/// sync1_shift_time: SYNC1相位偏移时间，单位为纳秒
 void ethercat_start_loop(DeviceHandler *handle,
                          const uint16_t *slave_positions,
                          int count,
@@ -770,6 +761,23 @@ LedInfo *modbus_get_led_info(DeviceHandler *handle, uint8_t slave_id);
 /// 如果失败，返回 NULL
 ButtonPressEvent *modbus_get_button_event(DeviceHandler *handle, uint8_t slave_id);
 
+/// 该函数用于启动 DFU（Device Firmware Update）过程。
+/// - `handle`: 设备处理器指针
+/// - `slave_id`: 从设备 ID
+/// - `dfu_file_path`: DFU 文件路径，C 字符串格式
+/// - `wait_secs`: 等待进入DFU模式时间，单位为秒，默认为5秒
+void start_dfu(DeviceHandler *handle,
+               uint8_t slave_id,
+               const char *dfu_file_path,
+               uintptr_t wait_secs);
+
+/// 停止 DFU 过程
+/// - `slave_id`: 从设备 ID
+/// 该函数用于停止 DFU 过程。
+/// 注意：在调用此函数之前，请确保 DFU 过程已经开始。
+/// 如果 DFU 过程未开始或已经完成，此函数将不会有任何效果。
+void stop_dfu(uint8_t slave_id);
+
 void free_device_config(DeviceConfig *config);
 
 void free_device_info(DeviceInfo *info);
@@ -808,8 +816,11 @@ void set_canfd_read_callback(CanFdReadCallback cb);
 /// 设置CAN FD写回调
 void set_canfd_send_callback(CanFdSendCallback cb);
 
-/// 设置触觉检测回调，检测是否有接触及滑移幅度
-void set_touch_sensor_callback(TouchSensorDataCallback cb);
+/// 设置DFU状态回调
+void set_dfu_state_callback(DfuStateCallback cb);
+
+/// 设置DFU进度回调
+void set_dfu_progress_callback(DfuProgressCallback cb);
 
 }  // extern "C"
 

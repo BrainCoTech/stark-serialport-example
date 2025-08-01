@@ -63,5 +63,8 @@ run_customed_modbus_async:
 run_ethercat:
 	export DYLD_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) && sudo setcap cap_sys_nice,cap_net_raw=eip revo2_ethercat.exe && ./revo2_ethercat.exe
 
+run_dfu:
+  export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./revo2_dfu.exe
+
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run
