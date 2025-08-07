@@ -48,23 +48,9 @@ clean:
 	rm -f $(addsuffix .exe,$(BINARIES))
 
 # 运行目标
-run:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./revo2_ctrl.exe
-
-run_multi:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./revo2_ctrl_multi.exe
-
-run_customed_modbus:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./revo2_customed_modbus.exe
-
-run_customed_modbus_async:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./revo2_customed_modbus_async.exe
-
-run_ethercat:
-	export DYLD_LIBRARY_PATH=$(LIB_DIR):$(DYLD_LIBRARY_PATH) && sudo setcap cap_sys_nice,cap_net_raw=eip revo2_ethercat.exe && ./revo2_ethercat.exe
-
-run_dfu:
-  export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./revo2_dfu.exe
+export LD_LIBRARY_PATH := $(LIB_DIR):$(LD_LIBRARY_PATH)
+run_%:
+	./$*.exe
 
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run
