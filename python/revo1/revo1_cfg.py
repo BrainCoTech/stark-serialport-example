@@ -132,7 +132,7 @@ async def configure_position_calibration(client, slave_id):
     """
     # 设置是否在上电后自动执行位置校准（可选）
     # 注意：修改此设置后设备会自动重启
-    # await client.set_position_auto_calibration(slave_id, False)
+    # await client.set_auto_calibration(slave_id, False)
 
     # 获取并显示自动校准状态
     # calibration_enabled = await client.get_auto_calibration_enabled(slave_id)

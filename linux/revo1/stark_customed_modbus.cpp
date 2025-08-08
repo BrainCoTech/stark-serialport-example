@@ -67,6 +67,6 @@ int main(int argc, char const *argv[])
 
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
-  uint32_t baudrate = modbus_get_rs485_baudrate(handle, slave_id);
+  uint32_t baudrate = stark_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
 }

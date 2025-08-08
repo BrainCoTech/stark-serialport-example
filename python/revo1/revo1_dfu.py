@@ -41,7 +41,8 @@ revo1_basic_ota_bin_path = os.path.join(
     parent_dir,
     "ota_bin",
     "modbus",
-    "FW_MotorController_Release_SecureOTA_modbus_0.1.7.ota",
+    # "FW_MotorController_Release_SecureOTA_modbus_0.1.7.ota",
+    "FW_MotorController_Release_SecureOTA_0.3.1.C.ota",
 )
 
 # Revo1 Protobuf协议固件路径

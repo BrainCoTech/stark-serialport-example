@@ -50,7 +50,7 @@ async def open_modbus_revo1():
     # 建立Modbus连接
     client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
 
-    # 获取并记录设备信息
+    # 获取设备信息
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
 

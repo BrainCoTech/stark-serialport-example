@@ -23,7 +23,7 @@ StarkNode::StarkNode() : Node("stark_node"), handle_(nullptr) {
   if (fw_type_ == StarkHardwareType::STARK_HARDWARE_TYPE_REVO1_TOUCH || 
       fw_type_ == StarkHardwareType::STARK_HARDWARE_TYPE_REVO2_TOUCH) {
     // 启用全部触觉传感器
-    modbus_enable_touch_sensor(handle_, slave_id_, 0x1F);
+    stark_enable_touch_sensor(handle_, slave_id_, 0x1F);
     // usleep(1000 * 1000); // wait for touch sensor to be ready
   }
 
@@ -70,7 +70,7 @@ bool StarkNode::initialize_modbus() {
     RCLCPP_ERROR(this->get_logger(), "Failed to open Modbus on %s", port_.c_str());
     return false;
   }
-  auto info = modbus_get_device_info(handle_, slave_id_);
+  auto info = stark_get_device_info(handle_, slave_id_);
   if (info != NULL) {
     sku_type_ = info->sku_type;
     sn_ = std::string(info->serial_number);
@@ -95,7 +95,7 @@ void StarkNode::timer_callback() {
 // }
 
 void StarkNode::publish_motor_status() {
-  auto motor_status = modbus_get_motor_status(handle_, slave_id_);
+  auto motor_status = stark_get_motor_status(handle_, slave_id_);
   if (!motor_status) {
     RCLCPP_WARN(this->get_logger(), "Failed to get motor status");
     return;
@@ -119,7 +119,7 @@ void StarkNode::publish_motor_status() {
 }
 
 void StarkNode::publish_touch_status() {
-  auto touch_status = modbus_get_touch_status(handle_, slave_id_);
+  auto touch_status = stark_get_touch_status(handle_, slave_id_);
   if (!touch_status) {
     RCLCPP_WARN(this->get_logger(), "Failed to get touch status");
     return;
@@ -155,11 +155,11 @@ void StarkNode::handle_get_device_info(
   response->serial_number = sn_;
   response->firmware_version = fw_version_;
   if (request->get_voltage) {
-    voltage_ = modbus_get_voltage(handle_, slave_id_);
+    voltage_ = stark_get_voltage(handle_, slave_id_);
     response->voltage = voltage_;
   }
   if (request->get_turbo_mode) {
-    is_turbo_mode_enabled_ = modbus_get_turbo_mode_enabled(handle_, slave_id_);
+    is_turbo_mode_enabled_ = stark_get_turbo_mode_enabled(handle_, slave_id_);
     response->turbo_mode = is_turbo_mode_enabled_;
   }
   response->success = true;
@@ -175,28 +175,28 @@ void StarkNode::handle_set_motor_multi(
     for (int i = 0; i < 6; i++) {
       positions[i] = static_cast<uint16_t>(request->positions[i]);
     }
-    modbus_set_finger_positions(handle_, slave_id_, positions, 6);
+    stark_set_finger_positions(handle_, slave_id_, positions, 6);
   } break;
   case 2:
     int16_t speeds[6];
     for (int i = 0; i < 6; i++) {
       speeds[i] = static_cast<int16_t>(request->speeds[i]);
     }
-    modbus_set_finger_speeds(handle_, slave_id_, speeds, 6);
+    stark_set_finger_speeds(handle_, slave_id_, speeds, 6);
     break;
   case 3: // 仅支持二代手
     int16_t currents[6];
     for (int i = 0; i < 6; i++) {
       currents[i] = static_cast<int16_t>(request->currents[i]);
     }
-    modbus_set_finger_currents(handle_, slave_id_, currents, 6);
+    stark_set_finger_currents(handle_, slave_id_, currents, 6);
     break;
   case 4: // 仅支持二代手
     int16_t pwms[6];
     for (int i = 0; i < 6; i++) {
       pwms[i] = static_cast<int16_t>(request->pwms[i]);
     }
-    modbus_set_finger_pwms(handle_, slave_id_, pwms, 6);
+    stark_set_finger_pwms(handle_, slave_id_, pwms, 6);
     break;
   case 5: // 仅支持二代手
   {
@@ -208,7 +208,7 @@ void StarkNode::handle_set_motor_multi(
     for (int i = 0; i < 6; i++) {
       durations[i] = static_cast<uint16_t>(request->durations[i]);
     }
-    modbus_set_finger_positions_and_durations(handle_, slave_id_, positions, durations, 6);
+    stark_set_finger_positions_and_durations(handle_, slave_id_, positions, durations, 6);
   } break;
   case 6: // 仅支持二代手
   {
@@ -220,7 +220,7 @@ void StarkNode::handle_set_motor_multi(
     for (int i = 0; i < 6; i++) {
       speeds[i] = static_cast<uint16_t>(request->speeds[i]);
     }
-    modbus_set_finger_positions_and_speeds(handle_, slave_id_, positions, speeds, 6);
+    stark_set_finger_positions_and_speeds(handle_, slave_id_, positions, speeds, 6);
   } break;
   default:
     response->success = false;
@@ -236,28 +236,28 @@ void StarkNode::handle_set_motor_single(
   response->success = true;
   switch (request->mode) {
   case 1:
-    modbus_set_finger_position(handle_, slave_id_, finger_id, request->position);
+    stark_set_finger_position(handle_, slave_id_, finger_id, request->position);
     break;
   case 2:
-    modbus_set_finger_speed(handle_, slave_id_, finger_id, request->speed);
+    stark_set_finger_speed(handle_, slave_id_, finger_id, request->speed);
     break;
   case 3: // 仅支持二代手
     /// 范围为-1000~1000或-最大电流~最大电流mA
-    modbus_set_finger_current(handle_, slave_id_, finger_id, request->current);
+    stark_set_finger_current(handle_, slave_id_, finger_id, request->current);
     break;
   case 4: // 仅支持二代手
     /// 范围为-1000~1000
-    modbus_set_finger_pwm(handle_, slave_id_, finger_id, request->pwm);
+    stark_set_finger_pwm(handle_, slave_id_, finger_id, request->pwm);
     break;
   case 5: // 仅支持二代手
     /// 位置范围为0~1000或最小-最大位置（°）
     /// 期望时间范围为1~2000ms
-    modbus_set_finger_position_with_millis(handle_, slave_id_, finger_id, request->position, request->duration);
+    stark_set_finger_position_with_millis(handle_, slave_id_, finger_id, request->position, request->duration);
     break;
   case 6: // 仅支持二代手
     /// 位置范围为0~1000或最小-最大位置（°）
     /// 速度范围为1~1000或最小-最大速度(°/s）
-    modbus_set_finger_position_with_speed(handle_, slave_id_, finger_id, request->position, request->speed);
+    stark_set_finger_position_with_speed(handle_, slave_id_, finger_id, request->position, request->speed);
     break;
   default:
     response->success = false;
@@ -274,28 +274,28 @@ void StarkNode::handle_motor_multi_command(const std::shared_ptr<ros2_stark_inte
     for (int i = 0; i < 6; i++) {
       positions[i] = static_cast<uint16_t>(msg->positions[i]);
     }
-    modbus_set_finger_positions(handle_, slave_id_, positions, 6);
+    stark_set_finger_positions(handle_, slave_id_, positions, 6);
   } break;
   case 2: {
     int16_t speeds[6];
     for (int i = 0; i < 6; i++) {
       speeds[i] = static_cast<int16_t>(msg->speeds[i]);
     }
-    modbus_set_finger_speeds(handle_, slave_id_, speeds, 6);
+    stark_set_finger_speeds(handle_, slave_id_, speeds, 6);
   } break;
   case 3: // 仅支持二代手
     int16_t currents[6];
     for (int i = 0; i < 6; i++) {
       currents[i] = static_cast<int16_t>(msg->currents[i]);
     }
-    modbus_set_finger_currents(handle_, slave_id_, currents, 6);
+    stark_set_finger_currents(handle_, slave_id_, currents, 6);
     break;
   case 4: // 仅支持二代手
     int16_t pwms[6];
     for (int i = 0; i < 6; i++) {
       pwms[i] = static_cast<int16_t>(msg->pwms[i]);
     }
-    modbus_set_finger_pwms(handle_, slave_id_, pwms, 6);
+    stark_set_finger_pwms(handle_, slave_id_, pwms, 6);
     break;
   case 5: // 仅支持二代手
   {
@@ -307,7 +307,7 @@ void StarkNode::handle_motor_multi_command(const std::shared_ptr<ros2_stark_inte
     for (int i = 0; i < 6; i++) {
       durations[i] = static_cast<uint16_t>(msg->durations[i]);
     }
-    modbus_set_finger_positions_and_durations(handle_, slave_id_, positions, durations, 6);
+    stark_set_finger_positions_and_durations(handle_, slave_id_, positions, durations, 6);
   } break;
   case 6: // 仅支持二代手
   {
@@ -319,7 +319,7 @@ void StarkNode::handle_motor_multi_command(const std::shared_ptr<ros2_stark_inte
     for (int i = 0; i < 6; i++) {
       speeds[i] = static_cast<uint16_t>(msg->speeds[i]);
     }
-    modbus_set_finger_positions_and_speeds(handle_, slave_id_, positions, speeds, 6);
+    stark_set_finger_positions_and_speeds(handle_, slave_id_, positions, speeds, 6);
   } break;
   default:
     RCLCPP_ERROR(this->get_logger(), "Invalid mode: %d", msg->mode);
@@ -332,28 +332,28 @@ void StarkNode::handle_motor_single_command(const std::shared_ptr<ros2_stark_int
   StarkFingerId finger_id = static_cast<StarkFingerId>(msg->motor_id);
   switch (msg->mode) {
   case 1:
-    modbus_set_finger_position(handle_, slave_id_, finger_id, msg->position);
+    stark_set_finger_position(handle_, slave_id_, finger_id, msg->position);
     break;
   case 2:
-    modbus_set_finger_speed(handle_, slave_id_, finger_id, msg->speed);
+    stark_set_finger_speed(handle_, slave_id_, finger_id, msg->speed);
     break;
   case 3: // 仅支持二代手
     /// 范围为-1000~1000或-最大电流~最大电流mA
-    modbus_set_finger_current(handle_, slave_id_, finger_id, msg->current);
+    stark_set_finger_current(handle_, slave_id_, finger_id, msg->current);
     break;
   case 4: // 仅支持二代手
     /// 范围为-1000~1000
-    modbus_set_finger_pwm(handle_, slave_id_, finger_id, msg->pwm);
+    stark_set_finger_pwm(handle_, slave_id_, finger_id, msg->pwm);
     break;
   case 5: // 仅支持二代手
     /// 位置范围为0~1000或最小-最大位置（°）
     /// 期望时间范围为1~2000ms
-    modbus_set_finger_position_with_millis(handle_, slave_id_, finger_id, msg->position, msg->duration);
+    stark_set_finger_position_with_millis(handle_, slave_id_, finger_id, msg->position, msg->duration);
     break;
   case 6: // 仅支持二代手
     /// 位置范围为0~1000或最小-最大位置（°）
     /// 速度范围为1~1000或最小-最大速度(°/s）
-    modbus_set_finger_position_with_speed(handle_, slave_id_, finger_id, msg->position, msg->speed);
+    stark_set_finger_position_with_speed(handle_, slave_id_, finger_id, msg->position, msg->speed);
     break;
   default:
     RCLCPP_ERROR(this->get_logger(), "Invalid mode: %d", msg->mode);

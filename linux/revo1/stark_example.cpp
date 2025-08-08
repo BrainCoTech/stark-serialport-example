@@ -37,14 +37,14 @@ int main(int argc, char const *argv[])
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
 
   useconds_t delay = 1000 * 1000; // 1000ms
-  // modbus_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);
+  // stark_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);
   // usleep(delay);
-  modbus_set_finger_positions(handle, slave_id, positions_fist, 6);
+  stark_set_finger_positions(handle, slave_id, positions_fist, 6);
   usleep(delay);
-  modbus_set_finger_positions(handle, slave_id, positions_open, 6);
+  stark_set_finger_positions(handle, slave_id, positions_open, 6);
   usleep(delay);
 
-  auto finger_status = modbus_get_motor_status(handle, slave_id);
+  auto finger_status = stark_get_motor_status(handle, slave_id);
   if (finger_status != NULL)
   {
     printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
@@ -58,9 +58,9 @@ int main(int argc, char const *argv[])
   while (0)
   {
     printf("set_positions loop start\n");
-    modbus_set_finger_positions(handle, slave_id, positions_fist, 6);
+    stark_set_finger_positions(handle, slave_id, positions_fist, 6);
     usleep(delay);
-    modbus_set_finger_positions(handle, slave_id, positions_open, 6);
+    stark_set_finger_positions(handle, slave_id, positions_open, 6);
     usleep(delay);
   }
 
@@ -70,7 +70,7 @@ int main(int argc, char const *argv[])
 // 获取设备序列号、固件版本等信息
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
-  auto info = modbus_get_device_info(handle, slave_id);
+  auto info = stark_get_device_info(handle, slave_id);
   if (info != NULL)
   {
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
@@ -85,22 +85,22 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 // 获取设备信息, 串口波特率, 从机地址, 电压, LED信息, 按键事件
 void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
-  auto baudrate = modbus_get_rs485_baudrate(handle, slave_id);
+  auto baudrate = stark_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
   // 触觉版 deprecated
-  // auto force_level = modbus_get_force_level(handle, slave_id);
+  // auto force_level = stark_get_force_level(handle, slave_id);
   // printf("Slave[%hhu] Force Level: %d\n", slave_id, force_level);
-  auto voltage = modbus_get_voltage(handle, slave_id);
+  auto voltage = stark_get_voltage(handle, slave_id);
   printf("Slave[%hhu] Voltage: %.2fV\n", slave_id, voltage / 1000.0);
 
-  auto led_info = modbus_get_led_info(handle, slave_id);
+  auto led_info = stark_get_led_info(handle, slave_id);
   if (led_info != NULL)
   {
     printf("Slave[%hhu] LED Info: %hhu, %hhu\n", slave_id, led_info->mode, led_info->color);
     free_led_info(led_info);
   }
 
-  auto button_event = modbus_get_button_event(handle, slave_id);
+  auto button_event = stark_get_button_event(handle, slave_id);
   if (button_event != NULL)
   {
     printf("Slave[%hhu] Button Event: %d, %d, %hhu\n", slave_id, button_event->timestamp, button_event->button_id, button_event->press_state);

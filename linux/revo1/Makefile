@@ -47,21 +47,9 @@ all: $(BINARIES)
 clean:
 	rm -f $(addsuffix .exe,$(BINARIES))
 
-# 运行目标
-run_v1:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_v1.exe
-
-run_v1_touch:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_v1_touch.exe
-
-run_multi:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_multi_example.exe
-
-run_customed_modbus:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_customed_modbus.exe
-
-run_customed_modbus_async:
-	export LD_LIBRARY_PATH=$(LIB_DIR):$(LD_LIBRARY_PATH) && ./stark_customed_modbus_async.exe
+# export LD_LIBRARY_PATH := $(LIB_DIR):$(LD_LIBRARY_PATH)
+run_%:
+	LD_LIBRARY_PATH=$(LIB_DIR):$$LD_LIBRARY_PATH ./stark_$*.exe
 
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run
