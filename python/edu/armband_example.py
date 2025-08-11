@@ -1,7 +1,7 @@
 import asyncio
 import numpy as np
 from model import EMGData
-from edu_utils import get_armband_port_name, libedu, lib, logger, libstark
+from edu_utils import *
 from utils import print_afe_timestamps
 
 fs = 250  # 采样频率
@@ -45,7 +45,7 @@ async def setup_device():
     device = libedu.PyEduDevice(port_name, 115200)
 
     # 启动数据流
-    await device.start_data_stream(lib.MessageParser("ARMBAND-device", lib.MsgType.Edu))
+    await device.start_data_stream(lib.MessageParser("ARMBAND-device", libstark.MsgType.Edu))
     logger.info("Listening for messages...")
 
     # 获取Dongle与臂环的配对状态, 成功配对时，会返回Paired
@@ -54,10 +54,8 @@ async def setup_device():
 
     # 设置EMG采样率，这里设置为250Hz, 0xFF表示所有通道都开启
     await device.set_afe_config(libedu.AfeSampleRate.AFE_SR_250, 0xFF)
-
-    # 开始传感器数据流
-    await device.start_sensor_data_stream()
-    logger.info("Sensor data stream started")
+    await device.set_imu_config(libedu.ImuSampleRate.IMU_SR_100)
+    await device.set_mag_config(libedu.MagSampleRate.MAG_SR_20)
     return True
 
 def init_cfg():

@@ -1,7 +1,7 @@
 import asyncio
 import numpy as np
 
-from edu_utils import get_glove_port_name, logger, libedu, lib
+from edu_utils import *
 from model import FlexData, IMUData, MagData
 
 # flex数据
@@ -102,7 +102,7 @@ async def connect():
     baudrate = 115200
     device = libedu.PyEduDevice(port_name, baudrate)
 
-    await device.start_data_stream(lib.MessageParser("Glove-device", lib.MsgType.Edu))
+    await device.start_data_stream(lib.MessageParser("Glove-device", libstark.MsgType.Edu))
     logger.info("Listening for messages...")
 
     # 获取

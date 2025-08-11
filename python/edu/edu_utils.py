@@ -1,10 +1,12 @@
 import json
 import logging
 from logger import getLogger
+
 # logger = getLogger(logging.DEBUG)
 logger = getLogger(logging.INFO)
 
 from bc_stark_sdk import main_mod
+
 libstark = main_mod.stark
 libedu = main_mod.edu
 lib = main_mod
@@ -27,7 +29,7 @@ async def open_modbus_device():
     Example:
         >>> client, slave_id = await open_modbus_device()
         >>> # 或者手动指定参数:
-        >>> # client = await libstark.modbus_open(port_name, baudrate)
+        >>> # client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
     """
     # 指定端口名称，None表示自动检测第一个可用端口
     # 多设备连接时可指定具体端口，例如: "/dev/ttyUSB0" (Linux/macOS) 或 "COM3" (Windows)
@@ -40,13 +42,17 @@ async def open_modbus_device():
 
     # 自动检测第一个可用从机设备
     # 返回: (协议类型, 端口名, 波特率, 从站ID)
-    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device(port_name, quick)
+    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device(
+        port_name, quick
+    )
 
     # 验证检测到的协议类型，确保是Modbus协议
-    assert (protocol == libstark.StarkProtocolType.Modbus), "Only Modbus protocol is supported"
+    assert (
+        protocol == libstark.StarkProtocolType.Modbus
+    ), "Only Modbus protocol is supported"
 
     # 使用检测到的参数建立Modbus连接
-    client = await libstark.modbus_open(port_name, baudrate)
+    client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
 
     # 获取并记录设备详细信息
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
@@ -55,16 +61,17 @@ async def open_modbus_device():
     # 根据设备型号记录具体版本信息
     if device_info.is_revo1():
         if device_info.is_revo1_touch():
-          logger.info(f"Revo1-触觉版")  # 触觉版Revo1
+            logger.info(f"Revo1-触觉版")  # 触觉版Revo1
         else:
-          logger.info(f"Revo1-标准版")  # 标准版Revo1
+            logger.info(f"Revo1-标准版")  # 标准版Revo1
     elif device_info.is_revo2():
         if device_info.is_revo2_touch():
-          logger.info(f"Revo2-触觉版")  # 触觉版Revo2
+            logger.info(f"Revo2-触觉版")  # 触觉版Revo2
         else:
-          logger.info(f"Revo2-标准版")  # 标准版Revo2
+            logger.info(f"Revo2-标准版")  # 标准版Revo2
 
     return (client, slave_id)
+
 
 def _get_first_port_name(ports_data, device_type):
     """
@@ -111,6 +118,7 @@ def _get_first_port_name(ports_data, device_type):
     logger.info(f"Using {device_type} port: {port_name}")
     return port_name
 
+
 def get_stark_port_name():
     """
     获取第一个可用的Stark设备端口名称
@@ -139,6 +147,7 @@ def get_stark_port_name():
     ports = libstark.list_available_ports()
     return _get_first_port_name(ports, "Stark")
 
+
 def get_glove_port_name():
     """
     获取第一个可用的手套设备端口名称
@@ -166,6 +175,7 @@ def get_glove_port_name():
     # VID=21059: 厂商标识符, PID=6: 手套设备产品标识符
     ports = main_mod.available_usb_ports(21059, 6)
     return _get_first_port_name(ports, "Glove")
+
 
 def get_armband_port_name():
     """

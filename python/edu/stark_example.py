@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from edu_utils import get_stark_port_name, logger, libstark
+from edu_utils import *
 
 
 # Main
@@ -26,7 +26,7 @@ async def main():
     # await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])  # 握拳
     # await asyncio.sleep(1)
     # await client.set_finger_positions(slave_id, [0] * 6)  # 张开手指
-    
+
     await client.run_action_sequence(slave_id, libstark.ActionSequenceId.DefaultGestureFist)
     await asyncio.sleep(2)  # 等待动作序列执行完成
     await client.run_action_sequence(slave_id, libstark.ActionSequenceId.DefaultGestureOpen)

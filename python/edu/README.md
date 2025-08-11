@@ -17,6 +17,10 @@
 
 (py310) ➜ pip install -r requirements.txt --index-url https://pypi.org/simple/ # 安装依赖
 
+# 无法通过以上方式安装的话，可尝试手动下载之后，再通过pip安装.whl文件
+# https://pypi.org/project/bc-stark-sdk/0.4.8/#files
+# (py310) ➜ pip install --force-reinstall '/path/to/bc_stark_sdk-0.4.8-cp38-abi3-macosx_11_0_arm64.whl'
+
 (py310) ➜ python glove_example.py # 连接遥操作手套，接收6通道手套数据(flex_data)
 (py310) ➜ python armband_example.py # 连接遥操作臂环，接收8通道EMG数据(afe_data)
 (py310) ➜ python stark_example.py # 连接灵巧手，控制手的动作
