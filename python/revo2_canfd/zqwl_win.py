@@ -36,6 +36,7 @@ def zcan_open(device_type: int, channel: int, baudrate: int):
         # chn_cfg.config.canfd.acc_code = 0
         # chn_cfg.config.canfd.acc_mask = 0xffffffff
         chn_cfg.config.canfd.mode = 0  # 0: 正常模式, 1: 只听模式
+
         can_handler = zcan.InitCAN(dev_handler, channel, chn_cfg)
         if can_handler == INVALID_CHANNEL_HANDLE:
             logger.error("初始化通道失败!")
@@ -110,7 +111,7 @@ def zcan_receive_message(quick_retries: int = 2, dely_retries: int = 0):
 
     # 快速接收尝试
     for attempt in range(quick_retries):
-        time.sleep(0.0000001)  # 极短延时
+        time.sleep(0.00001)  # 极短延时
         message = _zcan_read_messages(attempt)
         if message is not None:
             return message

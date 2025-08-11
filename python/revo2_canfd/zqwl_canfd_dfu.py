@@ -101,8 +101,8 @@ async def main():
 
     # ZCAN_USBCANFD_100U
     zcan_open(device_type=42, channel=0, baudrate=5000000)
-    libstark.set_canfd_tx_callback(canfd_send)
-    libstark.set_canfd_rx_callback(canfd_read)
+    libstark.set_can_tx_callback(canfd_send)
+    libstark.set_can_rx_callback(canfd_read)
 
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)

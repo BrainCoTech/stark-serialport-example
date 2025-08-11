@@ -46,7 +46,7 @@ async def configure_control_mode(client, slave_id):
     finger_unit_mode = await client.get_finger_unit_mode(slave_id)
     logger.info(f"Finger unit mode: {finger_unit_mode}")
 
-    # 参考文档：https://www.brainco-hz.com/docs/revolimb-hand/protocol/stark_v2.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
+    # 参考文档：https://www.brainco-hz.com/docs/revolimb-hand/revo2/modbus_foundation.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
 
 
 async def configure_finger_parameters(client, slave_id):
@@ -215,8 +215,8 @@ async def main():
 
     # ZCAN_USBCANFD_100U
     zcan_open(device_type=42, channel=0, baudrate=5000000)
-    libstark.set_canfd_tx_callback(canfd_send)
-    libstark.set_canfd_rx_callback(canfd_read)
+    libstark.set_can_tx_callback(canfd_send)
+    libstark.set_can_rx_callback(canfd_read)
 
     logger.debug("get_device_info")  # 获取设备信息
     device_info = await client.get_device_info(slave_id)

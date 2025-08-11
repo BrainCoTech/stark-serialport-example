@@ -43,7 +43,7 @@ void *get_device_info_thread(void *arg)
   DeviceHandler *modbus_handle = params->handle;
   uint8_t slave_id = params->slave_id;
 
-  uint32_t baudrate = modbus_get_rs485_baudrate(modbus_handle, slave_id);
+  uint32_t baudrate = stark_get_rs485_baudrate(modbus_handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
 
   free(arg); // 释放参数内存

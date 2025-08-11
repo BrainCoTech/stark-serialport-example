@@ -35,7 +35,7 @@ async def main():
     logger.debug("get_finger_unit_mode")
     finger_unit_mode = await ctx.get_finger_unit_mode(slave_pos)
     logger.info(f"Finger unit mode: {finger_unit_mode}")
-    # https://www.brainco-hz.com/docs/revolimb-hand/protocol/stark_v2.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
+    # https://www.brainco-hz.com/docs/revolimb-hand/revo2/modbus_foundation.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
 
     # 设置/读取保护电流, 参数范围详见文档
     finger_id = libstark.FingerId.Ring

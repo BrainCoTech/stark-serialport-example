@@ -62,7 +62,7 @@ async def configure_control_mode(client, slave_id):
     finger_unit_mode = await client.get_finger_unit_mode(slave_id)
     logger.info(f"Finger unit mode: {finger_unit_mode}")
 
-    # 参考文档：https://www.brainco-hz.com/docs/revolimb-hand/protocol/stark_v2.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
+    # 参考文档：https://www.brainco-hz.com/docs/revolimb-hand/revo2/modbus_foundation.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
 
 
 async def configure_finger_parameters(client, slave_id):

@@ -35,10 +35,10 @@ int main(int argc, char const *argv[])
   if (cfg != NULL) free_device_config(cfg);
 
   // 设置手指控制参数的单位模式
-  modbus_set_finger_unit_mode(handle, slave_id, FINGER_UNIT_MODE_NORMALIZED);
-  // modbus_set_finger_unit_mode(handle, slave_id, FINGER_UNIT_MODE_PHYSICAL);
+  stark_set_finger_unit_mode(handle, slave_id, FINGER_UNIT_MODE_NORMALIZED);
+  // stark_set_finger_unit_mode(handle, slave_id, FINGER_UNIT_MODE_PHYSICAL);
 
-  auto mode = modbus_get_finger_unit_mode(handle, slave_id);
+  auto mode = stark_get_finger_unit_mode(handle, slave_id);
   if (mode == FINGER_UNIT_MODE_NORMALIZED)
   {
     printf("Finger unit mode: Normalized\n");
@@ -54,67 +54,67 @@ int main(int argc, char const *argv[])
 
   // 设置手指参数，最大角度，最小角度，最大速度，最大电流，保护电流, 各个手指参数范围详见文档
   auto finger_id = STARK_FINGER_ID_MIDDLE;
-  // modbus_set_finger_min_position(handle, slave_id, finger_id, 0);
-  // auto min_position = modbus_get_finger_min_position(handle, slave_id, finger_id);
+  // stark_set_finger_min_position(handle, slave_id, finger_id, 0);
+  // auto min_position = stark_get_finger_min_position(handle, slave_id, finger_id);
   // printf("Finger[%hhu] min position: %hu\n", finger_id, min_position);
 
-  // modbus_set_finger_max_position(handle, slave_id, finger_id, 80);
-  // auto max_position = modbus_get_finger_max_position(handle, slave_id, finger_id);
+  // stark_set_finger_max_position(handle, slave_id, finger_id, 80);
+  // auto max_position = stark_get_finger_max_position(handle, slave_id, finger_id);
   // printf("Finger[%hhu] max position: %hu\n", finger_id, max_position);
 
-  // modbus_set_finger_max_speed(handle, slave_id, finger_id, 130);
-  // auto max_speed = modbus_get_finger_max_speed(handle, slave_id, finger_id);
+  // stark_set_finger_max_speed(handle, slave_id, finger_id, 130);
+  // auto max_speed = stark_get_finger_max_speed(handle, slave_id, finger_id);
   // printf("Finger[%hhu] max speed: %hu\n", finger_id, max_speed);
 
-  // modbus_set_finger_max_current(handle, slave_id, finger_id, 1000);
-  // auto max_current = modbus_get_finger_max_current(handle, slave_id, finger_id);
+  // stark_set_finger_max_current(handle, slave_id, finger_id, 1000);
+  // auto max_current = stark_get_finger_max_current(handle, slave_id, finger_id);
   // printf("Finger[%hhu] max current: %hu\n", finger_id, max_current);
 
-  // modbus_set_finger_protected_current(handle, slave_id, finger_id, 500);
-  // auto protected_current = modbus_get_finger_protected_current(handle, slave_id, finger_id);
+  // stark_set_finger_protected_current(handle, slave_id, finger_id, 500);
+  // auto protected_current = stark_get_finger_protected_current(handle, slave_id, finger_id);
   // printf("Finger[%hhu] protect current: %hu\n", finger_id, protected_current);
 
   useconds_t delay = 1000 * 1000; // 1000ms
 
   // 单个手指，按速度/电流/PWM控制
   // 其中符号表示方向，正表示为握紧方向，负表示为松开方向
-  modbus_set_finger_speed(handle, slave_id, finger_id, 500);    // -1000 ~ 1000
+  stark_set_finger_speed(handle, slave_id, finger_id, 500);    // -1000 ~ 1000
   usleep(delay);                                                // 等待手指到达目标位置
-  modbus_set_finger_current(handle, slave_id, finger_id, -300); // -1000 ~ 1000
+  stark_set_finger_current(handle, slave_id, finger_id, -300); // -1000 ~ 1000
   usleep(delay);                                                // 等待手指到达目标位置
-  modbus_set_finger_pwm(handle, slave_id, finger_id, 700);      // -1000 ~ 1000
+  stark_set_finger_pwm(handle, slave_id, finger_id, 700);      // -1000 ~ 1000
   usleep(delay);                                                // 等待手指到达目标位置
 
   // 多个手指，按速度/电流/PWM控制
   // 其中符号表示方向，正表示为握紧方向，负表示为松开方向
   int16_t speeds[6] = {500, 500, 500, 500, 500, 500};
-  modbus_set_finger_speeds(handle, slave_id, speeds, 6);
+  stark_set_finger_speeds(handle, slave_id, speeds, 6);
   usleep(delay); // 等待手指到达目标位置
   int16_t currents[6] = {-300, -300, -300, -300, -300, -300};
-  modbus_set_finger_currents(handle, slave_id, currents, 6);
+  stark_set_finger_currents(handle, slave_id, currents, 6);
   usleep(delay); // 等待手指到达目标位置
   int16_t pwms[6] = {700, 700, 700, 700, 700, 700};
-  modbus_set_finger_pwms(handle, slave_id, pwms, 6);
+  stark_set_finger_pwms(handle, slave_id, pwms, 6);
   usleep(delay); // 等待手指到达目标位置
 
   // 单个手指，按位置+速度/期望时间，无符号
-  modbus_set_finger_position_with_millis(handle, slave_id, finger_id, 1000, 1000);
+  stark_set_finger_position_with_millis(handle, slave_id, finger_id, 1000, 1000);
   usleep(delay); // 等待手指到达目标位置
-  modbus_set_finger_position_with_speed(handle, slave_id, finger_id, 1, 50);
+  stark_set_finger_position_with_speed(handle, slave_id, finger_id, 1, 50);
   usleep(delay); // 等待手指到达目标位置
 
   // 多个手指，按位置+速度/期望时间，无符号
   uint16_t positions[6] = {500, 500, 500, 500, 500, 500};
   uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
-  modbus_set_finger_positions_and_durations(handle, slave_id, positions, durations, 6);
+  stark_set_finger_positions_and_durations(handle, slave_id, positions, durations, 6);
   usleep(delay); // 等待手指到达目标位置
 
   uint16_t positions2[6] = {100, 100, 100, 100, 100, 100};
   uint16_t speeds2[6] = {500, 500, 500, 500, 500, 500};
-  modbus_set_finger_positions_and_speeds(handle, slave_id, positions2, speeds2, 6);
+  stark_set_finger_positions_and_speeds(handle, slave_id, positions2, speeds2, 6);
   usleep(delay); // 等待手指到达目标位置
 
-  auto finger_status = modbus_get_motor_status(handle, slave_id);
+  auto finger_status = stark_get_motor_status(handle, slave_id);
   if (finger_status != NULL)
   {
     printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
@@ -130,14 +130,14 @@ int main(int argc, char const *argv[])
 // 获取设备序列号、固件版本等信息
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
-  auto info = modbus_get_device_info(handle, slave_id);
+  auto info = stark_get_device_info(handle, slave_id);
   if (info != NULL)
   {
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
     if (info->hardware_type == STARK_HARDWARE_TYPE_REVO1_TOUCH || info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
     {
       // 启用全部触觉传感器
-      modbus_enable_touch_sensor(handle, slave_id, 0x1F);
+      stark_enable_touch_sensor(handle, slave_id, 0x1F);
       usleep(1000 * 1000); // wait for touch sensor to be ready
     }
     free_device_info(info);
@@ -148,21 +148,21 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
   // RS485串口波特率
-  auto baudrate = modbus_get_rs485_baudrate(handle, slave_id);
+  auto baudrate = stark_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
 
   // CANFD波特率
-  auto canfd_baudrate = modbus_get_canfd_baudrate(handle, slave_id);
+  auto canfd_baudrate = stark_get_canfd_baudrate(handle, slave_id);
   printf("Slave[%hhu] CANFD Baudrate: %d\n", slave_id, canfd_baudrate);
 
-  auto led_info = modbus_get_led_info(handle, slave_id);
+  auto led_info = stark_get_led_info(handle, slave_id);
   if (led_info != NULL)
   {
     printf("Slave[%hhu] LED Info: %hhu, %hhu\n", slave_id, led_info->mode, led_info->color);
     free_led_info(led_info);
   }
 
-  auto button_event = modbus_get_button_event(handle, slave_id);
+  auto button_event = stark_get_button_event(handle, slave_id);
   if (button_event != NULL)
   {
     printf("Slave[%hhu] Button Event: %d, %d, %hhu\n", slave_id, button_event->timestamp, button_event->button_id, button_event->press_state);
@@ -173,7 +173,7 @@ void get_info(DeviceHandler *handle, uint8_t slave_id)
 // 获取触觉传感器状态，三维力数值、接近值，以及传感器状态
 void get_touch_status(DeviceHandler *handle, uint8_t slave_id)
 {
-  auto status = modbus_get_touch_status(handle, slave_id);
+  auto status = stark_get_touch_status(handle, slave_id);
   if (status != NULL)
   {
     auto data = status->items[1];
@@ -192,7 +192,7 @@ void get_touch_status(DeviceHandler *handle, uint8_t slave_id)
     printf("Error: Failed to get touch sensor status\n");
   }
 
-  auto raw_data = modbus_get_touch_raw_data(handle, slave_id);
+  auto raw_data = stark_get_touch_raw_data(handle, slave_id);
   if (raw_data != NULL)
   {
     printf("Slave[%hhu] Touch Raw Data:\n", slave_id);
