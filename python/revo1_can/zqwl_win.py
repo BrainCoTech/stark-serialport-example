@@ -156,7 +156,8 @@ def revo1_can_receive_message(quick_retries: int = 2, dely_retries: int = 0):
 
     # 快速接收尝试
     for attempt in range(quick_retries):
-        time.sleep(0.0001)  # 极短延时
+        # time.sleep(0.0001)  # 极短延时
+        time.sleep(0.02)  # 极短延时
         message = _zcan_read_messages(attempt)
         if message is not None:
             return message
