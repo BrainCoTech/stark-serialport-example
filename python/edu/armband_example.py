@@ -15,6 +15,10 @@ def print_afe_data():
     fetch_num = 100  # 每次获取的数据点数, 超过缓冲区长度时，返回缓冲区中的所有数据
     clean = True  # 是否清空缓冲区
     afe_buff = libedu.get_afe_buffer(fetch_num, clean)
+    # imu_buff = libedu.get_imu_buffer(fetch_num, clean) # IMU RawData
+    # imu_calibration_buff = libedu.get_imu_calibration_buff(fetch_num, clean) # IMU校准数据
+    # mag_buff = libedu.get_mag_buffer(fetch_num, clean) # 磁力计数据
+    # mag_calibration_buff = libedu.get_mag_calibration_buff(fetch_num, clean) # 磁力计校准数据
     logger.warning(f"Got afe buffer len={len(afe_buff)}")
     if len(afe_buff) == 0:
         return
@@ -54,8 +58,10 @@ async def setup_device():
 
     # 设置EMG采样率，这里设置为250Hz, 0xFF表示所有通道都开启
     await device.set_afe_config(libedu.AfeSampleRate.AFE_SR_250, 0xFF)
-    await device.set_imu_config(libedu.ImuSampleRate.IMU_SR_100)
-    await device.set_mag_config(libedu.MagSampleRate.MAG_SR_20)
+    # await device.set_imu_config(libedu.ImuSampleRate.IMU_SR_100, libedu.UploadDataType.RAW_DATA) # 返回IMU原始数据
+    # await device.set_mag_config(libedu.MagSampleRate.MAG_SR_20, libedu.UploadDataType.RAW_DATA) # 返回磁力计原始数据
+    await device.set_imu_config(libedu.ImuSampleRate.IMU_SR_100, libedu.UploadDataType.CALIBRATED_DATA) # 返回IMU校准数据
+    await device.set_mag_config(libedu.MagSampleRate.MAG_SR_20, libedu.UploadDataType.CALIBRATED_DATA) # 返回磁力计校准数据
     return True
 
 def init_cfg():
