@@ -124,10 +124,10 @@ def print_flex_timestamps(data: List[FlexData]) -> None:
         return
 
     # 如果数据太多，只打印前3个和后3个
-    for item in data[:50]:
+    for item in data[:3]:
         logger.info(f"{item}")
     logger.info("...")
-    for item in data[-50:]:
+    for item in data[-3:]:
         logger.info(f"{item}")
 
 
