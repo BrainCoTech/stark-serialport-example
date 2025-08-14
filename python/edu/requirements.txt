@@ -1,4 +1,4 @@
-bc-stark-sdk==0.8.4
+bc-edu-sdk==0.1.0
 asyncio>=3.4.3
 colorlog>=6.9.0
 numpy #>=1.26.4

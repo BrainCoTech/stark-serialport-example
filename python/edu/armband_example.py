@@ -1,90 +1,181 @@
+"""
+Armband EMG Data Collection Example
+
+这个示例展示了如何使用 bc-edu-sdk 连接臂环设备并收集 EMG（肌电信号）数据，
+同时也支持 IMU 和磁力计数据的收集。
+"""
+
 import asyncio
 import numpy as np
+
 from model import EMGData
 from edu_utils import *
-from utils import print_afe_timestamps
 
-fs = 250  # 采样频率
-num_channels = 8  # 通道数
-afe_buffer_length = 1250  # 默认缓冲区长度, 1250个数据点
-afe_values = np.zeros((num_channels, afe_buffer_length))  # 8通道的afe数据
+# 配置常量
+SAMPLING_FREQUENCY = 250  # EMG采样频率 (Hz)
+NUM_CHANNELS = 8  # EMG通道数
+AFE_BUFFER_LENGTH = 1250  # AFE数据缓冲区长度（数据点数）
+FETCH_DATA_COUNT = 100  # 每次获取的数据点数
+BAUDRATE = 115200  # 串口波特率
+DATA_PRINT_INTERVAL = 0.5  # 数据打印间隔（秒）
+
+# 全局变量
+afe_values = np.zeros((NUM_CHANNELS, AFE_BUFFER_LENGTH))  # EMG传感器数据缓冲区
 
 
-def print_afe_data():
-    # 获取afe数据
-    fetch_num = 100  # 每次获取的数据点数, 超过缓冲区长度时，返回缓冲区中的所有数据
-    clean = True  # 是否清空缓冲区
-    afe_buff = libedu.get_afe_buffer(fetch_num, clean)
-    # imu_buff = libedu.get_imu_buffer(fetch_num, clean) # IMU RawData
-    # imu_calibration_buff = libedu.get_imu_calibration_buff(fetch_num, clean) # IMU校准数据
-    # mag_buff = libedu.get_mag_buffer(fetch_num, clean) # 磁力计数据
-    # mag_calibration_buff = libedu.get_mag_calibration_buff(fetch_num, clean) # 磁力计校准数据
-    logger.warning(f"Got afe buffer len={len(afe_buff)}")
+def update_afe_buffer(afe_data: EMGData) -> None:
+    """
+    更新AFE（EMG）传感器数据缓冲区
+
+    Args:
+        afe_data: EMG数据对象
+    """
+    # 将通道数据分割为各个通道
+    channel_values = np.array_split(afe_data.channel_values, NUM_CHANNELS)
+
+    # 更新每个通道的数据缓冲区
+    for i in range(NUM_CHANNELS):
+        afe_values[i] = np.roll(afe_values[i], -1)  # 数据向左滚动
+        afe_values[i, -1] = channel_values[i][0]  # 添加最新数据
+
+
+def print_afe_data() -> None:
+    """
+    获取并打印AFE（EMG）传感器数据
+
+    支持获取以下类型的数据：
+    - AFE数据（EMG肌电信号）
+    - IMU原始数据或校准数据
+    - 磁力计原始数据或校准数据
+    """
+    # 获取AFE数据
+    afe_buff = libedu.get_afe_buffer(FETCH_DATA_COUNT, clean=True)
+
+    # 可选：获取其他传感器数据
+    # imu_buff = libedu.get_imu_buffer(FETCH_DATA_COUNT, clean=True)  # IMU原始数据
+    # imu_calibration_buff = libedu.get_imu_calibration_buff(FETCH_DATA_COUNT, clean=True)  # IMU校准数据
+    # mag_buff = libedu.get_mag_buffer(FETCH_DATA_COUNT, clean=True)  # 磁力计数据
+    # mag_calibration_buff = libedu.get_mag_calibration_buff(FETCH_DATA_COUNT, clean=True)  # 磁力计校准数据
+
+    logger.info(f"Got AFE buffer len={len(afe_buff)}")
+
     if len(afe_buff) == 0:
         return
 
-    values = []
+    emg_data_list = []
     for row in afe_buff:
         afe_data = EMGData.from_data(row)
-        values.append(afe_data)
+        emg_data_list.append(afe_data)
+        update_afe_buffer(afe_data)
 
-        channel_values = np.array_split(afe_data.channel_values, num_channels)
-        # 更新每个通道的数据
-        for i in range(num_channels):
-            afe_values[i] = np.roll(afe_values[i], -1)  # 数据向左滚动，腾出最后一个位置
-            afe_values[i, -1] = channel_values[i][0]  # 更新最新的数据值
-
-    # 打印数据
-    print_afe_timestamps(logger, values)
+    # 打印数据时间戳信息
+    print_afe_timestamps(logger, emg_data_list)
 
 
-async def setup_device():
-    # port_name = "COM8"  # 修改为实际端口号
-    port_name = "/dev/tty.usbmodem212201"  # 修改为实际端口号
-    # port_name = get_armband_port_name()
-    # if port_name is None:
-    #     return False
+async def setup_armband_device() -> bool:
+    """
+    设置并连接臂环设备
 
-    # 波特率为115200
-    device = libedu.PyEduDevice(port_name, 115200)
+    Returns:
+        bool: 连接成功返回True，失败返回False
+    """
+    # 获取臂环设备端口（可以自动检测或手动指定）
+    libedu.get_usb_available_ports()
+    port_name = get_armband_port_name()
 
-    # 启动数据流
-    await device.start_data_stream(lib.MessageParser("ARMBAND-device", libstark.MsgType.Edu))
-    logger.info("Listening for messages...")
+    # 如果自动检测失败，可以手动指定端口
+    if port_name is None:
+        # port_name = "COM8"  # Windows
+        # port_name = "/dev/tty.usbmodem212201"  # macOS/Linux
+        logger.warning(f"Using manual port: {port_name}")
 
-    # 获取Dongle与臂环的配对状态, 成功配对时，会返回Paired
-    await device.get_dongle_pair_stat()
-    await asyncio.sleep(0.5)
+    if port_name is None:
+        logger.error("No armband device found")
+        return False
 
-    # 设置EMG采样率，这里设置为250Hz, 0xFF表示所有通道都开启
+    try:
+        device = libedu.PyEduDevice(port_name, BAUDRATE)
+
+        # 启动数据流
+        await device.start_data_stream(libedu.MessageParser("ARMBAND-device", libedu.MsgType.Edu))
+        logger.info("Listening for messages...")
+
+        # 获取Dongle与臂环的配对状态，成功配对时会返回Paired
+        await device.get_dongle_pair_stat()
+        await asyncio.sleep(0.5)
+
+        # 配置传感器参数
+        await configure_sensors(device)
+
+        logger.info("Armband device setup completed successfully")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to setup armband device: {e}")
+        return False
+
+
+async def configure_sensors(device) -> None:
+    """
+    配置传感器采样率和数据类型
+
+    Args:
+        device: 设备对象
+    """
+    # 设置EMG采样率为250Hz，0xFF表示所有通道都开启
     await device.set_afe_config(libedu.AfeSampleRate.AFE_SR_250, 0xFF)
-    # await device.set_imu_config(libedu.ImuSampleRate.IMU_SR_100, libedu.UploadDataType.RAW_DATA) # 返回IMU原始数据
-    # await device.set_mag_config(libedu.MagSampleRate.MAG_SR_20, libedu.UploadDataType.RAW_DATA) # 返回磁力计原始数据
-    await device.set_imu_config(libedu.ImuSampleRate.IMU_SR_100, libedu.UploadDataType.CALIBRATED_DATA) # 返回IMU校准数据
-    await device.set_mag_config(libedu.MagSampleRate.MAG_SR_20, libedu.UploadDataType.CALIBRATED_DATA) # 返回磁力计校准数据
-    return True
 
-def init_cfg():
-    logger.info("Init cfg")
-    libedu.edu_set_afe_buffer_cfg(afe_buffer_length)
+    # 配置IMU传感器 - 返回校准数据
+    await device.set_imu_config(
+        libedu.ImuSampleRate.IMU_SR_100,
+        libedu.UploadDataType.CALIBRATED_DATA
+    )
+
+    # 配置磁力计传感器 - 返回校准数据
+    await device.set_mag_config(
+        libedu.MagSampleRate.MAG_SR_20,
+        libedu.UploadDataType.CALIBRATED_DATA
+    )
+
+    # 可选：返回原始数据
+    # await device.set_imu_config(libedu.ImuSampleRate.IMU_SR_100, libedu.UploadDataType.RAW_DATA)
+    # await device.set_mag_config(libedu.MagSampleRate.MAG_SR_20, libedu.UploadDataType.RAW_DATA)
+
+    logger.info("Sensor configuration completed")
+
+
+def initialize_configuration() -> None:
+    """
+    初始化SDK配置
+    """
+    logger.info("Initializing AFE configuration...")
+    libedu.set_afe_buffer_cfg(AFE_BUFFER_LENGTH)
     libedu.set_msg_resp_callback(
-        lambda device_id, msg: logger.warning(f"Message response: {msg}")
+        lambda device_id, msg: logger.warning(f"Message response from {device_id}: {msg}")
     )
 
 
-async def main():
-    init_cfg()
-    if await setup_device():
-        logger.info("Device setup completed successfully")
+async def main() -> None:
+    """
+    主函数：初始化配置，连接设备，开始EMG数据收集循环
+    """
+    initialize_configuration()
+
+    if await setup_armband_device():
+        logger.info("Armband device setup completed successfully")
     else:
-        logger.error("Failed to setup device")
+        logger.error("Failed to setup armband device")
         return
 
-    logger.info("Starting to print AFE data...")
-    # 每500ms打印一次数据
-    while True:
-        print_afe_data()
-        await asyncio.sleep(0.5)  # 500ms
+    logger.info("Starting EMG data collection loop...")
+    try:
+        while True:
+            print_afe_data()
+            await asyncio.sleep(DATA_PRINT_INTERVAL)
+    except KeyboardInterrupt:
+        logger.info("EMG data collection stopped by user")
+    except Exception as e:
+        logger.error(f"Error in data collection loop: {e}")
 
 
 if __name__ == "__main__":
