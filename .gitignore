@@ -4,7 +4,6 @@ VERSION
 *.exe
 dist.zip
 ota_bin
-win/
 test.py
 example_Modbus_RTU.py
 example_Modbus_test.py
