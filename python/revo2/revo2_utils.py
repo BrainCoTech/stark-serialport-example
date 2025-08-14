@@ -19,7 +19,9 @@ logger = getLogger(logging.INFO)
 from bc_stark_sdk import main_mod
 
 libstark = main_mod.stark
-
+libstark.init_config(
+    libstark.StarkHardwareType.Revo1Basic, libstark.StarkProtocolType.Modbus
+)
 
 async def open_modbus_revo2():
     """

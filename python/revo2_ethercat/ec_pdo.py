@@ -3,8 +3,8 @@ import math
 import time
 from ec_utils import logger, libstark, setup_shutdown_event
 
-TRAJ_LEN = 200  # 轨迹点数
-CTRL_INTERVAL = 0.05  # 控制间隔 50ms (20Hz)
+TRAJ_LEN = 10  # 轨迹点数
+CTRL_INTERVAL = 0.1 # 控制间隔 100ms
 TEST_DURATION = 400.0  # 测试时长 400秒
 
 # 1. 初始化余弦轨迹
