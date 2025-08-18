@@ -9,7 +9,7 @@ class EMGData:
         self.channel_values = channel_values  # 8 * 20, 8个通道，每个通道20个数据点
 
     def __repr__(self):
-        return f"EMG seq_num={self.seq_num}, lead_off_bits={self.lead_off_bits}, len={len(self.channel_values)}"
+        return f"EMG seq_num={self.seq_num}, lead_off_bits={self.lead_off_bits}, len={len(self.channel_values)}, values={self.channel_values[:3]}"
 
 class FlexData:
     @staticmethod

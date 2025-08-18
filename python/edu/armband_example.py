@@ -8,6 +8,7 @@ Armband EMG Data Collection Example
 import asyncio
 import numpy as np
 
+from filters_sdk import *
 from model import EMGData
 from edu_utils import *
 
@@ -21,6 +22,11 @@ DATA_PRINT_INTERVAL = 0.5  # 数据打印间隔（秒）
 
 # 全局变量
 afe_values = np.zeros((NUM_CHANNELS, AFE_BUFFER_LENGTH))  # EMG传感器数据缓冲区
+
+# 滤波器
+env_noise_50 = [BWBandStopFilter(4, sample_rate=SAMPLING_FREQUENCY, fl=49, fu=51) for _ in range(NUM_CHANNELS)]
+env_noise_60 = [BWBandStopFilter(4, sample_rate=SAMPLING_FREQUENCY, fl=59, fu=61) for _ in range(NUM_CHANNELS)]
+hp = [BWHighPassFilter(4, sample_rate=SAMPLING_FREQUENCY, f=10) for _ in range(NUM_CHANNELS)]
 
 
 def update_afe_buffer(afe_data: EMGData) -> None:
@@ -36,7 +42,12 @@ def update_afe_buffer(afe_data: EMGData) -> None:
     # 更新每个通道的数据缓冲区
     for i in range(NUM_CHANNELS):
         afe_values[i] = np.roll(afe_values[i], -1)  # 数据向左滚动
-        afe_values[i, -1] = channel_values[i][0]  # 添加最新数据
+        raw_value = channel_values[i][0]
+        filter_value = env_noise_50[i].filter(raw_value)
+        filter_value = env_noise_60[i].filter(filter_value)
+        filter_value = hp[i].filter(filter_value)
+        logger.info(f"Channel {i} raw value: {raw_value}, filtered value: {filter_value}")
+        afe_values[i, -1] = filter_value  # 添加最新数据
 
 
 def print_afe_data() -> None:
