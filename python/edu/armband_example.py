@@ -43,11 +43,13 @@ def update_afe_buffer(afe_data: EMGData) -> None:
     for i in range(NUM_CHANNELS):
         afe_values[i] = np.roll(afe_values[i], -1)  # 数据向左滚动
         raw_value = channel_values[i][0]
-        filter_value = env_noise_50[i].filter(raw_value)
-        filter_value = env_noise_60[i].filter(filter_value)
-        filter_value = hp[i].filter(filter_value)
-        logger.info(f"Channel {i} raw value: {raw_value}, filtered value: {filter_value}")
-        afe_values[i, -1] = filter_value  # 添加最新数据
+        afe_values[i, -1] = raw_value  # 添加最新数据
+
+        # filter_value = env_noise_50[i].filter(raw_value)
+        # filter_value = env_noise_60[i].filter(filter_value)
+        # filter_value = hp[i].filter(filter_value)
+        # logger.info(f"Channel {i} raw value: {raw_value}, filtered value: {filter_value}")
+        # afe_values[i, -1] = filter_value  # 添加最新数据
 
 
 def print_afe_data() -> None:

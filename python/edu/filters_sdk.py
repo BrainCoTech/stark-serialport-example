@@ -157,9 +157,6 @@ class BWLowPassFilter:
     w2 = None
 
     def __init__(self, order, sample_rate, f):
-        self.order = order
-        self.sample_rate = sample_rate
-        self.f = f
 
         if order % 2 != 0:
             print("ERROR:Order has to be multiple of 2")
@@ -174,19 +171,7 @@ class BWLowPassFilter:
         self.w1 = [0.0] * self.n
         self.w2 = [0.0] * self.n
 
-        self.reset_sample_rate(sample_rate)
-
-    def filter(self, x):
-        for i in range(self.n):
-            self.w0[i] = self.d1[i] * self.w1[i] + self.d2[i] * self.w2[i] + x
-            x = self.A[i] * (self.w0[i] + 2.0 * self.w1[i] + self.w2[i])
-            self.w2[i] = self.w1[i]
-            self.w1[i] = self.w0[i]
-        return x
-
-    def reset_sample_rate(self, sample_rate):
-        self.sample_rate = sample_rate
-        a = math.tan(math.pi * self.f / sample_rate)
+        a = math.tan(math.pi * f / sample_rate)
         a2 = a * a
 
         for i in range(self.n):
@@ -196,22 +181,27 @@ class BWLowPassFilter:
             self.d1[i] = 2.0 * (1.0 - a2) / s
             self.d2[i] = -(a2 - 2.0 * a * r + 1.0) / s
 
+    def filter(self, x):
+        for i in range(self.n):
+            self.w0[i] = self.d1[i] * self.w1[i] + self.d2[i] * self.w2[i] + x
+            x = self.A[i] * (self.w0[i] + 2.0 * self.w1[i] + self.w2[i])
+            self.w2[i] = self.w1[i]
+            self.w1[i] = self.w0[i]
+        return x
+
 
 class BWHighPassFilter:
     n = 0
     A = None
     d1 = None
     d2 = None
+
     w0 = None
     w1 = None
     w2 = None
 
     def __init__(self, order, sample_rate, f):
-        self.order = order
-        self.sample_rate = sample_rate
-        self.f = f
 
-        # 阶数必须是2的倍数
         if order % 2 != 0:
             print("ERROR:Order has to be multiple of 2")
             return
@@ -225,24 +215,21 @@ class BWHighPassFilter:
         self.w1 = [0.0] * self.n
         self.w2 = [0.0] * self.n
 
-        self.reset_sample_rate(sample_rate)
-
-    def filter(self, x):
-        for i in range(self.n):
-            self.w0[i] = self.d1[i] * self.w1[i] + self.d2[i] * self.w2[i] + x
-            x = self.A[i] * (self.w0[i] - 2.0 * self.w1[i] + self.w2[i])
-            self.w2[i] = self.w1[i]
-            self.w1[i] = self.w0[i]
-        return x
-
-    def reset_sample_rate(self, sample_rate):
-        self.sample_rate = sample_rate
-        a = math.tan(math.pi * self.f / sample_rate)
+        a = math.tan(math.pi * f / sample_rate)
         a2 = a * a
 
         for i in range(self.n):
             r = math.sin(math.pi * (2.0 * i + 1.0) / (4.0 * self.n))
             s = a2 + 2.0 * a * r + 1.0
             self.A[i] = 1.0 / s
-            self.d1[i] = 2.0 * (a2 - 1.0) / s
+            self.d1[i] = 2.0 * (1.0 - a2) / s
             self.d2[i] = -(a2 - 2.0 * a * r + 1.0) / s
+
+    def filter(self, x):
+
+        for i in range(self.n):
+            self.w0[i] = self.d1[i] * self.w1[i] + self.d2[i] * self.w2[i] + x
+            x = self.A[i] * (self.w0[i] - 2.0 * self.w1[i] + self.w2[i])
+            self.w2[i] = self.w1[i]
+            self.w1[i] = self.w0[i]
+        return x
