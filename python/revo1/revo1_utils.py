@@ -7,15 +7,22 @@ logger = getLogger(logging.INFO)
 
 from bc_stark_sdk import main_mod
 
-libstark = main_mod.stark
+libstark = main_mod
 
 
-async def open_modbus_revo1():
+async def open_modbus_revo1(port_name = None, quick = True):
     """
     自动检测并打开Revo1灵巧手的Modbus连接
 
     Revo1灵巧手支持Modbus和Protobuf两种通讯协议，推荐使用Modbus协议。
     该函数会自动检测端口、波特率和设备ID，并建立连接。
+
+    Args:
+        port_name (str, optional): 串口名称，默认为None表示自动检测第一个可用端口。
+            多串口时可指定具体端口，例如: "/dev/ttyUSB0"
+        quick (bool, optional): 快速检测模式配置，默认为True。
+            True: 仅检测常用波特率和默认设备ID，速度快
+            False: 检测设备ID范围1~247，覆盖更全面但耗时较长
 
     Returns:
         tuple: (client, slave_id) - Modbus客户端实例和设备从站ID
@@ -28,15 +35,6 @@ async def open_modbus_revo1():
         # 或者手动指定参数:
         # client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
     """
-    # 指定端口名称，None表示自动检测第一个可用端口
-    # 多设备连接时可指定具体端口，例如: "/dev/ttyUSB0"
-    port_name = None
-
-    # 快速检测模式配置
-    # True: 仅检测常用波特率和默认设备ID，速度快
-    # False: 检测设备ID范围1~247，覆盖更全面但耗时较长
-    quick = True
-
     # 自动检测第一个可用从机
     (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo1(
         port_name, quick

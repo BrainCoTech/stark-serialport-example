@@ -7,7 +7,7 @@ DIST_DIR="${SCRIPT_DIR}/dist"
 VERSION_FILE="${SCRIPT_DIR}/VERSION"
 
 # Configuration
-LIB_VERSION="v0.8.2"
+LIB_VERSION="v0.8.6"
 BASE_URL="https://app.brainco.cn/universal/bc-stark-sdk/libs/${LIB_VERSION}"
 
 # Colorful echo functions
@@ -88,15 +88,27 @@ unzip -o -q "${SCRIPT_DIR}/${ZIP_NAME}" -d "$SCRIPT_DIR" || {
 rm -f "${SCRIPT_DIR}/${ZIP_NAME}"
 rm -rf "${SCRIPT_DIR}/__MACOSX"
 rm -rf "${DIST_DIR}/__MACOSX"
-find dist/include -type f ! -name stark-sdk.h -exec rm -f {} \;
+find dist/include \
+  -type f \
+  ! -name 'stark-sdk.h' \
+  ! -path 'dist/include/zlgcan/*' \
+  -exec rm -f {} \;
 
-# copy the files to ros2_stark_ws
-if [ "$OS_TYPE" == "Linux" ]; then
+case "$OS_TYPE" in
+"Linux")
+  # copy the files to ros2_stark_ws
   mkdir -p ros2_stark_ws/src/ros2_stark_controller/include/ros2_stark_controller
   mkdir -p ros2_stark_ws/src/ros2_stark_controller/lib
   cp -vf dist/include/stark-sdk.h ros2_stark_ws/src/ros2_stark_controller/include/ros2_stark_controller/
   cp -vf dist/shared/linux/*.so ros2_stark_ws/src/ros2_stark_controller/lib/
-fi
+  ;;
+"Darwin")
+  ;;
+"msys" | "MINGW"*)
+  mkdir -p python/dll
+  cp -vf dist/shared/win/*.dll python/dll/
+  ;;
+esac
 
 # Create VERSION file
 echo_y "[bc-stark-sdk] Creating version file..."

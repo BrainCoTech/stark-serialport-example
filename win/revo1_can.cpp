@@ -41,19 +41,15 @@ int main(int argc, char const *argv[])
     return -1;
   }
 
-  // 初始化 SDK 并设置回调
-  init_cfg(STARK_HARDWARE_TYPE_REVO1_BASIC, STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_DEBUG, 1024);
-  setup_can_callbacks();
+  setup_can_callbacks(); // 设置读写回调
 
-  // 打开设备并获取信息
-  uint8_t master_id = 1;
-  uint8_t slave_id = 1;
-  auto handle = can_open(baudrate, master_id, slave_id);
+  init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_DEBUG);
+  auto handle = create_device_handler();
   get_device_info(handle, slave_id);
 
   uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
-  int delay = 1000; // 1000ms
+  int delay = 1000;                                         // 1000ms
   // stark_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);
   // Sleep(delay);
   stark_set_finger_positions(handle, slave_id, positions_fist, 6);
@@ -128,77 +124,77 @@ bool start_can_channel(int channel_index)
 void setup_can_callbacks()
 {
   // CAN 发送回调
-  set_can_send_callback([](uint8_t slave_id,
-                           uint32_t can_id,
-                           const uint8_t *data,
-                           uintptr_t data_len) -> int
+  set_can_tx_callback([](uint8_t slave_id,
+                         uint32_t can_id,
+                         const uint8_t *data,
+                         uintptr_t data_len) -> int
+                      {
+                        printf("CAN Send: Slave ID: %d, CAN ID: 0x%X, Data Length: %zu\n", slave_id, can_id, data_len);
+                        printf("Data: ");
+                        for (uintptr_t i = 0; i < data_len; ++i)
                         {
-                          printf("CAN Send: Slave ID: %d, CAN ID: 0x%X, Data Length: %zu\n", slave_id, can_id, data_len);
-                          printf("Data: ");
-                          for (uintptr_t i = 0; i < data_len; ++i)
-                          {
-                            printf("%02x ", data[i]);
-                          }
-                          printf("\n");
+                          printf("%02x ", data[i]);
+                        }
+                        printf("\n");
 
-                          // 构造 CAN 发送数据结构体
-                          ZCAN_Transmit_Data can_data;
-                          memset(&can_data, 0, sizeof(can_data));
+                        // 构造 CAN 发送数据结构体
+                        ZCAN_Transmit_Data can_data;
+                        memset(&can_data, 0, sizeof(can_data));
 
-                          // 设置 CAN ID，标准帧 eff=0，扩展帧 eff=1
-                          // rtr=0:数据帧，rtr=1:远程帧；err=0:正常帧，err=1:错误帧
-                          can_data.frame.can_id = MAKE_CAN_ID(can_id, 0, 0, 0); // 标准帧
-                          can_data.frame.can_dlc = data_len;
-                          can_data.transmit_type = 0; // 正常发送
+                        // 设置 CAN ID，标准帧 eff=0，扩展帧 eff=1
+                        // rtr=0:数据帧，rtr=1:远程帧；err=0:正常帧，err=1:错误帧
+                        can_data.frame.can_id = MAKE_CAN_ID(can_id, 0, 0, 0); // 标准帧
+                        can_data.frame.can_dlc = data_len;
+                        can_data.transmit_type = 0; // 正常发送
 
-                          // 填充数据
-                          for (uintptr_t i = 0; i < data_len && i < 8; ++i)
-                          {
-                            can_data.frame.data[i] = data[i];
-                          }
+                        // 填充数据
+                        for (uintptr_t i = 0; i < data_len && i < 8; ++i)
+                        {
+                          can_data.frame.data[i] = data[i];
+                        }
 
-                          // 发送 CAN 帧
-                          int result = ZCAN_Transmit(channel_handle_, &can_data, 1);
-                          return result == 1 ? 0 : -1; // 0 表示成功
-                        });
+                        // 发送 CAN 帧
+                        int result = ZCAN_Transmit(channel_handle_, &can_data, 1);
+                        return result == 1 ? 0 : -1; // 0 表示成功
+                      });
 
   // CAN 读取回调
-  set_can_read_callback([](uint8_t slave_id,
-                           uint32_t *can_id_out,
-                           uint8_t *data_out,
-                           uintptr_t *data_len_out) -> int
+  set_can_rx_callback([](uint8_t slave_id,
+                         uint32_t *can_id_out,
+                         uint8_t *data_out,
+                         uintptr_t *data_len_out) -> int
+                      {
+                        printf("CAN Read: Slave ID: %d\n", slave_id);
+
+                        // 读取数据
+                        ZCAN_Receive_Data can_data[1000];
+                        int len = ZCAN_GetReceiveNum(channel_handle_, TYPE_CAN);
+                        len = ZCAN_Receive(channel_handle_, can_data, 1000, 50);
+                        if (len < 1)
                         {
-                          printf("CAN Read: Slave ID: %d\n", slave_id);
+                          return -1;
+                        }
 
-                          // 读取数据
-                          ZCAN_Receive_Data can_data[1000];
-                          int len = ZCAN_GetReceiveNum(channel_handle_, TYPE_CAN);
-                          len = ZCAN_Receive(channel_handle_, can_data, 1000, 50);
-                          if (len < 1)
+                        // 拼接多个 CAN 帧，多个 CAN 帧的 CAN ID 应该一致
+                        *can_id_out = can_data[0].frame.can_id;
+
+                        int idx = 0;
+                        int total_dlc = 0;
+
+                        for (int i = 0; i < len; i++)
+                        {
+                          ZCAN_Receive_Data recv_data = can_data[i];
+                          int can_dlc = recv_data.frame.can_dlc;
+                          for (int j = 0; j < can_dlc; j++)
                           {
-                            return -1;
+                            data_out[idx++] = recv_data.frame.data[j];
                           }
+                          total_dlc += can_dlc;
+                        }
 
-                          // 拼接多个 CAN 帧，多个 CAN 帧的 CAN ID 应该一致
-                          *can_id_out = can_data[0].frame.can_id;
-
-                          int idx = 0;
-                          int total_dlc = 0;
-
-                          for (int i = 0; i < len; i++)
-                          {
-                            ZCAN_Receive_Data recv_data = can_data[i];
-                            int can_dlc = recv_data.frame.can_dlc;
-                            for (int j = 0; j < can_dlc; j++)
-                            {
-                              data_out[idx++] = recv_data.frame.data[j];
-                            }
-                            total_dlc += can_dlc;
-                          }
-
-                          *data_len_out = total_dlc;
-                          return 0; // 成功返回 0
-                        });
+                        *data_len_out = total_dlc;
+                        return 0; // 成功返回 0
+                      });
 }
 
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)

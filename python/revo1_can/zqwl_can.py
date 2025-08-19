@@ -11,18 +11,13 @@ class Revo1CanController:
     def __init__(self, master_id: int = 1, slave_id: int = 1):
         self.master_id = master_id
         self.slave_id = slave_id
-        self.client = None  # type: ignore
+        self.client = libstark.PyDeviceContext()
 
     async def initialize(
         self, device_type: int = 42, channel: int = 0, baudrate: int = 1000000
     ):
         """初始化CAN连接"""
         try:
-            # 建立设备连接
-            self.client: libstark.PyDeviceContext = await libstark.can_open(
-                libstark.BaudrateCAN.Baud5Mbps, self.master_id, self.slave_id
-            )
-
             # 初始化ZCAN设备
             zcan_open(device_type=device_type, channel=channel, baudrate=baudrate)
 

@@ -5,7 +5,6 @@ StarkNode::StarkNode() : Node("stark_node"), handle_(nullptr) {
   port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB1");
   baudrate_ = this->declare_parameter<int>("baudrate", 115200);
   slave_id_ = this->declare_parameter<int>("slave_id", 1);
-  fw_type_ = static_cast<StarkHardwareType>(this->declare_parameter<int>("firmware_type", 2));
   protocol_type_ = static_cast<StarkProtocolType>(this->declare_parameter<int>("protocol_type", 1));
   log_level_ = static_cast<LogLevel>(this->declare_parameter<int>("log_level", 2));
   RCLCPP_INFO(this->get_logger(),
@@ -13,7 +12,7 @@ StarkNode::StarkNode() : Node("stark_node"), handle_(nullptr) {
               port_.c_str(), baudrate_, slave_id_, fw_type_, protocol_type_, log_level_);
 
   // Initialize Stark SDK
-  init_cfg(fw_type_, protocol_type_, log_level_, 1024);
+  init_cfg(protocol_type_, log_level_);
   // list_available_ports();
   if (!initialize_modbus()) {
     RCLCPP_ERROR(this->get_logger(), "Failed to initialize Modbus");
@@ -75,6 +74,7 @@ bool StarkNode::initialize_modbus() {
     sku_type_ = info->sku_type;
     sn_ = std::string(info->serial_number);
     fw_version_ = std::string(info->firmware_version);
+    fw_type_ = static_cast<StarkHardwareType>(info->firmware_type);
     RCLCPP_INFO(this->get_logger(), "Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id_,
                 (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
     free_device_info(info);

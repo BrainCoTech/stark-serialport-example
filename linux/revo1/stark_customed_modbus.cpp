@@ -5,6 +5,7 @@
 #include <execinfo.h>
 
 // 声明函数
+void setup_modbus_callbacks();
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 
 void handler(int sig)
@@ -26,7 +27,23 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_HARDWARE_TYPE_REVO1_TOUCH, STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO, 1024);
+  setup_modbus_callbacks(); // 设置读写回调
+
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
+  auto handle = create_device_handler();
+  uint8_t slave_id = 1;
+  get_device_info(handle, slave_id);
+  return 0;
+}
+
+void get_device_info(DeviceHandler *handle, uint8_t slave_id)
+{
+  uint32_t baudrate = stark_get_rs485_baudrate(handle, slave_id);
+  printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
+}
+
+void setup_modbus_callbacks()
+{
 
   set_modbus_read_holding_callback([](uint8_t slave_id, uint16_t register_address, uint16_t *data_out, uint16_t count) -> int
                                    {
@@ -58,15 +75,4 @@ int main(int argc, char const *argv[])
                               }
                               return 0; // Return 0 to indicate success
                             });
-  auto handle = modbus_init();
-
-  uint8_t slave_id = 1;
-  get_device_info(handle, slave_id);
-  return 0;
-}
-
-void get_device_info(DeviceHandler *handle, uint8_t slave_id)
-{
-  uint32_t baudrate = stark_get_rs485_baudrate(handle, slave_id);
-  printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
 }

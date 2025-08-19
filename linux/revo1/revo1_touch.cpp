@@ -29,6 +29,12 @@ int main(int argc, char const *argv[])
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
   auto cfg = auto_detect_modbus_revo1(NULL, true);
+  if (cfg == NULL)
+  {
+    fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
+    return -1;
+  }
+  
   auto handle = modbus_open(cfg->port_name, cfg->baudrate);
   uint8_t slave_id = cfg->slave_id;
   get_device_info(handle, slave_id);

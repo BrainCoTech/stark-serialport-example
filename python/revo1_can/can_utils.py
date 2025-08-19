@@ -11,10 +11,8 @@ logger = getLogger(logging.INFO)
 
 from bc_stark_sdk import main_mod
 
-libstark = main_mod.stark
-libstark.init_config(
-    libstark.StarkHardwareType.Revo1Basic, libstark.StarkProtocolType.Can
-)
+libstark = main_mod
+libstark.init_config(libstark.StarkProtocolType.Can)
 
 
 def setup_shutdown_event(logger=None):

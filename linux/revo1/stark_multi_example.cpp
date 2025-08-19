@@ -13,6 +13,12 @@ int main(int argc, char const *argv[])
   // auto port_name = "/dev/ttyUSB0"; // Linux
 
   auto cfg = auto_detect_modbus_revo1(NULL, true);
+  if (cfg == NULL)
+  {
+    fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
+    return -1;
+  }
+  
   auto handle = modbus_open(cfg->port_name, cfg->baudrate);
   if (cfg != NULL) free_device_config(cfg);
 
