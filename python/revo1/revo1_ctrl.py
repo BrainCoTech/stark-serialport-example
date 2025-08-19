@@ -77,7 +77,7 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     # 检测灵巧手的波特率和设备ID，初始化client
-    (client, slave_id) = await open_modbus_revo1()
+    (client, slave_id) = await open_modbus_revo1(port_name="/dev/ttyUSB0")
 
     # 执行初始化动作
     # 设置单个手指控制：小指闭合到100%位置
@@ -86,6 +86,9 @@ async def main():
     # 执行握手动作：设置所有手指到预定位置
     # 位置参数：[拇指60%, 拇指辅助60%, 食指100%, 中指100%, 无名指100%, 小指100%]
     await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])
+
+    # 执行OPEN动作：设置所有手指到最小位置（0%）
+    await client.set_finger_positions(slave_id, [0] * 6)
 
     # 创建并启动电机状态监控任务
     asyncio.create_task(get_motor_status_periodically(client, slave_id))

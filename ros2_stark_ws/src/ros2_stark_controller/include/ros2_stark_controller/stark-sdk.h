@@ -217,34 +217,34 @@ using ModbusOperationCallback = int32_t(*)(const uint8_t *values,
                                            ModbusOperationResultCallback callback,
                                            void *user_data);
 
-/// Modbus接收回调
+/// 自定义Modbus接收回调
 /// 返回值为 0 成功，其他值失败
-using ModbusReadCallback = int32_t(*)(uint8_t slave_id,
-                                      uint16_t register_address,
-                                      uint16_t *data_out,
-                                      uint16_t count);
+using ModbusRxCallback = int32_t(*)(uint8_t slave_id,
+                                    uint16_t register_address,
+                                    uint16_t *data_out,
+                                    uint16_t count);
 
-/// Modbus发送回调
+/// 自定义Modbus发送回调
 /// 返回值为 0 成功，其他值失败
-using ModbusSendCallback = int32_t(*)(uint8_t slave_id,
-                                      uint16_t register_address,
-                                      const uint16_t *data,
-                                      uint16_t count);
+using ModbusTxCallback = int32_t(*)(uint8_t slave_id,
+                                    uint16_t register_address,
+                                    const uint16_t *data,
+                                    uint16_t count);
 
-/// CAN FD接收回调
+/// CAN/CANFD 接收回调
 /// 注意data_out 长度最多为 64
 /// 返回值为 0 成功，其他值失败
-using CanFdReadCallback = int32_t(*)(uint8_t slave_id,
-                                     uint32_t *can_id_out,
-                                     uint8_t *data_out,
-                                     uintptr_t *data_len_out);
+using CanRxCallback = int32_t(*)(uint8_t slave_id,
+                                 uint32_t *can_id_out,
+                                 uint8_t *data_out,
+                                 uintptr_t *data_len_out);
 
-/// CAN FD发送回调
+/// CAN/CANFD 发送回调
 /// 返回值为 0 成功，其他值失败
-using CanFdSendCallback = int32_t(*)(uint8_t slave_id,
-                                     uint32_t can_id,
-                                     const uint8_t *data,
-                                     uintptr_t data_len);
+using CanTxCallback = int32_t(*)(uint8_t slave_id,
+                                 uint32_t can_id,
+                                 const uint8_t *data,
+                                 uintptr_t data_len);
 
 /// DFU状态回调, state: DfuState
 using DfuStateCallback = void(*)(uint8_t slave_id, uint8_t state);
@@ -255,14 +255,9 @@ using DfuProgressCallback = void(*)(uint8_t slave_id, float progress);
 extern "C" {
 
 /// 初始化选项
-/// fw_type: 固件类型，默认为 Revo1Touch
 /// protocol_type: 协议类型，默认为 Modbus
 /// log_level: 日志级别，默认为 Info
-/// max_response_bytes: 自定义Modbus回调读取寄存器内容时，单次响应的最大字节数，默认为 1024
-void init_cfg(StarkHardwareType fw_type,
-              StarkProtocolType protocol_type,
-              LogLevel log_level,
-              uintptr_t max_response_bytes);
+void init_cfg(StarkProtocolType protocol_type, LogLevel log_level);
 
 /// 列出可用的串口
 /// 用于列出所有的 Stark 串口
@@ -271,7 +266,7 @@ void list_available_ports();
 /// 自动检测串口设备，先检测二代灵巧手，再检测一代灵巧手
 /// port: 串口名称，传入 None 时自动检测
 /// quick: 是否快速检测，默认为 true, 默认只检测集中特定波特率及设备ID
-/// 返回 DeviceConfig 结构体指针，包含协议类型、端口名称、波特率和设备ID，，关闭时需要调用 free_device_config 释放内存
+/// 返回 DeviceConfig 结构体指针，包含协议类型、端口名称、波特率和设备ID，关闭时需要调用 free_device_config 释放内存
 /// 如果失败，返回 NULL
 /// 注意：quick传false时，此函数会自动检测设备ID范围1~247，可能需要较长时间
 DeviceConfig *auto_detect_device(const char *port,
@@ -303,43 +298,33 @@ DeviceConfig *auto_detect_modbus_revo2(const char *port,
 DeviceHandler *modbus_open(const char *port,
                            uint32_t baudrate);
 
-/// 自定义Modbus读写，与set_modbus_read_callback/set_modbus_write_callback结合使用
-DeviceHandler *modbus_init();
-
 /// 关闭串口
 void modbus_close(DeviceHandler *handle);
 
-/// 打开CAN 设备
-/// baudrate: 波特率，1M
-/// 仅支持一代手
-/// master_id: 主设备ID，范围为1~255
-/// 返回 DeviceHandler 结构体指针，关闭时需要调用 can_close 释放内存
-/// 如果失败，返回 NULL
-DeviceHandler *can_open(uint32_t baudrate, uint8_t master_id, uint8_t slave_id);
+/// @brief  创建一个新的 DeviceHandler 结构体
+/// @return  返回指向新创建的 DeviceHandler 结构体的指针，关闭时需要调用 free_device_handler 释放内存
+DeviceHandler *create_device_handler();
 
-/// 打开CAN FD设备
-/// baudrate: 波特率，1M, 2M, 4M, 5M
-/// 仅支持二代手
-/// master_id: 主设备ID，范围为1~255
-/// slave_id: 设备ID，范围为1~247, 二代手左手默认ID为0x7e，右手默认ID为0x7f
-/// 返回 DeviceHandler 结构体指针，关闭时需要调用 can_close 释放内存
-/// 如果失败，返回 NULL
-DeviceHandler *canfd_open(uint32_t baudrate, uint8_t master_id, uint8_t slave_id);
+/// @brief  释放 DeviceHandler 结构体
+/// @param handle  DeviceHandler 结构体指针
+void free_device_handler(DeviceHandler *handle);
 
-/// 关闭CAN/CANFD设备
-void can_close(DeviceHandler *handle);
+/// @brief  创建一个新的 DeviceHandler 结构体
+/// @param master_id: 主设备ID，范围为1~255
+/// @return  返回指向新创建的 DeviceHandler 结构体的指针，关闭时需要调用 free_device_handler 释放内存
+DeviceHandler *canfd_init(uint8_t master_id);
 
-/// 打开EtherCAT设备
+/// 打开EtherCAT igH Master主站
 DeviceHandler *ethercat_open_master(uint32_t master_pos);
 
-/// 关闭EtherCAT设备
+/// 关闭EtherCAT igH Master主站
 void ethercat_close(DeviceHandler *handle);
 
 /// 设置EtherCAT设备的SDO
 void ethercat_setup_sdo(DeviceHandler *handle, uint16_t slave_pos);
 
 /// 开始EtherCAT循环, PDO通信控制&读取
-/// dc_assign_activate: DC分配激活标志，0x0000表示不分配，0x0100 = 只使用 SYNC0, 0x0300 = 使用 SYNC0 + SYNC1
+/// dc_assign_activate: DC标志，0x0000表示不设置DC
 /// sync0_cycle_time: SYNC0周期时间，单位为纳秒, loop循环周期和 SYNC0周期时间一致
 /// sync0_shift_time: SYNC0相位偏移时间，单位为纳秒
 /// sync1_cycle_time: SYNC1周期时间，单位为纳秒
@@ -808,19 +793,19 @@ void free_string(const char *s);
 void set_modbus_operation_callback(ModbusOperationCallback cb);
 
 /// 设置Modbus读回调, input_registers
-void set_modbus_read_input_callback(ModbusReadCallback cb);
+void set_modbus_read_input_callback(ModbusRxCallback cb);
 
 /// 设置Modbus读回调, holding_registers
-void set_modbus_read_holding_callback(ModbusReadCallback cb);
+void set_modbus_read_holding_callback(ModbusRxCallback cb);
 
 /// 设置Modbus写回调
-void set_modbus_write_callback(ModbusSendCallback cb);
+void set_modbus_write_callback(ModbusTxCallback cb);
 
-/// 设置CAN FD读回调
-void set_can_read_callback(CanFdReadCallback cb);
+/// 设置CAN/CANFD 读回调
+void set_can_rx_callback(CanRxCallback cb);
 
-/// 设置CAN FD写回调
-void set_can_send_callback(CanFdSendCallback cb);
+/// 设置CAN/CANFD 写回调
+void set_can_tx_callback(CanTxCallback cb);
 
 /// 设置DFU状态回调
 void set_dfu_state_callback(DfuStateCallback cb);

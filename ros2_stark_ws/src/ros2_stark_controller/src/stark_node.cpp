@@ -74,7 +74,7 @@ bool StarkNode::initialize_modbus() {
     sku_type_ = info->sku_type;
     sn_ = std::string(info->serial_number);
     fw_version_ = std::string(info->firmware_version);
-    fw_type_ = static_cast<StarkHardwareType>(info->firmware_type);
+    fw_type_ = static_cast<StarkHardwareType>(info->hardware_type);
     RCLCPP_INFO(this->get_logger(), "Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id_,
                 (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
     free_device_info(info);
