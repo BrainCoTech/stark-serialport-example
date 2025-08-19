@@ -2,7 +2,7 @@
 import asyncio
 import sys
 import pathlib
-from ec_utils import logger, libstark, libethercat
+from ec_utils import logger, libstark
 
 current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent.parent
@@ -33,8 +33,8 @@ async def main():
     )
 
     logger.info("DFU started, waiting for completion...") # 等待DFU完成, 大约25秒
-    # await ctx.ec_start_dfu(slave_pos, libethercat.EtherCATFoeType.Wrist, ota_bin_path)
-    await ctx.ec_start_dfu(slave_pos, libethercat.EtherCATFoeType.Control, ota_bin_path)
+    # await ctx.ec_start_dfu(slave_pos, libstark.EtherCATFoeType.Wrist, ota_bin_path)
+    await ctx.ec_start_dfu(slave_pos, libstark.EtherCATFoeType.Control, ota_bin_path)
 
     sys.exit(0)
 

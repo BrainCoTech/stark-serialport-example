@@ -41,12 +41,12 @@ source install/setup.bash # bash
 source install/setup.zsh # zsh
 
 # FIXME: 需要设置动态链接库路径, 更新为实际路径
-export LD_LIBRARY_PATH=/home/nvidia/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=~/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
 
 # 使用 launch 文件运行Stak节点
 ros2 launch ros2_stark_controller stark_launch.py 
 # or
-ros2 run ros2_stark_controller stark_node --ros-args --params-file /home/nvidia/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml
+ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml
 
 # 检查节点
 ros2 node list

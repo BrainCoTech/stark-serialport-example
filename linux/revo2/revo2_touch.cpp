@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include "stark-sdk.h"
 #include <unistd.h>
@@ -28,11 +29,21 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  auto cfg = auto_detect_modbus_revo2(NULL, true);
-  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // 初始化配置
+  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true);
+  if (cfg == NULL)
+  {
+    fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
+    return -1;
+  }
   uint8_t slave_id = cfg->slave_id;
+  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  free_device_config(cfg);
+
+  // uint8_t slave_id = 0x7f;
+  // auto handle = modbus_open("/dev/ttyUSB0", 460800);
+
   get_device_info(handle, slave_id);
-  if (cfg != NULL) free_device_config(cfg);
 
   // 设置手指控制参数的单位模式
   stark_set_finger_unit_mode(handle, slave_id, FINGER_UNIT_MODE_NORMALIZED);
@@ -87,13 +98,13 @@ int main(int argc, char const *argv[])
 
   // 多个手指，按速度/电流/PWM控制
   // 其中符号表示方向，正表示为握紧方向，负表示为松开方向
-  int16_t speeds[6] = {500, 500, 500, 500, 500, 500};
+  int16_t speeds[6] = {100, 100, 500, 500, 500, 500};
   stark_set_finger_speeds(handle, slave_id, speeds, 6);
   usleep(delay); // 等待手指到达目标位置
   int16_t currents[6] = {-300, -300, -300, -300, -300, -300};
   stark_set_finger_currents(handle, slave_id, currents, 6);
   usleep(delay); // 等待手指到达目标位置
-  int16_t pwms[6] = {700, 700, 700, 700, 700, 700};
+  int16_t pwms[6] = {100, 100, 700, 700, 700, 700};
   stark_set_finger_pwms(handle, slave_id, pwms, 6);
   usleep(delay); // 等待手指到达目标位置
 
@@ -104,12 +115,12 @@ int main(int argc, char const *argv[])
   usleep(delay); // 等待手指到达目标位置
 
   // 多个手指，按位置+速度/期望时间，无符号
-  uint16_t positions[6] = {500, 500, 500, 500, 500, 500};
+  uint16_t positions[6] = {300, 300, 500, 500, 500, 500};
   uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
   stark_set_finger_positions_and_durations(handle, slave_id, positions, durations, 6);
   usleep(delay); // 等待手指到达目标位置
 
-  uint16_t positions2[6] = {100, 100, 100, 100, 100, 100};
+  uint16_t positions2[6] = {30, 30, 100, 100, 100, 100};
   uint16_t speeds2[6] = {500, 500, 500, 500, 500, 500};
   stark_set_finger_positions_and_speeds(handle, slave_id, positions2, speeds2, 6);
   usleep(delay); // 等待手指到达目标位置

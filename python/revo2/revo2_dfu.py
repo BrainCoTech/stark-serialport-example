@@ -88,7 +88,7 @@ async def main():
     main_loop = asyncio.get_running_loop()
 
     # 自动检测设备协议和连接参数
-    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device()
+    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device("/dev/ttyUSB0")
     logger.info(
         f"Detected protocol: {protocol}, port: {port_name}, baudrate: {baudrate}, slave_id: {slave_id}"
     )

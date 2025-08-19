@@ -42,12 +42,10 @@ void start_pdo_thread()
 int main(int argc, char const *argv[])
 {
   printf("main\n");
-  signal(SIGSEGV,
-         handler);          // Install our handler for SIGSEGV (segmentation fault)
+  signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_HARDWARE_TYPE_REVO2_BASIC, STARK_PROTOCOL_TYPE_ETHER_CAT,
-           LOG_LEVEL_INFO, 1024);
+  init_cfg(STARK_PROTOCOL_TYPE_ETHER_CAT, LOG_LEVEL_INFO);
   printf("ethercat_open_master...\n");
   device_handle = ethercat_open_master(0);
   ethercat_setup_sdo(device_handle, slave_pos);
@@ -70,7 +68,7 @@ int main(int argc, char const *argv[])
 
   // 设置手指控制参数的单位模式
   stark_set_finger_unit_mode(device_handle, slave_pos,
-                              FINGER_UNIT_MODE_NORMALIZED);
+                             FINGER_UNIT_MODE_NORMALIZED);
   // stark_set_finger_unit_mode(device_handle, slave_pos,
   // FINGER_UNIT_MODE_PHYSICAL);
 
@@ -128,14 +126,14 @@ void *pdo_thread(void *arg)
   // 其中符号表示方向，正表示为握紧方向，负表示为松开方向
   auto finger_id = STARK_FINGER_ID_RING;
   stark_set_finger_speed(device_handle, slave_pos, finger_id,
-                          500); // -1000 ~ 1000
-  usleep(delay);                // 等待手指到达目标位置
+                         500); // -1000 ~ 1000
+  usleep(delay);               // 等待手指到达目标位置
   stark_set_finger_current(device_handle, slave_pos, finger_id,
-                            -300); // -1000 ~ 1000
-  usleep(delay);                   // 等待手指到达目标位置
+                           -300); // -1000 ~ 1000
+  usleep(delay);                  // 等待手指到达目标位置
   stark_set_finger_pwm(device_handle, slave_pos, finger_id,
-                        700); // -1000 ~ 1000
-  usleep(delay);              // 等待手指到达目标位置
+                       700); // -1000 ~ 1000
+  usleep(delay);             // 等待手指到达目标位置
 
   // 多个手指，按速度/电流/PWM控制
   // 其中符号表示方向，正表示为握紧方向，负表示为松开方向
@@ -151,23 +149,23 @@ void *pdo_thread(void *arg)
 
   // 单个手指，按位置+速度/期望时间，无符号
   stark_set_finger_position_with_millis(device_handle, slave_pos, finger_id,
-                                         1000, 1000);
+                                        1000, 1000);
   usleep(delay); // 等待手指到达目标位置
   stark_set_finger_position_with_speed(device_handle, slave_pos, finger_id, 1,
-                                        50);
+                                       50);
   usleep(delay); // 等待手指到达目标位置
 
   // 多个手指，按位置+速度/期望时间，无符号
   uint16_t positions[6] = {500, 500, 500, 500, 500, 500};
   uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
   stark_set_finger_positions_and_durations(device_handle, slave_pos, positions,
-                                            durations, 6);
+                                           durations, 6);
   usleep(delay); // 等待手指到达目标位置
 
   uint16_t positions2[6] = {100, 100, 100, 100, 100, 100};
   uint16_t speeds2[6] = {500, 500, 500, 500, 500, 500};
   stark_set_finger_positions_and_speeds(device_handle, slave_pos, positions2,
-                                         speeds2, 6);
+                                        speeds2, 6);
   usleep(delay); // 等待手指到达目标位置
 
   while (1)

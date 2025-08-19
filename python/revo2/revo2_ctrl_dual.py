@@ -14,7 +14,7 @@ async def main():
     """
     主函数：初始化设备连接和控制任务
     """
-    libstark.init_config(libstark.StarkHardwareType.Revo1Basic, libstark.StarkProtocolType.Modbus)
+    libstark.init_config(libstark.StarkProtocolType.Modbus)
     shutdown_event = setup_shutdown_event(logger)
 
     # 打开两个设备

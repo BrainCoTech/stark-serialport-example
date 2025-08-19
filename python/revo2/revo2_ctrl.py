@@ -24,7 +24,7 @@ async def main():
     主函数：初始化Revo2灵巧手并执行控制示例
     """
     # 连接Revo2设备
-    (client, slave_id) = await open_modbus_revo2()
+    (client, slave_id) = await open_modbus_revo2(port_name="/dev/ttyUSB0")
 
     # 配置控制模式
     await configure_control_mode(client, slave_id)

@@ -3,7 +3,7 @@ import sys
 import time
 from revo2_utils import libstark, logger
 
-SLAVE_ID = 0x7F  # 左手
+SLAVE_ID = 0x7e  # 左手
 PORT = "/dev/ttyUSB1"  # Adjust this to your actual port
 # PORT = "/dev/tty.usbserial-21120"
 BAUDRATE = libstark.Baudrate.Baud460800

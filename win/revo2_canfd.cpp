@@ -42,14 +42,14 @@ int main(int argc, char const *argv[])
     return -1;
   }
 
-  // 初始化 SDK 并设置回调
-  init_cfg(STARK_HARDWARE_TYPE_REVO2_BASIC, STARK_PROTOCOL_TYPE_CAN_FD, LOG_LEVEL_DEBUG, 1024);
-  setup_canfd_callbacks();
+  setup_canfd_callbacks(); // 设置读写回调
 
   // 打开设备并获取信息
-  uint8_t master_id = 1;
+  const uint8_t MASTER_ID = 1;
+  init_cfg(STARK_PROTOCOL_TYPE_CAN_FD, LOG_LEVEL_DEBUG);
+  auto handle = canfd_init(MASTER_ID);
+
   uint8_t slave_id = 0x7f; // 0x7f为右手
-  auto handle = canfd_open(dbit_baudrate, master_id, slave_id);
   get_device_info(handle, slave_id);
 
   int delay = 1000; // 1000ms
@@ -126,75 +126,75 @@ bool start_canfd_channel(int channel_index)
 void setup_canfd_callbacks()
 {
   // CANFD 发送回调
-  set_can_send_callback([](uint8_t slave_id,
-                           uint32_t can_id,
-                           const uint8_t *data,
-                           uintptr_t data_len) -> int
+  set_can_tx_callback([](uint8_t slave_id,
+                         uint32_t can_id,
+                         const uint8_t *data,
+                         uintptr_t data_len) -> int
+                      {
+                        printf("CANFD Send: Slave ID: %d, CAN ID: 0x%X, Data Length: %zu\n", slave_id, can_id, data_len);
+                        printf("Data: ");
+                        for (uintptr_t i = 0; i < data_len; ++i)
                         {
-                          printf("CANFD Send: Slave ID: %d, CAN ID: 0x%X, Data Length: %zu\n", slave_id, can_id, data_len);
-                          printf("Data: ");
-                          for (uintptr_t i = 0; i < data_len; ++i)
-                          {
-                            printf("%02x ", data[i]);
-                          }
-                          printf("\n");
+                          printf("%02x ", data[i]);
+                        }
+                        printf("\n");
 
-                          // 构造 CANFD 发送数据结构体
-                          ZCAN_TransmitFD_Data canfd_data;
-                          memset(&canfd_data, 0, sizeof(canfd_data));
+                        // 构造 CANFD 发送数据结构体
+                        ZCAN_TransmitFD_Data canfd_data;
+                        memset(&canfd_data, 0, sizeof(canfd_data));
 
-                          // 设置 CAN ID，扩展帧 eff=1，数据帧 rtr=0，正常帧 err=0
-                          canfd_data.frame.can_id = MAKE_CAN_ID(can_id, 1, 0, 0); // 扩展帧
-                          canfd_data.frame.len = data_len;
-                          canfd_data.transmit_type = 0;        // 正常发送
-                          canfd_data.frame.flags |= CANFD_BRS; // 使用 BRS 位速率切换
+                        // 设置 CAN ID，扩展帧 eff=1，数据帧 rtr=0，正常帧 err=0
+                        canfd_data.frame.can_id = MAKE_CAN_ID(can_id, 1, 0, 0); // 扩展帧
+                        canfd_data.frame.len = data_len;
+                        canfd_data.transmit_type = 0;        // 正常发送
+                        canfd_data.frame.flags |= CANFD_BRS; // 使用 BRS 位速率切换
 
-                          // 填充数据
-                          for (uintptr_t i = 0; i < data_len && i < 64; ++i)
-                          { // CANFD 最大 64 字节
-                            canfd_data.frame.data[i] = data[i];
-                          }
+                        // 填充数据, 数据长度最大64
+                        for (uintptr_t i = 0; i < data_len && i < 64; ++i)
+                        { 
+                          canfd_data.frame.data[i] = data[i];
+                        }
 
-                          // 发送 CANFD 帧
-                          int result = ZCAN_TransmitFD(channel_handle_, &canfd_data, 1);
-                          return result == 1 ? 0 : -1; // 0 表示成功
-                        });
+                        // 发送 CANFD 帧
+                        int result = ZCAN_TransmitFD(channel_handle_, &canfd_data, 1);
+                        return result == 1 ? 0 : -1; // 0 表示成功
+                      });
 
   // CANFD 读取回调
-  set_can_read_callback([](uint8_t slave_id,
-                           uint32_t *can_id_out,
-                           uint8_t *data_out,
-                           uintptr_t *data_len_out) -> int
+  set_can_rx_callback([](uint8_t slave_id,
+                         uint32_t *can_id_out,
+                         uint8_t *data_out,
+                         uintptr_t *data_len_out) -> int
+                      {
+                        printf("CANFD Read: Slave ID: %d\n", slave_id);
+                        // Sleep(1000); // 等待数据准备
+
+                        // 读取 CANFD 数据
+                        ZCAN_ReceiveFD_Data canfd_data[1000];
+                        int len = ZCAN_GetReceiveNum(channel_handle_, TYPE_CANFD);
+                        printf("ZCAN_GetReceiveNum, len: %d\n", len);
+                        len = ZCAN_ReceiveFD(channel_handle_, canfd_data, 1000, 50);
+                        printf("ZCAN_ReceiveFD, len: %d\n", len);
+                        if (len < 1)
                         {
-                          printf("CANFD Read: Slave ID: %d\n", slave_id);
-                          // Sleep(1000); // 等待数据准备
+                          return -1;
+                        }
 
-                          // 读取 CANFD 数据
-                          ZCAN_ReceiveFD_Data canfd_data[1000];
-                          int len = ZCAN_GetReceiveNum(channel_handle_, TYPE_CANFD);
-                          printf("ZCAN_GetReceiveNum, len: %d\n", len);
-                          len = ZCAN_ReceiveFD(channel_handle_, canfd_data, 1000, 50);
-                          printf("ZCAN_ReceiveFD, len: %d\n", len);
-                          if (len < 1)
-                          {
-                            return -1;
-                          }
+                        // 处理第一帧数据
+                        ZCAN_ReceiveFD_Data recv_data = canfd_data[0];
+                        canfd_frame frame = recv_data.frame;
 
-                          // 处理第一帧数据
-                          ZCAN_ReceiveFD_Data recv_data = canfd_data[0];
-                          canfd_frame frame = recv_data.frame;
+                        *can_id_out = frame.can_id;
+                        *data_len_out = frame.len; // CANFD 使用 len 而不是 can_dlc
 
-                          *can_id_out = frame.can_id;
-                          *data_len_out = frame.len; // CANFD 使用 len 而不是 can_dlc
+                        // 填充数据, 数据长度最大64
+                        for (int i = 0; i < frame.len && i < 64; i++)
+                        {
+                          data_out[i] = frame.data[i];
+                        }
 
-                          // 拷贝数据
-                          for (int i = 0; i < frame.len && i < 64; i++)
-                          { // CANFD 最大 64 字节
-                            data_out[i] = frame.data[i];
-                          }
-
-                          return 0; // 成功返回 0
-                        });
+                        return 0; // 成功返回 0
+                      });
 }
 
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)

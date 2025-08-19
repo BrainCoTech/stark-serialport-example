@@ -164,9 +164,9 @@ async def main():
     # 根据需要选择以下配置操作之一：
 
     # 1. 修改从站ID（取消注释以使用）
-    # logger.debug("set_slave_id")
-    # await set_slave_id(client, slave_id, new_slave_id=0x7e)  # 修改slave_id为0x7e
-    # sys.exit(0) # 修改后会退出程序
+    logger.debug("set_slave_id")
+    await set_slave_id(client, slave_id, new_slave_id=0x7e)  # 修改slave_id为0x7e
+    sys.exit(0) # 修改后会退出程序
 
     # 2. 修改波特率（取消注释以使用）
     # logger.debug("set_baudrate")

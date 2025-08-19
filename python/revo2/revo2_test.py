@@ -159,8 +159,8 @@ async def run_concurrent_tasks(client, slave_id, finger_id, trajectory, traj_len
             # 发送位置控制指令，1ms表示以最快速度响应
             await client.set_finger_position_with_millis(slave_id, finger_id, target, 1)
 
-            elapsed = time.perf_counter() - task_start
-            logger.info(f"[{index}] Target: {target}, Control elapsed: {elapsed:.3f}s")
+            elapsed = (time.perf_counter() - task_start) * 1000
+            logger.info(f"[{index}] Target: {target}, Control elapsed: {elapsed:.1f}ms")
 
             # 保持控制频率
             if elapsed < CTRL_INTERVAL:

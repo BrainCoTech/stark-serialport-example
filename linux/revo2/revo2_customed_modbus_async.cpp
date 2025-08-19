@@ -21,11 +21,18 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  auto cfg = auto_detect_modbus_revo2(NULL, true);
-  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // 初始化配置
+  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true);
+  if (cfg == NULL)
+  {
+    fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
+    return -1;
+  }
   uint8_t slave_id = cfg->slave_id;
+  auto handle = modbus_open(cfg->port_name, cfg->baudrate);
+  free_device_config(cfg);
+  
   get_device_info(handle, slave_id);
-  if (cfg != NULL) free_device_config(cfg);
 
   while (true)
   {

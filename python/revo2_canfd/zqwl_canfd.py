@@ -211,7 +211,7 @@ async def main():
     # 连接Revo2设备
     master_id = 1
     slave_id = 0x7f # 左手默认ID为0x7e，右手默认ID为0x7f
-    client: libstark.PyDeviceContext = await libstark.canfd_open(libstark.BaudrateCAN.Baud5Mbps, master_id, slave_id)
+    client = libstark.PyDeviceContext.init_canfd(master_id)
 
     # ZCAN_USBCANFD_100U
     zcan_open(device_type=42, channel=0, baudrate=5000000)

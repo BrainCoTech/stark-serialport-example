@@ -8,9 +8,18 @@ void get_info(DeviceHandler *handle, uint8_t slave_id);
 
 int main(int argc, char const *argv[])
 {
-  auto cfg = auto_detect_modbus_revo2(NULL, true);
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // 初始化配置
+  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true);
+  if (cfg == NULL)
+  {
+    fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
+    return -1;
+  }
+  // uint8_t slave_id = cfg->slave_id;
   auto handle = modbus_open(cfg->port_name, cfg->baudrate);
-  if (cfg != NULL) free_device_config(cfg);
+  free_device_config(cfg);
+
+  // 方式1：单个串口连接多个设备（需要配置不同的设备ID）
   uint8_t slave_id_1 = 0x7e; // 左手默认ID为0x7e，右手默认ID为0x7f
   uint8_t slave_id_2 = 0x7f;
   get_device_info(handle, slave_id_1);
