@@ -640,7 +640,8 @@ def main(args=None):
     slave_id = 1  # 默认值
     if len(sys.argv) > 1:
         try:
-            slave_id = int(sys.argv[1])
+            # 自动检测数字格式（支持十进制、十六进制、八进制等）
+            slave_id = int(sys.argv[1], 0)
         except ValueError:
             print(f"Invalid slave_id: {sys.argv[1]}, using default: 1")
 

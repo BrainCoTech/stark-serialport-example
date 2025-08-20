@@ -1,0 +1,7 @@
+stark_node:
+  ros__parameters:
+    port: "/dev/ttyUSB0"
+    baudrate: 115200 # 一代灵巧手默认波特率
+    slave_id: 1 # 一代灵巧手默认ID为1
+    protocol_type: 2  # 1: Modbus RTU, 2: CAN 3: CANFD, 4: Ethernet
+    log_level: 2      # Info

@@ -15,6 +15,7 @@
 #include "ros2_stark_interfaces/msg/set_motor_multi.hpp"
 #include "ros2_stark_interfaces/msg/set_motor_single.hpp"
 #include "ros2_stark_controller/stark-sdk.h"
+#include "ros2_stark_controller/zcan.h"
 
 class StarkNode : public rclcpp::Node {
 public:
@@ -79,7 +80,7 @@ private:
         const std::shared_ptr<ros2_stark_interfaces::msg::SetMotorSingle> msg);
 
     // Helper functions
-    bool initialize_modbus();
+    bool initialize_stark_handler();
     // void publish_device_status();
     void publish_motor_status();
     void publish_touch_status();

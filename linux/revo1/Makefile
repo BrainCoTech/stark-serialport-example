@@ -14,15 +14,15 @@ CXX := g++
 CFLAGS := -g -Wall
 CXXFLAGS := -g -Wall -std=c++17  # 指定 C++17 标准
 
-COMMON_LIBS := -L/usr/local/lib -L$(LIB_DIR) -Wl,-rpath,/usr/local/lib:/usr/lib:$(LIB_DIR) -lbc_stark_sdk -lm -lpthread -lrt -ldl # -rdynamic
-# COMMON_LIBS := -L/usr/local/lib -L$(LIB_DIR) -Wl,-rpath,/usr/local/lib:/usr/lib:$(LIB_DIR) -lbc_stark_sdk -lm -lpthread -lrt -ldl -lusbcanfd # 添加 ZLG USB-CAN FD 库
+# COMMON_LIBS := -L/usr/local/lib -L$(LIB_DIR) -Wl,-rpath,/usr/local/lib:/usr/lib:$(LIB_DIR) -lbc_stark_sdk -lm -lpthread -lrt -ldl # -rdynamic
+COMMON_LIBS := -L/usr/local/lib -L$(LIB_DIR) -Wl,-rpath,/usr/local/lib:/usr/lib:$(LIB_DIR) -lbc_stark_sdk -lm -lpthread -lrt -ldl -lusbcanfd # 添加 ZLG USB-CAN FD 库
 # sudo ln -s libusbcanfd.so libusbcanfd.so.1.0.10
 
 # 获取所有 .c 和 .cpp 文件
 C_SOURCES := $(wildcard *.c)
-CPP_SOURCES := $(wildcard *.cpp)
-CPP_SOURCES := $(filter-out revo1_can.cpp, $(CPP_SOURCES))
-# CPP_SOURCES := revo1_can.cpp
+# CPP_SOURCES := $(wildcard *.cpp)
+# CPP_SOURCES := $(filter-out revo1_can.cpp, $(CPP_SOURCES))
+CPP_SOURCES := revo1_can.cpp
 BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 
 # 编译 C++ 文件

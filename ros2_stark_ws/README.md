@@ -33,20 +33,22 @@ colcon build --symlink-install
 # colcon build --packages-select ros2_stark_controller
 
 # pip install catkin_pkg numpy lark empy==3.3.4
-# export PYTHON_EXECUTABLE=/home/nvidia/miniconda3/envs/py310/bin/python
-# colcon build --symlink-install --cmake-args -DPYTHON_EXECUTABLE=/home/nvidia/miniconda3/envs/py310/bin/python
+# export PYTHON_EXECUTABLE=~/miniconda3/envs/py310/bin/python
+# colcon build --symlink-install --cmake-args -DPYTHON_EXECUTABLE=~/miniconda3/envs/py310/bin/python
 
 # 设置本地环境
 source install/setup.bash # bash
 source install/setup.zsh # zsh
 
 # FIXME: 需要设置动态链接库路径, 更新为实际路径
-export LD_LIBRARY_PATH=/home/nvidia/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=~/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
 
 # 使用 launch 文件运行Stak节点
 ros2 launch ros2_stark_controller stark_launch.py 
 # or
-ros2 run ros2_stark_controller stark_node --ros-args --params-file /home/nvidia/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_v2.yaml
+ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo2.yaml
+ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo2_canfd.yaml
+ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo1_can.yaml
 
 # 检查节点
 ros2 node list
@@ -56,8 +58,8 @@ ros2 topic list
 ros2 service list
 
 # 测试位置控制
-ros2 run ros2_stark_controller stark_node_client.py 1 # 使用从机ID (1)
-ros2 run ros2_stark_controller stark_node_client.py 2 # 使用从机ID (2)
+ros2 run ros2_stark_controller stark_node_client.py 0x7e # 二代手左手ID默认为0x7e
+ros2 run ros2_stark_controller stark_node_client.py 0x7f # 二代手右手ID默认为0x7f
 
 # ros2 topic echo /joint_states
 ros2 topic echo /motor_status

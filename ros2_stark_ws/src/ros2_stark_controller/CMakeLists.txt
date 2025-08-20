@@ -25,15 +25,13 @@ target_include_directories(stark_node PUBLIC
 # 开发阶段，放在项目内的 lib 目录
 target_link_libraries(stark_node
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so
 )
-
-# set(CMAKE_LINK_NEW_DTAGS OFF)  # 禁用 RUNPATH
 
 # 避免每次手动设置 LD_LIBRARY_PATH，可以在链接时嵌入 RPATH（运行时库搜索路径）
 set_target_properties(stark_node PROPERTIES
   BUILD_WITH_INSTALL_RPATH TRUE
   INSTALL_RPATH "$ORIGIN"
-  # INSTALL_RPATH_USE_LINK_PATH TRUE
 )
 
 ament_target_dependencies(stark_node
@@ -49,7 +47,9 @@ install(TARGETS stark_node
 install(DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}/)
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
+install(FILES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -1,10 +1,15 @@
 #include "ros2_stark_controller/stark_node.hpp"
 
+// ================== 函数声明 ==================
+int canfd_open();
+int can_2_0_open();
+
 StarkNode::StarkNode() : Node("stark_node"), handle_(nullptr) {
   // Declare and Get parameters
   port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB1");
   baudrate_ = this->declare_parameter<int>("baudrate", 115200);
   slave_id_ = this->declare_parameter<int>("slave_id", 1);
+  // fw_type_ = static_cast<StarkHardwareType>(this->declare_parameter<int>("firmware_type", 2));
   protocol_type_ = static_cast<StarkProtocolType>(this->declare_parameter<int>("protocol_type", 1));
   log_level_ = static_cast<LogLevel>(this->declare_parameter<int>("log_level", 2));
   RCLCPP_INFO(this->get_logger(),
@@ -14,9 +19,9 @@ StarkNode::StarkNode() : Node("stark_node"), handle_(nullptr) {
   // Initialize Stark SDK
   init_cfg(protocol_type_, log_level_);
   // list_available_ports();
-  if (!initialize_modbus()) {
-    RCLCPP_ERROR(this->get_logger(), "Failed to initialize Modbus");
-    throw std::runtime_error("Modbus initialization failed");
+  if (!initialize_stark_handler()) {
+    RCLCPP_ERROR(this->get_logger(), "Failed to initialize Stark handler");
+    throw std::runtime_error("Stark handler initialization failed");
   }
 
   if (fw_type_ == StarkHardwareType::STARK_HARDWARE_TYPE_REVO1_TOUCH || 
@@ -63,12 +68,31 @@ StarkNode::~StarkNode() {
   }
 }
 
-bool StarkNode::initialize_modbus() {
-  handle_ = modbus_open(port_.c_str(), baudrate_);
-  if (!handle_) {
-    RCLCPP_ERROR(this->get_logger(), "Failed to open Modbus on %s", port_.c_str());
+bool StarkNode::initialize_stark_handler() {
+  if (protocol_type_ == STARK_PROTOCOL_TYPE_MODBUS) {
+    handle_ = modbus_open(port_.c_str(), baudrate_);
+    if (!handle_) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to open Modbus on %s", port_.c_str());
+      return false;
+    }
+  } else if (protocol_type_ == STARK_PROTOCOL_TYPE_CAN) {
+    if (can_2_0_open() != 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to open CAN 2.0");
+      return false;
+    }
+    handle_ = create_device_handler();  
+  } else if (protocol_type_ == STARK_PROTOCOL_TYPE_CAN_FD) {
+    if (canfd_open() != 0) {
+      RCLCPP_ERROR(this->get_logger(), "Failed to open CANFD");
+      return false;
+    }
+    const uint8_t MASTER_ID = 1; // 主设备 ID
+    handle_ = canfd_init(MASTER_ID);
+  } else {
+    RCLCPP_ERROR(this->get_logger(), "Unsupported protocol type");
     return false;
   }
+  
   auto info = stark_get_device_info(handle_, slave_id_);
   if (info != NULL) {
     sku_type_ = info->sku_type;
@@ -366,5 +390,216 @@ int main(int argc, char **argv) {
   auto node = std::make_shared<StarkNode>();
   rclcpp::spin(node);
   rclcpp::shutdown();
+  return 0;
+}
+
+// ================== 常量定义 ==================
+#define ZCAN_TYPE_USBCANFD 33 // 设备类型
+#define ZCAN_CARD_INDEX 0     // 卡索引
+#define ZCAN_CHANNEL_INDEX 0  // 通道索引
+#define MAX_CHANNELS 2          // 最大通道数量
+#define RX_WAIT_TIME 100        // 接收等待时间
+#define RX_BUFF_SIZE 1000       // 接收缓冲区大小
+
+void setup_canfd_callbacks()
+{
+  // CANFD 发送回调
+  set_can_tx_callback([](uint8_t slave_id,
+                           uint32_t canfd_id,
+                           const uint8_t *data,
+                           uintptr_t data_len) -> int
+                        {
+                          // 构造 CANFD 发送数据结构体
+                          ZCAN_FD_MSG canfd_msg;
+                          memset(&canfd_msg, 0, sizeof(ZCAN_FD_MSG));
+
+                          canfd_msg.hdr.inf.txm = 0; // 0-正常发送
+                          canfd_msg.hdr.inf.fmt = 1; // 0-CAN, 1-CANFD
+                          canfd_msg.hdr.inf.sdf = 0; // 0-数据帧, CANFD只有数据帧!
+                          canfd_msg.hdr.inf.sef = 1; // 0-标准帧, 1-扩展帧
+
+                          canfd_msg.hdr.id = canfd_id;              // ID
+                          canfd_msg.hdr.chn = ZCAN_CHANNEL_INDEX; // 通道
+                          canfd_msg.hdr.len = data_len;             // 数据长度
+
+                          // 填充数据, 数据长度最大64
+                          for (uintptr_t i = 0; i < data_len && i < 64; ++i)
+                          {
+                            canfd_msg.dat[i] = data[i];
+                          }
+
+                          // 发送 CANFD 帧
+                          int result = VCI_TransmitFD(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX, &canfd_msg, 1);
+                          if (result != 1) {
+                            printf("Transmit result: %d\n", result);
+                          }
+                          return result == 1 ? 0 : -1; // 0 表示成功
+                        });
+
+  // CANFD 读取回调
+  set_can_rx_callback([](uint8_t slave_id,
+                           uint32_t *canfd_id_out,
+                           uint8_t *data_out,
+                           uintptr_t *data_len_out) -> int
+                        {
+                          // 读取数据
+                          ZCAN_FD_MSG canfd_data[RX_BUFF_SIZE];
+                          int len = VCI_ReceiveFD(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX, canfd_data, RX_BUFF_SIZE, RX_WAIT_TIME); // CANFD
+                          // printf("VCI_ReceiveFD, len: %d\n", len);
+                          if (len < 1) return -1;
+
+                          // 处理第一帧数据
+                          ZCAN_FD_MSG recv_data = canfd_data[0];
+                          int canfd_dlc = recv_data.hdr.len;
+                          *canfd_id_out = recv_data.hdr.id;
+                          *data_len_out = canfd_dlc;
+
+                          for (int j = 0; j < canfd_dlc && j < 64; j++)
+                          {
+                            data_out[j] = recv_data.dat[j];
+                          }
+                          return 0; // 成功返回 0
+                        });
+}
+
+void setup_can_2_0_callbacks()
+{
+  // CAN 发送回调
+  set_can_tx_callback([](uint8_t slave_id,
+                         uint32_t can_id,
+                         const uint8_t *data,
+                         uintptr_t data_len) -> int
+                      {
+                        // 构造 CAN 发送数据结构体
+                        ZCAN_20_MSG can_msg;
+                        memset(&can_msg, 0, sizeof(ZCAN_20_MSG));
+
+                        can_msg.hdr.inf.txm = 0; // 0-正常发送
+                        can_msg.hdr.inf.fmt = 0; // 0-CAN
+                        can_msg.hdr.inf.sdf = 0; // 0-数据帧, 1-远程帧
+                        can_msg.hdr.inf.sef = 0; // 0-标准帧, 1-扩展帧
+
+                        can_msg.hdr.id = can_id;              // ID
+                        can_msg.hdr.chn = ZCAN_CHANNEL_INDEX; // 通道
+                        can_msg.hdr.len = data_len;           // 数据长度
+
+                        // 填充数据
+                        for (uintptr_t i = 0; i < data_len && i < 8; ++i)
+                        {
+                          can_msg.dat[i] = data[i];
+                        }
+
+                        // 发送 CAN 帧
+                        int result = VCI_Transmit(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX, &can_msg, 1);
+                        if (result != 1) {
+                          printf("Transmit result: %d\n", result);
+                        }
+                        return result == 1 ? 0 : -1; // 0 表示成功
+                      });
+
+  // CAN 读取回调
+  set_can_rx_callback([](uint8_t slave_id,
+                         uint32_t *can_id_out,
+                         uint8_t *data_out,
+                         uintptr_t *data_len_out) -> int
+                      {
+                        // 读取数据
+                        ZCAN_20_MSG can_data[RX_BUFF_SIZE];
+                        int len = VCI_Receive(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME); // CAN
+                        // printf("VCI_Receive, len: %d\n", len);
+                        if (len < 1) return -1;
+
+                        // 拼接多个 CAN 帧，多个 CAN 帧的 CAN ID 应该一致
+                        *can_id_out = can_data[0].hdr.id & 0x1FFFFFFF;
+
+                        int idx = 0;
+                        int total_dlc = 0;
+
+                        for (int i = 0; i < len; i++)
+                        {
+                          ZCAN_20_MSG recv_data = can_data[i];
+                          int can_dlc = recv_data.hdr.len;
+                          for (int j = 0; j < can_dlc; j++)
+                          {
+                            data_out[idx++] = recv_data.dat[j];
+                          }
+                          total_dlc += can_dlc;
+                        }
+
+                        *data_len_out = total_dlc;
+                        return 0; // 成功返回 0
+                      });
+}
+
+bool init_canfd_device()
+{
+  // 打开设备
+  if (!VCI_OpenDevice(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX))
+  {
+    printf("Failed to open device\n");
+    return false;
+  }
+  return true;
+}
+
+bool start_canfd_channel()
+{
+  ZCAN_INIT init;      // 波特率结构体，数据根据zcanpro的波特率计算器得出
+  init.mode = 0;       // 0-正常
+  init.clk = 60000000; // clock: 60M(V1.01) 80M(V1.03即以上)
+
+  // 仲裁域 1Mbps
+  init.aset.sjw = 1;
+  init.aset.brp = 5;
+  init.aset.tseg1 = 6;
+  init.aset.tseg2 = 1;
+  init.aset.smp = 0;
+
+  // 数据域 5Mbps
+  init.dset.sjw = 1;
+  init.dset.brp = 0;
+  init.dset.tseg1 = 7;
+  init.dset.tseg2 = 2;
+  init.dset.smp = 0;
+
+  // 初始化 CANFD 通道
+  if (!VCI_InitCAN(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX, &init))
+  {
+    printf("Failed to initialize CANFD channel\n");
+    return false;
+  }
+
+  // 启动 CANFD 通道
+  if (!VCI_StartCAN(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX))
+  {
+    printf("Failed to start CANFD channel\n");
+    return false;
+  }
+
+  return true;
+}
+
+void cleanup_canfd()
+{
+  VCI_ResetCAN(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX); // 重置 CAN 通道
+  VCI_CloseDevice(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX);
+}
+
+// int canfd_open() {}
+// int can_2_0_open() {}
+
+// CANFD 协议
+int canfd_open() {
+  if(!init_canfd_device()) return -1;
+  if(!start_canfd_channel()) return -1;
+  setup_canfd_callbacks();
+  return 0;
+}
+
+// CAN 2.0 协议
+int can_2_0_open() {
+  if(!init_canfd_device()) return -1;
+  if(!start_canfd_channel()) return -1;
+  setup_can_2_0_callbacks();
   return 0;
 }

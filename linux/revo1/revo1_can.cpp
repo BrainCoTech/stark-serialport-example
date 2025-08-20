@@ -49,6 +49,16 @@ int main(int argc, char const *argv[])
   stark_set_finger_positions(handle, slave_id, positions_open, 6);
   usleep(delay);
 
+  auto finger_status = stark_get_motor_status(handle, slave_id);
+  if (finger_status != NULL)
+  {
+    printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
+    printf("Speeds: %hd, %hd, %hd, %hd, %hd, %hd\n", finger_status->speeds[0], finger_status->speeds[1], finger_status->speeds[2], finger_status->speeds[3], finger_status->speeds[4], finger_status->speeds[5]);
+    printf("Currents: %hd, %hd, %hd, %hd, %hd, %hd\n", finger_status->currents[0], finger_status->currents[1], finger_status->currents[2], finger_status->currents[3], finger_status->currents[4], finger_status->currents[5]);
+    printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
+    free_motor_status_data(finger_status);
+  }
+
   // 清理资源
   cleanup_resources();
   return 0;

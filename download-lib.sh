@@ -100,7 +100,11 @@ case "$OS_TYPE" in
   mkdir -p ros2_stark_ws/src/ros2_stark_controller/include/ros2_stark_controller
   mkdir -p ros2_stark_ws/src/ros2_stark_controller/lib
   cp -vf dist/include/stark-sdk.h ros2_stark_ws/src/ros2_stark_controller/include/ros2_stark_controller/
+  cp -vf dist/include/zlgcan/zcan.h ros2_stark_ws/src/ros2_stark_controller/include/ros2_stark_controller/
   cp -vf dist/shared/linux/*.so ros2_stark_ws/src/ros2_stark_controller/lib/
+  # 可以拷贝到系统目录
+  # sudo cp -vf dist/shared/linux/*.so /usr/lib/
+  # sudo ln -s /usr/lib/libusbcanfd.so /usr/lib/libusbcanfd.so.1.0.10
   ;;
 "Darwin")
   ;;
