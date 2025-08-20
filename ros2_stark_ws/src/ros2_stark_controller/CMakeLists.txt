@@ -23,9 +23,12 @@ target_include_directories(stark_node PUBLIC
 # target_link_libraries(stark_node ${STARK_SDK_LIBRARY})
 
 # 开发阶段，放在项目内的 lib 目录
+# target_link_libraries(stark_node
+#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
+#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so # ZLG USB-CAN FD 库
+# )
 target_link_libraries(stark_node
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
-  ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so
 )
 
 # 避免每次手动设置 LD_LIBRARY_PATH，可以在链接时嵌入 RPATH（运行时库搜索路径）
@@ -49,9 +52,14 @@ install(DIRECTORY launch config
 
 install(FILES 
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
-  ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so
   DESTINATION lib/${PROJECT_NAME}
 )
+
+# install(FILES 
+#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
+#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so # ZLG USB-CAN FD 库
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 # 安装 Python 脚本
 install(PROGRAMS

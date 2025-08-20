@@ -43,6 +43,11 @@ source install/setup.zsh # zsh
 # FIXME: 需要设置动态链接库路径, 更新为实际路径
 export LD_LIBRARY_PATH=~/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
 
+# Ubuntu 22.04 humble + zsh
+source /opt/ros/humble/setup.zsh
+colcon build --symlink-install
+source install/setup.zsh
+
 # 使用 launch 文件运行Stak节点
 ros2 launch ros2_stark_controller stark_launch.py 
 # or

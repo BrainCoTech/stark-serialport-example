@@ -393,6 +393,10 @@ int main(int argc, char **argv) {
   return 0;
 }
 
+int canfd_open() {} // TODO: Implement CANFD logic
+int can_2_0_open() {} // TODO: Implement CAN 2.0 logic
+
+/*
 // ================== 常量定义 ==================
 #define ZCAN_TYPE_USBCANFD 33 // 设备类型
 #define ZCAN_CARD_INDEX 0     // 卡索引
@@ -585,9 +589,6 @@ void cleanup_canfd()
   VCI_CloseDevice(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX);
 }
 
-// int canfd_open() {}
-// int can_2_0_open() {}
-
 // CANFD 协议
 int canfd_open() {
   if(!init_canfd_device()) return -1;
@@ -603,3 +604,4 @@ int can_2_0_open() {
   setup_can_2_0_callbacks();
   return 0;
 }
+*/
