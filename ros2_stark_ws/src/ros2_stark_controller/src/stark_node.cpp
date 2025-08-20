@@ -6,15 +6,14 @@ int can_2_0_open();
 
 StarkNode::StarkNode() : Node("stark_node"), handle_(nullptr) {
   // Declare and Get parameters
-  port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB1");
+  port_ = this->declare_parameter<std::string>("port", "/dev/ttyUSB0");
   baudrate_ = this->declare_parameter<int>("baudrate", 115200);
   slave_id_ = this->declare_parameter<int>("slave_id", 1);
-  // fw_type_ = static_cast<StarkHardwareType>(this->declare_parameter<int>("firmware_type", 2));
   protocol_type_ = static_cast<StarkProtocolType>(this->declare_parameter<int>("protocol_type", 1));
   log_level_ = static_cast<LogLevel>(this->declare_parameter<int>("log_level", 2));
   RCLCPP_INFO(this->get_logger(),
-              "Port: %s, Baudrate: %d, slave_id: %d, firmware_type: %d, protocol_type: %d, log_level: %d",
-              port_.c_str(), baudrate_, slave_id_, fw_type_, protocol_type_, log_level_);
+              "Port: %s, Baudrate: %d, slave_id: %d, protocol_type: %d, log_level: %d",
+              port_.c_str(), baudrate_, slave_id_, protocol_type_, log_level_);
 
   // Initialize Stark SDK
   init_cfg(protocol_type_, log_level_);
@@ -393,8 +392,15 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-int canfd_open() {} // TODO: Implement CANFD logic
-int can_2_0_open() {} // TODO: Implement CAN 2.0 logic
+int canfd_open() {
+  // TODO: Implement CANFD logic
+  return -1; // 返回错误代码，表示未实现
+}
+
+int can_2_0_open() {
+  // TODO: Implement CAN 2.0 logic
+  return -1; // 返回错误代码，表示未实现
+}
 
 /*
 // ================== 常量定义 ==================

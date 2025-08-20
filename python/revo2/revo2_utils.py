@@ -49,7 +49,7 @@ async def open_modbus_revo2(port_name=None, quick=True):
     """
     try:
         # 自动检测第一个可用从机
-        (protocol, port_name, baudrate, slave_id) = (
+        (protocol, detected_port_name, baudrate, slave_id) = (
             await libstark.auto_detect_modbus_revo2(port_name, quick)
         )
         # 验证检测到的协议类型
@@ -61,7 +61,7 @@ async def open_modbus_revo2(port_name=None, quick=True):
         sys.exit(1)
 
     # 建立Modbus连接
-    client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
+    client: libstark.PyDeviceContext = await libstark.modbus_open(detected_port_name, baudrate)
 
     # 获取设备信息
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)

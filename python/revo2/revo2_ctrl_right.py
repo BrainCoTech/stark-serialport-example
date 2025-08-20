@@ -4,8 +4,7 @@ import time
 from revo2_utils import libstark, logger
 
 SLAVE_ID = 0x7f  # 右手
-PORT = "/dev/ttyUSB0"  # Adjust this to your actual port
-# PORT = "/dev/tty.usbserial-DU0D8TM5"
+PORT = "/dev/ttyUSB1" # 替换为实际的串口名称
 BAUDRATE = libstark.Baudrate.Baud460800
 
 async def main():

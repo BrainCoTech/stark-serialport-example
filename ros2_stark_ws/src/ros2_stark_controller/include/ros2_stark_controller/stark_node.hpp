@@ -15,7 +15,7 @@
 #include "ros2_stark_interfaces/msg/set_motor_multi.hpp"
 #include "ros2_stark_interfaces/msg/set_motor_single.hpp"
 #include "ros2_stark_controller/stark-sdk.h"
-#include "ros2_stark_controller/zcan.h"
+// #include "ros2_stark_controller/zcan.h"
 
 class StarkNode : public rclcpp::Node {
 public:

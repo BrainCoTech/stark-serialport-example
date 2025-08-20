@@ -30,7 +30,7 @@ int main(int argc, char const *argv[])
   setup_modbus_callbacks(); // 设置读写回调
 
   init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // 初始化配置
-  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true);
+  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // 替换为实际的串口名称, 传None会尝试自动检测
   if (cfg == NULL)
   {
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");

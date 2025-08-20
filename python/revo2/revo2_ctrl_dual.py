@@ -4,8 +4,8 @@ import time
 from revo2_utils import libstark, logger
 from utils import setup_shutdown_event
 
-LEFT_PORT = "/dev/tty.usbserial-21120"
-RIGHT_PORT = "/dev/tty.usbserial-DU0D8TM5"
+LEFT_PORT = "/dev/ttyUSB0" # 替换为实际的串口名称
+RIGHT_PORT = "/dev/ttyUSB1" # 替换为实际的串口名称
 LEFT_ID = 0x7e
 RIGHT_ID = 0x7f
 BAUDRATE = libstark.Baudrate.Baud460800

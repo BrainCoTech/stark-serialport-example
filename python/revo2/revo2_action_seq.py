@@ -93,7 +93,7 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     # 连接Revo2设备
-    (client, slave_id) = await open_modbus_revo2(port_name="/dev/ttyUSB0")
+    (client, slave_id) = await open_modbus_revo2(port_name="/dev/ttyUSB0") # 替换为实际的串口名称, 传None会尝试自动检测
 
     # 转换动作序列格式
     mapped_sequences = map(lambda action: action_sequence_info_to_list(action), sample_action_sequences)

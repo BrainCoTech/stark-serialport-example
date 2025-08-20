@@ -98,8 +98,6 @@ async def setup_armband_device() -> bool:
 
     # 如果自动检测失败，可以手动指定端口
     if port_name is None:
-        # port_name = "COM8"  # Windows
-        # port_name = "/dev/tty.usbmodem212201"  # macOS/Linux
         logger.warning(f"Using manual port: {port_name}")
 
     if port_name is None:
