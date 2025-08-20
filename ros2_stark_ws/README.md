@@ -50,10 +50,14 @@ source install/setup.zsh
 
 # 使用 launch 文件运行Stak节点
 ros2 launch ros2_stark_controller stark_launch.py 
-# or
+
+# 使用配置文件运行stark_node
+ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo1.yaml 
+ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo1_touch.yaml
+ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo1_can.yaml
+
 ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo2.yaml
 ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo2_canfd.yaml
-ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo1_can.yaml
 
 # 检查节点
 ros2 node list
@@ -63,6 +67,7 @@ ros2 topic list
 ros2 service list
 
 # 测试位置控制
+ros2 run ros2_stark_controller stark_node_client.py 1    # 一代手ID默认为1
 ros2 run ros2_stark_controller stark_node_client.py 0x7e # 二代手左手ID默认为0x7e
 ros2 run ros2_stark_controller stark_node_client.py 0x7f # 二代手右手ID默认为0x7f
 

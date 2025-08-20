@@ -3,26 +3,24 @@
 ## download or update stark lib dependencies
 
 ```shell
-# on Linux/macOS
-./download-lib.sh
-
-# on Windows, need install choco first
-[choco setup](https://docs.chocolatey.org/en-us/choco/setup)
-download-lib.dat
+# on Linux Ubuntu 20/22
+./download-lib.sh # 下载.so和头文件, c++ 或 ros2 DEMO中使用
 ```
 
 ## Documentation
 
 [Documentation](https://www.brainco-hz.com/docs/revolimb-hand/)
 
+[二代手 URDF](https://app.brainco.cn/universal/bc-stark-sdk/assets/revo2/URDF.zip)
+
 ## Python example
 
 [See Python example](https://github.com/BrainCoTech/stark-serialport-example/blob/main/python/README.md)
 
-## C example
+## C++ example
 
-[See C example](https://github.com/BrainCoTech/stark-serialport-example/blob/main/README-C.md)
+[See C++ example](https://github.com/BrainCoTech/stark-serialport-example/blob/main/README-C.md)
 
-## libserialport
+## ROS2 example
 
-[See libserialport](https://github.com/sigrokproject/libserialport)
+[See ROS2 example](https://github.com/BrainCoTech/stark-serialport-example/blob/main/ros2_stark_ws/README.md)

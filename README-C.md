@@ -13,7 +13,7 @@ To build the examples, ensure that `make`, `gcc`, `pkg-config`, and `libbc_stark
 
 ```shell
 cd linux && make && make run
-cd mac && make && make run
+cd windows && make && make run
 ```
 
 If the build process fails, you may need to adjust the Makefile or configure your environment variables accordingly.
