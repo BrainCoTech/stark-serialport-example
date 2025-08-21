@@ -1,3 +1,10 @@
+"""
+Revo2灵巧手控制双手示例
+
+连接方式说明：
+- 使用两个串口分别连接左手和右手（可以使用相同的设备ID，左右默认为0x7e，右手默认为0x7f）
+"""
+
 import asyncio
 import sys
 import time
