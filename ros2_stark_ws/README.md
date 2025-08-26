@@ -17,12 +17,16 @@ ros2_stark_ws/src/ros2_stark_controller/include
 # Replace ".bash" with your shell if you're not using bash
 # Possible values are: setup.bash, setup.sh, setup.zsh
 # Ubuntu 22.04
-source /opt/ros/humble/setup.bash # bash
+# source /opt/ros/humble/setup.bash # bash
 source /opt/ros/humble/setup.zsh # zsh
 
 # Ubuntu 20.04
-source /opt/ros/galactic/setup.bash # bash
+# source /opt/ros/galactic/setup.bash # bash
 source /opt/ros/galactic/setup.zsh # zsh
+
+# ROS1 环境设置
+# alias setup_ros1="source /opt/ros/noetic/setup.bash"
+alias setup_ros1="source /opt/ros/noetic/setup.zsh"
 
 cd ros2_stark_ws
 rm -rf build install log
