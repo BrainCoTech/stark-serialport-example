@@ -1,3 +1,9 @@
+// 本示例为Revo1 结合 ZLG USB-CAN 设备的简单控制示例
+// USBCANFD-200U
+// USBCANFD-100U
+// USBCANFD-100U-mini
+// 需要下载厂商提供的.so
+// https://manual.zlg.cn/web/#/146
 #include <stdio.h>
 #include <cstring>
 #include <unistd.h>

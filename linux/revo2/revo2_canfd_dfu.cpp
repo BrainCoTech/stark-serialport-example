@@ -1,3 +1,9 @@
+// 本示例为Revo2 结合 ZLG USB-CAN FD设备的固件升级示例
+// USBCANFD-200U
+// USBCANFD-100U
+// USBCANFD-100U-mini
+// 需要下载厂商提供的.so
+// https://manual.zlg.cn/web/#/146
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>

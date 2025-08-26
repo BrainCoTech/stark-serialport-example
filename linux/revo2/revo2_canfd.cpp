@@ -1,3 +1,9 @@
+// 本示例为Revo2 结合 ZLG USB-CAN FD设备的简单控制示例
+// USBCANFD-200U
+// USBCANFD-100U
+// USBCANFD-100U-mini
+// 需要下载厂商提供的.so
+// https://manual.zlg.cn/web/#/146
 #include <stdio.h>
 #include <cstring>
 #include <unistd.h>
@@ -44,6 +50,7 @@ int main(int argc, char const *argv[])
   get_device_info(handle, slave_id);
   get_device_info(handle, slave_id_right);
 
+  // 修改手的波特率接口，也可以通过上位机修改
   // stark_set_canfd_baudrate(handle, slave_id_right, 2000); // 设置为2Mbps
   // stark_set_canfd_baudrate(handle, slave_id_right, 5000); // 设置为5Mbps
   // return 0;
