@@ -32,6 +32,9 @@
 
 #define MAX_TRAJECTORY_POINTS 10
 
+#define STARK_VENDOR_ID     0x00bc0000
+#define STARK_PRODUCT_CODE  0x00009252
+
 /****************************************************************************/
 // 枚举和结构体定义
 /****************************************************************************/
@@ -112,8 +115,8 @@ static int current_trajectory_point = 0;
 
 // PDO 域注册
 const ec_pdo_entry_reg_t domain_regs[] = {
-    {0, 0, 0x00bc0000, 0x00009252, 0x6000, 0x01, &off_in},  // 输入数据
-    {0, 0, 0x00bc0000, 0x00009252, 0x7000, 0x01, &off_out}, // 输出数据
+    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x6000, 0x01, &off_in},  // 输入数据
+    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x7000, 0x01, &off_out}, // 输出数据
     {}};
 
 // PDO 条目定义
@@ -724,6 +727,10 @@ void cyclic_task()
         { // 增加手势演示
         case 0:
         {
+          // set_single_joint_position_time((finger_index_t)PINKY, 1000, 100);
+          // set_single_joint_position_time((finger_index_t)PINKY, 0, 100);
+          // break;
+
           // 位置和时间控制模式
           uint16_t positions[6] = {400, 400, 1000, 1000, 1000, 1000};
           uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
@@ -860,7 +867,7 @@ int main(int argc, char **argv)
   // 4. 创建从站配置
   printf("Requesting slave...\n");
   ec_slave_config_t *sc;
-  if (!(sc = ecrt_master_slave_config(master, 0, 0, 0x00bc0000, 0x00009252)))
+  if (!(sc = ecrt_master_slave_config(master, 0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE)))
   {
     fprintf(stderr, "Failed to get slave configuration.\n");
     return -1;

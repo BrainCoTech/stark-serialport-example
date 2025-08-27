@@ -113,10 +113,6 @@ void StarkNode::timer_callback() {
   }
 }
 
-// void StarkNode::() {
-//     publish_device_status();
-// }
-
 void StarkNode::publish_motor_status() {
   auto motor_status = stark_get_motor_status(handle_, slave_id_);
   if (!motor_status) {
@@ -130,13 +126,6 @@ void StarkNode::publish_motor_status() {
   std::copy(motor_status->speeds, motor_status->speeds + 6, msg.speeds.begin());
   std::copy(motor_status->currents, motor_status->currents + 6, msg.currents.begin());
   std::copy(motor_status->states, motor_status->states + 6, msg.states.begin());
-  // print currents if not zero
-  // for (int i = 0; i < 6; i++) {
-  //     if (motor_status->currents[i] != 0) {
-  //         RCLCPP_INFO(this->get_logger(), "Motor %d current: %d", i, motor_status->currents[i]);
-  //     }
-  // }
-
   motor_status_pub_->publish(msg);
   free_motor_status_data(motor_status);
 }

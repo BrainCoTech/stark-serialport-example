@@ -1,5 +1,5 @@
 # 请求部分
-# uint8 slave_id            # 从机ID
+uint8 slave_id            # 从机ID
 # bool get_sku_type         # 是否获取设备 SKU 类型
 # bool get_serial_number    # 是否获取设备序列号
 # bool get_firmware_version # 是否获取固件版本

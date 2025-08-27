@@ -1,4 +1,8 @@
-# ros2 humble or galactic
+# ros2 humble stark controller
+
+## RS-485 或 CAN 版本
+
+### 下载依赖
 
 ```shell
 # First download libs, in project root directory
@@ -13,76 +17,48 @@ ros2_stark_ws/src/ros2_stark_controller/include
 └── ros2_stark_controller
     ├── stark-sdk.h
     └── stark_node.hpp
+```
 
-# Replace ".bash" with your shell if you're not using bash
-# Possible values are: setup.bash, setup.sh, setup.zsh
-# Ubuntu 22.04
-# source /opt/ros/humble/setup.bash # bash
-source /opt/ros/humble/setup.zsh # zsh
+### 启动控制器节点
 
-# Ubuntu 20.04
-# source /opt/ros/galactic/setup.bash # bash
-source /opt/ros/galactic/setup.zsh # zsh
+```shell
+cd ros2_stark_ws
+chmod +x launch_test.sh # 给脚本执行权限
+./launch_test.sh launch # 启动控制器节点
+# ./launch_test.sh launch build # 如果需要编译
+# ./launch_test.sh launch build clean # 如果需要编译并清理
+```
 
-# ROS1 环境设置
-# alias setup_ros1="source /opt/ros/noetic/setup.bash"
-alias setup_ros1="source /opt/ros/noetic/setup.zsh"
+### 重启开启另一个终端
+
+```shell
+cd ros2_stark_ws
+./launch_test.sh # 测试发送位置控制命令
+./launch_test.sh monitor  # 监控电机状态
+./launch_test.sh monitor_touch  # 监控触觉状态
+```
+
+## ROS2 EtherCAT 版本
+
+### 启动控制器节点 - EtherCAT 版本
+
+```shell
+sudo systemctl status ethercat # 检查 EtherCAT 主站是否运行
+ip link show # 检查网络接口
+sudo ethercat slaves  # 检查是否有 EtherCAT 设备连接
+chmod +x launch_ethercat.sh # 给脚本执行权限
 
 cd ros2_stark_ws
-rm -rf build install log
+./launch_ethercat.sh launch # 启动控制器节点
+#./launch_ethercat.sh launch build # 如果需要编译
+#./launch_ethercat.sh launch build clean # 如果需要编译并清理
+```
 
-# 编译
-colcon build --symlink-install
-# colcon build --packages-select ros2_stark_interfaces 
-# colcon build --packages-select ros2_stark_controller
+### 重启开启另一个终端 - EtherCAT 版本
 
-# pip install catkin_pkg numpy lark empy==3.3.4
-# export PYTHON_EXECUTABLE=~/miniconda3/envs/py310/bin/python
-# colcon build --symlink-install --cmake-args -DPYTHON_EXECUTABLE=~/miniconda3/envs/py310/bin/python
-
-# 设置本地环境
-source install/setup.bash # bash
-source install/setup.zsh # zsh
-
-# FIXME: 需要设置动态链接库路径, 更新为实际路径
-export LD_LIBRARY_PATH=~/projects/stark-serialport-example/ros2_stark_ws/install/ros2_stark_controller/lib/ros2_stark_controller:$LD_LIBRARY_PATH
-
-# Ubuntu 22.04 humble + zsh
-source /opt/ros/humble/setup.zsh
-colcon build --symlink-install
-source install/setup.zsh
-
-# 使用 launch 文件运行Stak节点
-ros2 launch ros2_stark_controller stark_launch.py 
-
-# 使用配置文件运行stark_node
-ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo1.yaml 
-ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo1_touch.yaml
-ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo1_can.yaml
-
-ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo2.yaml
-ros2 run ros2_stark_controller stark_node --ros-args --params-file ~/projects/stark-serialport-example/ros2_stark_ws/src/ros2_stark_controller/config/params_revo2_canfd.yaml
-
-# 检查节点
-ros2 node list
-# 查看话题
-ros2 topic list
-# 查看服务
-ros2 service list
-
-# 测试位置控制
-ros2 run ros2_stark_controller stark_node_client.py 1    # 一代手ID默认为1
-ros2 run ros2_stark_controller stark_node_client.py 0x7e # 二代手左手ID默认为0x7e
-ros2 run ros2_stark_controller stark_node_client.py 0x7f # 二代手右手ID默认为0x7f
-
-# ros2 topic echo /joint_states
-ros2 topic echo /motor_status
-ros2 topic echo /touch_status
-
-# 查看参数
-ros2 param list /stark_node
-
-# 动态修改参数
-ros2 param set /stark_node baudrate 115200
-ros2 param set /stark_node baudrate 57600
+```shell
+cd ros2_stark_ws
+./launch_ethercat.sh # 测试发送位置控制命令
+./launch_ethercat.sh monitor  # 监控左电机状态
+./launch_ethercat.sh monitor_right  # 监控右电机状态
 ```

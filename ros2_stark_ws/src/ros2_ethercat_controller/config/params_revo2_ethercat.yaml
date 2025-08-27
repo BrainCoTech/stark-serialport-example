@@ -1,0 +1,5 @@
+stark_node:
+  ros__parameters:
+    slave_pos_left: 0
+    # slave_pos_right: 1 # 右手从站POS为1，用于双手模式使用
+    log_level: 2      # Info

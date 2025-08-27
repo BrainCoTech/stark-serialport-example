@@ -32,6 +32,9 @@
 
 #define TIMESPEC2NS(T) ((uint64_t)(T).tv_sec * NSEC_PER_SEC + (T).tv_nsec)
 
+#define STARK_VENDOR_ID     0x00bc0000
+#define STARK_PRODUCT_CODE  0x00009252
+
 // SDO配置参数索引定义
 #define CONFIG_OBJECT_INDEX 0x8000
 
@@ -131,10 +134,10 @@ void parse_turbo_param(uint32_t turbo_param, uint16_t *interval, uint16_t *durat
 // 固件信息结构体
 typedef struct
 {
-  char ctrl_wrist_fw_version[21]; // 控制板固件版本
-  char ctrl_sn[19];               // 控制板序列号
-  char wrist_fw_version[21];      // 手腕板固件版本
-  char wrist_sn[19];              // 手腕板序列号
+  char ctrl_wrist_fw_version[21]; // 控制板固件版本, 20字节 + 1结束符
+  char ctrl_sn[19];               // 控制板序列号, 18字节 + 1结束符
+  char wrist_fw_version[21];      // 手腕板固件版本, 20字节 + 1结束符
+  char wrist_sn[19];              // 手腕板序列号, 18字节 + 1结束符
 } firmware_info_t;
 
 /****************************************************************************/
@@ -580,7 +583,7 @@ int main(int argc, char **argv)
 
   // 2. 创建从站配置
   printf("Requesting slave configuration...\n");
-  slave_config = ecrt_master_slave_config(master, 0, 0, 0x00bc0000, 0x00009252);
+  slave_config = ecrt_master_slave_config(master, 0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE);
   if (!slave_config)
   {
     fprintf(stderr, "Failed to get slave configuration.\n");
