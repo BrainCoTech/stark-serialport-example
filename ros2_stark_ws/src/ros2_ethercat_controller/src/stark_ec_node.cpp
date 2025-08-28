@@ -86,9 +86,17 @@ static ec_master_state_t master_state_ = {};
 static ec_domain_t *domain_ = NULL;
 static ec_domain_state_t domain_state_ = {};
 static uint8_t *domain_data_ = NULL;
-std::queue<ros2_stark_interfaces::msg::SetMotorMulti> motor_multi_command_queue_;
-std::queue<ros2_stark_interfaces::msg::SetMotorSingle> motor_single_command_queue_;
-std::mutex command_queue_mutex_;
+static std::queue<ros2_stark_interfaces::msg::SetMotorMulti> motor_multi_command_queue_;
+static std::queue<ros2_stark_interfaces::msg::SetMotorSingle> motor_single_command_queue_;
+static std::mutex command_queue_mutex_;
+static uint8_t joint_pos_0[12];
+static uint8_t joint_spd_0[12];
+static uint8_t joint_cur_0[12];
+static uint8_t joint_status_0[12];
+static uint8_t joint_pos_1[12];
+static uint8_t joint_spd_1[12];
+static uint8_t joint_cur_1[12];
+static uint8_t joint_status_1[12];
 void run_motor_multi_command(const std::shared_ptr<ros2_stark_interfaces::msg::SetMotorMulti> msg);
 void run_motor_single_command(const std::shared_ptr<ros2_stark_interfaces::msg::SetMotorSingle> msg);
 
@@ -461,37 +469,25 @@ void set_single_joint_pwm(uint8_t slave_pos, StarkFingerId joint_id, uint16_t pw
 // 反馈数据读取函数
 /****************************************************************************/
 
-void get_motor_status(uint8_t slave_pos)
+void get_motor_status()
 {
-  unsigned int off_in = (slave_pos == 0) ? off_in_0 : off_in_1;
+  memcpy(joint_pos_0, domain_data_ + off_in_0, 12);
+  memcpy(joint_spd_0, domain_data_ + off_in_0 + 12, 12);
+  memcpy(joint_cur_0, domain_data_ + off_in_0 + 24, 12);
+  memcpy(joint_status_0, domain_data_ + off_in_0 + 36, 12);
+  // printf("Motor Status 0 - Pos: ");
+  // for (int i = 0; i < 6; i++) {
+  //   uint16_t pos = *((uint16_t *)(joint_pos_0 + i * 2));
+  //   printf("%d ", pos);
+  // }
+  // printf("\n");
 
-  // 读取关节位置
-  uint8_t joint_pos[12];
-  memcpy(joint_pos, domain_data_ + off_in, 12);
-
-  // 读取关节速度
-  uint8_t joint_spd[12];
-  memcpy(joint_spd, domain_data_ + off_in + 12, 12);
-
-  // 读取关节电流
-  uint8_t joint_cur[12];
-  memcpy(joint_cur, domain_data_ + off_in + 24, 12);
-
-  // 读取关节状态
-  uint8_t joint_status[12];
-  memcpy(joint_status, domain_data_ + off_in + 36, 12);
-
-  // 打印反馈数据
-  printf("=== Joint Feedback Data ===\n");
-  printf("Position: ");
-  print_hex(joint_pos, 12);
-  printf("Speed:    ");
-  print_hex(joint_spd, 12);
-  printf("Current:  ");
-  print_hex(joint_cur, 12);
-  printf("Status:   ");
-  print_hex(joint_status, 12);
-  printf("===========================\n");
+  if (off_in_1 > 0) {
+    memcpy(joint_pos_1, domain_data_ + off_in_1, 12);
+    memcpy(joint_spd_1, domain_data_ + off_in_1 + 12, 12);
+    memcpy(joint_cur_1, domain_data_ + off_in_1 + 24, 12);
+    memcpy(joint_status_1, domain_data_ + off_in_1 + 36, 12);
+  }
 }
 
 StarkNode::StarkNode() : Node("stark_ec_node") {
@@ -557,7 +553,7 @@ StarkNode::StarkNode() : Node("stark_ec_node") {
   }
 
   // Initialize timer
-  timer_ = create_wall_timer(std::chrono::milliseconds(100), std::bind(&StarkNode::timer_callback, this));
+  timer_ = create_wall_timer(std::chrono::milliseconds(10), std::bind(&StarkNode::timer_callback, this));
 
   // 设备电量等信息，不需要频繁更新
   // info_timer_ = create_wall_timer(
@@ -617,23 +613,9 @@ int read_firmware_info(uint8_t pos, firmware_info_t *info)
 }
 
 bool StarkNode::initialize_stark_handler() {
-  // 1. 内存锁定
-  if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1)
-  {
-    perror("mlockall failed");
-    return -1;
-  }
+  
 
-  // 2. 设置实时调度策略
-  // struct sched_param param = {};
-  // param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-  // printf("Using priority %i.\n", param.sched_priority);
-  // if (sched_setscheduler(0, SCHED_FIFO, &param) == -1)
-  // {
-  //   perror("sched_setscheduler failed");
-  // }
-
-  // 3. 初始化 EtherCAT 主站
+  // 初始化 EtherCAT 主站
   printf("Requesting master_...\n");
   master_ = ecrt_request_master(0);
   if (!master_)
@@ -644,7 +626,7 @@ bool StarkNode::initialize_stark_handler() {
   if (!domain_)
     return -1;
 
-  // 4. 创建从站配置
+  // 创建从站配置
   printf("Requesting slave[%d]...\n", slave_pos_left);
   ec_slave_config_t *sc_0;
   if (!(sc_0 = ecrt_master_slave_config(master_, slave_pos_left, slave_pos_left, STARK_VENDOR_ID, STARK_PRODUCT_CODE)))
@@ -717,50 +699,39 @@ bool StarkNode::initialize_stark_handler() {
 
 void StarkNode::timer_callback() {
   publish_motor_status();
-  // if (fw_type_left == StarkHardwareType::STARK_HARDWARE_TYPE_REVO2_TOUCH || 
-  //     fw_type_right == StarkHardwareType::STARK_HARDWARE_TYPE_REVO2_TOUCH) {
+  // if (touch_device) {
   //   publish_touch_status();
   // }
 }
 
-// void StarkNode::() {
-//     publish_device_status();
-// }
-
 void StarkNode::publish_motor_status() {
-  // 读取关节位置
-  uint8_t joint_pos[12];
-  memcpy(joint_pos, domain_data_ + off_in_0, 12);
-  // 读取关节速度
-  uint8_t joint_spd[12];
-  memcpy(joint_spd, domain_data_ + off_in_0 + 12, 12);
-  // 读取关节电流
-  uint8_t joint_cur[12];
-  memcpy(joint_cur, domain_data_ + off_in_0 + 24, 12);
-  // 读取关节状态
-  uint8_t joint_status[12];
-  memcpy(joint_status, domain_data_ + off_in_0 + 36, 12);
-
   auto msg = ros2_stark_interfaces::msg::MotorStatus();
   msg.slave_id = slave_pos_left;
-  std::copy(joint_pos, joint_pos + 6, msg.positions.begin());
-  std::copy(joint_spd, joint_spd + 6, msg.speeds.begin());
-  std::copy(joint_cur, joint_cur + 6, msg.currents.begin());
-  std::copy(joint_status, joint_status + 6, msg.states.begin());
+  for (int i = 0; i < 6; i++) {
+    uint16_t pos = *((uint16_t *)(joint_pos_0 + i * 2));
+    uint16_t spd = *((uint16_t *)(joint_spd_0 + i * 2));
+    uint16_t cur = *((uint16_t *)(joint_cur_0 + i * 2));
+    uint16_t status = *((uint16_t *)(joint_status_0 + i * 2));
+    msg.positions[i] = pos;
+    msg.speeds[i] = spd;
+    msg.currents[i] = cur;
+    msg.states[i] = status;
+  }
   motor_status_pub_left->publish(msg);
 
   if (slave_pos_right <= 0) return;
-  memcpy(joint_pos, domain_data_ + off_in_1, 12);
-  memcpy(joint_spd, domain_data_ + off_in_1 + 12, 12);
-  memcpy(joint_cur, domain_data_ + off_in_1 + 24, 12);
-  memcpy(joint_status, domain_data_ + off_in_1 + 36, 12);
-
   auto msg_right = ros2_stark_interfaces::msg::MotorStatus();
   msg_right.slave_id = slave_pos_right;
-  std::copy(joint_pos, joint_pos + 6, msg_right.positions.begin());
-  std::copy(joint_spd, joint_spd + 6, msg_right.speeds.begin());
-  std::copy(joint_cur, joint_cur + 6, msg_right.currents.begin());
-  std::copy(joint_status, joint_status + 6, msg_right.states.begin());
+  for (int i = 0; i < 6; i++) {
+    uint16_t pos = *((uint16_t *)(joint_pos_1 + i * 2));
+    uint16_t spd = *((uint16_t *)(joint_spd_1 + i * 2));
+    uint16_t cur = *((uint16_t *)(joint_cur_1 + i * 2));
+    uint16_t status = *((uint16_t *)(joint_status_1 + i * 2));
+    msg_right.positions[i] = pos;
+    msg_right.speeds[i] = spd;
+    msg_right.currents[i] = cur;
+    msg_right.states[i] = status;
+  }
   motor_status_pub_right->publish(msg_right);
 }
 
@@ -1104,6 +1075,21 @@ int main(int argc, char **argv) {
 }
 
 void start_cyclic_task() {
+  // 内存锁定
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1)
+  {
+    perror("mlockall failed");
+  }
+
+  // 设置实时调度策略
+  struct sched_param param = {};
+  param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  printf("Using priority %i.\n", param.sched_priority);
+  if (sched_setscheduler(0, SCHED_FIFO, &param) == -1)
+  {
+    perror("sched_setscheduler failed");
+  }
+
   printf("Activating master_...\n");
   if (ecrt_master_activate(master_))
     return;
@@ -1147,10 +1133,10 @@ void start_cyclic_task() {
     // 仅当从站处于 OPERATIONAL 状态时才执行读写操作
     if (master_state_.al_states == 0x08)
     {
-      // static int print_counter = 0;
-      // if (print_counter++ % (FREQUENCY * 5) == 0)
-      // { // 每5秒打印一次
-      //   get_motor_status(0);
+      // static int read_counter = 0;
+      // if (read_counter++ % (FREQUENCY * 1) == 0)
+      // { // 每秒读取一次
+        get_motor_status();
       // }
 
       run_motor_command();

@@ -58,14 +58,13 @@ elif [ "$1" == "monitor_touch" ]; then
     ros2 topic echo /touch_status 
 
 else
-    # 运行测试脚本
-    # 检查节点
-    ros2 node list
-    # 查看话题
+    echo "Available topics:"
     ros2 topic list
-    # 查看服务
+    echo ""
+    echo "Available services:"
     ros2 service list
-    # 测试位置控制
+    echo ""
+    echo "Testing Stark controller..."
     # ros2 run ros2_stark_controller stark_node_client.py 1    # 一代手ID默认为1
     # ros2 run ros2_stark_controller stark_node_client.py 0x7e # 二代手左手ID默认为0x7e
     ros2 run ros2_stark_controller stark_node_client.py 0x7f # 二代手右手ID默认为0x7f

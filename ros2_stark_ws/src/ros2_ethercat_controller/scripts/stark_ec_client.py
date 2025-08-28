@@ -682,7 +682,7 @@ def main(args=None):
         time.sleep(1)
 
         # 示例: 设置张开
-        positions = [0] * 6 # 张开
+        positions = [400, 400, 0, 0, 0, 0]  # 张开
         client_node.set_all_finger_positions(positions)
         time.sleep(1)
         

@@ -20,9 +20,6 @@ done
 echo "Setting up ROS 2 environment..."
 source /opt/ros/humble/setup.bash
 
-# 添加额外的库路径，而不是覆盖
-# export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-
 # 验证ROS环境
 echo "ROS_DISTRO: $ROS_DISTRO"
 
@@ -44,28 +41,9 @@ fi
 # 设置工作空间
 source install/setup.bash
 
-# 验证动态库依赖
-# EC_NODE_PATH="install/ros2_ethercat_controller/lib/ros2_ethercat_controller/stark_ec_node"
-# if [ -f "$EC_NODE_PATH" ]; then
-#     echo "Checking library dependencies..."
-#     MISSING_LIBS=$(ldd "$EC_NODE_PATH" | grep "not found")
-#     if [ -n "$MISSING_LIBS" ]; then
-#         echo "Error: Missing library dependencies:"
-#         echo "$MISSING_LIBS"
-#         echo "Current LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-#         exit 1
-#     fi
-#     echo "All libraries found successfully!"
-# else
-#     echo "Error: stark_ec_node not found. Please run: $0 test build"
-#     exit 1
-# fi
-
 # 运行
 if [ "$1" == "launch" ]; then
     echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-    # sudo setcap cap_sys_nice,cap_net_raw=eip install/ros2_ethercat_controller/lib/ros2_ethercat_controller/stark_ec_node
-    # getcap install/ros2_ethercat_controller/lib/ros2_ethercat_controller/stark_ec_node
     # ros2 launch ros2_ethercat_controller ec_launch.py
     ros2 run ros2_ethercat_controller stark_ec_node --ros-args --params-file /home/yongle/projects/stark-serialport-example/ros2_stark_ws/src/ros2_ethercat_controller/config/params_revo2_ethercat.yaml
 

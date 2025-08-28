@@ -18,15 +18,14 @@ target_include_directories(${EXEC_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
-
 target_link_libraries(${EXEC_NAME}
   ethercat
 )
 
-# find_package(PkgConfig REQUIRED)
-# pkg_check_modules(ETHERCAT REQUIRED ethercat)
-# target_link_libraries(${EXEC_NAME} ${ETHERCAT_LIBRARIES})
-# target_include_directories(${EXEC_NAME} PRIVATE ${ETHERCAT_INCLUDE_DIRS})
+set_target_properties(${EXEC_NAME} PROPERTIES
+  BUILD_WITH_INSTALL_RPATH TRUE
+  INSTALL_RPATH "$ORIGIN"
+)
 
 ament_target_dependencies(${EXEC_NAME}
   rclcpp

@@ -12,39 +12,34 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(ros2_stark_interfaces REQUIRED)
 
-add_executable(stark_node src/stark_node.cpp)
-target_include_directories(stark_node PUBLIC
+set(EXEC_NAME stark_node)
+add_executable(${EXEC_NAME} src/${EXEC_NAME}.cpp)
+target_include_directories(${EXEC_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
-# 生产阶段  
-# target_link_libraries(stark_node bc_stark_sdk)
-# find_library(STARK_SDK_LIBRARY NAMES bc_stark_sdk PATHS /usr/local/lib)
-# target_link_libraries(stark_node ${STARK_SDK_LIBRARY})
-
 # 开发阶段，放在项目内的 lib 目录
-# target_link_libraries(stark_node
-#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
-#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so # ZLG USB-CAN FD 库
-# )
-target_link_libraries(stark_node
+target_link_libraries(${EXEC_NAME}
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
 )
+# target_link_libraries(${EXEC_NAME}
+#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so # ZLG USB-CAN FD 库
+# )
 
 # 避免每次手动设置 LD_LIBRARY_PATH，可以在链接时嵌入 RPATH（运行时库搜索路径）
-set_target_properties(stark_node PROPERTIES
+set_target_properties(${EXEC_NAME} PROPERTIES
   BUILD_WITH_INSTALL_RPATH TRUE
   INSTALL_RPATH "$ORIGIN"
 )
 
-ament_target_dependencies(stark_node
+ament_target_dependencies(${EXEC_NAME}
   rclcpp
   sensor_msgs
   std_msgs
   ros2_stark_interfaces
 )
 
-install(TARGETS stark_node
+install(TARGETS ${EXEC_NAME}
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch config
@@ -54,12 +49,6 @@ install(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
   DESTINATION lib/${PROJECT_NAME}
 )
-
-# install(FILES 
-#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libbc_stark_sdk.so
-#   ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusbcanfd.so # ZLG USB-CAN FD 库
-#   DESTINATION lib/${PROJECT_NAME}
-# )
 
 # 安装 Python 脚本
 install(PROGRAMS
