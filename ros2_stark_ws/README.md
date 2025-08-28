@@ -36,6 +36,22 @@ cd ros2_stark_ws
 ./stark_serial_manager.sh # 测试发送位置控制命令
 ./stark_serial_manager.sh monitor  # 监控电机状态
 ./stark_serial_manager.sh monitor_touch  # 监控触觉状态
+ros2 topic list # 查看话题列表
+ros2 service list # 查看服务列表
+ros2 param list # 查看参数列表
+ros2 param get /stark_node port # 查看串口参数
+ros2 topic info /set_motor_single_1 # 查看单个手指控制话题信息
+# 发送单个手指位置控制命令
+ros2 topic pub --once /set_motor_single_1 ros2_stark_interfaces/msg/SetMotorSingle "{
+  slave_id: 1,
+  mode: 1,
+  motor_id: 5,
+  position: 100,
+  speed: 0,
+  current: 0,
+  pwm: 0,
+  duration: 0
+}"
 ```
 
 ## ROS2 EtherCAT 版本

@@ -652,15 +652,25 @@ def main(args=None):
         # 示例: 获取设备信息
         client_node.get_device_info()
 
-        # 示例: 设置所有手指位置到中间位置
-        positions = [50] * 6  # 所有手指位置设置为50
+        # 示例: 设置握拳
+        positions = [50, 50, 100, 100, 100, 100] # 握拳 - 一代手
+        # positions = [300, 300, 1000, 1000, 1000, 1000] # 握拳 - 二代手
         client_node.set_all_finger_positions(positions)
+        time.sleep(1)
 
-        # 等待一秒
+        # 示例: 设置张开
+        positions = [0, 0, 0, 0, 0, 0]  # 张开 - 一代手
+        # positions = [400, 400, 0, 0, 0, 0]  # 张开 - 二代手
+        client_node.set_all_finger_positions(positions)
         time.sleep(1)
 
         # 示例: 设置最后一个手指位置到100
         client_node.set_single_finger_position(6, 100)
+        time.sleep(1)
+
+        # 示例: 设置最后一个手指位置到0
+        client_node.set_single_finger_position(6, 0)
+        time.sleep(1)
 
         # 提示用户程序已完成
         print("\nDemonstration complete! Press Ctrl+C to exit.")

@@ -340,6 +340,7 @@ void StarkNode::handle_motor_multi_command(const std::shared_ptr<ros2_stark_inte
 }
 
 void StarkNode::handle_motor_single_command(const std::shared_ptr<ros2_stark_interfaces::msg::SetMotorSingle> msg) {
+  // printf("Received motor single command: motor_id=%d, mode=%d, position=%d, speed=%d, current=%d, pwm=%d, duration=%d\n", msg->motor_id, msg->mode, msg->position, msg->speed, msg->current, msg->pwm, msg->duration);
   // Handle motor single command
   StarkFingerId finger_id = static_cast<StarkFingerId>(msg->motor_id);
   switch (msg->mode) {
