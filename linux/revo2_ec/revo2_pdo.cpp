@@ -896,7 +896,7 @@ int main(int argc, char **argv)
   {
     return -1;
   }
-  printf("Domain data pointer: %p, size: %ld\n", domain_data, ecrt_domain_size(domain));
+  // printf("Domain data pointer: %p, size: %ld\n", domain_data, ecrt_domain_size(domain));
 
   printf("Starting cyclic function.\n");
   cyclic_task();

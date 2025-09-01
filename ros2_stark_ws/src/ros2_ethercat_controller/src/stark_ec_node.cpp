@@ -1098,7 +1098,7 @@ void start_cyclic_task() {
   {
     return;
   }
-  printf("Domain data pointer: %p, size: %ld\n", domain_data_, ecrt_domain_size(domain_));
+  // printf("Domain data pointer: %p, size: %ld\n", domain_data_, ecrt_domain_size(domain_));
 
   printf("Starting cyclic function.\n");
   struct timespec wakeupTime, time;
