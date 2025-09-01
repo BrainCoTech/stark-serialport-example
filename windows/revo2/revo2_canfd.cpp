@@ -1,9 +1,3 @@
-// 本示例为Revo2 结合 ZQWL USB-CAN FD设备的简单控制示例
-// USBCANFD-200U
-// USBCANFD-100U
-// USBCANFD-100U-mini
-// 需要下载厂商提供的.dll
-// http://39.108.220.80/download/user/ZQWL/UCANFD/
 #include <stdio.h>
 #include <windows.h>
 #include "stark-sdk.h"

@@ -85,6 +85,8 @@ int main(int argc, char const *argv[])
   // usleep(1 * 1000 * 1000); // wait test
   const uint16_t slave_positions[] = {slave_pos}; // 设备位置数组
   printf("start_loop...\n");
+  ethercat_reserve_master(device_handle);
+  
   // # 常见 assign_activate 位定义：
   // # 位位置	掩码（十六进制）	功能说明
   // # bit 0	0x0001	启用 SYNC0 事件

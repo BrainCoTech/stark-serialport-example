@@ -172,7 +172,7 @@ void setup_can_callbacks()
                         // 读取数据
                         ZCAN_20_MSG can_data[RX_BUFF_SIZE];
                         int len = VCI_Receive(ZCAN_TYPE_USBCANFD, ZCAN_CARD_INDEX, ZCAN_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME); // CAN
-                        printf("VCI_Receive, len: %d\n", len);
+                        printf("ZCAN Receive, len: %d\n", len);
                         if (len < 1)
                         {
                           return -1;

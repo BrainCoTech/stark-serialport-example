@@ -1,4 +1,4 @@
-// 本示例为Revo2 结合 ZQWL USB-CAN 设备的简单控制示例
+// 本示例为Revo1 结合 ZQWL USB-CAN 设备的简单控制示例
 // USBCANFD-200U
 // USBCANFD-100U
 // USBCANFD-100U-mini

@@ -5,12 +5,15 @@ import platform
 
 import logging
 from logger import getLogger
+
 # logger = getLogger(logging.DEBUG)
 logger = getLogger(logging.INFO)
 
 from bc_stark_sdk import main_mod
+
 libstark = main_mod
 libstark.init_config(libstark.StarkProtocolType.EtherCAT)
+
 
 def setup_shutdown_event(logger=None):
     # 创建一个事件用于关闭
