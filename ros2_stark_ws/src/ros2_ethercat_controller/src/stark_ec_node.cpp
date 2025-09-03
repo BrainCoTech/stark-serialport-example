@@ -1075,20 +1075,23 @@ int main(int argc, char **argv) {
 }
 
 void start_cyclic_task() {
-  // 内存锁定
-  if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1)
-  {
-    perror("mlockall failed");
-  }
-
   // 设置实时调度策略
   struct sched_param param = {};
-  param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  param.sched_priority = 49;
+  // param.sched_priority = sched_get_priority_max(SCHED_FIFO);
   printf("Using priority %i.\n", param.sched_priority);
   if (sched_setscheduler(0, SCHED_FIFO, &param) == -1)
   {
     perror("sched_setscheduler failed");
   }
+  // 内存锁定
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1)
+  {
+    perror("mlockall failed");
+  }
+  int MAX_SAFE_STACK = 8 * 1024;
+  unsigned char dummy[MAX_SAFE_STACK];
+  memset(dummy, 0, MAX_SAFE_STACK);
 
   printf("Activating master_...\n");
   if (ecrt_master_activate(master_))
