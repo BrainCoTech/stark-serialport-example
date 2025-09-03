@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from ros2_stark_interfaces.srv import GetDeviceInfo, SetMotorMulti, SetMotorSingle
-from ros2_stark_interfaces.msg import (
+from ros2_stark_msgs.srv import GetDeviceInfo, SetMotorMulti, SetMotorSingle
+from ros2_stark_msgs.msg import (
     SetMotorMulti as SetMotorMultiCmd,
     SetMotorSingle as SetMotorSingleCmd,
 )

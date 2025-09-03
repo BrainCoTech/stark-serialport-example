@@ -32,24 +32,24 @@ StarkNode::StarkNode() : Node("stark_node"), handle_(nullptr) {
 
   // Initialize services
   std::string slave_id = std::to_string(slave_id_);
-  get_device_info_service_ = create_service<ros2_stark_interfaces::srv::GetDeviceInfo>(
+  get_device_info_service_ = create_service<ros2_stark_msgs::srv::GetDeviceInfo>(
       "get_device_info_" + slave_id,
       std::bind(&StarkNode::handle_get_device_info, this, std::placeholders::_1, std::placeholders::_2));
-  set_motor_multi_service_ = create_service<ros2_stark_interfaces::srv::SetMotorMulti>(
+  set_motor_multi_service_ = create_service<ros2_stark_msgs::srv::SetMotorMulti>(
       "set_motor_multi_" + slave_id,
       std::bind(&StarkNode::handle_set_motor_multi, this, std::placeholders::_1, std::placeholders::_2));
-  set_motor_single_service_ = create_service<ros2_stark_interfaces::srv::SetMotorSingle>(
+  set_motor_single_service_ = create_service<ros2_stark_msgs::srv::SetMotorSingle>(
       "set_motor_single_" + slave_id,
       std::bind(&StarkNode::handle_set_motor_single, this, std::placeholders::_1, std::placeholders::_2));
 
   // Initialize publishers
-  motor_status_pub_ = create_publisher<ros2_stark_interfaces::msg::MotorStatus>("motor_status", 10);
-  touch_status_pub_ = create_publisher<ros2_stark_interfaces::msg::TouchStatus>("touch_status", 10);
+  motor_status_pub_ = create_publisher<ros2_stark_msgs::msg::MotorStatus>("motor_status", 10);
+  touch_status_pub_ = create_publisher<ros2_stark_msgs::msg::TouchStatus>("touch_status", 10);
 
   // Initialize subscribers
-  motor_multi_sub_ = create_subscription<ros2_stark_interfaces::msg::SetMotorMulti>(
+  motor_multi_sub_ = create_subscription<ros2_stark_msgs::msg::SetMotorMulti>(
       "set_motor_multi_" + slave_id, 10, std::bind(&StarkNode::handle_motor_multi_command, this, std::placeholders::_1));
-  motor_single_sub_ = create_subscription<ros2_stark_interfaces::msg::SetMotorSingle>(
+  motor_single_sub_ = create_subscription<ros2_stark_msgs::msg::SetMotorSingle>(
       "set_motor_single_" + slave_id, 10, std::bind(&StarkNode::handle_motor_single_command, this, std::placeholders::_1));
 
   // Initialize timer
@@ -120,7 +120,7 @@ void StarkNode::publish_motor_status() {
     return;
   }
 
-  auto msg = ros2_stark_interfaces::msg::MotorStatus();
+  auto msg = ros2_stark_msgs::msg::MotorStatus();
   msg.slave_id = slave_id_;
   std::copy(motor_status->positions, motor_status->positions + 6, msg.positions.begin());
   std::copy(motor_status->speeds, motor_status->speeds + 6, msg.speeds.begin());
@@ -137,7 +137,7 @@ void StarkNode::publish_touch_status() {
     return;
   }
 
-  auto msg = ros2_stark_interfaces::msg::TouchStatus();
+  auto msg = ros2_stark_msgs::msg::TouchStatus();
   msg.slave_id = slave_id_;
   // 填充固定 5 个元素的数组, 代表 5个手指上对应的传感器信息
   for (int i = 0; i < 5; i++) {
@@ -161,8 +161,8 @@ void StarkNode::publish_touch_status() {
 }
 
 void StarkNode::handle_get_device_info(
-    const std::shared_ptr<ros2_stark_interfaces::srv::GetDeviceInfo::Request> request,
-    std::shared_ptr<ros2_stark_interfaces::srv::GetDeviceInfo::Response> response) {
+    const std::shared_ptr<ros2_stark_msgs::srv::GetDeviceInfo::Request> request,
+    std::shared_ptr<ros2_stark_msgs::srv::GetDeviceInfo::Response> response) {
   response->sku_type = static_cast<uint8_t>(sku_type_);
   response->serial_number = sn_;
   response->firmware_version = fw_version_;
@@ -178,8 +178,8 @@ void StarkNode::handle_get_device_info(
 }
 
 void StarkNode::handle_set_motor_multi(
-    const std::shared_ptr<ros2_stark_interfaces::srv::SetMotorMulti::Request> request,
-    std::shared_ptr<ros2_stark_interfaces::srv::SetMotorMulti::Response> response) {
+    const std::shared_ptr<ros2_stark_msgs::srv::SetMotorMulti::Request> request,
+    std::shared_ptr<ros2_stark_msgs::srv::SetMotorMulti::Response> response) {
   response->success = true;
   switch (request->mode) {
   case 1: {
@@ -242,8 +242,8 @@ void StarkNode::handle_set_motor_multi(
 }
 
 void StarkNode::handle_set_motor_single(
-    const std::shared_ptr<ros2_stark_interfaces::srv::SetMotorSingle::Request> request,
-    std::shared_ptr<ros2_stark_interfaces::srv::SetMotorSingle::Response> response) {
+    const std::shared_ptr<ros2_stark_msgs::srv::SetMotorSingle::Request> request,
+    std::shared_ptr<ros2_stark_msgs::srv::SetMotorSingle::Response> response) {
   StarkFingerId finger_id = static_cast<StarkFingerId>(request->motor_id);
   response->success = true;
   switch (request->mode) {
@@ -278,7 +278,7 @@ void StarkNode::handle_set_motor_single(
   }
 }
 
-void StarkNode::handle_motor_multi_command(const std::shared_ptr<ros2_stark_interfaces::msg::SetMotorMulti> msg) { //
+void StarkNode::handle_motor_multi_command(const std::shared_ptr<ros2_stark_msgs::msg::SetMotorMulti> msg) { //
   // Handle motor multi command
   switch (msg->mode) {
   case 1: {
@@ -339,7 +339,7 @@ void StarkNode::handle_motor_multi_command(const std::shared_ptr<ros2_stark_inte
   }
 }
 
-void StarkNode::handle_motor_single_command(const std::shared_ptr<ros2_stark_interfaces::msg::SetMotorSingle> msg) {
+void StarkNode::handle_motor_single_command(const std::shared_ptr<ros2_stark_msgs::msg::SetMotorSingle> msg) {
   // printf("Received motor single command: motor_id=%d, mode=%d, position=%d, speed=%d, current=%d, pwm=%d, duration=%d\n", msg->motor_id, msg->mode, msg->position, msg->speed, msg->current, msg->pwm, msg->duration);
   // Handle motor single command
   StarkFingerId finger_id = static_cast<StarkFingerId>(msg->motor_id);

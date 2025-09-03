@@ -10,7 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(ros2_stark_interfaces REQUIRED)
+find_package(ros2_stark_msgs REQUIRED)
 
 set(EXEC_NAME stark_node)
 add_executable(${EXEC_NAME} src/${EXEC_NAME}.cpp)
@@ -36,7 +36,7 @@ ament_target_dependencies(${EXEC_NAME}
   rclcpp
   sensor_msgs
   std_msgs
-  ros2_stark_interfaces
+  ros2_stark_msgs
 )
 
 install(TARGETS ${EXEC_NAME}

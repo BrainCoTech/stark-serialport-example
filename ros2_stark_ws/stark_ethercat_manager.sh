@@ -30,7 +30,7 @@ fi
 # 是否编译, 根据传入的参数
 if [ "$2" == "build" ]; then
     echo "Building workspace..."
-    colcon build --packages-select ros2_stark_interfaces # 编译自定义消息包
+    colcon build --packages-select ros2_stark_msgs # 编译自定义消息包
     colcon build --packages-select ros2_ethercat_controller # 编译EtherCAT版本
     if [ $? -ne 0 ]; then
         echo "Build failed. Exiting."

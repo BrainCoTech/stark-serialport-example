@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(ros2_stark_interfaces)
+project(ros2_stark_msgs)
 
 # 设置 CMP0148 策略为 OLD，避免警告
 if(POLICY CMP0148)
