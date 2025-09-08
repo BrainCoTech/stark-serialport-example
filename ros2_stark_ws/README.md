@@ -61,6 +61,7 @@ ros2 topic pub --once /set_motor_single_1 ros2_stark_msgs/msg/SetMotorSingle "{
 ```shell
 ip link show # 检查网络接口
 ethercat version # 检查 EtherCAT 版本
+sudo systemctl enable ethercat # 启用 EtherCAT 主站
 sudo systemctl restart ethercat # 重启 EtherCAT 主站
 sudo systemctl status ethercat # 检查 EtherCAT 主站是否运行
 sudo ethercat slaves  # 检查是否有 EtherCAT 设备连接
