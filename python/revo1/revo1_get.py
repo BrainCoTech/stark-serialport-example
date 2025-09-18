@@ -71,7 +71,7 @@ async def execute_finger_movements(client, slave_id):
     await asyncio.sleep(1.0)
 
     # 执行握手动作（所有手指设置为最大位置值）
-    await client.set_finger_positions(slave_id, [100, 100, 100, 100, 100, 100])
+    await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])
 
     # 等待手指到达目标位置
     await asyncio.sleep(1.0)

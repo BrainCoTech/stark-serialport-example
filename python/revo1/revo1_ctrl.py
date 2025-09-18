@@ -77,7 +77,7 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     # 检测灵巧手的波特率和设备ID，初始化client
-    (client, slave_id) = await open_modbus_revo1(port_name="/dev/ttyUSB0") # 替换为实际的串口名称, 传None会尝试自动检测
+    (client, slave_id) = await open_modbus_revo1(port_name=None, quick=True) # 替换为实际的串口名称, 传None会尝试自动检测
 
     # 执行初始化动作
     # 设置单个手指控制：小指闭合到100%位置

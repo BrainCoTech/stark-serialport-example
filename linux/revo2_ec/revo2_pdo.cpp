@@ -32,8 +32,8 @@
 
 #define MAX_TRAJECTORY_POINTS 10
 
-#define STARK_VENDOR_ID     0x00bc0000
-#define STARK_PRODUCT_CODE  0x00009252
+#define STARK_VENDOR_ID 0x00bc0000
+#define STARK_PRODUCT_CODE 0x00009252
 
 /****************************************************************************/
 // 枚举和结构体定义
@@ -846,8 +846,7 @@ int main(int argc, char **argv)
 
   // 2. 设置实时调度策略
   struct sched_param param = {};
-  param.sched_priority = 49;
-  // param.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  param.sched_priority = sched_get_priority_max(SCHED_FIFO);
   printf("Using priority %i.\n", param.sched_priority);
   if (sched_setscheduler(0, SCHED_FIFO, &param) == -1)
   {
