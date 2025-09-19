@@ -64,6 +64,12 @@ ethercat version # 检查 EtherCAT 版本
 sudo systemctl enable ethercat # 启用 EtherCAT 主站
 sudo systemctl restart ethercat # 重启 EtherCAT 主站
 sudo systemctl status ethercat # 检查 EtherCAT 主站是否运行
+
+journalctl -u ethercat.service -b # 查看 EtherCAT 运行日志
+# 查看内核日志，排查 驱动层 / 网卡绑定 是否正常
+dmesg | grep EtherCAT
+dmesg | grep ec_
+
 sudo ethercat slaves  # 检查是否有 EtherCAT 设备连接
 sudo ethercat sdos # 检查 EtherCAT 设备的 SDO 信息
 sudo ethercat pdos # 检查 EtherCAT 设备的 PDO 信息
@@ -97,4 +103,6 @@ cd ros2_stark_ws
 ./stark_ethercat_manager.sh # 测试发送位置控制命令
 ./stark_ethercat_manager.sh monitor  # 监控左电机状态
 ./stark_ethercat_manager.sh monitor_right  # 监控右电机状态
+./stark_ethercat_manager.sh touch   # 监控左触觉状态
+./stark_ethercat_manager.sh touch_right  # 监控右触觉状态
 ```

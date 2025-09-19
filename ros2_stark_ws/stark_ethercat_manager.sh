@@ -55,6 +55,14 @@ elif [ "$1" == "monitor_right" ]; then
     # 测试监控关节信息
     ros2 topic echo /motor_status_right    
 
+elif [ "$1" == "touch" ]; then
+    # 测试监控触觉信息
+    ros2 topic echo /touch_status_left    
+
+elif [ "$1" == "touch_right" ]; then
+    # 测试监控触觉信息
+    ros2 topic echo /touch_status_right
+
 else
     # 运行测试脚本
     echo "Available topics:"

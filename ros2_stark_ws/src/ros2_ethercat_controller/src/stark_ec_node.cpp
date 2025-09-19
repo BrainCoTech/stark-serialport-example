@@ -89,6 +89,7 @@ static uint8_t *domain_data_ = NULL;
 static std::queue<ros2_stark_msgs::msg::SetMotorMulti> motor_multi_command_queue_;
 static std::queue<ros2_stark_msgs::msg::SetMotorSingle> motor_single_command_queue_;
 static std::mutex command_queue_mutex_;
+// 关节反馈
 static uint8_t joint_pos_0[12];
 static uint8_t joint_spd_0[12];
 static uint8_t joint_cur_0[12];
@@ -97,6 +98,19 @@ static uint8_t joint_pos_1[12];
 static uint8_t joint_spd_1[12];
 static uint8_t joint_cur_1[12];
 static uint8_t joint_status_1[12];
+// 触觉反馈
+static bool is_touch_hand_0 = false;
+static bool is_touch_hand_1 = false;
+static uint8_t normal_force_0[10];
+static uint8_t tangential_force_0[10];
+static uint8_t tangential_direction_0[10];
+static uint8_t touch_proximity_0[20];
+static uint8_t touch_status_0[10];
+static uint8_t normal_force_1[10];
+static uint8_t tangential_force_1[10];
+static uint8_t tangential_direction_1[10];
+static uint8_t touch_proximity_1[20];
+static uint8_t touch_status_1[10];
 void run_motor_multi_command(const std::shared_ptr<ros2_stark_msgs::msg::SetMotorMulti> msg);
 void run_motor_single_command(const std::shared_ptr<ros2_stark_msgs::msg::SetMotorSingle> msg);
 
@@ -132,27 +146,43 @@ const ec_pdo_entry_reg_t domain_regs_1[] = {
 
 // PDO 条目定义
 ec_pdo_entry_info_t slave_pdo_entries[] = {
-    // RxPDO: 0x1600 (主站发送给从站)
-    {0x7000, 0x01, 16}, // mult_joint_ctrl_mode
-    {0x7000, 0x02, 96}, // joint_param1 (positions)
-    {0x7000, 0x03, 96}, // joint_param2 (durations/speeds)
-    {0x7010, 0x01, 8},  // single_joint_ctrl_mode
-    {0x7010, 0x02, 8},  // single_joint_id
-    {0x7010, 0x03, 16}, // single_joint_param1
-    {0x7010, 0x04, 16}, // single_joint_param2
+  // RxPDO: 0x1600 (主站发送给从站) 多指控制模式
+  {0x7000, 0x01, 16}, // mult_joint_ctrl_mode
+  {0x7000, 0x02, 96}, // joint_param1 (positions)  (6 x uint16)
+  {0x7000, 0x03, 96}, // joint_param2 (durations/speeds) (6 x uint16)
+                      //
+  // RxPDO: 0x1601 (主站发送给从站) 单指控制模式
+  {0x7010, 0x01, 8},  // single_joint_ctrl_mode
+  {0x7010, 0x02, 8},  // single_joint_id
+  {0x7010, 0x03, 16}, // single_joint_param1
+  {0x7010, 0x04, 16}, // single_joint_param2
 
-    // TxPDO: 0x1A00 (从站发送给主站)
-    {0x6000, 0x01, 96}, // joint_pos
-    {0x6000, 0x02, 96}, // joint_spd
-    {0x6000, 0x03, 96}, // joint_cur
-    {0x6000, 0x04, 96}, // joint_status
+  // TxPDO: 0x1A00 (从站发送给主站)
+  {0x6000, 0x01, 96}, // joint_pos (6 x uint16)
+  {0x6000, 0x02, 96}, // joint_spd (6 x uint16)
+  {0x6000, 0x03, 96}, // joint_cur (6 x int16)
+  {0x6000, 0x04, 96}, // joint_status (6 x uint16)
+
+  // TxPDO: 0x1A01 (从站发送给主站) 触觉数据
+  {0x6010, 0x01, 80},  // force_normal (5 x uint16)
+  {0x6010, 0x02, 80},  // force_tangential (5 x uint16)
+  {0x6010, 0x03, 80},  // force_direction (5 x uint16)
+  {0x6010, 0x04, 160}, // proximity (5 x uint32)
+  {0x6010, 0x05, 80},  // touch_status (5 x uint16)
 };
 
 // PDO 映射
 ec_pdo_info_t slave_pdos[] = {
-  {0x1600, 3, &slave_pdo_entries[0]}, // RxPDO: 0x7000:01-03
-  {0x1601, 4, &slave_pdo_entries[3]}, // RxPDO: 0x7010:01-04
-  {0x1A00, 4, &slave_pdo_entries[7]}, // TxPDO: 0x6000:01-04
+  {0x1600, 3, &slave_pdo_entries[0]},  // RxPDO: 0x7000:01-03 多指控制
+  {0x1601, 4, &slave_pdo_entries[3]},  // RxPDO: 0x7010:01-04 单指控制
+  {0x1A00, 4, &slave_pdo_entries[7]},  // TxPDO: 0x6000:01-04 关节反馈
+};
+
+ec_pdo_info_t slave_pdos_touch[] = {
+  {0x1600, 3, &slave_pdo_entries[0]},  // RxPDO: 0x7000:01-03 多指控制
+  {0x1601, 4, &slave_pdo_entries[3]},  // RxPDO: 0x7010:01-04 单指控制
+  {0x1A00, 4, &slave_pdo_entries[7]},  // TxPDO: 0x6000:01-04 关节反馈
+  {0x1A01, 5, &slave_pdo_entries[11]}, // TxPDO: 0x6010:01-05 触觉反馈
 };
 
 // 同步管理器配置
@@ -161,6 +191,14 @@ ec_sync_info_t slave_syncs[] = {
   {1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE},
   {2, EC_DIR_OUTPUT, 2, &slave_pdos[0], EC_WD_ENABLE}, // SM2: RxPDO
   {3, EC_DIR_INPUT, 1, &slave_pdos[2], EC_WD_DISABLE}, // SM3: TxPDO
+  {0xff},
+};
+
+ec_sync_info_t slave_syncs_touch[] = {
+  {0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE},
+  {1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE},
+  {2, EC_DIR_OUTPUT, 2, &slave_pdos_touch[0], EC_WD_ENABLE}, // SM2: RxPDO
+  {3, EC_DIR_INPUT, 2, &slave_pdos_touch[2], EC_WD_DISABLE}, // SM3: TxPDO
   {0xff},
 };
 
@@ -490,6 +528,30 @@ void get_motor_status()
   }
 }
 
+void get_touch_status() {
+  if (is_touch_hand_0 && off_in_0 >= 0) {
+    memcpy(normal_force_0, domain_data_ + off_in_0 + 48, 10);
+    memcpy(tangential_force_0, domain_data_ + off_in_0 + 58, 10);
+    memcpy(tangential_direction_0, domain_data_ + off_in_0 + 68, 10);
+    memcpy(touch_proximity_0, domain_data_ + off_in_0 + 78, 20);
+    memcpy(touch_status_0, domain_data_ + off_in_0 + 98, 10);
+    // printf("Touch Status 0 - Normal Force: ");
+    // for (int i = 0; i < 5; i++) {
+    //   uint16_t force = *((uint16_t *)(normal_force_0 + i * 2));
+    //   printf("%d ", force);
+    // }
+    // printf("\n");
+  }
+
+  if (is_touch_hand_1 && off_in_1 > 0) {
+    memcpy(normal_force_1, domain_data_ + off_in_1 + 48, 10);
+    memcpy(tangential_force_1, domain_data_ + off_in_1 + 58, 10);
+    memcpy(tangential_direction_1, domain_data_ + off_in_1 + 68, 10);
+    memcpy(touch_proximity_1, domain_data_ + off_in_1 + 78, 20);
+    memcpy(touch_status_1, domain_data_ + off_in_1 + 98, 10);
+  }
+}
+
 StarkNode::StarkNode() : Node("stark_ec_node") {
   // Declare and Get parameters
   slave_pos_left = this->declare_parameter<int>("slave_pos_left", 0);
@@ -527,7 +589,7 @@ StarkNode::StarkNode() : Node("stark_ec_node") {
   
   // Initialize publishers
   motor_status_pub_left = create_publisher<ros2_stark_msgs::msg::MotorStatus>("motor_status_left", 10);
-  // touch_status_pub_left = create_publisher<ros2_stark_msgs::msg::TouchStatus>("touch_status_left", 10);
+  touch_status_pub_left = create_publisher<ros2_stark_msgs::msg::TouchStatus>("touch_status_left", 10);
   
   // Initialize subscribers
   motor_multi_sub_left = create_subscription<ros2_stark_msgs::msg::SetMotorMulti>(
@@ -544,7 +606,7 @@ StarkNode::StarkNode() : Node("stark_ec_node") {
       std::bind(&StarkNode::handle_set_motor_single, this, std::placeholders::_1, std::placeholders::_2));
 
     motor_status_pub_right = create_publisher<ros2_stark_msgs::msg::MotorStatus>("motor_status_right", 10);
-    // touch_status_pub_right = create_publisher<ros2_stark_msgs::msg::TouchStatus>("touch_status_right", 10);
+    touch_status_pub_right = create_publisher<ros2_stark_msgs::msg::TouchStatus>("touch_status_right", 10);
 
     motor_multi_sub_right = create_subscription<ros2_stark_msgs::msg::SetMotorMulti>(
       "set_motor_multi_" + str_right, 10, std::bind(&StarkNode::queue_motor_multi_command, this, std::placeholders::_1));
@@ -592,6 +654,12 @@ int read_sdo_string(uint8_t pos, uint16_t index, uint8_t subindex, char *value, 
   return 0;
 }
 
+bool is_touch_hand_by_sn(const char *sn)
+{
+  // 触觉手的序列号以 "BCXT" 开头
+  return (sn[0] == 'B' && sn[1] == 'C' && sn[2] == 'X' && sn[3] == 'T');
+}
+
 // 读取固件信息
 int read_firmware_info(uint8_t pos, firmware_info_t *info)
 {
@@ -613,8 +681,6 @@ int read_firmware_info(uint8_t pos, firmware_info_t *info)
 }
 
 bool StarkNode::initialize_stark_handler() {
-  
-
   // 初始化 EtherCAT 主站
   printf("Requesting master_...\n");
   master_ = ecrt_request_master(0);
@@ -635,7 +701,8 @@ bool StarkNode::initialize_stark_handler() {
     return -1;
   }
   printf("Configuring PDOs...\n");
-  if (ecrt_slave_config_pdos(sc_0, EC_END, slave_syncs))
+  const bool use_touch_pdo = true;
+  if (ecrt_slave_config_pdos(sc_0, EC_END, use_touch_pdo ? slave_syncs_touch : slave_syncs))
   {
     fprintf(stderr, "Failed to configure PDOs.\n");
     return -1;
@@ -682,6 +749,8 @@ bool StarkNode::initialize_stark_handler() {
     printf("  Control Board SN: %s\n", fw_info_0.ctrl_sn);
     printf("  Wrist Board FW:   %s\n", fw_info_0.wrist_fw_version);
     printf("  Wrist Board SN:   %s\n", fw_info_0.wrist_sn);
+    is_touch_hand_0 = is_touch_hand_by_sn(fw_info_0.ctrl_sn);
+    printf("  Is Touch Hand:    %s\n", is_touch_hand_0 ? "Yes" : "No");
   }
   if (slave_pos_right > 0) {
     firmware_info_t fw_info_1;
@@ -692,6 +761,8 @@ bool StarkNode::initialize_stark_handler() {
       printf("  Control Board SN: %s\n", fw_info_1.ctrl_sn);
       printf("  Wrist Board FW:   %s\n", fw_info_1.wrist_fw_version);
       printf("  Wrist Board SN:   %s\n", fw_info_1.wrist_sn);
+      is_touch_hand_1 = is_touch_hand_by_sn(fw_info_1.ctrl_sn);
+      printf("  Is Touch Hand:    %s\n", is_touch_hand_1 ? "Yes" : "No");
    }
   }
   return true;
@@ -699,9 +770,7 @@ bool StarkNode::initialize_stark_handler() {
 
 void StarkNode::timer_callback() {
   publish_motor_status();
-  // if (touch_device) {
-  //   publish_touch_status();
-  // }
+  publish_touch_status();
 }
 
 void StarkNode::publish_motor_status() {
@@ -735,40 +804,47 @@ void StarkNode::publish_motor_status() {
   motor_status_pub_right->publish(msg_right);
 }
 
-// void StarkNode::publish_touch_status() {
-//   auto touch_status = stark_get_touch_status(slave_pos_left);
-//   if (!touch_status) {
-//     RCLCPP_WARN(this->get_logger(), "Failed to get slave[%d]  touch status", slave_pos_left);
-//     return;
-//   }
-//   auto msg = ros2_stark_msgs::msg::TouchStatus();
-//   msg.slave_pos = slave_pos_left;
-//   // 填充固定 5 个元素的数组, 代表 5个手指上对应的传感器信息
-//   for (int i = 0; i < 5; i++) {
-//     msg.data[i].normal_force1 = touch_status->items[i].normal_force1;
-//     msg.data[i].tangential_force1 = touch_status->items[i].tangential_force1;
-//     msg.data[i].tangential_direction1 = touch_status->items[i].tangential_direction1;
-//     msg.data[i].self_proximity1 = touch_status->items[i].self_proximity1;
-//     msg.data[i].status = touch_status->items[i].status;
-//   }
-//   touch_status_pub_->publish(msg);
-//   free_touch_finger_data(touch_status);
-// }
+void StarkNode::publish_touch_status() {
+  if (is_touch_hand_0) {
+    auto msg = ros2_stark_msgs::msg::TouchStatus();
+    msg.slave_id = slave_pos_left;
+    for (int i = 0; i < 5; i++) {
+      uint16_t normal_force = *((uint16_t *)(normal_force_0 + i * 2));
+      uint16_t tangential_force = *((uint16_t *)(tangential_force_0 + i * 2));
+      uint16_t tangential_direction = *((uint16_t *)(tangential_direction_0 + i * 2));
+      uint32_t proximity = *((uint32_t *)(touch_proximity_0 + i * 4));
+      uint16_t status = *((uint16_t *)(touch_status_0 + i * 2));
+      // if (i == 4) {
+      //   printf("Touch Sensor %d: normal=%d, tangential=%d, direction=%d, proximity=%d, status=%d\n", 
+      //     i, normal_force, tangential_force, tangential_direction, proximity, status);
+      // }
+      msg.data[i].normal_force1 = normal_force;
+      msg.data[i].tangential_force1 = tangential_force;
+      msg.data[i].tangential_direction1 = tangential_direction;
+      msg.data[i].self_proximity1 = proximity;
+      msg.data[i].status = status;
+    }
+    touch_status_pub_left->publish(msg);
+  }
 
-// void StarkNode::handle_get_device_info(
-//     const std::shared_ptr<ros2_stark_msgs::srv::GetDeviceInfo::Request> request,
-//     std::shared_ptr<ros2_stark_msgs::srv::GetDeviceInfo::Response> response) {
-//   uint8_t slave_pos = request->slave_id;  
-//   bool is_left = (slave_pos == slave_pos_left);  
-//   response->sku_type = static_cast<uint8_t>(is_left ? sku_type_left : sku_type_right);
-//   response->serial_number = is_left ? sn_left : sn_right;
-//   response->firmware_version = is_left ? fw_version_left : fw_version_right;
-//   if (request->get_turbo_mode) {
-//     is_turbo_mode_enabled = stark_get_turbo_mode_enabled(slave_id);
-//     response->turbo_mode = is_turbo_mode_enabled;
-//   }
-//   response->success = true;
-// }
+  if (is_touch_hand_1 && slave_pos_right > 0) {
+    auto msg = ros2_stark_msgs::msg::TouchStatus();
+    msg.slave_id = slave_pos_right;
+    for (int i = 0; i < 5; i++) {
+      uint16_t normal_force = *((uint16_t *)(normal_force_1 + i * 2));
+      uint16_t tangential_force = *((uint16_t *)(tangential_force_1 + i * 2));
+      uint16_t tangential_direction = *((uint16_t *)(tangential_direction_1 + i * 2));
+      uint32_t proximity = *((uint32_t *)(touch_proximity_1 + i * 4));
+      uint16_t status = *((uint16_t *)(touch_status_1 + i * 2));
+      msg.data[i].normal_force1 = normal_force;
+      msg.data[i].tangential_force1 = tangential_force;
+      msg.data[i].tangential_direction1 = tangential_direction;
+      msg.data[i].self_proximity1 = proximity;
+      msg.data[i].status = status;
+    }
+    touch_status_pub_right->publish(msg);
+  }
+}
 
 void StarkNode::handle_set_motor_multi(
     const std::shared_ptr<ros2_stark_msgs::srv::SetMotorMulti::Request> request,
@@ -1136,11 +1212,12 @@ void start_cyclic_task() {
     // 仅当从站处于 OPERATIONAL 状态时才执行读写操作
     if (master_state_.al_states == 0x08)
     {
-      // static int read_counter = 0;
-      // if (read_counter++ % (FREQUENCY * 1) == 0)
-      // { // 每秒读取一次
+      static int read_counter = 0;
+      if (read_counter++ % (10) == 0)
+      { 
         get_motor_status();
-      // }
+        get_touch_status();
+      }
 
       run_motor_command();
     }

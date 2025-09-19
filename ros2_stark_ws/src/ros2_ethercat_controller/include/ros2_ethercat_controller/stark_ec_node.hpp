@@ -63,8 +63,8 @@ private:
     // ROS 2 Publishers
     rclcpp::Publisher<ros2_stark_msgs::msg::MotorStatus>::SharedPtr motor_status_pub_left;
     rclcpp::Publisher<ros2_stark_msgs::msg::MotorStatus>::SharedPtr motor_status_pub_right;
-    // rclcpp::Publisher<ros2_stark_msgs::msg::TouchStatus>::SharedPtr touch_status_pub_left;
-    // rclcpp::Publisher<ros2_stark_msgs::msg::TouchStatus>::SharedPtr touch_status_pub_right;
+    rclcpp::Publisher<ros2_stark_msgs::msg::TouchStatus>::SharedPtr touch_status_pub_left;
+    rclcpp::Publisher<ros2_stark_msgs::msg::TouchStatus>::SharedPtr touch_status_pub_right;
 
     // ROS 2 Subscribers
     rclcpp::Subscription<ros2_stark_msgs::msg::SetMotorMulti>::SharedPtr motor_multi_sub_left;
@@ -118,7 +118,7 @@ private:
     bool initialize_stark_handler();
     // void publish_device_status();
     void publish_motor_status();
-    // void publish_touch_status();
+    void publish_touch_status();
 };
 
 #endif // STARK_NODE_HPP
