@@ -2,6 +2,7 @@ import asyncio
 import sys
 from ec_utils import logger, libstark
 
+
 # Main
 async def main():
     # fmt: off
@@ -32,14 +33,17 @@ async def main():
     logger.info(f"Finger[{finger_id}] protected current: {protected_current}")
 
     if ctx.is_touch_hand():
-      # 触觉传感器参数校准
+      touch_fw_versions = await ctx.get_touch_sensor_fw_versions(slave_pos)
+      logger.info(f"Touch Fw Versions: {touch_fw_versions}")  
+      
+      # 触觉传感器参数-校准零漂
       # 当空闲状态下的三维力数值不为0时，可通过该指令进行校准
       # 该指令的执行时间较长，期间的数据无法作为参考
       # 建议忽略校准后十秒内的数据，执行时手指传感器不能受力
-      # await client.touch_sensor_calibrate(slave_id, 0x1f)  # 校准指定手指的传感器采集通道
-
-      touch_fw_versions = await ctx.get_touch_sensor_fw_versions(slave_pos)
-      logger.info(f"Touch Fw Versions: {touch_fw_versions}")
+      # await ctx.touch_sensor_calibrate(slave_pos, 0x1f)  # 校准全部/指定通道
+      
+      # 触觉传感器参数调整
+      # await ctx.touch_sensor_reset(slave_pos, 0x1f)  # 调整全部/指定通道
 
 
     # NOTE: 使用PDO通信 控制/读取马达状态、触觉等信息
@@ -47,6 +51,7 @@ async def main():
     # 关闭资源
     # libstark.modbus_close(ctx)
     sys.exit(0)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

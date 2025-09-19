@@ -46,11 +46,17 @@
 #define RING_CALIBRATION_SUBINDEX 0x04
 #define PINKY_CALIBRATION_SUBINDEX 0x05
 #define TOUCH_VENDOR_SUBINDEX 0x06
-#define THUMB_TOUCH_FW_VERSION_SUBINDEX 0x07
-#define INDEX_TOUCH_FW_VERSION_SUBINDEX 0x08
-#define MID_TOUCH_FW_VERSION_SUBINDEX 0x09
-#define RING_TOUCH_FW_VERSION_SUBINDEX 0x0A
-#define PINK_TOUCH_FW_VERSION_SUBINDEX 0x0B
+#define THUMB_ACQ_PARAM_UPDATE_SUBINDEX 0x07
+#define INDEX_ACQ_PARAM_UPDATE_SUBINDEX 0x08
+#define MID_ACQ_PARAM_UPDATE_SUBINDEX 0x09
+#define RING_ACQ_PARAM_UPDATE_SUBINDEX 0x0A
+#define PINKY_ACQ_PARAM_UPDATE_SUBINDEX 0x0B
+#define RESERVED1_SUBINDEX 0x0C
+#define THUMB_TOUCH_FW_VERSION_SUBINDEX 0x0D
+#define INDEX_TOUCH_FW_VERSION_SUBINDEX 0x0E
+#define MID_TOUCH_FW_VERSION_SUBINDEX 0x0F
+#define RING_TOUCH_FW_VERSION_SUBINDEX 0x10
+#define PINK_TOUCH_FW_VERSION_SUBINDEX 0x11
 
 // 通用配置子索引
 #define HAND_TYPE_SUBINDEX 0x01
@@ -349,7 +355,8 @@ int write_sdo_string(uint16_t index, uint8_t subindex, const char *value) {
 int read_touch_config(touch_config_t *config) {
   int ret = 0;
   printf("=== Reading Touch Configuration ===\n");
-  ret |= read_sdo_uint8(TOUCH_OBJECT_INDEX, TOUCH_VENDOR_SUBINDEX, &config->vendor_id);
+  ret |= read_sdo_uint8(TOUCH_OBJECT_INDEX, TOUCH_VENDOR_SUBINDEX,
+                        &config->vendor_id);
 
   ret |= read_sdo_string(TOUCH_OBJECT_INDEX, THUMB_TOUCH_FW_VERSION_SUBINDEX,
                          config->thumb_touch_fw_version,

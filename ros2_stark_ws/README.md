@@ -78,6 +78,14 @@ sudo ethercat pdos # 检查 EtherCAT 设备的 PDO 信息
 ethercat upload -t string -p 0 0x8000 0x11 # FW version
 ethercat upload -t string -p 0 0x8000 0x12 # SN
 ethercat upload -t string -p 0 0x8000 0x13 # Wrist FW version
+ethercat upload -t string -p 0 0x8000 0x14 # Wrist SN
+
+ethercat upload -t uint8 -p 0 0x8010 0x06 # Touch Sensor Vendor ID
+ethercat upload -t string -p 0 0x8010 0x0D # Thumb Touch Sensor FW
+ethercat upload -t string -p 0 0x8010 0x0E # Index Touch Sensor FW
+ethercat upload -t string -p 0 0x8010 0x0F # Middle Touch Sensor FW
+ethercat upload -t string -p 0 0x8010 0x10 # Ring Touch Sensor FW
+ethercat upload -t string -p 0 0x8010 0x11 # Pinky Touch Sensor FW 
 
 # 在OP模式下，读取关节信息
 # echo "=== 读取所有关节数据 ==="
