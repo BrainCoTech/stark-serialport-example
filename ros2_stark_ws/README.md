@@ -69,14 +69,19 @@ sudo ethercat sdos # 检查 EtherCAT 设备的 SDO 信息
 sudo ethercat pdos # 检查 EtherCAT 设备的 PDO 信息
 
 # 读取固件版本
-ethercat upload -t string -p 0 0x8000 0x11 # Wrist FW version
-ethercat upload -t string -p 0 0x8000 0x13 # CTRL FW version
+ethercat upload -t string -p 0 0x8000 0x11 # FW version
+ethercat upload -t string -p 0 0x8000 0x12 # SN
+ethercat upload -t string -p 0 0x8000 0x13 # Wrist FW version
 
 # 在OP模式下，读取关节信息
 # echo "=== 读取所有关节数据 ==="
 # echo "位置数据 (6x UINT16):"
 ethercat upload -t raw -p 0 0x6000 0x01
 ethercat upload -t raw -p 0 0x6000 0x01 | xxd -r -p | od -An -t u2 --endian=little -w2 | awk '{printf "关节位置%d: %d\n", NR, $1}'
+
+# 在OP模式下，读取触觉信息
+ethercat upload -t raw -p 0 0x6010 0x01
+ethercat upload -t raw -p 0 0x6010 0x01 | xxd -r -p | od -An -t u2 --endian=little -w2 | awk '{printf "法向力%d: %d\n", NR, $1}'
 
 cd ros2_stark_ws
 chmod +x stark_ethercat_manager.sh # 给脚本执行权限

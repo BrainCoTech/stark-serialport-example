@@ -23,4 +23,6 @@ make clean # 清理旧的编译文件
 make # 编译
 make run_revo2_sdo # 运行 revo2_sdo 示例
 make run_revo2_pdo # 运行 revo2_pdo 示例
+make run_revo2_touch_sdo # 运行 revo2_sdo 示例 - 触觉版
+make run_revo2_touch_pdo # 运行 revo2_pdo 示例 - 触觉版
 ```

@@ -376,6 +376,12 @@ void ethercat_start_dfu(DeviceHandler *handle,
 /// 如果失败，返回 NULL
 DeviceInfo *stark_get_device_info(DeviceHandler *handle, uint8_t slave_id);
 
+/// 根据序列号判断是否为触觉版灵巧手
+bool is_touch_hand_by_sn(const char *sn_ptr);
+
+/// 根据序列号判断是否为二代灵巧手
+bool is_revo2_hand_by_sn(const char *sn_ptr);
+
 /// 获取RS485串口设备波特率
 /// 115200, 57600, 19200, 460800
 uint32_t stark_get_rs485_baudrate(DeviceHandler *handle, uint8_t slave_id);

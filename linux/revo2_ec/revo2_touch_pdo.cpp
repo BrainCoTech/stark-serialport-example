@@ -119,27 +119,37 @@ const ec_pdo_entry_reg_t domain_regs[] = {
 
 // PDO 条目定义
 ec_pdo_entry_info_t slave_pdo_entries[] = {
-    // RxPDO: 0x1600 (主站发送给从站)
+    // RxPDO: 0x1600 (主站发送给从站) 多指控制模式
     {0x7000, 0x01, 16}, // mult_joint_ctrl_mode
-    {0x7000, 0x02, 96}, // joint_param1 (positions)
-    {0x7000, 0x03, 96}, // joint_param2 (durations/speeds)
+    {0x7000, 0x02, 96}, // joint_param1 (positions)  (6 x uint16)
+    {0x7000, 0x03, 96}, // joint_param2 (durations/speeds) (6 x uint16)
+                        //
+    // RxPDO: 0x1601 (主站发送给从站) 单指控制模式
     {0x7010, 0x01, 8},  // single_joint_ctrl_mode
     {0x7010, 0x02, 8},  // single_joint_id
     {0x7010, 0x03, 16}, // single_joint_param1
     {0x7010, 0x04, 16}, // single_joint_param2
 
     // TxPDO: 0x1A00 (从站发送给主站)
-    {0x6000, 0x01, 96}, // joint_pos
-    {0x6000, 0x02, 96}, // joint_spd
-    {0x6000, 0x03, 96}, // joint_cur
-    {0x6000, 0x04, 96}, // joint_status
+    {0x6000, 0x01, 96}, // joint_pos (6 x uint16)
+    {0x6000, 0x02, 96}, // joint_spd (6 x uint16)
+    {0x6000, 0x03, 96}, // joint_cur (6 x int16)
+    {0x6000, 0x04, 96}, // joint_status (6 x uint16)
+
+    // TxPDO: 0x1A01 (从站发送给主站) 触觉数据
+    {0x6010, 0x01, 80},  // force_normal (5 x uint16)
+    {0x6010, 0x02, 80},  // force_tangential (5 x uint16)
+    {0x6010, 0x03, 80},  // force_direction (5 x uint16)
+    {0x6010, 0x04, 160}, // proximity (5 x uint32)
+    {0x6010, 0x05, 80},  // touch_status (5 x uint16)
 };
 
 // PDO 映射
 ec_pdo_info_t slave_pdos[] = {
-    {0x1600, 3, &slave_pdo_entries[0]}, // RxPDO: 0x7000:01-03
-    {0x1601, 4, &slave_pdo_entries[3]}, // RxPDO: 0x7010:01-04
-    {0x1A00, 4, &slave_pdo_entries[7]}, // TxPDO: 0x6000:01-04
+    {0x1600, 3, &slave_pdo_entries[0]},  // RxPDO: 0x7000:01-03 多指控制
+    {0x1601, 4, &slave_pdo_entries[3]},  // RxPDO: 0x7010:01-04 单指控制
+    {0x1A00, 4, &slave_pdo_entries[7]},  // TxPDO: 0x6000:01-04 关节反馈
+    {0x1A01, 5, &slave_pdo_entries[11]}, // TxPDO: 0x6010:01-05 触觉反馈
 };
 
 // 同步管理器配置
@@ -147,7 +157,7 @@ ec_sync_info_t slave_syncs[] = {
     {0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE},
     {1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE},
     {2, EC_DIR_OUTPUT, 2, &slave_pdos[0], EC_WD_ENABLE}, // SM2: RxPDO
-    {3, EC_DIR_INPUT, 1, &slave_pdos[2], EC_WD_DISABLE}, // SM3: TxPDO
+    {3, EC_DIR_INPUT, 2, &slave_pdos[2], EC_WD_DISABLE}, // SM3: TxPDO
     {0xff}};
 
 /****************************************************************************/
@@ -365,8 +375,8 @@ void set_single_joint_position_time(finger_index_t joint_id, uint16_t position,
   EC_WRITE_U16(domain_data + off_out + single_offset + 2, position);
   EC_WRITE_U16(domain_data + off_out + single_offset + 4, duration);
 
-  printf("Single joint %s(%d): PositionAndTime, pos=%d, time=%d\n",
-         get_joint_name(joint_id), joint_id, position, duration);
+  // printf("Single joint %s(%d): PositionAndTime, pos=%d, time=%d\n",
+  //        get_joint_name(joint_id), joint_id, position, duration);
 }
 
 // 单关节位置和速度控制
@@ -378,8 +388,8 @@ void set_single_joint_position_speed(finger_index_t joint_id, uint16_t position,
   EC_WRITE_U16(domain_data + off_out + single_offset + 2, position);
   EC_WRITE_U16(domain_data + off_out + single_offset + 4, speed);
 
-  printf("Single joint %s(%d): PositionAndSpeed, pos=%d, speed=%d\n",
-         get_joint_name(joint_id), joint_id, position, speed);
+  // printf("Single joint %s(%d): PositionAndSpeed, pos=%d, speed=%d\n",
+  //        get_joint_name(joint_id), joint_id, position, speed);
 }
 
 // 单关节速度控制
@@ -390,8 +400,8 @@ void set_single_joint_speed(finger_index_t joint_id, uint16_t speed) {
   EC_WRITE_U16(domain_data + off_out + single_offset + 2, speed);
   EC_WRITE_U16(domain_data + off_out + single_offset + 4, 0);
 
-  printf("Single joint %s(%d): Speed, speed=%d\n", get_joint_name(joint_id),
-         joint_id, speed);
+  // printf("Single joint %s(%d): Speed, speed=%d\n", get_joint_name(joint_id),
+  //        joint_id, speed);
 }
 
 // 单关节电流控制
@@ -621,6 +631,74 @@ void read_joint_feedback_data() {
 }
 
 /****************************************************************************/
+// 触觉反馈数据读取函数
+// ● 5个手指法向力（force_normal） → UINT16 ×5
+// ● 5个手指切向力（force_tangential） → INT16 ×5
+// ● 5个手指切向力方向（force_direction） → INT16 ×5
+// ● 5个手指接近觉（proximity） → UINT32 ×5
+// ● 5个手指触觉状态（touch_status）→ UINT16 ×5
+
+// ● 法向力，切向力是 16 位的无符号数据。数值单位是 100 * N， 例如切向力1000表示
+// 1000 / 100 N, 即 10 N。法向力，切向力的测量范围是 0 ~ 25 N。
+//
+// ● 切向力方向是 16 位的无符号数据。单位是角度，数值范围为 0 ~
+// 359度。靠近指尖的方向为 0 度，按顺时针旋转最大到 359 度，当数值为
+// 65535(0xFFFF) 时，表示切向力方向无效。
+//
+// ● 接近值是 32 位的无符号数据。
+//
+// ● 触觉状态寄存器为 16 位，分高低字节表示不同状态信息：
+// 高字节：用于表示传感器内部数据更新的包序号。该字节数值若递增或发生变化，表明传感器输出数据已更新。
+// 低字节：用于指示传感器当前状态，各位定义如下：
+//   ○ bit2：触发时间超时, 厂商反馈可忽略该状态
+//   ○ bit1：原始值未更新, 厂商反馈可忽略该状态
+//   ○ bit0：原始值错误
+/****************************************************************************/
+
+void read_touch_feedback_data() {
+  // 法向力
+  uint8_t force_normal[10];
+  memcpy(force_normal, domain_data + off_in + 48, 10);
+  // 切向力
+  uint8_t force_tangential[10];
+  memcpy(force_tangential, domain_data + off_in + 58, 10);
+  // 切向力方向
+  uint8_t force_direction[10];
+  memcpy(force_direction, domain_data + off_in + 68, 10);
+  // 接近觉
+  uint8_t proximity[20];
+  memcpy(proximity, domain_data + off_in + 78, 20);
+  // 触觉状态
+  uint8_t touch_status[20];
+  memcpy(touch_status, domain_data + off_in + 98, 20);
+
+  // 打印反馈数据
+  printf("===========================\n");
+  printf("Force Normal: ");
+  print_hex(force_normal, 10);
+  printf("Force Tangential: ");
+  print_hex(force_tangential, 10);
+  printf("Force Direction: ");
+  print_hex(force_direction, 10);
+  printf("Proximity: ");
+  print_hex(proximity, 20);
+  printf("Touch Status: \n");
+
+  // ● 低字节：用于指示传感器当前状态，各位定义如下：
+  //   ○ bit2：触发时间超时, 厂商反馈可忽略该状态
+  //   ○ bit1：原始值未更新, 厂商反馈可忽略该状态
+  //   ○ bit0：原始值错误
+
+  // 打印触觉状态（共 10 字节，每 2 字节一个传感器数据）
+  for (int i = 0; i < 10; i += 2) {
+    uint8_t status = touch_status[i];      // 低字节：状态
+    uint8_t seq    = touch_status[i + 1];  // 高字节：序号
+    printf("Sensor %d -> Status: 0x%02X, Seq: %u\n", i / 2, (unsigned)status, (unsigned)seq);
+  }
+  printf("===========================\n");
+}
+
+/****************************************************************************/
 // 主循环任务
 /****************************************************************************/
 
@@ -664,8 +742,8 @@ void cyclic_task() {
         initial_command_sent = true;
       }
 
-      // 每2秒切换一次演示模式
-      if (demo_counter++ % (FREQUENCY * 2) == 0) {
+      // 每20秒切换一次演示模式
+      if (demo_counter++ % (FREQUENCY * 20) == 0) {
         switch (demo_stage % 8) { // 增加手势演示
         case 0: {
           // set_single_joint_position_time((finger_index_t)PINKY, 1000, 100);
@@ -727,8 +805,9 @@ void cyclic_task() {
 
       // 定期打印反馈数据
       static int print_counter = 0;
-      if (print_counter++ % (FREQUENCY * 2) == 0) { // 每2秒打印一次
+      if (print_counter++ % 10 == 0) {
         read_joint_feedback_data();
+        read_touch_feedback_data();
       }
     }
 

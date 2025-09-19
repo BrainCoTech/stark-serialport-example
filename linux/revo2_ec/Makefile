@@ -1,6 +1,5 @@
 # 设置变量
 SCRIPT_DIR := $(shell pwd)
-# DIST_DIR := $(abspath $(SCRIPT_DIR)/../../lib)
 DIST_DIR := $(abspath $(SCRIPT_DIR)/../../dist)
 LIB_DIR := $(abspath $(DIST_DIR)/shared/linux)
 HEADER_DIR := $(abspath $(DIST_DIR)/include)
@@ -28,7 +27,7 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 		$(INCLUDE) \
 		$(COMMON_LIBS)
 	@echo "\033[1;33m[linux] build $@.cpp done\033[0m"
-	sudo setcap cap_sys_nice,cap_net_raw=eip $@.exe
+# 	sudo setcap cap_sys_nice,cap_net_raw=eip $@.exe
 
 # 默认目标
 all: $(BINARIES)
@@ -37,12 +36,9 @@ all: $(BINARIES)
 clean:
 	rm -f $(addsuffix .exe,$(BINARIES))
 
-# export LD_LIBRARY_PATH := $(LIB_DIR):$(LD_LIBRARY_PATH)
+# 运行目标
 run_%:
 	./$*.exe
-
-# make run_revo2_pdo
-# make run_revo2_sdo
 
 # 伪目标声明，确保不会与同名文件冲突
 .PHONY: clean all run

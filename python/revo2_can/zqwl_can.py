@@ -5,8 +5,8 @@ from zqwl_win import zcan_open, zcan_close, zcan_send_message, zqwl_can_receive_
 from can_utils import libstark, logger, setup_shutdown_event
 
 
-class Revo1CanController:
-    """Revo1 CAN通信控制器"""
+class Revo2CanController:
+    """Revo2 CAN通信控制器"""
 
     def __init__(self, master_id: int = 1, slave_id: int = 1):
         self.master_id = master_id
@@ -135,12 +135,12 @@ class Revo1CanController:
         # 示例1: 逐个握拳动作
         logger.info("示例1: 逐个手指握拳")
         positions = [
-            [20, 0, 0, 0, 0, 0],  # 拇指
-            [20, 30, 0, 0, 0, 0],  # 拇指+食指
-            [20, 30, 50, 0, 0, 0],  # +中指
-            [20, 30, 50, 70, 0, 0],  # +无名指
-            [20, 30, 50, 70, 80, 0],  # +小指
-            [20, 30, 50, 70, 80, 90],  # +手腕
+            [200, 0, 0, 0, 0, 0],  # 拇指
+            [200, 300, 0, 0, 0, 0],  # 拇指+食指
+            [200, 300, 500, 0, 0, 0],  # +中指
+            [200, 300, 500, 700, 0, 0],  # +无名指
+            [200, 300, 500, 700, 800, 0],  # +小指
+            [200, 300, 500, 700, 800, 900],  # +手腕
         ]
 
         for i, pos in enumerate(positions):
@@ -154,10 +154,10 @@ class Revo1CanController:
         logger.info("示例2: 预设手势")
         gestures = {
             "张开手": [0, 0, 0, 0, 0, 0],
-            "指向": [0, 30, 0, 0, 0, 0],
-            "胜利手势": [0, 30, 80, 0, 0, 0],
-            "OK手势": [80, 30, 80, 0, 0, 0],
-            "握拳": [80, 30, 100, 100, 100, 100],
+            "指向": [0, 300, 0, 0, 0, 0],
+            "胜利手势": [0, 300, 800, 0, 0, 0],
+            "OK手势": [500, 300, 800, 0, 0, 0],
+            "握拳": [500, 300, 1000, 1000, 1000, 1000],
         }
 
         for gesture_name, positions in gestures.items():
@@ -169,8 +169,8 @@ class Revo1CanController:
         logger.info("示例3: 抓取动作模拟")
         grab_sequence = [
             ([0, 0, 0, 0, 0, 0], "初始位置"),
-            ([30, 40, 60, 80, 80, 0], "抓取准备"),
-            ([60, 70, 90, 100, 100, 0], "抓取完成"),
+            ([300, 400, 600, 800, 800, 0], "抓取准备"),
+            ([500, 400, 900, 1000, 1000, 0], "抓取完成"),
         ]
 
         for positions, description in grab_sequence:
@@ -192,7 +192,7 @@ class Revo1CanController:
 
         # 位置控制
         logger.info("位置控制测试")
-        await self.client.set_finger_position(self.slave_id, finger_id, 100)  # 最大位置
+        await self.client.set_finger_position(self.slave_id, finger_id, 1000)  # 最大位置
         await asyncio.sleep(1.0)
         await self.client.set_finger_position(self.slave_id, finger_id, 0)  # 初始位置
         await asyncio.sleep(1.0)
@@ -252,11 +252,6 @@ class Revo1CanController:
 
         await self.single_finger_control_example(libstark.FingerId.Pinky)
 
-        # 设置最终手势（装箱手势）
-        # await self.client.set_finger_positions(
-        #     self.slave_id, [80, 30, 100, 100, 100, 100]
-        # )
-
     def cleanup(self):
         """清理资源"""
         try:
@@ -268,7 +263,8 @@ class Revo1CanController:
 
 async def main():
     """主函数"""
-    controller = Revo1CanController(master_id=1, slave_id=1)
+    # 默认左手为1，右手为2
+    controller = Revo2CanController(master_id=1, slave_id=2)
 
     try:
         # 初始化连接
@@ -279,9 +275,11 @@ async def main():
         # 设置关闭事件监听
         shutdown_event = setup_shutdown_event(logger)
 
+        # 获取设备信息
+        await controller.get_device_info()
+
         # 创建任务
         tasks = []
-
         # 启动演示任务
         demo_task = asyncio.create_task(controller.demo_task())
         tasks.append(demo_task)

@@ -67,7 +67,7 @@ def zcan_open(device_type: int, channel: int, baudrate: int):
         zcan_handler = can_handler
         zcan_device_handler = dev_handler
 
-        logger.info(f"CAN 2.0 通道已成功开启: 波特率={baudrate}bps, 采样点=80%")
+        logger.info(f"CAN 2.0 通道已成功开启: 波特率={baudrate}bps, 采样点=75%")
 
     except Exception as e:
         logger.error(f"CAN初始化异常: {str(e)}")
@@ -241,12 +241,12 @@ def _zcan_read_messages(index: int = 0):
 # timing1 = 0x1C（TSEG1 = 12，TSEG2 = 7）→ 采样点靠后，容错性好，适用于低速率（如 125Kbps～500Kbps）
 # timing1 = 0x14（TSEG1 = 4，TSEG2 = 5） → 时隙短，采样点靠中间，适用于高速率（如 1Mbps）
 # 采样点 % = (1 + TSEG1) / (1 + TSEG1 + TSEG2) × 100%
-# 采样点为80%, 应该使用 0x1C（即 TSEG1 = 12, TSEG2 = 3）
+# 采样点为75%, 应该使用 0x12 (TSEG1=8, TSEG2=3)
 CAN_BAUDRATE_CONFIGS = {
-    125000: {"timing0": 0x03, "timing1": 0x1C},
-    250000: {"timing0": 0x01, "timing1": 0x1C},
-    500000: {"timing0": 0x00, "timing1": 0x1C},
-    1000000: {"timing0": 0x00, "timing1": 0x14},
+    125000: {"timing0": 0x03, "timing1": 0x1B},
+    250000: {"timing0": 0x01, "timing1": 0x1B},
+    500000: {"timing0": 0x00, "timing1": 0x1B},
+    1000000: {"timing0": 0x00, "timing1": 0x12},
 }
 
 
@@ -269,6 +269,9 @@ def set_can_baudrate(device_handler, channel: int, baudrate: int) -> bool:
 
     try:
         zcan.ZCAN_SetValue(device_handler, f"{channel}/baud_rate", str(baudrate))
+        # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_standard", "0")  # 标准CAN 2.0
+        # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_abit_baud_rate", str(baudrate))    
+        # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_dbit_baud_rate", str(baudrate))
         zcan.ZCAN_SetValue(
             device_handler, f"{channel}/abit_timing0", f"0x{config['timing0']:02X}"
         )
