@@ -17,7 +17,7 @@ Revo1灵巧手配置管理示例
 
 import asyncio
 import sys
-from revo1_utils import libstark, logger, open_modbus_revo1
+from revo1_utils import *
 
 
 async def set_slave_id(client, slave_id, new_slave_id):

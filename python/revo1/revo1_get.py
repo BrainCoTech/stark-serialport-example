@@ -11,8 +11,7 @@ Revo1灵巧手基础控制示例
 
 import asyncio
 import sys
-from revo1_utils import convert_to_mA, convert_to_position, get_stark_port_name, libstark, logger, convert_to_angle, open_modbus_revo1
-
+from revo1_utils import *
 
 async def main():
     """

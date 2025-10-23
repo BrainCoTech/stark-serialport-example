@@ -1,8 +1,8 @@
 import asyncio
 import sys
 
-from zqwl_win import zcan_open, zcan_close, zcan_send_message, zqwl_can_receive_message
-from can_utils import libstark, logger, setup_shutdown_event
+from zqwl_win import *
+from can_utils import *
 
 
 class Revo2CanController:

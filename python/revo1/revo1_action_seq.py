@@ -12,7 +12,7 @@ Revo1灵巧手动作序列控制示例
 import asyncio
 import sys
 from utils import setup_shutdown_event
-from revo1_utils import libstark, logger, open_modbus_revo1
+from revo1_utils import *
 
 # 一代灵巧手动作序列配置
 # 注意：当前版本中只有positions参数实际生效，speeds和forces参数为预留字段
@@ -119,7 +119,7 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     # 检测灵巧手的波特率和设备ID，初始化client
-    (client, slave_id) = await open_modbus_revo1(port_name="/dev/ttyUSB0")  # 替换为实际的串口名称, 传None会尝试自动检测
+    (client, slave_id) = await open_modbus_revo1(port_name=None)  # 替换为实际的串口名称, 传None会尝试自动检测
 
     # 转换动作序列格式
     # sample_action_sequences = random_action_sequences()  # 可选：使用随机动作序列

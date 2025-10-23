@@ -582,7 +582,9 @@ void stark_set_finger_position_with_speed(DeviceHandler *handle,
                                           uint16_t speed);
 
 /// 设置多个手指位置
-/// positions: 位置值数组，长度为6，范围为0~100, 对应百分比位置
+/// positions: 位置值数组，长度为6
+/// 一代手范围为0~100, 对应百分比位置
+/// 二代手位置范围为0~1000或最小最大位置（°）
 void stark_set_finger_positions(DeviceHandler *handle,
                                 uint8_t slave_id,
                                 const uint16_t *positions,
@@ -651,6 +653,8 @@ void stark_run_action_sequence(DeviceHandler *handle, uint8_t slave_id, ActionSe
 ///
 /// 该函数用于传输多个动作序列。每个动作序列包含 20 个元素，依次为：
 ///
+/// - slave_id: 从机设备ID
+/// - is_revo2: 是否为二代手
 /// - action_id: 动作序列的 ID，用于唯一标识该动作序列
 /// - sequences: 动作序列参数数组，包含多个动作序列
 ///
@@ -692,6 +696,7 @@ void stark_run_action_sequence(DeviceHandler *handle, uint8_t slave_id, ActionSe
 /// - 如果 `len` 大于最大限制（一代灵巧手为32，二代灵巧手为8），会输出警告并提前返回
 void stark_set_action_sequence(DeviceHandler *handle,
                                uint8_t slave_id,
+                               bool is_revo2,
                                ActionSequenceId action_id,
                                const uint16_t *sequences,
                                uintptr_t len);

@@ -1,7 +1,7 @@
 import asyncio
 import sys
 import time
-from revo2_utils import libstark, logger
+from revo2_utils import *
 
 SLAVE_ID = 0x7f  # 右手
 PORT = "/dev/ttyUSB1" # 替换为实际的串口名称

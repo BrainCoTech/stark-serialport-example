@@ -27,7 +27,7 @@ Revo2设备ID说明：
 import asyncio
 import sys
 import time
-from revo2_utils import get_stark_port_name, libstark, logger, open_modbus_revo2
+from revo2_utils import *
 from utils import setup_shutdown_event
 
 # 多设备控制配置
@@ -38,8 +38,8 @@ from utils import setup_shutdown_event
 # client_right_hand = await libstark.modbus_open(port_name_right, baudrate)
 
 # 设备ID列表配置
-slave_ids = [0x7e]        # 单个串口连接一个设备（左手）
-# slave_ids = [0x7e, 0x7f]   # 单个串口连接两个设备，左手ID为0x7e，右手ID为0x7f
+# slave_ids = [0x7e]        # 单个串口连接一个设备（左手）
+slave_ids = [0x7e, 0x7f]   # 单个串口连接两个设备，左手ID为0x7e，右手ID为0x7f
 
 # 设备触觉版本标记字典
 # 用于记录每个设备是否为触觉版本，以便后续处理时区分
@@ -204,25 +204,21 @@ async def get_motor_status_periodically(client, slave_id):
             # 记录状态信息
             logger.info(
                 f"Device {slave_id:02x} [{index}] Motor status - cost: {cost_ms:.2f}ms, "
-                f"is_idle: {status.is_idle()}, "
-                f"is_closed: {status.is_closed()}, "
-                f"is_opened: {status.is_opened()}"
+                f"is_idle: {status.is_idle()}"
             )
             logger.info(f"Device {slave_id:02x} [{index}] Motor status: {status.description}")
             index += 1
 
             # 根据当前状态执行自动控制
             if status.is_idle():
-                if status.is_opened():
+                if is_positions_open(status):
                     # 手指张开时，执行握手动作
                     # 位置值：[拇指, 食指, 中指, 无名指, 小指, 手腕]
-                    await client.set_finger_positions(
-                        slave_id, [60, 60, 100, 100, 100, 100]
-                    )
+                    await client.set_finger_positions(slave_id, [500, 500, 1000, 1000, 1000, 1000])
                     logger.debug(f"Device {slave_id:02x} executing grip action")
-                elif status.is_closed():
+                elif is_positions_closed(status):
                     # 手指闭合时，执行张开动作
-                    await client.set_finger_positions(slave_id, [0] * 6)
+                    await client.set_finger_positions(slave_id, [400, 400, 0, 0, 0, 0])
                     logger.debug(f"Device {slave_id:02x} executing open action")
 
             # 添加延时避免过于频繁的查询

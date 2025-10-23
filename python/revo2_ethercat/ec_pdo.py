@@ -1,7 +1,7 @@
 import asyncio
 import math
 import time
-from ec_utils import logger, libstark, setup_shutdown_event
+from ec_utils import *
 
 TRAJ_LEN = 10  # 轨迹点数
 CTRL_INTERVAL = 0.1  # 控制间隔 100ms
@@ -84,21 +84,32 @@ async def main():
                 logger.debug(f"Motor status: {status.description}")
 
                 if ctx.is_touch_hand():
-                    logger.debug("get_touch_sensor_status")
-                    start_time = time.perf_counter()
-                    touch_status: list[libstark.TouchFingerItem] = await ctx.get_touch_sensor_status(slave_pos)
-                    elapsed = (time.perf_counter() - start_time) * 1000
-                    logger.info(f"get_touch_sensor_status, elapsed:  {elapsed:.2f}ms")
-                    thumb: libstark.TouchFingerItem = touch_status[0]   # 拇指
-                    index: libstark.TouchFingerItem = touch_status[1]   # 食指
-                    middle: libstark.TouchFingerItem = touch_status[2]  # 中指
-                    ring: libstark.TouchFingerItem = touch_status[3]    # 无名指
-                    pinky: libstark.TouchFingerItem = touch_status[4]   # 小指
-                    logger.debug(f"Touch Sensor Status Thumb: {thumb.description}")
-                    logger.debug(f"Touch Sensor Status Index: {index.description}")
-                    logger.debug(f"Touch Sensor Status Middle: {middle.description}")
-                    logger.debug(f"Touch Sensor Status Ring: {ring.description}")
-                    logger.info(f"Touch Sensor Status Pinky: {pinky.description}")
+                    if ctx.is_touch_pressure():
+                      logger.debug("get_modulus_touch_data")
+                      start_time = time.perf_counter()
+                      modulus_touch_data = await ctx.get_modulus_touch_data(slave_pos)
+                      elapsed = (time.perf_counter() - start_time) * 1000
+                      logger.info(f"get_modulus_touch_data, elapsed:  {elapsed:.2f}ms")
+                      logger.info(f"Modulus Touch Data: {modulus_touch_data}")
+                      modulus_touch_summary = await ctx.get_modulus_touch_summary(slave_pos)
+                      logger.info(f"Modulus Touch Summary: {modulus_touch_summary}")
+
+                    else:
+                      logger.debug("get_touch_sensor_status")
+                      start_time = time.perf_counter()
+                      touch_status: list[libstark.TouchFingerItem] = await ctx.get_touch_sensor_status(slave_pos)
+                      elapsed = (time.perf_counter() - start_time) * 1000
+                      logger.info(f"get_touch_sensor_status, elapsed:  {elapsed:.2f}ms")
+                      thumb: libstark.TouchFingerItem = touch_status[0]   # 拇指
+                      index: libstark.TouchFingerItem = touch_status[1]   # 食指
+                      middle: libstark.TouchFingerItem = touch_status[2]  # 中指
+                      ring: libstark.TouchFingerItem = touch_status[3]    # 无名指
+                      pinky: libstark.TouchFingerItem = touch_status[4]   # 小指
+                      logger.debug(f"Touch Sensor Status Thumb: {thumb.description}")
+                      logger.debug(f"Touch Sensor Status Index: {index.description}")
+                      logger.debug(f"Touch Sensor Status Middle: {middle.description}")
+                      logger.debug(f"Touch Sensor Status Ring: {ring.description}")
+                      logger.info(f"Touch Sensor Status Pinky: {pinky.description}")
 
             except Exception as e:
                 logger.error(f"Read error: {e}")

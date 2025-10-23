@@ -16,7 +16,7 @@ Revo2灵巧手控制示例
 
 import asyncio
 import sys
-from revo2_utils import libstark, logger, open_modbus_revo2
+from revo2_utils import *
 
 
 async def main():
@@ -24,7 +24,7 @@ async def main():
     主函数：初始化Revo2灵巧手并执行控制示例
     """
     # 连接Revo2设备
-    (client, slave_id) = await open_modbus_revo2(port_name="/dev/ttyUSB0") # 替换为实际的串口名称, 传None会尝试自动检测
+    (client, slave_id) = await open_modbus_revo2(port_name=None) # 替换为实际的串口名称, 传None会尝试自动检测
 
     # 配置控制模式
     await configure_control_mode(client, slave_id)
@@ -76,7 +76,21 @@ async def configure_finger_parameters(client, slave_id):
         client: Modbus客户端实例
         slave_id: 设备ID
     """
-    finger_id = libstark.FingerId.Middle  # 选择中指作为示例
+    protected_currents = await client.get_finger_protected_currents(slave_id)
+    logger.info(f"Protected currents: {protected_currents}")
+    # await client.set_finger_protected_currents(slave_id, [600] * 6)
+    # protected_currents = await client.get_finger_protected_currents(slave_id)
+    # logger.info(f"Protected currents: {protected_currents}")
+    # sys.exit(0)
+
+    all_fingers_settings = await client.get_all_finger_settings(slave_id)
+    for i in range(6):
+        logger.info(f"Finger[{i}] settings: {all_fingers_settings[i].description}")
+
+    finger_id = libstark.FingerId.Index  # 选择食指作为示例
+    index_finger_settings = await client.get_finger_settings(slave_id, finger_id)
+    logger.info(f"Finger[{finger_id}] settings: {index_finger_settings.description}")
+    # await client.set_finger_settings(slave_id, finger_id, index_finger_settings)
 
     # 设置最小位置（角度）
     # await client.set_finger_min_position(slave_id, finger_id, 0)

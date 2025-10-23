@@ -18,7 +18,7 @@ import sys
 import pathlib
 import os
 from utils import setup_shutdown_event
-from revo1_utils import libstark, logger
+from revo1_utils import *
 
 # 重要！！！：不同硬件需使用相应固件，否则需要拆设备重新烧录
 # 固件升级文件路径配置
@@ -27,12 +27,12 @@ parent_dir = current_dir.parent.parent
 logger.info(f"parent_dir: {parent_dir}")
 
 # Revo1触觉版固件路径
-# 下载链接：https://app.brainco.cn/universal/bc-stark-sdk/firmware/touch/FW_MotorController_Release_SecureOTA_V1.8.32.F.ota
+# 下载链接：https://app.brainco.cn/universal/bc-stark-sdk/firmware/touch/FW_MotorController_Release_SecureOTA_V1.8.53.F.ota
 revo1_touch_ota_bin_path = os.path.join(
     parent_dir,
     "ota_bin",
     "touch",
-    "FW_MotorController_Release_SecureOTA_V1.8.32.F.ota",
+    "FW_MotorController_Release_SecureOTA_V1.8.53.F.ota",
 )
 
 # Revo1基础版Modbus固件路径
@@ -119,6 +119,11 @@ async def main():
         logger.info(f"Device info: {device_info.description}")
 
         if device_info.is_revo1():
+            if baudrate != libstark.Baudrate.Baud115200:
+                logger.warning(
+                    f"非115200波特率可能无法升级，请先将波特率设置为115200后再升级，当前波特率: {baudrate}"
+                )
+
             if device_info.is_revo1_touch():
                 # 触觉版使用触觉固件
                 ota_bin_path = revo1_touch_ota_bin_path
