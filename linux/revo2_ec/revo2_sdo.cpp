@@ -119,16 +119,15 @@ typedef struct
 } general_config_t;
 
 // 辅助函数：创建turbo参数
-uint32_t make_turbo_param(uint16_t interval, uint16_t duration)
-{
-  return ((uint32_t)duration << 16) | interval;
+uint32_t make_turbo_param(uint16_t interval, uint16_t duration) {
+  return ((uint32_t)interval << 16) | duration;
 }
 
 // 辅助函数：解析turbo参数
 void parse_turbo_param(uint32_t turbo_param, uint16_t *interval, uint16_t *duration)
 {
-  *duration = (turbo_param >> 16) & 0xFFFF;
-  *interval = turbo_param & 0xFFFF;
+  *interval = (turbo_param >> 16) & 0xFFFF;
+  *duration = turbo_param & 0xFFFF;
 }
 
 // 固件信息结构体
@@ -151,14 +150,14 @@ static ec_slave_config_t *slave_config = NULL;
 // SDO读取函数
 /****************************************************************************/
 
-// 读取UINT8类型SDO
-int read_sdo_uint8(uint16_t index, uint8_t subindex, uint8_t *value)
+// 通用SDO读取函数
+int read_sdo_generic(uint16_t index, uint8_t subindex, void *value, size_t size, bool big_endian)
 {
   size_t result_size;
   uint32_t abort_code;
 
   int ret = ecrt_master_sdo_upload(master, 0, index, subindex,
-                                   (uint8_t *)value, sizeof(uint8_t),
+                                   (uint8_t *)value, size,
                                    &result_size, &abort_code);
 
   if (ret)
@@ -168,74 +167,55 @@ int read_sdo_uint8(uint16_t index, uint8_t subindex, uint8_t *value)
     return ret;
   }
 
-  if (result_size != sizeof(uint8_t))
+  if (result_size != size)
   {
     printf("Unexpected data size for SDO 0x%04X:0x%02X - Expected: %zu, Got: %zu\n",
-           index, subindex, sizeof(uint8_t), result_size);
+           index, subindex, size, result_size);
     return -1;
   }
 
-  printf("Read SDO 0x%04X:0x%02X = %u\n", index, subindex, *value);
+  // 字节序转换（仅对多字节类型）
+  if (big_endian && size > 1)
+  {
+    if (size == 2)
+      *(uint16_t *)value = ntohs(*(uint16_t *)value);
+    else if (size == 4)
+      *(uint32_t *)value = ntohl(*(uint32_t *)value);
+  }
+
+  // 打印结果
+  if (size == 1)
+    printf("Read SDO 0x%04X:0x%02X = %u\n", index, subindex, *(uint8_t *)value);
+  else if (size == 2)
+    printf("Read SDO 0x%04X:0x%02X = %u\n", index, subindex, *(uint16_t *)value);
+  else if (size == 4)
+    printf("Read SDO 0x%04X:0x%02X = 0x%08X\n", index, subindex, *(uint32_t *)value);
+
   return 0;
+}
+
+// 读取UINT8类型SDO
+int read_sdo_uint8(uint16_t index, uint8_t subindex, uint8_t *value)
+{
+  return read_sdo_generic(index, subindex, value, sizeof(uint8_t), false);
 }
 
 // 读取UINT16类型SDO
 int read_sdo_uint16(uint16_t index, uint8_t subindex, uint16_t *value)
 {
-  size_t result_size;
-  uint32_t abort_code;
-
-  int ret = ecrt_master_sdo_upload(master, 0, index, subindex,
-                                   (uint8_t *)value, sizeof(uint16_t),
-                                   &result_size, &abort_code);
-
-  if (ret)
-  {
-    printf("Failed to read SDO 0x%04X:0x%02X - Error: %d, Abort code: 0x%08X\n",
-           index, subindex, ret, abort_code);
-    return ret;
-  }
-
-  if (result_size != sizeof(uint16_t))
-  {
-    printf("Unexpected data size for SDO 0x%04X:0x%02X - Expected: %zu, Got: %zu\n",
-           index, subindex, sizeof(uint16_t), result_size);
-    return -1;
-  }
-
-  printf("Read SDO 0x%04X:0x%02X = %u\n", index, subindex, *value);
-  return 0;
+  return read_sdo_generic(index, subindex, value, sizeof(uint16_t), false);
 }
 
-// 读取UINT32类型SDO
-int read_sdo_uint32(uint16_t index, uint8_t subindex, uint32_t *value)
+// 读取UINT32类型SDO-小端序
+int read_sdo_uint32_little_endian(uint16_t index, uint8_t subindex, uint32_t *value)
 {
-  size_t result_size;
-  uint32_t abort_code;
+  return read_sdo_generic(index, subindex, value, sizeof(uint32_t), false);
+}
 
-  int ret = ecrt_master_sdo_upload(master, 0, index, subindex,
-                                   (uint8_t *)value, sizeof(uint32_t),
-                                   &result_size, &abort_code);
-
-  if (ret)
-  {
-    printf("Failed to read SDO 0x%04X:0x%02X - Error: %d, Abort code: 0x%08X\n",
-           index, subindex, ret, abort_code);
-    return ret;
-  }
-
-  if (result_size != sizeof(uint32_t))
-  {
-    printf("Unexpected data size for SDO 0x%04X:0x%02X - Expected: %zu, Got: %zu\n",
-           index, subindex, sizeof(uint32_t), result_size);
-    return -1;
-  }
-
-  // 转换为主机字节序（如果需要）
-  *value = ntohl(*value); // 网络字节序(大端)转主机字节序
-
-  printf("Read SDO 0x%04X:0x%02X = 0x%08X\n", index, subindex, *value);
-  return 0;
+// 读取UINT32类型SDO-大端序
+int read_sdo_uint32_big_endian(uint16_t index, uint8_t subindex, uint32_t *value)
+{
+  return read_sdo_generic(index, subindex, value, sizeof(uint32_t), true);
 }
 
 // 读取STRING类型SDO
@@ -366,8 +346,8 @@ int read_general_config(general_config_t *config)
   ret |= read_sdo_uint8(CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX, &config->turbo_mode);
 
   // 读取Turbo参数（32位，大端序）
-  ret |= read_sdo_uint32(CONFIG_OBJECT_INDEX, TURBO_PARAM_SUBINDEX, &config->turbo_param);
-
+  ret |= read_sdo_uint32_big_endian(CONFIG_OBJECT_INDEX, TURBO_PARAM_SUBINDEX, &config->turbo_param);
+  
   printf("=====================================\n");
   return ret;
 }

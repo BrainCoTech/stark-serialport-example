@@ -2,7 +2,7 @@
 import asyncio
 import sys
 import pathlib
-from ec_utils import logger, libstark
+from ec_utils import *
 
 current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent.parent
@@ -29,7 +29,7 @@ async def main():
         "ota_bin",
         "ethercat",
         "control",
-        "Revo2_V0.0.1_2507011416.bin",
+        "Revo2_V1.0.8.F_2509191719.bin",
     )
 
     logger.info("DFU started, waiting for completion...") # 等待DFU完成, 大约25秒

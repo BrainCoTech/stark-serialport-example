@@ -19,7 +19,7 @@ Revo2灵巧手动作序列控制示例
 import asyncio
 import sys
 from utils import setup_shutdown_event
-from revo2_utils import libstark, logger, open_modbus_revo2
+from revo2_utils import *
 
 # 二代灵巧手动作序列配置
 # Revo2支持更复杂的动作序列，包含多种控制模式和详细的参数配置
@@ -93,7 +93,7 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     # 连接Revo2设备
-    (client, slave_id) = await open_modbus_revo2(port_name="/dev/ttyUSB0") # 替换为实际的串口名称, 传None会尝试自动检测
+    (client, slave_id) = await open_modbus_revo2(port_name=None) # 替换为实际的串口名称, 传None会尝试自动检测
 
     # 转换动作序列格式
     mapped_sequences = map(lambda action: action_sequence_info_to_list(action), sample_action_sequences)
@@ -118,6 +118,10 @@ async def main():
     # 执行自定义动作序列
     logger.info("Executing custom action sequence...")
     await client.run_action_sequence(slave_id, custom_action_id)
+
+    # logger.info("Clearing custom action sequence...")
+    # await client.clear_action_sequence(slave_id, custom_action_id)
+    # await client.run_action_sequence(slave_id, custom_action_id)
 
     # 等待关闭事件（Ctrl+C 或其他关闭信号）
     await shutdown_event.wait()

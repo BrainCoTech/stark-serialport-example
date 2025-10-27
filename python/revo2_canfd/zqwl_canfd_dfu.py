@@ -6,8 +6,8 @@ import asyncio
 import time
 
 # from zlgcan import ZCAN_USBCANFD_100U
-from zqwl_win import zcan_open, zcan_close, zcan_send_message, zcan_receive_message
-from canfd_utils import libstark, logger, setup_shutdown_event
+from zqwl_win import *
+from canfd_utils import *
 
 # 固件升级文件路径
 current_dir = pathlib.Path(__file__).resolve()

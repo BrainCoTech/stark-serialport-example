@@ -7,6 +7,7 @@ sudo systemctl enable ethercat # 启用 EtherCAT 主站
 sudo systemctl restart ethercat # 重启 EtherCAT 主站
 sudo systemctl status ethercat # 检查 EtherCAT 主站是否运行
 
+# /usr/local/etc/ethercat.conf
 journalctl -u ethercat.service -b # 查看 EtherCAT 运行日志
 # 查看内核日志，排查 驱动层 / 网卡绑定 是否正常
 dmesg | grep EtherCAT

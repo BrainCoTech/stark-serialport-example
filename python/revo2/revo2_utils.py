@@ -60,6 +60,7 @@ async def open_modbus_revo2(port_name=None, quick=True):
         logger.error(e)
         sys.exit(1)
 
+    # set_latency_by_com_or_serial(detected_port_name)
     # 建立Modbus连接
     client: libstark.PyDeviceContext = await libstark.modbus_open(detected_port_name, baudrate)
 
@@ -106,3 +107,28 @@ def get_stark_port_name():
     port_name = ports_json[0]["port_name"]
     logger.info(f"Using port: {port_name}")
     return port_name
+
+def is_positions_open(status: main_mod.MotorStatusData) -> bool:
+    """
+    判断手指是否处于张开状态
+
+    Args:
+        status (main_mod.MotorStatusData): 电机状态数据对象
+
+    Returns:
+        bool: 如果手指张开则返回True，否则返回False
+    """
+    return status.positions <= [400, 400, 0, 0, 0, 0]
+
+def is_positions_closed(status: main_mod.MotorStatusData) -> bool:
+    """
+    判断手指是否处于闭合状态
+
+    Args:
+        status (main_mod.MotorStatusData): 电机状态数据对象
+
+    Returns:
+        bool: 如果手指闭合则返回True，否则返回False
+    """
+
+    return status.positions >= [399, 399, 950, 950, 950, 950]

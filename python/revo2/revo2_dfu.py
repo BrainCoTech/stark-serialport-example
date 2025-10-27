@@ -21,7 +21,7 @@ import os
 import time
 
 from utils import setup_shutdown_event
-from revo2_utils import libstark, logger
+from revo2_utils import *
 
 # 重要！！！：不同硬件需使用相应固件，否则需要拆设备重新烧录
 # 固件升级文件路径配置

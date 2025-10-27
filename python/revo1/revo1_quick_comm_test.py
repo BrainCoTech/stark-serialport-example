@@ -7,7 +7,7 @@ Revo1通讯频率测试 - 快速演示示例
 import asyncio
 import time
 import statistics
-from revo1_utils import libstark, logger, open_modbus_revo1
+from revo1_utils import *
 
 async def quick_frequency_test(duration=5.0, target_hz=50, test_type="read"):
     """

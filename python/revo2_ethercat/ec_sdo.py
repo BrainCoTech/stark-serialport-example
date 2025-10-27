@@ -1,7 +1,6 @@
 import asyncio
 import sys
-from ec_utils import logger, libstark
-
+from ec_utils import *
 
 # Main
 async def main():
@@ -34,14 +33,18 @@ async def main():
 
     if ctx.is_touch_hand():
       touch_fw_versions = await ctx.get_touch_sensor_fw_versions(slave_pos)
-      logger.info(f"Touch Fw Versions: {touch_fw_versions}")  
-      
+      logger.info(f"Touch Fw Versions: {touch_fw_versions}")
+
+      if ctx.is_touch_pressure():
+        data_type = await ctx.get_modulus_touch_data_type(slave_pos)
+        logger.info(f"Modulus Touch Data Type: {data_type}")
+
       # 触觉传感器参数-校准零漂
       # 当空闲状态下的三维力数值不为0时，可通过该指令进行校准
       # 该指令的执行时间较长，期间的数据无法作为参考
       # 建议忽略校准后十秒内的数据，执行时手指传感器不能受力
       # await ctx.touch_sensor_calibrate(slave_pos, 0x1f)  # 校准全部/指定通道
-      
+
       # 触觉传感器参数调整
       # await ctx.touch_sensor_reset(slave_pos, 0x1f)  # 调整全部/指定通道
 

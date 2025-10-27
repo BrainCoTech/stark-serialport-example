@@ -11,7 +11,7 @@ Revo1触觉版灵巧手控制示例
 import asyncio
 import sys
 import time
-from revo1_utils import get_stark_port_name, libstark, logger, open_modbus_revo1
+from revo1_utils import *
 from utils import setup_shutdown_event
 
 async def main():

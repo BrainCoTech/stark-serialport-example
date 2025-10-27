@@ -6,9 +6,10 @@ Revo2灵巧手控制双手示例
 """
 
 import asyncio
+import random
 import sys
 import time
-from revo2_utils import libstark, logger
+from revo2_utils import *
 from utils import setup_shutdown_event
 
 LEFT_PORT = "/dev/ttyUSB0" # 替换为实际的串口名称
@@ -70,9 +71,12 @@ async def monitor_and_control(client_left, client_right, left_id, right_id):
         try:
             index += 1
             now_ms = int(time.time() * 1000)
-            t = (now_ms / 1000.0) % period
+            t = (now_ms / 100.0) % period
+
             if t < period / 2:
-                positions = [0, 0, 0, 0, 0, 0]
+                pos_1 = random.randint(0, 590)
+                pos_2 = random.randint(0, 1000)
+                positions = [pos_1, pos_1, pos_2, pos_2, pos_2, pos_2]
             else:
                 positions = [0, 0, 1000, 1000, 1000, 1000]
 
@@ -87,7 +91,7 @@ async def monitor_and_control(client_left, client_right, left_id, right_id):
                     cost_ms = (time.perf_counter() - start) * 1000
                     logger.debug(
                         f"{hand} [{dev_id:02x}] [{index}] Motor status - cost: {cost_ms:.2f}ms, "
-                        f"is_idle: {status.is_idle()}, is_closed: {status.is_closed()}, is_opened: {status.is_opened()}"
+                        f"is_idle: {status.is_idle()}, is_closed: {is_positions_closed(status)}, is_opened: {is_positions_open(status)}"
                     )
                     logger.debug(f"{hand} [{dev_id:02x}] [{index}] Motor status: {status.description}")
                 except Exception as e:

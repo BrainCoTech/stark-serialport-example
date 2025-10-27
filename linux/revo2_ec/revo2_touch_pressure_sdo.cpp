@@ -39,24 +39,33 @@
 #define CONFIG_OBJECT_INDEX 0x8000
 #define TOUCH_OBJECT_INDEX 0x8010
 
-// 触觉配置子索引
+// 压感式触觉配置子索引
 #define THUMB_CALIBRATION_SUBINDEX 0x01
 #define INDEX_CALIBRATION_SUBINDEX 0x02
 #define MID_CALIBRATION_SUBINDEX 0x03
 #define RING_CALIBRATION_SUBINDEX 0x04
 #define PINKY_CALIBRATION_SUBINDEX 0x05
-#define TOUCH_VENDOR_SUBINDEX 0x06
-#define THUMB_ACQ_PARAM_UPDATE_SUBINDEX 0x07
-#define INDEX_ACQ_PARAM_UPDATE_SUBINDEX 0x08
-#define MID_ACQ_PARAM_UPDATE_SUBINDEX 0x09
-#define RING_ACQ_PARAM_UPDATE_SUBINDEX 0x0A
-#define PINKY_ACQ_PARAM_UPDATE_SUBINDEX 0x0B
-#define RESERVED1_SUBINDEX 0x0C
-#define THUMB_TOUCH_FW_VERSION_SUBINDEX 0x0D
-#define INDEX_TOUCH_FW_VERSION_SUBINDEX 0x0E
-#define MID_TOUCH_FW_VERSION_SUBINDEX 0x0F
-#define RING_TOUCH_FW_VERSION_SUBINDEX 0x10
-#define PINK_TOUCH_FW_VERSION_SUBINDEX 0x11
+#define CALIBRATION_PALM_SUBINDEX 0x06
+#define SWITCH_THUMB_SUBINDEX 0x07
+#define SWITCH_INDEX_SUBINDEX 0x08
+#define SWITCH_MIDDLE_SUBINDEX 0x09
+#define SWITCH_RING_SUBINDEX 0x0A
+#define SWITCH_PINKY_SUBINDEX 0x0B
+#define SWITCH_PALM_SUBINDEX 0x0C
+#define VENDOR_SUBINDEX 0x0D
+#define DATA_TYPE_SUBINDEX 0x0E
+#define DEVICE_SN_THUMB_SUBINDEX 0x0F
+#define DEVICE_SN_INDEX_SUBINDEX 0x10
+#define DEVICE_SN_MIDDLE_SUBINDEX 0x11
+#define DEVICE_SN_RING_SUBINDEX 0x12
+#define DEVICE_SN_PINKY_SUBINDEX 0x13
+#define DEVICE_SN_PALM_SUBINDEX 0x14
+#define FW_VERSION_THUMB_SUBINDEX 0x15
+#define FW_VERSION_INDEX_SUBINDEX 0x16
+#define FW_VERSION_MIDDLE_SUBINDEX 0x17
+#define FW_VERSION_RING_SUBINDEX 0x18
+#define FW_VERSION_PINKY_SUBINDEX 0x19
+#define FW_VERSION_PALM_SUBINDEX 0x1A
 
 // 通用配置子索引
 #define HAND_TYPE_SUBINDEX 0x01
@@ -100,6 +109,13 @@ typedef enum {
   PHYSICAL = 1 // 物理单位
 } unit_mode_t;
 
+// 压力感知式数据类型枚举
+typedef enum {
+  RAW = 0,        // 原始ADC值
+  CALIBRATED = 1, // 校准后的值（压强/kPa）
+  FORCE = 2       // 转换为力值（单位：mN）
+} touch_data_type_t;
+
 /****************************************************************************/
 // 结构体定义
 /****************************************************************************/
@@ -127,14 +143,24 @@ typedef struct {
   uint32_t turbo_param;     // Turbo参数（32位：duration[16] + interval[16]）
 } general_config_t;
 
-// 触觉配置结构体
+// 触觉传感器-压力感知式配置结构体
 typedef struct {
   uint8_t vendor_id;               // 厂商信息
+  uint8_t data_type;               // 数据类型
+
   char thumb_touch_fw_version[21]; // 拇指触觉固件版本, 20字节 + 1结束符
   char index_touch_fw_version[21]; // 食指触觉固件版本, 20字节 + 1结束符
   char mid_touch_fw_version[21];   // 中指触觉固件版本, 20字节 + 1结束符
   char ring_touch_fw_version[21];  // 无名指触觉固件版本, 20字节 + 1结束符
   char pinky_touch_fw_version[21]; // 小指触觉固件版本, 20字节 + 1结束符
+  char palm_touch_fw_version[21];  // 手掌触觉固件版本, 20字节 + 1结束符
+
+  char thumb_touch_sn[21]; // 拇指触觉传感器序列号, 20字节 + 1结束符
+  char index_touch_sn[21]; // 食指触觉传感器序列号, 20字节 + 1结束符
+  char mid_touch_sn[21];   // 中指触觉传感器序列号, 20字节 + 1结束符
+  char ring_touch_sn[21];  // 无名指触觉传感器序列号, 20字节 + 1结束符
+  char pinky_touch_sn[21]; // 小指触觉传感器序列号, 20字节 + 1结束符
+  char palm_touch_sn[21];  // 手掌触觉传感器序列号, 20字节 + 1结束符
 } touch_config_t;
 
 // 辅助函数：创建turbo参数
@@ -152,8 +178,9 @@ void parse_turbo_param(uint32_t turbo_param, uint16_t *interval, uint16_t *durat
 // 固件信息结构体
 typedef struct {
   char ctrl_wrist_fw_version[21]; // 控制板固件版本, 20字节 + 1结束符
-  char ctrl_sn[19];               // 控制板序列号, 18字节 + 1结束符
   char wrist_fw_version[21];      // 手腕板固件版本, 20字节 + 1结束符
+
+  char ctrl_sn[19];               // 控制板序列号, 18字节 + 1结束符
   char wrist_sn[19];              // 手腕板序列号, 18字节 + 1结束符
 } firmware_info_t;
 
@@ -345,24 +372,48 @@ int write_sdo_string(uint16_t index, uint8_t subindex, const char *value) {
 int read_touch_config(touch_config_t *config) {
   int ret = 0;
   printf("=== Reading Touch Configuration ===\n");
-  ret |= read_sdo_uint8(TOUCH_OBJECT_INDEX, TOUCH_VENDOR_SUBINDEX,
+  ret |= read_sdo_uint8(TOUCH_OBJECT_INDEX, VENDOR_SUBINDEX,
                         &config->vendor_id);
+                        ret |= read_sdo_uint8(TOUCH_OBJECT_INDEX, DATA_TYPE_SUBINDEX,
+                        &config->data_type);
 
-  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, THUMB_TOUCH_FW_VERSION_SUBINDEX,
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, FW_VERSION_THUMB_SUBINDEX,
                          config->thumb_touch_fw_version,
                          sizeof(config->thumb_touch_fw_version));
-  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, INDEX_TOUCH_FW_VERSION_SUBINDEX,
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, FW_VERSION_INDEX_SUBINDEX,
                          config->index_touch_fw_version,
                          sizeof(config->index_touch_fw_version));
-  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, MID_TOUCH_FW_VERSION_SUBINDEX,
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, FW_VERSION_MIDDLE_SUBINDEX,
                          config->mid_touch_fw_version,
                          sizeof(config->mid_touch_fw_version));
-  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, RING_TOUCH_FW_VERSION_SUBINDEX,
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, FW_VERSION_RING_SUBINDEX,
                          config->ring_touch_fw_version,
                          sizeof(config->ring_touch_fw_version));
-  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, PINK_TOUCH_FW_VERSION_SUBINDEX,
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, FW_VERSION_PINKY_SUBINDEX,
                          config->pinky_touch_fw_version,
                          sizeof(config->pinky_touch_fw_version));
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, FW_VERSION_PALM_SUBINDEX,
+                         config->palm_touch_fw_version,
+                         sizeof(config->palm_touch_fw_version));
+
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, DEVICE_SN_THUMB_SUBINDEX,
+                         config->thumb_touch_sn,
+                         sizeof(config->thumb_touch_sn));
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, DEVICE_SN_INDEX_SUBINDEX,
+                         config->index_touch_sn,
+                         sizeof(config->index_touch_sn));
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, DEVICE_SN_MIDDLE_SUBINDEX,
+                         config->mid_touch_sn,
+                         sizeof(config->mid_touch_sn));
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, DEVICE_SN_RING_SUBINDEX,
+                         config->ring_touch_sn,
+                         sizeof(config->ring_touch_sn));
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, DEVICE_SN_PINKY_SUBINDEX,
+                         config->pinky_touch_sn,
+                         sizeof(config->pinky_touch_sn));
+  ret |= read_sdo_string(TOUCH_OBJECT_INDEX, DEVICE_SN_PALM_SUBINDEX,
+                         config->palm_touch_sn,
+                         sizeof(config->palm_touch_sn));
   printf("===================================\n");
   return ret;
 }
@@ -548,6 +599,12 @@ int set_unit_mode(unit_mode_t mode) {
   return write_sdo_uint8(CONFIG_OBJECT_INDEX, UNIT_MODE_SUBINDEX, mode);
 }
 
+// 设置压力感知式数据类型
+int set_touch_data_type(touch_data_type_t type) {
+  printf("Setting touch data type to: %s\n", type == RAW ? "RAW" : type == CALIBRATED ? "CALIBRATED" : "FORCE");
+  return write_sdo_uint8(TOUCH_OBJECT_INDEX, DATA_TYPE_SUBINDEX, type);
+}
+
 // 执行手动位置校准
 int perform_manual_calibration() {
   printf("Performing manual position calibration...\n");
@@ -661,11 +718,19 @@ int main(int argc, char **argv) {
   if (read_touch_config(&touch_config) == 0) {
     printf("\nTouch Configuration:\n");
     printf("  Vendor ID: %d\n", touch_config.vendor_id);
+    printf("  Data Type: %s\n", touch_config.data_type == RAW ? "RAW" : touch_config.data_type == CALIBRATED ? "CALIBRATED" : "FORCE");
     printf("  Thumb Touch FW: %s\n", touch_config.thumb_touch_fw_version);
     printf("  Index Touch FW: %s\n", touch_config.index_touch_fw_version);
     printf("  Middle Touch FW: %s\n", touch_config.mid_touch_fw_version);
     printf("  Ring Touch FW: %s\n", touch_config.ring_touch_fw_version);
     printf("  Pinky Touch FW: %s\n", touch_config.pinky_touch_fw_version);
+    printf("  Palm Touch FW: %s\n", touch_config.palm_touch_fw_version);
+    printf("  Thumb Touch SN: %s\n", touch_config.thumb_touch_sn);
+    printf("  Index Touch SN: %s\n", touch_config.index_touch_sn);
+    printf("  Middle Touch SN: %s\n", touch_config.mid_touch_sn);
+    printf("  Ring Touch SN: %s\n", touch_config.ring_touch_sn);
+    printf("  Pinky Touch SN: %s\n", touch_config.pinky_touch_sn);
+    printf("  Palm Touch SN: %s\n", touch_config.palm_touch_sn);
   }
 
   // 读取保护电流配置
@@ -701,6 +766,13 @@ int main(int argc, char **argv) {
   set_unit_mode(PHYSICAL);
   sleep(0.5);
   set_unit_mode(NORMAL);
+
+  // 设置压力感知式数据类型
+  set_touch_data_type(RAW);
+  sleep(0.5);
+  set_touch_data_type(CALIBRATED);
+  sleep(0.5);
+  set_touch_data_type(FORCE);
 
   // 设置Turbo模式
   set_turbo_mode(SWITCH_ON, 1000, 2000); // interval=1000, duration=2000
