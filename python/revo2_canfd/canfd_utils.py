@@ -5,8 +5,8 @@ import platform
 
 import logging
 from logger import getLogger
-logger = getLogger(logging.DEBUG)
-# logger = getLogger(logging.INFO)
+# logger = getLogger(logging.DEBUG)
+logger = getLogger(logging.INFO)
 
 from bc_stark_sdk import main_mod
 libstark = main_mod

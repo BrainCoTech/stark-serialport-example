@@ -45,10 +45,11 @@ int main(int argc, char const *argv[])
   init_cfg(STARK_PROTOCOL_TYPE_CAN_FD, LOG_LEVEL_DEBUG);
   const uint8_t MASTER_ID = 1; // 主设备 ID
   auto handle = canfd_init(MASTER_ID);
-  uint8_t slave_id = 0x7e;       // 二代手左手ID默认为0x7e
-  uint8_t slave_id_right = 0x7f; // 二代手右手ID默认为0x7f
-  // get_device_info(handle, slave_id); // return 0;
-  get_device_info(handle, slave_id_right);
+  // uint8_t slave_id = 0x7e;       // 二代手左手ID默认为0x7e
+  uint8_t slave_id = 0x7f; // 二代手右手ID默认为0x7f
+  // uint8_t slave_id_right = 0x7f; // 二代手右手ID默认为0x7f
+  // get_device_info(handle, slave_id); return 0;
+  get_device_info(handle, slave_id); return 0;
 
   // 修改手的波特率接口，也可以通过上位机修改
   // stark_set_canfd_baudrate(handle, slave_id_right, 2000); // 设置为2Mbps
@@ -63,10 +64,10 @@ int main(int argc, char const *argv[])
     uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};                      // 张开
     useconds_t delay = 1000 * 1000;                                      // 1000ms
     stark_set_finger_positions_and_durations(handle, slave_id, positions_fist_1000, durations, 6);
-    stark_set_finger_positions_and_durations(handle, slave_id_right, positions_fist_1000, durations, 6);
+    // stark_set_finger_positions_and_durations(handle, slave_id_right, positions_fist_1000, durations, 6);
     usleep(delay);
     stark_set_finger_positions_and_durations(handle, slave_id, positions_open, durations, 6);
-    stark_set_finger_positions_and_durations(handle, slave_id_right, positions_open, durations, 6);
+    // stark_set_finger_positions_and_durations(handle, slave_id_right, positions_open, durations, 6);
     usleep(delay);
 
     // 位置+期望速度模式
@@ -256,7 +257,15 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   DeviceInfo *info = stark_get_device_info(handle, slave_id);
   if (info != NULL)
   {
-    printf("Slave[%hhu] Serial Number: %s, Fw: %s\n", slave_id, info->serial_number, info->firmware_version);
+    printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id, info->serial_number, info->firmware_version);
+    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO2_BASIC && info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
+      printf("Not Revo2, hardware type: %hhu\n", info->hardware_type);
+      exit(1);
+    }
     free_device_info(info);
+  } else {
+    printf("Error: Failed to get device info\n");
+    exit(1);
   }
 }

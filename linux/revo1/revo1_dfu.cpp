@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
   set_dfu_progress_callback([](uint8_t slave_id, float progress){ printf("DFU Progress: %.2f%%\n", progress * 100); });
   start_dfu(handle, slave_id, "ota_bin/modbus/FW_MotorController_Release_SecureOTA_modbus_0.1.7.ota", 5);
 
-  printf("Waiting for DFU to complete...\n");
+  printf("Revo1 Modbus DFU, Waiting for DFU to complete...\n");
   useconds_t delay = 60 * 1000 * 1000; // 60s, wait for DFU to complete
   usleep(delay);
 }

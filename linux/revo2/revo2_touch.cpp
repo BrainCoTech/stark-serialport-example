@@ -145,13 +145,19 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   if (info != NULL)
   {
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
-    if (info->hardware_type == STARK_HARDWARE_TYPE_REVO1_TOUCH || info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    if (info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
     {
       // 启用全部触觉传感器
       stark_enable_touch_sensor(handle, slave_id, 0x1F);
       usleep(1000 * 1000); // wait for touch sensor to be ready
+    } else {
+      printf("Not Revo2 Touch, hardware type: %hhu\n", info->hardware_type);
+      exit(1);
     }
     free_device_info(info);
+  } else {
+    printf("Error: Failed to get device info\n");
+    exit(1);
   }
 }
 

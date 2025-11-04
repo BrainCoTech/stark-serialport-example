@@ -5,7 +5,7 @@ import os
 import asyncio
 import time
 
-from zqwl_win import *
+from zlg_win import *
 from canfd_utils import *
 
 # 固件升级文件路径
@@ -51,13 +51,13 @@ def on_dfu_progress(_slave_id, progress):
 
 def canfd_send(slave_id: int, can_id: int, data: list):
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
-    if not zcan_send_message(slave_id, can_id, bytes(data)):
+    if not zlgcan_send_message(can_id, bytes(data)):
         logger.error("Failed to send CANFD message")
         return
 
 
 def canfd_read(slave_id: int):
-    recv_msg = zcan_receive_message(dely_retries=10)
+    recv_msg: Optional[ZCAN_ReceiveFD_Data] = zlgcan_receive_message()
     if recv_msg is None:
         logger.error("No message received")
         return 0, bytes([])
@@ -96,8 +96,7 @@ async def main():
     slave_id = 0x7F  # 左手默认ID为0x7e，右手默认ID为0x7f
     client = libstark.PyDeviceContext.init_canfd(master_id)
 
-    # ZCAN_USBCANFD_100U
-    zcan_open(device_type=42, channel=0, baudrate=5000000)
+    zlgcan_open()
     libstark.set_can_tx_callback(canfd_send)
     libstark.set_can_rx_callback(canfd_read)
 
@@ -122,7 +121,7 @@ async def main():
         )
 
         # 等待升级完成
-        logger.info("ZQWL CANFD DFU, Waiting for DFU to complete...")
+        logger.info("ZLG CANFD DFU, Waiting for DFU to complete...")
         await shutdown_event.wait()
         logger.info("DFU completed, shutdown event received!")
         elapsed = time.perf_counter() - start_time
@@ -136,7 +135,7 @@ async def main():
     finally:
         try:
             # 关闭资源
-            zcan_close()
+            zlgcan_close()
             sys.exit(0)
         except:
             pass

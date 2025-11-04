@@ -146,7 +146,7 @@ async def start_dfu(port_name, baudrate, slave_id, ota_bin_path):
     )
 
     # 等待升级完成
-    logger.info("Waiting for DFU to complete...")
+    logger.info("Revo2 Modbus DFU, Waiting for DFU to complete...")
     await shutdown_event.wait()
     logger.info("DFU completed, shutdown event received!")
     elapsed = time.perf_counter() - start_time

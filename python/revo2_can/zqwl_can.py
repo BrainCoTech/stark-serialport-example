@@ -281,12 +281,12 @@ async def main():
         # 创建任务
         tasks = []
         # 启动演示任务
-        demo_task = asyncio.create_task(controller.demo_task())
-        tasks.append(demo_task)
+        # demo_task = asyncio.create_task(controller.demo_task())
+        # tasks.append(demo_task)
 
-        # 可选：启动电机状态监控
-        monitor_task = asyncio.create_task(controller.monitor_motor_status())
-        tasks.append(monitor_task)
+        # # 可选：启动电机状态监控
+        # monitor_task = asyncio.create_task(controller.monitor_motor_status())
+        # tasks.append(monitor_task)
 
         # 等待关闭信号
         await shutdown_event.wait()

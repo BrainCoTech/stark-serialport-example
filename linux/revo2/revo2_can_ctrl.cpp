@@ -55,8 +55,8 @@ int main(int argc, char const *argv[])
   // 初始化 STARK SDK
   init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_DEBUG);
   auto handle = create_device_handler();
-  uint8_t slave_id = 1; // 二代手左手ID默认为1
-  // uint8_t slave_id = 2; // 二代手右手ID默认为2
+  // uint8_t slave_id = 1; // 二代手左手ID默认为1
+  uint8_t slave_id = 2; // 二代手右手ID默认为2
   get_device_info(handle, slave_id);
 
   auto finger_id = STARK_FINGER_ID_MIDDLE;
@@ -247,7 +247,15 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   if (info != NULL)
   {
     printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id, info->serial_number, info->firmware_version);
+    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO2_BASIC && info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
+      printf("Not Revo2, hardware type: %hhu\n", info->hardware_type);
+      exit(1);
+    }
     free_device_info(info);
+  } else {
+    printf("Error: Failed to get device info\n");
+    exit(1);
   }
 }
 

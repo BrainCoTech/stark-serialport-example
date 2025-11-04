@@ -40,6 +40,17 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   uint32_t baudrate = stark_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
+  DeviceInfo *info = stark_get_device_info(handle, slave_id);
+  if (info != NULL)
+  {
+    printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id, info->serial_number, info->firmware_version);
+    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO1_BASIC && info->hardware_type != STARK_HARDWARE_TYPE_REVO1_TOUCH)
+    {
+      printf("Not Revo1, hardware type: %hhu\n", info->hardware_type);
+      exit(1);
+    }
+    free_device_info(info);
+  }
 }
 
 void setup_modbus_callbacks()
