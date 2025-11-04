@@ -79,6 +79,9 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
       // 启用全部触觉传感器
       stark_enable_touch_sensor(handle, slave_id, 0x1F);
       usleep(1000 * 1000); // wait for touch sensor to be ready
+    } else {
+      printf("Not Revo1 Touch, hardware type: %hhu\n", info->hardware_type);
+      exit(1);
     }
     free_device_info(info);
   }

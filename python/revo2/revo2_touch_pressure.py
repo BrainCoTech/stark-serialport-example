@@ -31,6 +31,7 @@ async def main():
 
     if not client.is_touch_pressure():
         logger.error("This example is only for Revo2 Touch Pressure hardware")
+        libstark.modbus_close(client)
         sys.exit(1)
 
     # 配置触觉传感器
@@ -53,9 +54,9 @@ async def setup_touch_sensors(client, slave_id):
         client: Modbus客户端实例
         slave_id: 设备ID
     """
-    bits = 0x3F  # 0x3F: 启用五指+手掌
-    await client.touch_sensor_setup(slave_id, bits)
-    await asyncio.sleep(1)  # 等待触觉传感器准备就绪
+    # bits = 0x3F  # 0x3F: 启用五指+手掌
+    # await client.touch_sensor_setup(slave_id, bits)
+    # await asyncio.sleep(1)  # 等待触觉传感器准备就绪
 
     # 验证传感器启用状态
     bits = await client.get_touch_sensor_enabled(slave_id)
@@ -82,16 +83,19 @@ async def monitor_touch_sensors(client, slave_id):
         slave_id: 设备ID
     """
     while True:
+        # 获取单个手指的触觉传感器状态（可选方式）
+        thumb = await client.get_single_modulus_touch_summary(slave_id, 0)
+        pinky = await client.get_single_modulus_touch_summary(slave_id, 4)
+        palm = await client.get_single_modulus_touch_summary(slave_id, 5)
+        logger.info(f"Thumb: {thumb}")
+        logger.info(f"Pinky: {pinky}")
+        logger.info(f"Palm: {palm}")
+        
         # 获取所有手指的触觉传感器状态
         touch_summary: list[int] = await client.get_modulus_touch_summary(slave_id)
-        touch_data: list[int] = await client.get_modulus_touch_data(slave_id)
         logger.info(f"Touch summary: {touch_summary}")
+        touch_data: list[int] = await client.get_modulus_touch_data(slave_id)
         logger.info(f"Touch Data: {touch_data}")
-
-        # 获取单个手指的触觉传感器状态（可选方式）
-        thumb = await client.get_single_touch_sensor_status(slave_id, 0)
-        pinky = await client.get_single_touch_sensor_status(slave_id, 4)
-        palm = await client.get_single_touch_sensor_status(slave_id, 5)
 
         await asyncio.sleep(0.05)  # 控制数据采集频率
         # break  # 示例中只执行一次，实际应用中可根据需要调整

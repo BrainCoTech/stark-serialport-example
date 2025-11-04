@@ -73,7 +73,7 @@ int main(int argc, char const *argv[])
   // 启动 DFU 升级
   start_dfu(handle, slave_id, "ota_bin/stark2/Revo2_V1.0.4_2508291545.bin", 5);
 
-  printf("Waiting for DFU to complete...\n");
+  printf("Revo2 CAN DFU, Waiting for DFU to complete...\n");
   useconds_t delay = 300 * 1000 * 1000; // 300s, wait for DFU to complete
   usleep(delay);
 
@@ -252,7 +252,15 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   if (info != NULL)
   {
     printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id, info->serial_number, info->firmware_version);
+    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO2_BASIC && info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
+      printf("Not Revo2, hardware type: %hhu\n", info->hardware_type);
+      exit(1);
+    }
     free_device_info(info);
+  } else {
+    printf("Error: Failed to get device info\n");
+    exit(1);
   }
 }
 

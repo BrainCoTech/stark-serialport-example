@@ -1,25 +1,36 @@
 import asyncio
 import sys
-
-from zqwl_win import *
+import platform
+from typing import Optional
 from can_utils import *
 
+# 根据操作系统导入对应的 ZLG CAN 驱动模块
+if platform.system() == "Windows":
+    from zlg_win import *
+elif platform.system() == "Linux":
+    from zlg_linux import *
+else:
+    raise NotImplementedError(f"不支持的操作系统: {platform.system()}")
 
-class Revo1CanController:
-    """Revo1 CAN通信控制器"""
+# 注意：以下函数通过上面的条件导入从 zlg_win 或 zlg_linux 模块中导入：
+# - zlgcan_open()
+# - zlgcan_close()
+# - zlgcan_send_message(can_id, data)
+# - zlgcan_receive_message(quick_retries, dely_retries)
+
+class Revo2CanController:
+    """Revo2 CAN通信控制器"""
 
     def __init__(self, master_id: int = 1, slave_id: int = 1):
         self.master_id = master_id
         self.slave_id = slave_id
         self.client = libstark.PyDeviceContext()
 
-    async def initialize(
-        self, device_type: int = 42, channel: int = 0, baudrate: int = 1000000
-    ):
+    async def initialize(self):
         """初始化CAN连接"""
         try:
-            # 初始化ZCAN设备
-            zcan_open(device_type=device_type, channel=channel, baudrate=baudrate)
+            # 初始化ZLG CAN设备
+            zlgcan_open()  # type: ignore
 
             # 设置回调函数
             libstark.set_can_tx_callback(self._can_send)
@@ -34,10 +45,10 @@ class Revo1CanController:
             logger.error(f"CAN连接初始化失败: {e}")
             return False
 
-    def _can_send(self, slave_id: int, can_id: int, data: list) -> bool:
+    def _can_send(self, _slave_id: int, can_id: int, data: list) -> bool:
         """CAN消息发送"""
         try:
-            if not zcan_send_message(slave_id, can_id, bytes(data)):
+            if not zlgcan_send_message(can_id, bytes(data)):  # type: ignore
                 logger.error("发送CAN消息失败")
                 return False
             return True
@@ -45,10 +56,10 @@ class Revo1CanController:
             logger.error(f"CAN发送异常: {e}")
             return False
 
-    def _can_read(self, slave_id: int) -> tuple:
+    def _can_read(self, _slave_id: int) -> tuple:
         """CAN消息接收"""
         try:
-            recv_msg = zqwl_can_receive_message()
+            recv_msg = zlgcan_receive_message()  # type: ignore
             if recv_msg is None:
                 return 0, bytes([])
 
@@ -135,12 +146,12 @@ class Revo1CanController:
         # 示例1: 逐个握拳动作
         logger.info("示例1: 逐个手指握拳")
         positions = [
-            [20, 0, 0, 0, 0, 0],  # 拇指
-            [20, 30, 0, 0, 0, 0],  # 拇指+食指
-            [20, 30, 50, 0, 0, 0],  # +中指
-            [20, 30, 50, 70, 0, 0],  # +无名指
-            [20, 30, 50, 70, 80, 0],  # +小指
-            [20, 30, 50, 70, 80, 90],  # +手腕
+            [200, 0, 0, 0, 0, 0],  # 拇指
+            [200, 300, 0, 0, 0, 0],  # 拇指+食指
+            [200, 300, 500, 0, 0, 0],  # +中指
+            [200, 300, 500, 700, 0, 0],  # +无名指
+            [200, 300, 500, 700, 800, 0],  # +小指
+            [200, 300, 500, 700, 800, 900],  # +手腕
         ]
 
         for i, pos in enumerate(positions):
@@ -154,10 +165,10 @@ class Revo1CanController:
         logger.info("示例2: 预设手势")
         gestures = {
             "张开手": [0, 0, 0, 0, 0, 0],
-            "指向": [0, 30, 0, 0, 0, 0],
-            "胜利手势": [0, 30, 80, 0, 0, 0],
-            "OK手势": [80, 30, 80, 0, 0, 0],
-            "握拳": [80, 30, 100, 100, 100, 100],
+            "指向": [0, 300, 0, 0, 0, 0],
+            "胜利手势": [0, 300, 800, 0, 0, 0],
+            "OK手势": [500, 300, 800, 0, 0, 0],
+            "握拳": [500, 300, 1000, 1000, 1000, 1000],
         }
 
         for gesture_name, positions in gestures.items():
@@ -169,8 +180,8 @@ class Revo1CanController:
         logger.info("示例3: 抓取动作模拟")
         grab_sequence = [
             ([0, 0, 0, 0, 0, 0], "初始位置"),
-            ([30, 40, 60, 80, 80, 0], "抓取准备"),
-            ([60, 70, 90, 100, 100, 0], "抓取完成"),
+            ([300, 200, 600, 800, 800, 800], "抓取准备"),
+            ([500, 400, 900, 1000, 1000, 1000], "抓取完成"),
         ]
 
         for positions, description in grab_sequence:
@@ -192,7 +203,7 @@ class Revo1CanController:
 
         # 位置控制
         logger.info("位置控制测试")
-        await self.client.set_finger_position(self.slave_id, finger_id, 100)  # 最大位置
+        await self.client.set_finger_position(self.slave_id, finger_id, 1000)  # 最大位置
         await asyncio.sleep(1.0)
         await self.client.set_finger_position(self.slave_id, finger_id, 0)  # 初始位置
         await asyncio.sleep(1.0)
@@ -226,7 +237,8 @@ class Revo1CanController:
 
         while True:
             try:
-                await self.get_motor_status()
+                status = await self.get_motor_status()
+                logger.debug(f"电机状态: {status.description}")
                 await asyncio.sleep(interval)
             except asyncio.CancelledError:
                 logger.info("电机状态监控已取消")
@@ -237,9 +249,6 @@ class Revo1CanController:
 
     async def demo_task(self):
         """演示任务"""
-        # 获取设备信息
-        await self.get_device_info()
-
         # 配置设备参数，根据需要启用
         # await self.configure_device()
 
@@ -247,20 +256,15 @@ class Revo1CanController:
         await self.finger_position_examples()
         await asyncio.sleep(1.0)
 
-        await self.finger_speed_examples()
-        await asyncio.sleep(1.0)
+        # await self.finger_speed_examples()
+        # await asyncio.sleep(1.0)
 
-        await self.single_finger_control_example(libstark.FingerId.Pinky)
-
-        # 设置最终手势（装箱手势）
-        # await self.client.set_finger_positions(
-        #     self.slave_id, [80, 30, 100, 100, 100, 100]
-        # )
+        # await self.single_finger_control_example(libstark.FingerId.Pinky)
 
     def cleanup(self):
         """清理资源"""
         try:
-            zcan_close()
+            zlgcan_close()  # type: ignore
             logger.info("CAN连接已关闭")
         except Exception as e:
             logger.error(f"清理资源时出错: {e}")
@@ -268,7 +272,8 @@ class Revo1CanController:
 
 async def main():
     """主函数"""
-    controller = Revo1CanController(master_id=1, slave_id=1)
+    # 默认左手为1，右手为2
+    controller = Revo2CanController(master_id=1, slave_id=2)
 
     try:
         # 初始化连接
@@ -279,9 +284,11 @@ async def main():
         # 设置关闭事件监听
         shutdown_event = setup_shutdown_event(logger)
 
+        # 获取设备信息
+        await controller.get_device_info()
+
         # 创建任务
         tasks = []
-
         # 启动演示任务
         demo_task = asyncio.create_task(controller.demo_task())
         tasks.append(demo_task)

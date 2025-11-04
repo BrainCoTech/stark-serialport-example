@@ -72,7 +72,15 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   DeviceInfo *info = stark_get_device_info(handle, slave_id);
   if (info != NULL)
   {
-    printf("Slave[%hhu] Serial Number: %s\n", slave_id, info->serial_number);
+    printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id, info->serial_number, info->firmware_version);
+    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO2_BASIC && info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
+      printf("Not Revo2, hardware type: %hhu\n", info->hardware_type);
+      exit(1);
+    }
     free_device_info(info);
+  } else {
+    printf("Error: Failed to get device info\n");
+    exit(1);
   }
 }

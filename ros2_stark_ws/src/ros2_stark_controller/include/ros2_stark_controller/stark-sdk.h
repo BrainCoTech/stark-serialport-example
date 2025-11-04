@@ -161,11 +161,12 @@ struct DeviceConfig {
 
 /// 设备信息
 /// sku_type: 设备类型，1: 右手 2: 左手
+/// hardware_type: 硬件类型
 /// serial_number: 序列号
 /// firmware_version: 固件版本
 struct DeviceInfo {
-  StarkHardwareType hardware_type;
   SkuType sku_type;
+  StarkHardwareType hardware_type;
   const char *serial_number;
   const char *firmware_version;
 };

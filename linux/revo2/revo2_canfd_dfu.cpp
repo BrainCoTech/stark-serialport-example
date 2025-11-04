@@ -59,11 +59,11 @@ int main(int argc, char const *argv[])
   setup_canfd_callbacks();
 
   // 初始化 STARK SDK
-  init_cfg(STARK_PROTOCOL_TYPE_CAN_FD, LOG_LEVEL_INFO);
+  init_cfg(STARK_PROTOCOL_TYPE_CAN_FD, LOG_LEVEL_DEBUG);
   const uint8_t MASTER_ID = 1;
   auto handle = canfd_init(MASTER_ID);
-  uint8_t slave_id = 0x7e; // 二代手左手ID默认为0x7e
-  // uint8_t slave_id = 0x7f; // 二代手右手ID默认为0x7f
+  // uint8_t slave_id = 0x7e; // 二代手左手ID默认为0x7e
+  uint8_t slave_id = 0x7f; // 二代手右手ID默认为0x7f
 
   get_device_info(handle, slave_id);
 
@@ -73,10 +73,11 @@ int main(int argc, char const *argv[])
   set_dfu_progress_callback(dfu_progress_callback);
 
   // 启动 DFU 升级
-  start_dfu(handle, slave_id, "ota_bin/stark2/stark2_fw_V0.0.14_20250723135853.bin", 5);
+  // start_dfu(handle, slave_id, "ota_bin/stark2/stark2_fw_V0.0.14_20250723135853.bin", 5);
+  start_dfu(handle, slave_id, "ota_bin/stark2/Revo2_V1.0.2.C_2511031119_can.bin", 5);
 
-  printf("Waiting for DFU to complete...\n");
-  useconds_t delay = 10 * 1000 * 1000; // 10s, wait for DFU to complete
+  printf("Revo2 CANFD DFU, Waiting for DFU to complete...\n");
+  useconds_t delay = 100 * 1000 * 1000; // 100s, wait for DFU to complete
   usleep(delay);
 
   // 清理资源
@@ -247,8 +248,16 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   DeviceInfo *info = stark_get_device_info(handle, slave_id);
   if (info != NULL)
   {
-    printf("Slave[%hhu] Serial Number: %s\n", slave_id, info->serial_number);
+    printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id, info->serial_number, info->firmware_version);
+    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO2_BASIC && info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
+      printf("Not Revo2, hardware type: %hhu\n", info->hardware_type);
+      exit(1);
+    }
     free_device_info(info);
+  } else {
+    printf("Error: Failed to get device info\n");
+    exit(1);
   }
 }
 

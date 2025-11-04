@@ -1,19 +1,19 @@
-import os
 import sys
-import pathlib
-from zlgcan import *
+import os
+from pathlib import Path
 
-current_dir = pathlib.Path(__file__).resolve()
-parent_dir = current_dir.parent.parent
+current_dir = Path(__file__).resolve().parent
+parent_dir = current_dir.parent
 sys.path.append(str(parent_dir))
+
+from dll.zqwl.zqwl import *
 from can_utils import logger
 
 logger.info(f"parent_dir: {parent_dir}")
 
 read_timeout_ms = 50
 
-dll_path = os.path.join(parent_dir, "dll", "zlgcan.dll")
-zcan = ZCAN(dll_path)
+zcan = ZCAN()
 zcan_handler = None
 zcan_device_handler = None
 
@@ -182,7 +182,7 @@ def _zcan_read_messages(index: int = 0):
         return None
 
     # 接收标准CAN消息
-    recv_msgs, act_num = zcan.Receive(zcan_handler, num, read_timeout_ms)
+    recv_msgs, act_num = zcan.Receive(zcan_handler, num, c_int(read_timeout_ms))
     if act_num == 0:
         logger.error("接收CAN消息失败!")
         return None

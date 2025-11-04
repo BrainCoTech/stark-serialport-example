@@ -1,7 +1,7 @@
 import asyncio
 import sys
 
-from zqwl_win import *
+from zlg_win import *
 from can_utils import *
 
 
@@ -13,13 +13,11 @@ class Revo1CanController:
         self.slave_id = slave_id
         self.client = libstark.PyDeviceContext()
 
-    async def initialize(
-        self, device_type: int = 42, channel: int = 0, baudrate: int = 1000000
-    ):
+    async def initialize(self):
         """初始化CAN连接"""
         try:
-            # 初始化ZCAN设备
-            zcan_open(device_type=device_type, channel=channel, baudrate=baudrate)
+            # 初始化ZLG CAN设备
+            zlgcan_open()
 
             # 设置回调函数
             libstark.set_can_tx_callback(self._can_send)
@@ -34,10 +32,10 @@ class Revo1CanController:
             logger.error(f"CAN连接初始化失败: {e}")
             return False
 
-    def _can_send(self, slave_id: int, can_id: int, data: list) -> bool:
+    def _can_send(self, _slave_id: int, can_id: int, data: list) -> bool:
         """CAN消息发送"""
         try:
-            if not zcan_send_message(slave_id, can_id, bytes(data)):
+            if not zlgcan_send_message(can_id, bytes(data)):
                 logger.error("发送CAN消息失败")
                 return False
             return True
@@ -45,10 +43,10 @@ class Revo1CanController:
             logger.error(f"CAN发送异常: {e}")
             return False
 
-    def _can_read(self, slave_id: int) -> tuple:
+    def _can_read(self, _slave_id: int) -> tuple:
         """CAN消息接收"""
         try:
-            recv_msg = zqwl_can_receive_message()
+            recv_msg = zlgcan_receive_message()
             if recv_msg is None:
                 return 0, bytes([])
 
@@ -260,7 +258,7 @@ class Revo1CanController:
     def cleanup(self):
         """清理资源"""
         try:
-            zcan_close()
+            zlgcan_close()
             logger.info("CAN连接已关闭")
         except Exception as e:
             logger.error(f"清理资源时出错: {e}")

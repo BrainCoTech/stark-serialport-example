@@ -2,7 +2,6 @@ import asyncio
 import sys
 import pathlib
 
-# from zlgcan import ZCAN_USBCANFD_100U
 from zqwl_win import *
 from canfd_utils import *
 
@@ -96,7 +95,7 @@ async def execute_control_examples(client, slave_id):
         client: Modbus客户端实例
         slave_id: 设备ID
     """
-    finger_id = libstark.FingerId.Middle  # 选择中指作为示例
+    finger_id = libstark.FingerId.Index  # 选食指作为示例
 
     # 单个手指控制示例
     await single_finger_control_examples(client, slave_id, finger_id)
@@ -123,8 +122,8 @@ async def single_finger_control_examples(client, slave_id, finger_id):
     await asyncio.sleep(1.0)  # 等待手指到达目标位置
 
     # PWM控制：符号表示方向，正值为握紧方向，负值为松开方向
-    await client.set_finger_pwm(slave_id, finger_id, 700)  # 范围：-1000 ~ 1000
-    await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    # await client.set_finger_pwm(slave_id, finger_id, 700)  # 范围：-1000 ~ 1000
+    # await asyncio.sleep(1.0)  # 等待手指到达目标位置
 
     # 位置控制：目标位置 + 期望时间
     await client.set_finger_position_with_millis(slave_id, finger_id, 1000, 1000)
@@ -152,7 +151,7 @@ async def all_fingers_control_examples(client, slave_id):
     await asyncio.sleep(1.0)  # 等待手指到达目标位置
 
     # 全部手指PWM控制：符号表示方向，正值为握紧方向，负值为松开方向
-    await client.set_finger_pwms(slave_id, [700] * 6)
+    await client.set_finger_pwms(slave_id, [300] * 6)
     await asyncio.sleep(1.0)  # 等待手指到达目标位置
 
     # 全部手指位置控制：目标位置 + 期望时间
@@ -163,7 +162,7 @@ async def all_fingers_control_examples(client, slave_id):
     await asyncio.sleep(1.0)  # 等待手指到达目标位置
 
     # 全部手指位置控制：目标位置 + 期望速度
-    positions = [1000] * 6
+    positions = [500, 500] + [1000] * 4
     speeds = [500] * 6  # 到达目标位置的期望速度
     await client.set_finger_positions_and_speeds(slave_id, positions, speeds)
     await asyncio.sleep(1.0)  # 等待手指到达目标位置

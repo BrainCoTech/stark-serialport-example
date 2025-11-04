@@ -16,9 +16,16 @@ CFLAGS := -g -Wall
 CXXFLAGS := -g -Wall -std=c++17  # 指定 C++17 标准
 
 # ---------------- 模式选择 ----------------
-# MODE 可选：none / can
+# MODE/mod 可选：none / can / ethercat
 # 默认值：none
-MODE ?= none
+# 支持 MODE 和 mod 两种变量名，优先使用 mod（如果提供）
+ifneq ($(mod),)
+  MODE := $(mod)
+else
+  MODE ?= none
+endif
+# 转换为小写以忽略大小写
+MODE := $(shell echo $(MODE) | tr '[:upper:]' '[:lower:]')
 
 ifeq ($(MODE),none)
   CPP_SOURCES := $(wildcard *.cpp)

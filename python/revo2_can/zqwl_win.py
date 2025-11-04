@@ -1,19 +1,19 @@
-import os
 import sys
-import pathlib
-from zlgcan import *
+import os
+from pathlib import Path
 
-current_dir = pathlib.Path(__file__).resolve()
-parent_dir = current_dir.parent.parent
+current_dir = Path(__file__).resolve().parent
+parent_dir = current_dir.parent
 sys.path.append(str(parent_dir))
+
+from dll.zqwl.zqwl import *
 from can_utils import logger
 
 logger.info(f"parent_dir: {parent_dir}")
 
 read_timeout_ms = 50
 
-dll_path = os.path.join(parent_dir, "dll", "zlgcan.dll")
-zcan = ZCAN(dll_path)
+zcan = ZCAN()
 zcan_handler = None
 zcan_device_handler = None
 
@@ -31,7 +31,7 @@ def zcan_open(device_type: int, channel: int, baudrate: int):
         # open device
         dev_handler = zcan.OpenDevice(ZCAN_DEVICE_TYPE(device_type), 0, 0)
         if dev_handler == INVALID_DEVICE_HANDLE:
-            logger.error("打开设备失败")
+            logger.error("打开设备失败, device_type: %d, channel: %d, baudrate: %d", device_type, channel, baudrate)
             return
 
         # 配置标准 CAN 2.0 参数
@@ -149,13 +149,13 @@ def zqwl_can_receive_message(quick_retries: int = 2, dely_retries: int = 0):
         接收到的消息或None(接收失败)
     """
     if zcan_handler is None:
-        logger.error("CANFD handler is None")
+        logger.error("CAN handler is None")
         return None
 
     # 快速接收尝试
     for attempt in range(quick_retries):
         # time.sleep(0.0001)  # 极短延时
-        time.sleep(0.02)  # 极短延时
+        time.sleep(0.001)  # 较短延时
         message = _zcan_read_messages(attempt)
         if message is not None:
             return message
@@ -182,7 +182,7 @@ def _zcan_read_messages(index: int = 0):
         return None
 
     # 接收标准CAN消息
-    recv_msgs, act_num = zcan.Receive(zcan_handler, num, read_timeout_ms)
+    recv_msgs, act_num = zcan.Receive(zcan_handler, num, c_int(read_timeout_ms))
     if act_num == 0:
         logger.error("接收CAN消息失败!")
         return None
@@ -270,7 +270,7 @@ def set_can_baudrate(device_handler, channel: int, baudrate: int) -> bool:
     try:
         zcan.ZCAN_SetValue(device_handler, f"{channel}/baud_rate", str(baudrate))
         # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_standard", "0")  # 标准CAN 2.0
-        # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_abit_baud_rate", str(baudrate))    
+        # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_abit_baud_rate", str(baudrate))
         # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_dbit_baud_rate", str(baudrate))
         zcan.ZCAN_SetValue(
             device_handler, f"{channel}/abit_timing0", f"0x{config['timing0']:02X}"
