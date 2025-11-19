@@ -40,7 +40,7 @@ int main(int argc, char const *argv[])
   if (cfg != NULL)
     free_device_config(cfg);
 
-  uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
+  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
 
   useconds_t delay = 1000 * 1000; // 1000ms

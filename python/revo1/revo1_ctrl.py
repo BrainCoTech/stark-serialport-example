@@ -56,7 +56,7 @@ async def get_motor_status_periodically(client, slave_id):
                     # 手指张开时，执行握手动作
                     # 位置值：[拇指, 拇指辅助, 食指, 中指, 无名指, 小指]
                     await client.set_finger_positions(
-                        slave_id, [60, 60, 100, 100, 100, 100]
+                        slave_id, [600, 600, 1000, 1000, 1000, 1000]
                     )
                 elif status.is_closed():
                     # 手指闭合时，执行张开动作
@@ -81,12 +81,12 @@ async def main():
 
     # 执行初始化动作
     # 设置单个手指控制：小指闭合到100%位置
-    await client.set_finger_position(slave_id, libstark.FingerId.Pinky, 100)
+    await client.set_finger_position(slave_id, libstark.FingerId.Pinky, 1000)
     await asyncio.sleep(1)  # 等待1秒
 
     # 执行握手动作：设置所有手指到预定位置
     # 位置参数：[拇指60%, 拇指辅助60%, 食指100%, 中指100%, 无名指100%, 小指100%]
-    await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])
+    await client.set_finger_positions(slave_id, [600, 600, 1000, 1000, 1000, 1000])
     await asyncio.sleep(1)  # 等待1秒
 
     # 执行OPEN动作：设置所有手指到最小位置（0%）

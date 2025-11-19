@@ -140,7 +140,7 @@ async def configure_position_calibration(client, slave_id):
 
     # 手动执行位置校准（可选）
     # 建议在执行校准前先将手指移动到合适的位置
-    # await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])  # 握手动作
+    # await client.set_finger_positions(slave_id, [600, 600, 1000, 1000, 1000, 1000])  # 握手动作
     # await client.calibrate_position(slave_id)  # 执行位置校准
     # logger.info("Position calibration completed")
 

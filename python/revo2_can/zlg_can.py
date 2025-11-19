@@ -211,11 +211,11 @@ class Revo2CanController:
         # 速度控制
         logger.info("速度控制测试")
         await self.client.set_finger_speed(
-            self.slave_id, finger_id, 100
+            self.slave_id, finger_id, 1000
         )  # 正向最大速度
         await asyncio.sleep(1.0)
         await self.client.set_finger_speed(
-            self.slave_id, finger_id, -100
+            self.slave_id, finger_id, -1000
         )  # 反向最大速度
         await asyncio.sleep(1.0)
         await self.client.set_finger_speed(self.slave_id, finger_id, 0)  # 停止

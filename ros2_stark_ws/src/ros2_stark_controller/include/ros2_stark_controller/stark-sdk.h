@@ -132,6 +132,7 @@ enum StarkHardwareType : uint8_t {
   STARK_HARDWARE_TYPE_REVO1_TOUCH = 2,
   STARK_HARDWARE_TYPE_REVO2_BASIC = 3,
   STARK_HARDWARE_TYPE_REVO2_TOUCH = 4,
+  STARK_HARDWARE_TYPE_REVO1_ADVANCED = 5,
 };
 
 enum StarkProtocolType : uint8_t {
@@ -528,26 +529,46 @@ void stark_set_thumb_aux_lock_current(DeviceHandler *handle,
 uint16_t stark_get_thumb_aux_lock_current(DeviceHandler *handle, uint8_t slave_id);
 
 /// 设置单个手指位置
-/// position: 位置值，一代手范围为0~100
-/// 二代手范围为0~1000或最小-最大位置（°）
+///
+/// # 参数
+/// - `position`: 位置值，统一范围 **0~1000**（所有设备、所有协议）
+///   - SDK 内部会根据设备类型和协议自动转换
+///   - 0 表示完全张开，1000 表示完全握紧
+///
+/// # 统一范围说明
+/// 无论是一代手还是二代手，无论使用 Modbus、CAN 2.0 还是 CANFD，
+/// 对外接口统一使用 0~1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_position(DeviceHandler *handle,
                                uint8_t slave_id,
                                StarkFingerId finger_id,
                                uint16_t position);
 
 /// 设置单个手指速度
-/// speed: 速度值，一代手范围为-100~100
-/// 二代手范围为-1000~1000或-最大速度~最大速度°/s
-/// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
+///
+/// # 参数
+/// - `speed`: 速度值，统一范围 **-1000~+1000**（所有设备、所有协议）
+///   - SDK 内部会根据设备类型和协议自动转换
+///   - 正值表示握紧方向，负值表示松开方向
+///   - 0 表示停止
+///
+/// # 统一范围说明
+/// 无论是一代手还是二代手，无论使用 Modbus、CAN 2.0 还是 CANFD，
+/// 对外接口统一使用 -1000~+1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_speed(DeviceHandler *handle,
                             uint8_t slave_id,
                             StarkFingerId finger_id,
                             int16_t speed);
 
 /// 设置单个手指电流
-/// 二代基础版，参数范围为-1000~1000或-最大电流~最大电流mA
-/// 一代触觉版，参数范围为-100~-20, 20~100，单位mA
-/// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
+///
+/// # 参数
+/// - `current`: 电流值，统一范围 **-1000~+1000**（所有设备、所有协议）
+///   - SDK 内部会根据设备类型和协议自动转换
+///   - 正值表示握紧方向，负值表示松开方向
+///
+/// # 统一范围说明
+/// 无论是一代手还是二代手，无论使用 Modbus、CAN 2.0 还是 CANFD，
+/// 对外接口统一使用 -1000~+1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_current(DeviceHandler *handle,
                               uint8_t slave_id,
                               StarkFingerId finger_id,
@@ -555,8 +576,14 @@ void stark_set_finger_current(DeviceHandler *handle,
 
 /// 设置单个手指PWM
 /// 仅支持二代手
-/// 范围为-1000~1000
-/// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
+///
+/// # 参数
+/// - `pwm`: PWM值，统一范围 **-1000~+1000**（所有协议）
+///   - SDK 内部会根据协议自动转换
+///   - 正值表示握紧方向，负值表示松开方向
+///
+/// # 统一范围说明
+/// 无论使用 Modbus、CAN 2.0 还是 CANFD，对外接口统一使用 -1000~+1000 范围。
 void stark_set_finger_pwm(DeviceHandler *handle,
                           uint8_t slave_id,
                           StarkFingerId finger_id,
@@ -564,8 +591,13 @@ void stark_set_finger_pwm(DeviceHandler *handle,
 
 /// 设置单个手指位置+期望时间
 /// 仅支持二代手
-/// 位置范围为0~1000或最小-最大位置（°）
-/// 期望时间范围为1~2000ms
+///
+/// # 参数
+/// - `position`: 位置值，统一范围 **0~1000**（所有协议）
+/// - `millis`: 期望时间，范围 1~2000ms
+///
+/// # 统一范围说明
+/// 位置参数统一使用 0~1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_position_with_millis(DeviceHandler *handle,
                                            uint8_t slave_id,
                                            StarkFingerId finger_id,
@@ -574,8 +606,13 @@ void stark_set_finger_position_with_millis(DeviceHandler *handle,
 
 /// 设置单个手指位置+期望速度
 /// 仅支持二代手
-/// 位置范围为0~1000或最小最大位置（°）
-/// 速度范围为1~1000或最小~最大速度(°/s）
+///
+/// # 参数
+/// - `position`: 位置值，统一范围 **0~1000**（所有协议）
+/// - `speed`: 速度值，范围 1~1000
+///
+/// # 统一范围说明
+/// 位置参数统一使用 0~1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_position_with_speed(DeviceHandler *handle,
                                           uint8_t slave_id,
                                           StarkFingerId finger_id,
@@ -583,27 +620,46 @@ void stark_set_finger_position_with_speed(DeviceHandler *handle,
                                           uint16_t speed);
 
 /// 设置多个手指位置
-/// positions: 位置值数组，长度为6
-/// 一代手范围为0~100, 对应百分比位置
-/// 二代手位置范围为0~1000或最小最大位置（°）
+///
+/// # 参数
+/// - `positions`: 位置值数组，长度为6，统一范围 **0~1000**（所有设备、所有协议）
+///   - SDK 内部会根据设备类型和协议自动转换
+///   - 0 表示完全张开，1000 表示完全握紧
+///
+/// # 统一范围说明
+/// 无论是一代手还是二代手，无论使用 Modbus、CAN 2.0 还是 CANFD，
+/// 对外接口统一使用 0~1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_positions(DeviceHandler *handle,
                                 uint8_t slave_id,
                                 const uint16_t *positions,
                                 uintptr_t len);
 
 /// 设置多个手指速度
-/// speeds: 速度值数组，长度为6，一代手范围为-100~100
-/// 二代手范围为-1000~1000或-最大速度~最大速度°/s
-/// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
+///
+/// # 参数
+/// - `speeds`: 速度值数组，长度为6，统一范围 **-1000~+1000**（所有设备、所有协议）
+///   - SDK 内部会根据设备类型和协议自动转换
+///   - 正值表示握紧方向，负值表示松开方向
+///   - 0 表示停止
+///
+/// # 统一范围说明
+/// 无论是一代手还是二代手，无论使用 Modbus、CAN 2.0 还是 CANFD，
+/// 对外接口统一使用 -1000~+1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_speeds(DeviceHandler *handle,
                              uint8_t slave_id,
                              const int16_t *speeds,
                              uintptr_t len);
 
 /// 设置多个手指电流
-/// 二代基础版，参数范围为-1000~1000或-最大电流~最大电流mA
-/// 一代触觉版，参数范围为-100~-20, 20~100，单位mA
-/// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
+///
+/// # 参数
+/// - `currents`: 电流值数组，长度为6，统一范围 **-1000~+1000**（所有设备、所有协议）
+///   - SDK 内部会根据设备类型和协议自动转换
+///   - 正值表示握紧方向，负值表示松开方向
+///
+/// # 统一范围说明
+/// 无论是一代手还是二代手，无论使用 Modbus、CAN 2.0 还是 CANFD，
+/// 对外接口统一使用 -1000~+1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_currents(DeviceHandler *handle,
                                uint8_t slave_id,
                                const int16_t *currents,
@@ -611,8 +667,14 @@ void stark_set_finger_currents(DeviceHandler *handle,
 
 /// 设置多个手指PWM
 /// 仅支持二代手
-/// pwms: PWM值数组，长度为6，范围为-1000~1000
-/// 其中符号表示方向，正表示为握紧方向，负表示为松开方向。
+///
+/// # 参数
+/// - `pwms`: PWM值数组，长度为6，统一范围 **-1000~+1000**（所有协议）
+///   - SDK 内部会根据协议自动转换
+///   - 正值表示握紧方向，负值表示松开方向
+///
+/// # 统一范围说明
+/// 无论使用 Modbus、CAN 2.0 还是 CANFD，对外接口统一使用 -1000~+1000 范围。
 void stark_set_finger_pwms(DeviceHandler *handle,
                            uint8_t slave_id,
                            const int16_t *pwms,
@@ -620,9 +682,13 @@ void stark_set_finger_pwms(DeviceHandler *handle,
 
 /// 设置多个手指位置+期望时间
 /// 仅支持二代手
-/// positions: 位置值数组，长度为6，范围为0~1000或最小~最大位置（°）
-/// millis: 期望时间值数组，长度为6，范围为1~2000ms
-/// 其中位置值和期望时间值一一对应
+///
+/// # 参数
+/// - `positions`: 位置值数组，长度为6，统一范围 **0~1000**（所有协议）
+/// - `millis`: 期望时间值数组，长度为6，范围 1~2000ms
+///
+/// # 统一范围说明
+/// 位置参数统一使用 0~1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_positions_and_durations(DeviceHandler *handle,
                                               uint8_t slave_id,
                                               const uint16_t *positions,
@@ -631,9 +697,13 @@ void stark_set_finger_positions_and_durations(DeviceHandler *handle,
 
 /// 设置多个手指位置+期望速度
 /// 仅支持二代手
-/// positions: 位置值数组，长度为6，范围为0~1000或最小最大位置（°）
-/// speeds: 速度值数组，长度为6，范围为1~1000或最小~最大速度(°/s)
-/// 其中位置值和速度值一一对应
+///
+/// # 参数
+/// - `positions`: 位置值数组，长度为6，统一范围 **0~1000**（所有协议）
+/// - `speeds`: 速度值数组，长度为6，范围 1~1000
+///
+/// # 统一范围说明
+/// 位置参数统一使用 0~1000 范围，SDK 内部自动处理转换。
 void stark_set_finger_positions_and_speeds(DeviceHandler *handle,
                                            uint8_t slave_id,
                                            const uint16_t *positions,
@@ -641,9 +711,20 @@ void stark_set_finger_positions_and_speeds(DeviceHandler *handle,
                                            uintptr_t len);
 
 /// 获取手指状态
-/// 位置、速度、电流、马达运行状态
-/// 返回 MotorStatusData 结构体指针，需要调用 free_motor_status_data 释放内存
-/// 如果失败，返回 NULL
+///
+/// # 返回值
+/// 返回 `MotorStatusData` 结构体指针，包含：
+/// - `positions`: 位置数组，统一范围 **0~1000**（所有设备、所有协议）
+/// - `speeds`: 速度数组，统一范围 **-1000~+1000**（所有设备、所有协议）
+/// - `currents`: 电流数组，统一范围 **-1000~+1000**（所有设备、所有协议）
+/// - `states`: 马达运行状态数组
+///
+/// # 统一范围说明
+/// 无论是一代手还是二代手，无论使用 Modbus、CAN 2.0 还是 CANFD，
+/// 返回的数据都已转换为统一范围，SDK 内部自动处理转换。
+///
+/// # 内存管理
+/// 需要调用 `free_motor_status_data` 释放内存。如果失败，返回 NULL。
 MotorStatusData *stark_get_motor_status(DeviceHandler *handle, uint8_t slave_id);
 
 /// 运行动作序列

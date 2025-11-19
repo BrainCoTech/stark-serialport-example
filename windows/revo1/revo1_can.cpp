@@ -53,7 +53,7 @@ int main(int argc, char const *argv[])
   auto handle = create_device_handler();
   get_device_info(handle, slave_id);
 
-  uint16_t positions_fist[] = {50, 50, 100, 100, 100, 100}; // 握拳
+  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // 握拳
   uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
   int delay = 1000;                                         // 1000ms
   // stark_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);

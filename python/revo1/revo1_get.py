@@ -65,12 +65,12 @@ async def execute_finger_movements(client, slave_id):
         slave_id: 设备ID
     """
     # 设置手指位置，使用物理角度
-    angles = [20] * 6  # 一代手角度范围 [55, 90, 70, 70, 70, 70]
+    angles = [200] * 6  # 一代手角度范围 [550, 900, 700, 700, 700, 700]
     await client.set_finger_positions(slave_id, convert_to_position(angles))
     await asyncio.sleep(1.0)
 
     # 执行握手动作（所有手指设置为最大位置值）
-    await client.set_finger_positions(slave_id, [60, 60, 100, 100, 100, 100])
+    await client.set_finger_positions(slave_id, [600, 600, 1000, 1000, 1000, 1000])
 
     # 等待手指到达目标位置
     await asyncio.sleep(1.0)

@@ -135,12 +135,12 @@ class Revo1CanController:
         # 示例1: 逐个握拳动作
         logger.info("示例1: 逐个手指握拳")
         positions = [
-            [20, 0, 0, 0, 0, 0],  # 拇指
-            [20, 30, 0, 0, 0, 0],  # 拇指+食指
-            [20, 30, 50, 0, 0, 0],  # +中指
-            [20, 30, 50, 70, 0, 0],  # +无名指
-            [20, 30, 50, 70, 80, 0],  # +小指
-            [20, 30, 50, 70, 80, 90],  # +手腕
+            [200, 0, 0, 0, 0, 0],  # 拇指
+            [200, 300, 0, 0, 0, 0],  # 拇指+食指
+            [200, 300, 500, 0, 0, 0],  # +中指
+            [200, 300, 500, 700, 0, 0],  # +无名指
+            [200, 300, 500, 700, 800, 0],  # +小指
+            [200, 300, 500, 700, 800, 900],  # +手腕
         ]
 
         for i, pos in enumerate(positions):
@@ -154,10 +154,10 @@ class Revo1CanController:
         logger.info("示例2: 预设手势")
         gestures = {
             "张开手": [0, 0, 0, 0, 0, 0],
-            "指向": [0, 30, 0, 0, 0, 0],
-            "胜利手势": [0, 30, 80, 0, 0, 0],
-            "OK手势": [80, 30, 80, 0, 0, 0],
-            "握拳": [80, 30, 100, 100, 100, 100],
+            "指向": [0, 300, 0, 0, 0, 0],
+            "胜利手势": [0, 300, 800, 0, 0, 0],
+            "OK手势": [800, 300, 800, 0, 0, 0],
+            "握拳": [800, 300, 1000, 1000, 1000, 1000],
         }
 
         for gesture_name, positions in gestures.items():
@@ -169,8 +169,8 @@ class Revo1CanController:
         logger.info("示例3: 抓取动作模拟")
         grab_sequence = [
             ([0, 0, 0, 0, 0, 0], "初始位置"),
-            ([30, 40, 60, 80, 80, 0], "抓取准备"),
-            ([60, 70, 90, 100, 100, 0], "抓取完成"),
+            ([300, 400, 600, 800, 800, 0], "抓取准备"),
+            ([600, 700, 900, 1000, 1000, 0], "抓取完成"),
         ]
 
         for positions, description in grab_sequence:
@@ -192,7 +192,7 @@ class Revo1CanController:
 
         # 位置控制
         logger.info("位置控制测试")
-        await self.client.set_finger_position(self.slave_id, finger_id, 100)  # 最大位置
+        await self.client.set_finger_position(self.slave_id, finger_id, 1000)  # 最大位置
         await asyncio.sleep(1.0)
         await self.client.set_finger_position(self.slave_id, finger_id, 0)  # 初始位置
         await asyncio.sleep(1.0)
@@ -200,11 +200,11 @@ class Revo1CanController:
         # 速度控制
         logger.info("速度控制测试")
         await self.client.set_finger_speed(
-            self.slave_id, finger_id, 100
+            self.slave_id, finger_id, 1000
         )  # 正向最大速度
         await asyncio.sleep(1.0)
         await self.client.set_finger_speed(
-            self.slave_id, finger_id, -100
+            self.slave_id, finger_id, -1000
         )  # 反向最大速度
         await asyncio.sleep(1.0)
         await self.client.set_finger_speed(self.slave_id, finger_id, 0)  # 停止
@@ -214,7 +214,7 @@ class Revo1CanController:
         try:
             status = await self.client.get_motor_status(self.slave_id)
             # 可选：启用详细状态日志
-            # logger.info(f"电机状态: {status.description}")
+            logger.info(f"电机状态: {status.description}")
             return status
         except Exception as e:
             logger.error(f"获取电机状态失败: {e}")
@@ -240,6 +240,9 @@ class Revo1CanController:
         # 获取设备信息
         await self.get_device_info()
 
+        status = await self.get_motor_status()
+        logger.info(f"电机状态: {status.description}")
+
         # 配置设备参数，根据需要启用
         # await self.configure_device()
 
@@ -254,7 +257,7 @@ class Revo1CanController:
 
         # 设置最终手势（装箱手势）
         # await self.client.set_finger_positions(
-        #     self.slave_id, [80, 30, 100, 100, 100, 100]
+        #     self.slave_id, [800, 300, 1000, 1000, 1000, 1000]
         # )
 
     def cleanup(self):

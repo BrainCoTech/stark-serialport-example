@@ -73,7 +73,7 @@ async def monitor_and_control(client_left, client_right, left_id, right_id):
             if t < period / 2:
                 positions = [0, 0, 0, 0, 0, 0]
             else:
-                positions = [0, 0, 100, 100, 100, 100]
+                positions = [0, 0, 1000, 1000, 1000, 1000]
 
             # 获取电机状态
             for client, dev_id, hand in [
