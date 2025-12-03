@@ -2,14 +2,14 @@
 #include <unistd.h>
 #include "stark-sdk.h"
 
-// 声明函数
+// Function declarations
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
 int main(int argc, char const *argv[])
 {
-  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // 初始化配置
-  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // 替换为实际的串口名称, 传None会尝试自动检测
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // Initialize configuration
+  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // Replace with actual serial port name; passing NULL will try auto-detection
   if (cfg == NULL)
   {
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
@@ -19,16 +19,16 @@ int main(int argc, char const *argv[])
   auto handle = modbus_open(cfg->port_name, cfg->baudrate);
   free_device_config(cfg);
 
-  // 方式1：单个串口连接多个设备（需要配置不同的设备ID）
-  uint8_t slave_id_1 = 0x7e; // 左手默认ID为0x7e，右手默认ID为0x7f
+  // Option 1: connect multiple devices through a single serial port (each device must have a unique ID)
+  uint8_t slave_id_1 = 0x7e; // Default left-hand ID is 0x7e, right-hand ID is 0x7f
   uint8_t slave_id_2 = 0x7f;
   get_device_info(handle, slave_id_1);
   get_device_info(handle, slave_id_2);
 
-  uint16_t positions_fist[] = {400, 400, 1000, 1000, 1000, 1000}; // 握拳
-  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
+  uint16_t positions_fist[] = {400, 400, 1000, 1000, 1000, 1000}; // Fist
+  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // Open hand
 
-  useconds_t delay = 1000 * 1000; // 1000ms
+  useconds_t delay = 1000 * 1000; // 1000 ms
   stark_set_finger_positions(handle, slave_id_1, positions_fist, 6);
   stark_set_finger_positions(handle, slave_id_2, positions_fist, 6);
   usleep(delay);
@@ -43,7 +43,7 @@ int main(int argc, char const *argv[])
   printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
   free_motor_status_data(finger_status);
 
-  // 循环控制手指位置，仅用于测试，delay时间过短会影响电机使用寿命
+  // Loop to control finger positions, for testing only; a very short delay may affect motor lifespan
   while (0)
   {
     printf("set_positions loop start\n");
@@ -58,7 +58,7 @@ int main(int argc, char const *argv[])
   return 0;
 }
 
-// 获取设备序列号、固件版本等信息
+// Get device serial number, firmware version and other information
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto info = stark_get_device_info(handle, slave_id);
@@ -67,7 +67,7 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
     if (info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
     {
-      // 启用全部触觉传感器
+      // Enable all touch sensors
       stark_enable_touch_sensor(handle, slave_id, 0x1F);
       usleep(1000 * 1000); // wait for touch sensor to be ready
     } else {
@@ -81,7 +81,7 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   }
 }
 
-// 获取设备信息, 串口波特率, 从机地址, 电压, LED信息, 按键事件
+// Get device information: serial baudrate, slave address, voltage, LED info, button events
 void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto baudrate = stark_get_rs485_baudrate(handle, slave_id);

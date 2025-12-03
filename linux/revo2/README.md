@@ -1,20 +1,20 @@
-# Revo 2 示例程序
+# Revo2 Example Programs
 
 ```shell
-make clean # 清理旧的编译文件
+make clean # Clean old build artifacts
 
-make # 编译默认模式（Modbus）
-make run_revo2_ctrl # 运行 Modbus 控制示例
-make run_revo2_ctrl_multi # 运行 Modbus 多只手控制示例
-make run_revo2_dfu # 运行 Modbus 固件升级示例
-make run_revo2_touch # 运行 Modbus 触摸手示例
+make # Build with default mode (Modbus)
+make run_revo2_ctrl # Run Modbus control example
+make run_revo2_ctrl_multi # Run Modbus multi-hand control example
+make run_revo2_dfu # Run Modbus firmware upgrade example
+make run_revo2_touch # Run Modbus touch-hand example
 
-make MODE=can # 编译 CAN/CANFD 接口模式
-make run_revo2_can_ctrl # 运行 CAN 控制示例
-make run_revo2_can_dfu # 运行 CAN 固件升级示例
-make run_revo2_canfd # 运行 CANFD 控制示例
-make run_revo2_canfd_dfu # 运行 CANFD 固件升级示例
+make MODE=can # Build with CAN/CANFD interface mode
+make run_revo2_can_ctrl # Run CAN control example
+make run_revo2_can_dfu # Run CAN firmware upgrade example
+make run_revo2_canfd # Run CANFD control example
+make run_revo2_canfd_dfu # Run CANFD firmware upgrade example
 
-make MODE=ethercat # 编译 EtherCAT 接口模式
+make MODE=ethercat # Build with EtherCAT interface mode
 make run_revo2_ethercat
 ```

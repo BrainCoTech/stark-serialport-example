@@ -1,4 +1,4 @@
-# Ubuntu 示例
+# Ubuntu Examples
 
 ## Requirement
 
@@ -12,14 +12,14 @@ rm VERSION
 ./download-lib.sh
 ```
 
-## Revo1 RS-485/CAN 通信示例
+## Revo1 RS-485/CAN Communication Examples
 
-详细说明请参考：[Revo1 README](revo1/README.md)
+For detailed instructions, see: [Revo1 README](revo1/README.md)
 
-## Revo2 RS-485/CAN/CANFD 通信示例
+## Revo2 RS-485/CAN/CANFD Communication Examples
 
-详细说明请参考：[Revo2 CAN README](revo2/README.md)
+For detailed instructions, see: [Revo2 CAN README](revo2/README.md)
 
-## Revo2 EtherCAT 通信示例
+## Revo2 EtherCAT Communication Examples
 
-详细说明请参考：[Revo2 EtherCAT README](revo2_ec/README.md)
+For detailed instructions, see: [Revo2 EtherCAT README](revo2_ec/README.md)

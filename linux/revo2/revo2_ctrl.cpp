@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <execinfo.h>
 
-// 声明函数
+// Function declarations
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
@@ -13,10 +13,10 @@ void handler(int sig)
   void *array[10];
   size_t size;
 
-  // 获取堆栈帧
+  // Get stack frames
   size = backtrace(array, 10);
 
-  // 打印所有堆栈帧到 stderr
+  // Print all stack frames to stderr
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);
@@ -27,8 +27,8 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // 初始化配置
-  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // 替换为实际的串口名称, 传None会尝试自动检测
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // Initialize configuration
+  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // Replace with actual serial port name; passing NULL will try auto-detection
   if (cfg == NULL)
   {
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
@@ -40,7 +40,7 @@ int main(int argc, char const *argv[])
   
   get_device_info(handle, slave_id);
 
-  // 设置手指控制参数的单位模式
+  // Set the unit mode for finger control parameters
   stark_set_finger_unit_mode(handle, slave_id, FINGER_UNIT_MODE_NORMALIZED);
   // stark_set_finger_unit_mode(handle, slave_id, FINGER_UNIT_MODE_PHYSICAL);
 
@@ -58,7 +58,7 @@ int main(int argc, char const *argv[])
     printf("Finger unit mode: Unknown\n");
   }
 
-  // 设置手指参数，最大角度，最小角度，最大速度，最大电流，保护电流, 各个手指参数范围详见文档
+  // Configure finger parameters: max angle, min angle, max speed, max current, protection current; see documentation for valid ranges
   auto finger_id = STARK_FINGER_ID_MIDDLE;
   // stark_set_finger_min_position(handle, slave_id, finger_id, 0);
   // auto min_position = stark_get_finger_min_position(handle, slave_id, finger_id);
@@ -82,43 +82,43 @@ int main(int argc, char const *argv[])
 
   useconds_t delay = 1000 * 1000; // 1000ms
 
-  // 单个手指，按速度/电流/PWM控制
-  // 其中符号表示方向，正表示为握紧方向，负表示为松开方向
+  // Single finger control by speed/current/PWM.
+  // The sign represents direction: positive for closing (grip), negative for opening (release).
   stark_set_finger_speed(handle, slave_id, finger_id, 500);    // -1000 ~ 1000
-  usleep(delay);                                                // 等待手指到达目标位置
+  usleep(delay);                                                // Wait for finger to reach target position
   stark_set_finger_current(handle, slave_id, finger_id, -300); // -1000 ~ 1000
-  usleep(delay);                                                // 等待手指到达目标位置
+  usleep(delay);                                                // Wait for finger to reach target position
   stark_set_finger_pwm(handle, slave_id, finger_id, 700);      // -1000 ~ 1000
-  usleep(delay);                                                // 等待手指到达目标位置
+  usleep(delay);                                                // Wait for finger to reach target position
 
-  // 多个手指，按速度/电流/PWM控制
-  // 其中符号表示方向，正表示为握紧方向，负表示为松开方向
+  // Multiple fingers control by speed/current/PWM.
+  // The sign represents direction: positive for closing (grip), negative for opening (release).
   int16_t speeds[6] = {100, 100, 500, 500, 500, 500};
   stark_set_finger_speeds(handle, slave_id, speeds, 6);
-  usleep(delay); // 等待手指到达目标位置
+  usleep(delay); // Wait for fingers to reach target position
   int16_t currents[6] = {-300, -300, -300, -300, -300, -300};
   stark_set_finger_currents(handle, slave_id, currents, 6);
-  usleep(delay); // 等待手指到达目标位置
+  usleep(delay); // Wait for fingers to reach target position
   int16_t pwms[6] = {100, 100, 700, 700, 700, 700};
   stark_set_finger_pwms(handle, slave_id, pwms, 6);
-  usleep(delay); // 等待手指到达目标位置
+  usleep(delay); // Wait for fingers to reach target position
 
-  // 单个手指，按位置+速度/期望时间，无符号
+  // Single finger control by position + speed/expected time (unsigned)
   stark_set_finger_position_with_millis(handle, slave_id, finger_id, 1000, 1000);
-  usleep(delay); // 等待手指到达目标位置
+  usleep(delay); // Wait for finger to reach target position
   stark_set_finger_position_with_speed(handle, slave_id, finger_id, 1, 50);
-  usleep(delay); // 等待手指到达目标位置
+  usleep(delay); // Wait for finger to reach target position
 
-  // 多个手指，按位置+速度/期望时间，无符号
+  // Multiple fingers control by position + speed/expected time (unsigned)
   uint16_t positions[6] = {300, 300, 500, 500, 500, 500};
   uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
   stark_set_finger_positions_and_durations(handle, slave_id, positions, durations, 6);
-  usleep(delay); // 等待手指到达目标位置
+  usleep(delay); // Wait for fingers to reach target position
 
   uint16_t positions2[6] = {30, 30, 100, 100, 100, 100};
   uint16_t speeds2[6] = {500, 500, 500, 500, 500, 500};
   stark_set_finger_positions_and_speeds(handle, slave_id, positions2, speeds2, 6);
-  usleep(delay); // 等待手指到达目标位置
+  usleep(delay); // Wait for fingers to reach target position
 
   auto finger_status = stark_get_motor_status(handle, slave_id);
   if (finger_status != NULL)
@@ -133,7 +133,7 @@ int main(int argc, char const *argv[])
   return 0;
 }
 
-// 获取设备序列号、固件版本等信息
+// Get device serial number, firmware version and other information
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto info = stark_get_device_info(handle, slave_id);
@@ -142,7 +142,7 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
     if (info->hardware_type == STARK_HARDWARE_TYPE_REVO1_TOUCH || info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
     {
-      // 启用全部触觉传感器
+      // Enable all touch sensors
       stark_enable_touch_sensor(handle, slave_id, 0x1F);
       usleep(1000 * 1000); // wait for touch sensor to be ready
     }
@@ -150,14 +150,14 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   }
 }
 
-// 获取设备信息, 波特率, LED信息, 按键事件
+// Get device information: baudrate, LED info, button events
 void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
-  // RS485串口波特率
+  // RS485 serial baudrate
   auto baudrate = stark_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
 
-  // CANFD波特率
+  // CANFD baudrate
   auto canfd_baudrate = stark_get_canfd_baudrate(handle, slave_id);
   printf("Slave[%hhu] CANFD Baudrate: %d\n", slave_id, canfd_baudrate);
 

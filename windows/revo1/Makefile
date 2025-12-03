@@ -1,11 +1,11 @@
 # SHELL := /usr/bin/bash
 
-# 设置变量
+# Variable definitions
 SCRIPT_DIR := $(CURDIR)
 $(info Current dir: $(SCRIPT_DIR))
 DIST_DIR := $(abspath $(SCRIPT_DIR)/../dist)
 
-# 自动转换为 MSYS2/MinGW 可识别的路径
+# Convert to paths recognizable by MSYS2/MinGW
 RAW_LIB_DIR := $(DIST_DIR)/shared/win
 RAW_HEADER_DIR := $(DIST_DIR)/include
 LIB_DIR := $(shell cygpath -u "$(RAW_LIB_DIR)")

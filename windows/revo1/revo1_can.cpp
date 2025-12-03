@@ -1,19 +1,19 @@
-// 本示例为Revo1 结合 ZQWL USB-CAN 设备的简单控制示例
+// This example demonstrates simple control of Revo1 using a ZQWL USB-CAN device
 // USBCANFD-200U
 // USBCANFD-100U
 // USBCANFD-100U-mini
-// 需要下载厂商提供的.dll
+// You need to download the vendor-provided .dll
 // http://39.108.220.80/download/user/ZQWL/UCANFD/
 #include <stdio.h>
 #include <windows.h>
 #include "stark-sdk.h"
 #include "zlgcan/zlgcan.h"
 
-// 全局变量声明
+// Global variable declarations
 static long device_handle_ = INVALID_DEVICE_HANDLE;
 static Handle_chl channel_handle_ = {INVALID_CHANNEL_HANDLE};
 
-// 函数声明
+// Function declarations
 bool init_can_device(int device_type, int channel_index);
 bool setup_can_baudrate(int channel_index, int baudrate);
 bool start_can_channel(int channel_index);
@@ -25,37 +25,37 @@ int main(int argc, char const *argv[])
 {
   const int device_type = ZCAN_USBCANFD_100U;
   const int channel_index = 0;
-  const int baudrate = 1000000; // 1Mbps
+  const int baudrate = 1000000; // 1 Mbps
 
-  // 初始化 CAN 设备
+  // Initialize CAN device
   if (!init_can_device(device_type, channel_index))
   {
     return -1;
   }
 
-  // 启动 CAN 通道
+  // Start CAN channel
   if (!start_can_channel(channel_index))
   {
     cleanup_resources();
     return -1;
   }
 
-  // 设置波特率和时序参数
+  // Configure baudrate and timing parameters
   if (!setup_can_baudrate(channel_index, baudrate))
   {
     cleanup_resources();
     return -1;
   }
 
-  setup_can_callbacks(); // 设置读写回调
+  setup_can_callbacks(); // Set read/write callbacks
 
   init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_DEBUG);
   auto handle = create_device_handler();
   get_device_info(handle, slave_id);
 
-  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // 握拳
-  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
-  int delay = 1000;                                         // 1000ms
+  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist
+  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};                 // Open hand
+  int delay = 1000;                                               // 1000 ms
   // stark_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);
   // Sleep(delay);
   stark_set_finger_positions(handle, slave_id, positions_fist, 6);
@@ -63,7 +63,7 @@ int main(int argc, char const *argv[])
   stark_set_finger_positions(handle, slave_id, positions_open, 6);
   Sleep(delay);
 
-  // 清理资源
+  // Clean up resources
   cleanup_resources();
   return 0;
 }
@@ -81,15 +81,15 @@ bool init_can_device(int device_type, int channel_index)
 
 bool setup_can_baudrate(int channel_index, int baudrate)
 {
-  // 设置波特率
+  // Set baudrate
   char path[50] = {0};
   char value[10] = {0};
   sprintf_s(path, "%d/baud_rate", channel_index);
   sprintf_s(value, "%d", baudrate);
   ZCAN_SetValue(device_handle_, path, value);
 
-  // 设置 CAN 时序参数（timing0, timing1）
-  // 1Mbps 推荐 timing0=0x00, timing1=0x14
+  // Set CAN timing parameters (timing0, timing1)
+  // For 1 Mbps, recommended timing0=0x00, timing1=0x14
   char timing_path0[50] = {0};
   char timing_value0[10] = {0};
   char timing_path1[50] = {0};
@@ -109,7 +109,7 @@ bool start_can_channel(int channel_index)
   ZCAN_CHANNEL_INIT_CONFIG config;
   memset(&config, 0, sizeof(config));
   config.can_type = TYPE_CAN;
-  config.can.mode = 0; // 0: 正常模式, 1: 只听模式
+  config.can.mode = 0; // 0: normal mode, 1: listen-only mode
 
   channel_handle_ = ZCAN_InitCAN(device_handle_, channel_index, config)[0];
   if (INVALID_CHANNEL_HANDLE == channel_handle_.handle)
@@ -129,7 +129,7 @@ bool start_can_channel(int channel_index)
 
 void setup_can_callbacks()
 {
-  // CAN 发送回调
+  // CAN transmit callback
   set_can_tx_callback([](uint8_t slave_id,
                          uint32_t can_id,
                          const uint8_t *data,
@@ -143,28 +143,28 @@ void setup_can_callbacks()
                         }
                         printf("\n");
 
-                        // 构造 CAN 发送数据结构体
+                        // Build CAN transmit data structure
                         ZCAN_Transmit_Data can_data;
                         memset(&can_data, 0, sizeof(can_data));
 
-                        // 设置 CAN ID，标准帧 eff=0，扩展帧 eff=1
-                        // rtr=0:数据帧，rtr=1:远程帧；err=0:正常帧，err=1:错误帧
-                        can_data.frame.can_id = MAKE_CAN_ID(can_id, 0, 0, 0); // 标准帧
+                        // Configure CAN ID, standard frame eff=0, extended frame eff=1
+                        // rtr=0: data frame, rtr=1: remote frame; err=0: normal frame, err=1: error frame
+                        can_data.frame.can_id = MAKE_CAN_ID(can_id, 0, 0, 0); // Standard frame
                         can_data.frame.can_dlc = data_len;
-                        can_data.transmit_type = 0; // 正常发送
+                        can_data.transmit_type = 0; // Normal transmit
 
-                        // 填充数据
+                        // Fill data
                         for (uintptr_t i = 0; i < data_len && i < 8; ++i)
                         {
                           can_data.frame.data[i] = data[i];
                         }
 
-                        // 发送 CAN 帧
+                        // Transmit CAN frame
                         int result = ZCAN_Transmit(channel_handle_, &can_data, 1);
-                        return result == 1 ? 0 : -1; // 0 表示成功
+                        return result == 1 ? 0 : -1; // 0 indicates success
                       });
 
-  // CAN 读取回调
+  // CAN receive callback
   set_can_rx_callback([](uint8_t slave_id,
                          uint32_t *can_id_out,
                          uint8_t *data_out,
@@ -172,7 +172,7 @@ void setup_can_callbacks()
                       {
                         printf("CAN Read: Slave ID: %d\n", slave_id);
 
-                        // 读取数据
+                        // Read data
                         ZCAN_Receive_Data can_data[1000];
                         int len = ZCAN_GetReceiveNum(channel_handle_, TYPE_CAN);
                         len = ZCAN_Receive(channel_handle_, can_data, 1000, 50);
@@ -181,7 +181,7 @@ void setup_can_callbacks()
                           return -1;
                         }
 
-                        // 拼接多个 CAN 帧，多个 CAN 帧的 CAN ID 应该一致
+                        // Concatenate multiple CAN frames; all frames should share the same CAN ID
                         *can_id_out = can_data[0].frame.can_id;
 
                         int idx = 0;
@@ -199,7 +199,7 @@ void setup_can_callbacks()
                         }
 
                         *data_len_out = total_dlc;
-                        return 0; // 成功返回 0
+                        return 0; // Return 0 on success
                       });
 }
 

@@ -1,8 +1,9 @@
 """
 Armband EMG Data Collection Example
 
-这个示例展示了如何使用 bc-edu-sdk 连接臂环设备并收集 EMG（肌电信号）数据，
-同时也支持 IMU 和磁力计数据的收集。
+This example demonstrates how to use `bc-edu-sdk` to connect to an armband
+device and collect EMG (electromyography) data.
+It also supports collecting IMU and magnetometer data.
 """
 
 import asyncio
@@ -12,18 +13,18 @@ from filters_sdk import *
 from model import EMGData
 from edu_utils import *
 
-# 配置常量
-SAMPLING_FREQUENCY = 250  # EMG采样频率 (Hz)
-NUM_CHANNELS = 8  # EMG通道数
-AFE_BUFFER_LENGTH = 1250  # AFE数据缓冲区长度（数据点数）
-FETCH_DATA_COUNT = 100  # 每次获取的数据点数
-BAUDRATE = 115200  # 串口波特率
-DATA_PRINT_INTERVAL = 0.5  # 数据打印间隔（秒）
+# Configuration constants
+SAMPLING_FREQUENCY = 250  # EMG sampling frequency (Hz)
+NUM_CHANNELS = 8  # Number of EMG channels
+AFE_BUFFER_LENGTH = 1250  # AFE data buffer length (number of data points)
+FETCH_DATA_COUNT = 100  # Number of data points fetched each time
+BAUDRATE = 115200  # Serial port baud rate
+DATA_PRINT_INTERVAL = 0.5  # Data print interval (seconds)
 
-# 全局变量
-afe_values = np.zeros((NUM_CHANNELS, AFE_BUFFER_LENGTH))  # EMG传感器数据缓冲区
+# Global variables
+afe_values = np.zeros((NUM_CHANNELS, AFE_BUFFER_LENGTH))  # EMG sensor data buffer
 
-# 滤波器
+# Filters
 env_noise_50 = [BWBandStopFilter(4, sample_rate=SAMPLING_FREQUENCY, fl=49, fu=51) for _ in range(NUM_CHANNELS)]
 env_noise_60 = [BWBandStopFilter(4, sample_rate=SAMPLING_FREQUENCY, fl=59, fu=61) for _ in range(NUM_CHANNELS)]
 hp = [BWHighPassFilter(4, sample_rate=SAMPLING_FREQUENCY, f=10) for _ in range(NUM_CHANNELS)]
@@ -31,44 +32,44 @@ hp = [BWHighPassFilter(4, sample_rate=SAMPLING_FREQUENCY, f=10) for _ in range(N
 
 def update_afe_buffer(afe_data: EMGData) -> None:
     """
-    更新AFE（EMG）传感器数据缓冲区
+    Update the AFE (EMG) sensor data buffer.
 
     Args:
-        afe_data: EMG数据对象
+        afe_data: EMG data object
     """
-    # 将通道数据分割为各个通道
+    # Split channel data into individual channels
     channel_values = np.array_split(afe_data.channel_values, NUM_CHANNELS)
 
-    # 更新每个通道的数据缓冲区
+    # Update the buffer of each channel
     for i in range(NUM_CHANNELS):
-        afe_values[i] = np.roll(afe_values[i], -1)  # 数据向左滚动
+        afe_values[i] = np.roll(afe_values[i], -1)  # Shift data to the left
         raw_value = channel_values[i][0]
-        afe_values[i, -1] = raw_value  # 添加最新数据
+        afe_values[i, -1] = raw_value  # Append the latest data
 
         # filter_value = env_noise_50[i].filter(raw_value)
         # filter_value = env_noise_60[i].filter(filter_value)
         # filter_value = hp[i].filter(filter_value)
         # logger.info(f"Channel {i} raw value: {raw_value}, filtered value: {filter_value}")
-        # afe_values[i, -1] = filter_value  # 添加最新数据
+        # afe_values[i, -1] = filter_value  # Append the latest filtered data
 
 
 def print_afe_data() -> None:
     """
-    获取并打印AFE（EMG）传感器数据
+    Fetch and print AFE (EMG) sensor data.
 
-    支持获取以下类型的数据：
-    - AFE数据（EMG肌电信号）
-    - IMU原始数据或校准数据
-    - 磁力计原始数据或校准数据
+    Supports retrieving the following types of data:
+    - AFE data (EMG signals)
+    - IMU raw or calibrated data
+    - Magnetometer raw or calibrated data
     """
-    # 获取AFE数据
+    # Fetch AFE data
     afe_buff = libedu.get_afe_buffer(FETCH_DATA_COUNT, clean=True)
 
-    # 可选：获取其他传感器数据
-    # imu_buff = libedu.get_imu_buffer(FETCH_DATA_COUNT, clean=True)  # IMU原始数据
-    # imu_calibration_buff = libedu.get_imu_calibration_buff(FETCH_DATA_COUNT, clean=True)  # IMU校准数据
-    # mag_buff = libedu.get_mag_buffer(FETCH_DATA_COUNT, clean=True)  # 磁力计数据
-    # mag_calibration_buff = libedu.get_mag_calibration_buff(FETCH_DATA_COUNT, clean=True)  # 磁力计校准数据
+    # Optional: fetch other sensor data
+    # imu_buff = libedu.get_imu_buffer(FETCH_DATA_COUNT, clean=True)  # IMU raw data
+    # imu_calibration_buff = libedu.get_imu_calibration_buff(FETCH_DATA_COUNT, clean=True)  # IMU calibrated data
+    # mag_buff = libedu.get_mag_buffer(FETCH_DATA_COUNT, clean=True)  # Magnetometer data
+    # mag_calibration_buff = libedu.get_mag_calibration_buff(FETCH_DATA_COUNT, clean=True)  # Magnetometer calibrated data
 
     logger.info(f"Got AFE buffer len={len(afe_buff)}")
 
@@ -81,22 +82,22 @@ def print_afe_data() -> None:
         emg_data_list.append(afe_data)
         update_afe_buffer(afe_data)
 
-    # 打印数据时间戳信息
+    # Print timestamp information of AFE data
     print_afe_timestamps(logger, emg_data_list)
 
 
 async def setup_armband_device() -> bool:
     """
-    设置并连接臂环设备
+    Set up and connect to the armband device.
 
     Returns:
-        bool: 连接成功返回True，失败返回False
+        bool: True if connection succeeded, False otherwise.
     """
-    # 获取臂环设备端口（可以自动检测或手动指定）
+    # Get armband device port (auto-detect or manual)
     libedu.get_usb_available_ports()
     port_name = get_armband_port_name()
 
-    # 如果自动检测失败，可以手动指定端口
+    # If auto-detection fails, you can manually specify the port
     if port_name is None:
         logger.warning(f"Using manual port: {port_name}")
 
@@ -128,27 +129,27 @@ async def setup_armband_device() -> bool:
 
 async def configure_sensors(device) -> None:
     """
-    配置传感器采样率和数据类型
+    Configure sensor sampling rates and data types.
 
     Args:
-        device: 设备对象
+        device: Device object
     """
-    # 设置EMG采样率为250Hz，0xFF表示所有通道都开启
+    # Set EMG sample rate to 250 Hz, 0xFF means all channels are enabled
     await device.set_afe_config(libedu.AfeSampleRate.AFE_SR_250, 0xFF)
 
-    # 配置IMU传感器 - 返回校准数据
+    # Configure IMU sensor - return calibrated data
     await device.set_imu_config(
         libedu.ImuSampleRate.IMU_SR_100,
         libedu.UploadDataType.CALIBRATED_DATA
     )
 
-    # 配置磁力计传感器 - 返回校准数据
+    # Configure magnetometer sensor - return calibrated data
     await device.set_mag_config(
         libedu.MagSampleRate.MAG_SR_20,
         libedu.UploadDataType.CALIBRATED_DATA
     )
 
-    # 可选：返回原始数据
+    # Optional: return raw data instead of calibrated data
     # await device.set_imu_config(libedu.ImuSampleRate.IMU_SR_100, libedu.UploadDataType.RAW_DATA)
     # await device.set_mag_config(libedu.MagSampleRate.MAG_SR_20, libedu.UploadDataType.RAW_DATA)
 
@@ -157,7 +158,7 @@ async def configure_sensors(device) -> None:
 
 def initialize_configuration() -> None:
     """
-    初始化SDK配置
+    Initialize SDK configuration.
     """
     logger.info("Initializing AFE configuration...")
     libedu.set_afe_buffer_cfg(AFE_BUFFER_LENGTH)

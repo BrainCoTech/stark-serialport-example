@@ -1,9 +1,9 @@
-# Revo 1 示例程序
+# Revo 1 Examples
 
 ```shell
-make clean # 清理旧的编译文件
-make # 编译
-make run_revo1_ctrl # 运行 revo1_modbus_ctrl 示例, Modbus
-make run_revo1_can # 运行 revo1_can_ctrl 示例, CAN
+make clean            # Clean old build artifacts
+make                  # Build
+make run_revo1_ctrl   # Run revo1_modbus_ctrl example (Modbus)
+make run_revo1_can    # Run revo1_can_ctrl example (CAN)
 ```
 

@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <execinfo.h>
 
-// 声明函数
+// Function declarations
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
@@ -13,10 +13,10 @@ void handler(int sig)
   void *array[10];
   size_t size;
 
-  // 获取堆栈帧
+  // Get stack frames
   size = backtrace(array, 10);
 
-  // 打印所有堆栈帧到 stderr
+  // Print all stack frames to stderr
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);
@@ -40,8 +40,8 @@ int main(int argc, char const *argv[])
   if (cfg != NULL)
     free_device_config(cfg);
 
-  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // 握拳
-  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
+  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist
+  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // Open hand
 
   useconds_t delay = 1000 * 1000; // 1000ms
   // stark_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);
@@ -64,7 +64,7 @@ int main(int argc, char const *argv[])
   return 0;
 }
 
-// 获取设备序列号、固件版本等信息
+// Get device serial number, firmware version and other information
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   DeviceInfo *info = stark_get_device_info(handle, slave_id);
@@ -84,12 +84,12 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   }
 }
 
-// 获取设备信息, 串口波特率, 从机地址, 电压, LED信息, 按键事件
+// Get device information: serial baudrate, slave address, voltage, LED info, button events
 void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto baudrate = stark_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
-  // 触觉版 deprecated
+  // Touch version deprecated
   // auto force_level = stark_get_force_level(handle, slave_id);
   // printf("Slave[%hhu] Force Level: %d\n", slave_id, force_level);
   auto voltage = stark_get_voltage(handle, slave_id);

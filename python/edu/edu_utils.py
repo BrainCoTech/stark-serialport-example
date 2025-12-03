@@ -1,8 +1,8 @@
 """
 Education SDK Utilities
 
-这个模块提供了与 bc-edu-sdk 交互的实用工具函数，
-主要用于设备发现、端口管理和通用功能。
+This module provides utility functions for interacting with `bc-edu-sdk`,
+mainly for device discovery, port management, and common helper utilities.
 """
 
 import json
@@ -12,63 +12,64 @@ from typing import Optional, List, Dict, Any
 from logger import getLogger
 from bc_edu_sdk import main_mod
 
-# 配置常量
-VENDOR_ID = 21059  # BrainCo 厂商ID
-GLOVE_PRODUCT_ID = 6  # 手套设备产品ID
-ARMBAND_PRODUCT_ID_PRIMARY = 1  # 臂环设备主要产品ID
-ARMBAND_PRODUCT_ID_SECONDARY = 5  # 臂环设备备用产品ID
+# Configuration constants
+VENDOR_ID = 21059  # BrainCo vendor ID
+GLOVE_PRODUCT_ID = 6  # Glove device product ID
+ARMBAND_PRODUCT_ID_PRIMARY = 1  # Primary armband device product ID
+ARMBAND_PRODUCT_ID_SECONDARY = 5  # Secondary armband device product ID
 
-# 初始化日志和SDK模块
-# logger = getLogger(logging.DEBUG) # 可选：使用DEBUG级别日志
-logger = getLogger(logging.INFO)  # 默认：使用INFO级别日志
+# Initialize logger and SDK module
+# logger = getLogger(logging.DEBUG)  # Optional: use DEBUG level logging
+logger = getLogger(logging.INFO)  # Default: use INFO level logging
 libedu = main_mod
 
 def get_usb_available_ports() -> None:
     """
-    获取所有可用的USB端口信息
+    Get information for all available USB ports.
 
-    这是一个便捷函数，用于显示当前系统中所有可用的USB端口。
-    主要用于调试和端口发现。
+    This is a convenience function to display all available USB ports
+    in the current system. It is mainly used for debugging and port discovery.
     """
     libedu.get_usb_available_ports()
 
 
 def _get_first_port_name(ports_data: bytes, device_type: str) -> Optional[str]:
     """
-    从端口数据中提取第一个可用端口名称的通用函数
+    Generic helper to extract the first available port name from port data.
 
-    该函数用于解析各种设备的端口扫描结果，提取第一个可用的端口名称。
-    支持JSON格式的端口数据解析，包含错误处理和日志记录。
+    This function parses the port scan result of various devices and
+    extracts the first available port name. It supports JSON-formatted
+    port data and includes error handling and logging.
 
     Args:
-        ports_data: 端口数据，JSON格式的字节串
-            预期格式: [{"port_name": "COM1", ...}, {"port_name": "COM2", ...}]
-        device_type: 设备类型名称，用于日志标识（如"Stark", "Glove", "Armband"）
+        ports_data: Port data, JSON-formatted bytes
+            Expected format: [{"port_name": "COM1", ...}, {"port_name": "COM2", ...}]
+        device_type: Device type name, used in logs (e.g. "Stark", "Glove", "Armband")
 
     Returns:
-        第一个可用端口的名称，解析失败时返回None
-        成功时返回端口名称，如"/dev/ttyUSB0"、"COM3"等
+        The first available port name, or None if parsing failed.
+        On success, returns something like "/dev/ttyUSB0" or "COM3".
 
     Note:
-        - 该函数会优先选择列表中的第一个端口
-        - 包含完整的错误处理，确保程序稳定性
-        - 所有操作都会记录到日志中便于调试
+        - The first port in the list is chosen by default
+        - Includes full error handling to ensure stability
+        - All operations are logged to help with debugging
     """
     logger.info(f"Available {device_type} ports: {ports_data}")
 
     try:
-        # 解码字节对象并解析JSON格式数据
+        # Decode bytes and parse JSON-formatted data
         ports_json: List[Dict[str, Any]] = json.loads(ports_data.decode("utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         logger.error(f"Failed to parse {device_type} ports data: {e}")
         return None
 
-    # 检查解析结果是否为空列表
+    # Check whether the parsed result is an empty list
     if not ports_json:
         logger.warning(f"No {device_type} ports found in scan results")
         return None
 
-    # 提取第一个端口的名称
+    # Extract the first port name
     try:
         port_name = ports_json[0]["port_name"]
         logger.info(f"Using {device_type} port: {port_name}")
@@ -79,19 +80,22 @@ def _get_first_port_name(ports_data: bytes, device_type: str) -> Optional[str]:
 
 def get_glove_port_name() -> Optional[str]:
     """
-    获取第一个可用的手套设备端口名称
+    Get the first available glove device port name.
 
-    通过USB VID/PID扫描手套设备，返回第一个检测到的端口名称。
-    使用特定的厂商ID和产品ID来识别手套设备。
+    Scan glove devices via USB VID/PID and return the first detected
+    port name. A specific vendor ID and product ID are used to identify
+    glove devices.
 
     Returns:
-        第一个可用端口的名称，如果没有找到端口或解析失败则返回None
-        成功时返回端口名称，如"/dev/ttyUSB0"、"COM3"等
+        The first available port name, or None if no port was found
+        or parsing failed. On success, returns something like
+        "/dev/ttyUSB0" or "COM3".
 
     Note:
-        - 使用VID=21059, PID=6识别手套设备
-        - 该函数专门用于检测USB连接的手套设备
-        - 如果系统中有多个手套设备，该函数只返回第一个检测到的端口
+        - Uses VID=21059, PID=6 to identify glove devices
+        - This function is dedicated to detecting USB glove devices
+        - If multiple glove devices are present, only the first
+          detected port is returned
 
     Example:
         >>> port = get_glove_port_name()
@@ -110,19 +114,22 @@ def get_glove_port_name() -> Optional[str]:
 
 def get_armband_port_name() -> Optional[str]:
     """
-    获取第一个可用的臂环设备端口名称
+    Get the first available armband device port name.
 
-    通过USB VID/PID扫描臂环设备，返回第一个检测到的端口名称。
-    支持多个产品ID，提高设备兼容性。
+    Scan armband devices via USB VID/PID and return the first detected
+    port name. Multiple product IDs are supported to improve compatibility.
 
     Returns:
-        第一个可用端口的名称，如果没有找到端口或解析失败则返回None
-        成功时返回端口名称，如"/dev/ttyUSB0"、"COM3"等
+        The first available port name, or None if no port was found
+        or parsing failed. On success, returns something like
+        "/dev/ttyUSB0" or "COM3".
 
     Note:
-        - 首先尝试主要产品ID (PID=1)，然后尝试备用产品ID (PID=5)
-        - 该函数专门用于检测USB连接的臂环设备
-        - 如果系统中有多个臂环设备，该函数只返回第一个检测到的端口
+        - Tries the primary product ID (PID=1) first, then the secondary
+          product ID (PID=5)
+        - This function is dedicated to detecting USB armband devices
+        - If multiple armband devices are present, only the first
+          detected port is returned
 
     Example:
         >>> port = get_armband_port_name()
@@ -151,11 +158,11 @@ def get_armband_port_name() -> Optional[str]:
 
 def get_all_device_ports() -> Dict[str, Optional[str]]:
     """
-    获取所有支持设备的端口信息
+    Get the port information for all supported devices.
 
     Returns:
-        包含所有设备类型和对应端口的字典
-        格式: {"glove": "COM3", "armband": "/dev/ttyUSB0"}
+        A dictionary containing all device types and their ports.
+        Format: {"glove": "COM3", "armband": "/dev/ttyUSB0"}
     """
     devices = {
         "glove": get_glove_port_name(),
@@ -168,13 +175,13 @@ def get_all_device_ports() -> Dict[str, Optional[str]]:
 
 def is_device_connected(device_type: str) -> bool:
     """
-    检查指定类型的设备是否已连接
+    Check whether a specific type of device is connected.
 
     Args:
-        device_type: 设备类型 ("glove" 或 "armband")
+        device_type: Device type ("glove" or "armband")
 
     Returns:
-        如果设备已连接返回True，否则返回False
+        True if the device is connected, otherwise False.
     """
     if device_type.lower() == "glove":
         return get_glove_port_name() is not None
@@ -187,9 +194,10 @@ def is_device_connected(device_type: str) -> bool:
 
 def scan_and_report_devices() -> None:
     """
-    扫描并报告所有连接的设备
+    Scan and report all connected devices.
 
-    这是一个便捷函数，用于快速查看当前连接的所有设备状态。
+    This is a convenience function for quickly checking the status
+    of all currently connected devices.
     """
     logger.info("Scanning for connected devices...")
 
@@ -204,18 +212,18 @@ def scan_and_report_devices() -> None:
     else:
         logger.warning("No devices found. Please check connections.")
 
-    # 显示所有可用端口作为参考
+    # Display all available ports as reference
     logger.info("All available USB ports:")
     get_usb_available_ports()
 
 
 def print_afe_timestamps(logger, data) -> None:
     """
-    打印AFE数据的时间戳信息
+    Print timestamp information of AFE data.
 
     Args:
-        logger: 日志记录器
-        data: AFE数据列表
+        logger: Logger instance
+        data: List of AFE data
     """
     if len(data) <= 6:
         for item in data:

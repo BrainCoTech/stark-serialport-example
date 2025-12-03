@@ -1,5 +1,5 @@
 #include "ecrt.h"
-#include <arpa/inet.h> // 为了使用 htonl/ntohl
+#include <arpa/inet.h> // For htonl/ntohl
 #include <errno.h>
 #include <execinfo.h>
 #include <malloc.h>
@@ -18,7 +18,7 @@
 #include <unistd.h>
 
 /****************************************************************************/
-// 宏定义
+// Macro definitions
 /****************************************************************************/
 #define FREQUENCY 1000 // 1000 Hz
 #define MAX_WAIT_LOOP FREQUENCY * 0.1
@@ -35,11 +35,11 @@
 #define STARK_VENDOR_ID 0x00bc0000
 #define STARK_PRODUCT_CODE 0x00009252
 
-// SDO配置参数索引定义
+// SDO configuration object index definitions
 #define CONFIG_OBJECT_INDEX 0x8000
 #define TOUCH_OBJECT_INDEX 0x8010
 
-// 压感式触觉配置子索引
+// Pressure-sensitive tactile configuration sub-indices
 #define THUMB_CALIBRATION_SUBINDEX 0x01
 #define INDEX_CALIBRATION_SUBINDEX 0x02
 #define MID_CALIBRATION_SUBINDEX 0x03
@@ -67,7 +67,7 @@
 #define FW_VERSION_PINKY_SUBINDEX 0x19
 #define FW_VERSION_PALM_SUBINDEX 0x1A
 
-// 通用配置子索引
+// General configuration sub-indices
 #define HAND_TYPE_SUBINDEX 0x01
 #define LED_SWITCH_SUBINDEX 0x02
 #define BUZZER_SWITCH_SUBINDEX 0x03
@@ -78,7 +78,7 @@
 #define TURBO_MODE_SUBINDEX 0x08
 #define TURBO_PARAM_SUBINDEX 0x09
 
-// 保护电流子索引
+// Protection current sub-indices
 #define THUMB_FLEX_PRO_CUR_SUBINDEX 0x0A
 #define THUMB_AUX_PRO_CUR_SUBINDEX 0x0B
 #define INDEX_PRO_CUR_SUBINDEX 0x0C
@@ -87,115 +87,115 @@
 #define PINK_PRO_CUR_SUBINDEX 0x0F
 #define THUMB_AUX_LOCK_CUR_SUBINDEX 0x10
 
-// 固件信息子索引
+// Firmware information sub-indices
 #define CTRL_WRIST_FW_VERSION_SUBINDEX 0x11
 #define CTRL_SN_SUBINDEX 0x12
 #define WRIST_FW_VERSION_SUBINDEX 0x13
 #define WRIST_SN_SUBINDEX 0x14
 
 /****************************************************************************/
-// 枚举定义
+// Enum definitions
 /****************************************************************************/
 
-// 手型枚举
+// Hand type enum
 typedef enum { LEFT_HAND = 0, RIGHT_HAND = 1 } hand_type_t;
 
-// 开关状态枚举
+// Switch state enum
 typedef enum { SWITCH_OFF = 0, SWITCH_ON = 1 } switch_state_t;
 
-// 单位模式枚举
+// Unit mode enum
 typedef enum {
-  NORMAL = 0,  // 无量纲
-  PHYSICAL = 1 // 物理单位
+  NORMAL = 0,  // Dimensionless
+  PHYSICAL = 1 // Physical units
 } unit_mode_t;
 
-// 压力感知式数据类型枚举
+// Pressure-sensitive data type enum
 typedef enum {
-  RAW = 0,        // 原始ADC值
-  CALIBRATED = 1, // 校准后的值（压强/kPa）
-  FORCE = 2       // 转换为力值（单位：mN）
+  RAW = 0,        // Raw ADC value
+  CALIBRATED = 1, // Calibrated value (pressure/kPa)
+  FORCE = 2       // Converted to force value (unit: mN)
 } touch_data_type_t;
 
 /****************************************************************************/
-// 结构体定义
+// Struct definitions
 /****************************************************************************/
 
-// 保护电流配置结构体
+// Protection current configuration struct
 typedef struct {
-  uint16_t thumb_flex_pro_cur; // 拇指尖保护电流
-  uint16_t thumb_aux_pro_cur;  // 拇指根保护电流
-  uint16_t index_pro_cur;      // 食指保护电流
-  uint16_t mid_pro_cur;        // 中指保护电流
-  uint16_t ring_pro_cur;       // 无名指保护电流
-  uint16_t pink_pro_cur;       // 小指保护电流
-  uint16_t thumb_aux_lock_cur; // 拇指副关节锁定电流
+  uint16_t thumb_flex_pro_cur; // Thumb fingertip protection current
+  uint16_t thumb_aux_pro_cur;  // Thumb base protection current
+  uint16_t index_pro_cur;      // Index finger protection current
+  uint16_t mid_pro_cur;        // Middle finger protection current
+  uint16_t ring_pro_cur;       // Ring finger protection current
+  uint16_t pink_pro_cur;       // Pinky finger protection current
+  uint16_t thumb_aux_lock_cur; // Thumb auxiliary joint lock current
 } protection_current_config_t;
 
-// 通用配置结构体
+// General configuration struct
 typedef struct {
-  uint8_t hand_type;        // 手型
-  uint8_t led_switch;       // LED开关
-  uint8_t buzzer_switch;    // 蜂鸣器开关
-  uint8_t vibrator_switch;  // 振动马达开关
-  uint8_t unit_mode;        // 单位模式
-  uint8_t auto_calibration; // 自动校准
-  uint8_t turbo_mode;       // Turbo模式
-  uint32_t turbo_param;     // Turbo参数（32位：duration[16] + interval[16]）
+  uint8_t hand_type;        // Hand type
+  uint8_t led_switch;       // LED switch
+  uint8_t buzzer_switch;    // Buzzer switch
+  uint8_t vibrator_switch;  // Vibration motor switch
+  uint8_t unit_mode;        // Unit mode
+  uint8_t auto_calibration; // Auto calibration
+  uint8_t turbo_mode;       // Turbo mode
+  uint32_t turbo_param;     // Turbo parameter (32-bit: duration[16] + interval[16])
 } general_config_t;
 
-// 触觉传感器-压力感知式配置结构体
+// Tactile sensor - pressure-sensitive configuration struct
 typedef struct {
-  uint8_t vendor_id;               // 厂商信息
-  uint8_t data_type;               // 数据类型
+  uint8_t vendor_id;               // Vendor information
+  uint8_t data_type;               // Data type
 
-  char thumb_touch_fw_version[21]; // 拇指触觉固件版本, 20字节 + 1结束符
-  char index_touch_fw_version[21]; // 食指触觉固件版本, 20字节 + 1结束符
-  char mid_touch_fw_version[21];   // 中指触觉固件版本, 20字节 + 1结束符
-  char ring_touch_fw_version[21];  // 无名指触觉固件版本, 20字节 + 1结束符
-  char pinky_touch_fw_version[21]; // 小指触觉固件版本, 20字节 + 1结束符
-  char palm_touch_fw_version[21];  // 手掌触觉固件版本, 20字节 + 1结束符
+  char thumb_touch_fw_version[21]; // Thumb tactile firmware version, 20 bytes + null terminator
+  char index_touch_fw_version[21]; // Index finger tactile firmware version, 20 bytes + null terminator
+  char mid_touch_fw_version[21];   // Middle finger tactile firmware version, 20 bytes + null terminator
+  char ring_touch_fw_version[21];  // Ring finger tactile firmware version, 20 bytes + null terminator
+  char pinky_touch_fw_version[21]; // Pinky finger tactile firmware version, 20 bytes + null terminator
+  char palm_touch_fw_version[21];  // Palm tactile firmware version, 20 bytes + null terminator
 
-  char thumb_touch_sn[21]; // 拇指触觉传感器序列号, 20字节 + 1结束符
-  char index_touch_sn[21]; // 食指触觉传感器序列号, 20字节 + 1结束符
-  char mid_touch_sn[21];   // 中指触觉传感器序列号, 20字节 + 1结束符
-  char ring_touch_sn[21];  // 无名指触觉传感器序列号, 20字节 + 1结束符
-  char pinky_touch_sn[21]; // 小指触觉传感器序列号, 20字节 + 1结束符
-  char palm_touch_sn[21];  // 手掌触觉传感器序列号, 20字节 + 1结束符
+  char thumb_touch_sn[21]; // Thumb tactile sensor serial number, 20 bytes + null terminator
+  char index_touch_sn[21]; // Index finger tactile sensor serial number, 20 bytes + null terminator
+  char mid_touch_sn[21];   // Middle finger tactile sensor serial number, 20 bytes + null terminator
+  char ring_touch_sn[21];  // Ring finger tactile sensor serial number, 20 bytes + null terminator
+  char pinky_touch_sn[21]; // Pinky finger tactile sensor serial number, 20 bytes + null terminator
+  char palm_touch_sn[21];  // Palm tactile sensor serial number, 20 bytes + null terminator
 } touch_config_t;
 
-// 辅助函数：创建turbo参数
+// Helper function: create turbo parameter
 uint32_t make_turbo_param(uint16_t interval, uint16_t duration) {
   return ((uint32_t)interval << 16) | duration;
 }
 
-// 辅助函数：解析turbo参数
+// Helper function: parse turbo parameter
 void parse_turbo_param(uint32_t turbo_param, uint16_t *interval, uint16_t *duration)
 {
   *interval = (turbo_param >> 16) & 0xFFFF;
   *duration = turbo_param & 0xFFFF;
 }
 
-// 固件信息结构体
+// Firmware information struct
 typedef struct {
-  char ctrl_wrist_fw_version[21]; // 控制板固件版本, 20字节 + 1结束符
-  char wrist_fw_version[21];      // 手腕板固件版本, 20字节 + 1结束符
+  char ctrl_wrist_fw_version[21]; // Controller board firmware version, 20 bytes + null terminator
+  char wrist_fw_version[21];      // Wrist board firmware version, 20 bytes + null terminator
 
-  char ctrl_sn[19];               // 控制板序列号, 18字节 + 1结束符
-  char wrist_sn[19];              // 手腕板序列号, 18字节 + 1结束符
+  char ctrl_sn[19];               // Controller board serial number, 18 bytes + null terminator
+  char wrist_sn[19];              // Wrist board serial number, 18 bytes + null terminator
 } firmware_info_t;
 
 /****************************************************************************/
-// 全局变量
+// Global variables
 /****************************************************************************/
 
 static ec_master_t *master = NULL;
 static ec_slave_config_t *slave_config = NULL;
 
 /****************************************************************************/
-// SDO读取函数
+// SDO read functions
 /****************************************************************************/
 
-// 通用SDO读取函数
+// Generic SDO read function
 int read_sdo_generic(uint16_t index, uint8_t subindex, void *value, size_t size, bool big_endian)
 {
   size_t result_size;
@@ -219,7 +219,7 @@ int read_sdo_generic(uint16_t index, uint8_t subindex, void *value, size_t size,
     return -1;
   }
 
-  // 字节序转换（仅对多字节类型）
+  // Byte order conversion (for multi-byte types only)
   if (big_endian && size > 1)
   {
     if (size == 2)
@@ -228,7 +228,7 @@ int read_sdo_generic(uint16_t index, uint8_t subindex, void *value, size_t size,
       *(uint32_t *)value = ntohl(*(uint32_t *)value);
   }
 
-  // 打印结果
+  // Print result
   if (size == 1)
     printf("Read SDO 0x%04X:0x%02X = %u\n", index, subindex, *(uint8_t *)value);
   else if (size == 2)
@@ -239,31 +239,31 @@ int read_sdo_generic(uint16_t index, uint8_t subindex, void *value, size_t size,
   return 0;
 }
 
-// 读取UINT8类型SDO
+// Read UINT8 SDO
 int read_sdo_uint8(uint16_t index, uint8_t subindex, uint8_t *value)
 {
   return read_sdo_generic(index, subindex, value, sizeof(uint8_t), false);
 }
 
-// 读取UINT16类型SDO
+// Read UINT16 SDO
 int read_sdo_uint16(uint16_t index, uint8_t subindex, uint16_t *value)
 {
   return read_sdo_generic(index, subindex, value, sizeof(uint16_t), false);
 }
 
-// 读取UINT32类型SDO-小端序
+// Read UINT32 SDO - little endian
 int read_sdo_uint32_little_endian(uint16_t index, uint8_t subindex, uint32_t *value)
 {
   return read_sdo_generic(index, subindex, value, sizeof(uint32_t), false);
 }
 
-// 读取UINT32类型SDO-大端序
+// Read UINT32 SDO - big endian
 int read_sdo_uint32_big_endian(uint16_t index, uint8_t subindex, uint32_t *value)
 {
   return read_sdo_generic(index, subindex, value, sizeof(uint32_t), true);
 }
 
-// 读取STRING类型SDO
+// Read STRING SDO
 int read_sdo_string(uint16_t index, uint8_t subindex, char *value,
                     size_t max_size) {
   size_t result_size;
@@ -278,16 +278,16 @@ int read_sdo_string(uint16_t index, uint8_t subindex, char *value,
     return ret;
   }
 
-  value[result_size] = '\0'; // 确保字符串结束
+  value[result_size] = '\0'; // Ensure null termination
   // printf("Read SDO 0x%04X:0x%02X = \"%s\"\n", index, subindex, value);
   return 0;
 }
 
 /****************************************************************************/
-// SDO写入函数
+// SDO write functions
 /****************************************************************************/
 
-// 写入UINT8类型SDO
+// Write UINT8 SDO
 int write_sdo_uint8(uint16_t index, uint8_t subindex, uint8_t value) {
   uint32_t abort_code;
 
@@ -306,7 +306,7 @@ int write_sdo_uint8(uint16_t index, uint8_t subindex, uint8_t value) {
   return 0;
 }
 
-// 写入UINT16类型SDO
+// Write UINT16 SDO
 int write_sdo_uint16(uint16_t index, uint8_t subindex, uint16_t value) {
   uint32_t abort_code;
 
@@ -325,10 +325,10 @@ int write_sdo_uint16(uint16_t index, uint8_t subindex, uint16_t value) {
   return 0;
 }
 
-// 写入UINT32类型SDO
+// Write UINT32 SDO
 int write_sdo_uint32(uint16_t index, uint8_t subindex, uint32_t value) {
   uint32_t abort_code;
-  uint32_t network_value = htonl(value); // 主机字节序转网络字节序(大端)
+  uint32_t network_value = htonl(value); // Host to network byte order (big-endian)
 
   int ret = ecrt_master_sdo_download(master, 0, index, subindex,
                                      (uint8_t *)&network_value,
@@ -345,7 +345,7 @@ int write_sdo_uint32(uint16_t index, uint8_t subindex, uint32_t value) {
   return 0;
 }
 
-// 写入STRING类型SDO
+// Write STRING SDO
 int write_sdo_string(uint16_t index, uint8_t subindex, const char *value) {
   uint32_t abort_code;
   size_t len = strlen(value);
@@ -365,10 +365,10 @@ int write_sdo_string(uint16_t index, uint8_t subindex, const char *value) {
 }
 
 /****************************************************************************/
-// 高级配置函数
+// High-level configuration functions
 /****************************************************************************/
 
-// 读取触觉配置
+// Read tactile configuration
 int read_touch_config(touch_config_t *config) {
   int ret = 0;
   printf("=== Reading Touch Configuration ===\n");
@@ -418,7 +418,7 @@ int read_touch_config(touch_config_t *config) {
   return ret;
 }
 
-// 读取通用配置
+// Read general configuration
 int read_general_config(general_config_t *config) {
   int ret = 0;
 
@@ -439,14 +439,14 @@ int read_general_config(general_config_t *config) {
   ret |= read_sdo_uint8(CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX,
                         &config->turbo_mode);
 
-  // 读取Turbo参数（32位，大端序）
+  // Read Turbo parameter (32-bit, big-endian)
   ret |= read_sdo_uint32_big_endian(CONFIG_OBJECT_INDEX, TURBO_PARAM_SUBINDEX, &config->turbo_param);
 
   printf("=====================================\n");
   return ret;
 }
 
-// 写入通用配置
+// Write general configuration
 int write_general_config(const general_config_t *config) {
   int ret = 0;
 
@@ -467,7 +467,7 @@ int write_general_config(const general_config_t *config) {
   ret |= write_sdo_uint8(CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX,
                          config->turbo_mode);
 
-  // 写入Turbo参数（32位，大端序）
+  // Write Turbo parameter (32-bit, big-endian)
   ret |= write_sdo_uint32(CONFIG_OBJECT_INDEX, TURBO_PARAM_SUBINDEX,
                           config->turbo_param);
 
@@ -475,7 +475,7 @@ int write_general_config(const general_config_t *config) {
   return ret;
 }
 
-// 读取保护电流配置
+// Read protection current configuration
 int read_protection_current_config(protection_current_config_t *config) {
   int ret = 0;
 
@@ -500,7 +500,7 @@ int read_protection_current_config(protection_current_config_t *config) {
   return ret;
 }
 
-// 写入保护电流配置
+// Write protection current configuration
 int write_protection_current_config(const protection_current_config_t *config) {
   int ret = 0;
 
@@ -525,7 +525,7 @@ int write_protection_current_config(const protection_current_config_t *config) {
   return ret;
 }
 
-// 读取固件信息
+// Read firmware information
 int read_firmware_info(firmware_info_t *info) {
   int ret = 0;
 
@@ -546,7 +546,7 @@ int read_firmware_info(firmware_info_t *info) {
   return ret;
 }
 
-// 写入序列号信息
+// Write serial numbers
 int write_serial_numbers(const char *ctrl_sn, const char *wrist_sn) {
   int ret = 0;
 
@@ -565,60 +565,60 @@ int write_serial_numbers(const char *ctrl_sn, const char *wrist_sn) {
 }
 
 /****************************************************************************/
-// 专用功能函数
+// Specialized functions
 /****************************************************************************/
 
-// 设置手型
+// Set hand type
 int set_hand_type(hand_type_t hand_type) {
   printf("Setting hand type to: %s\n",
          hand_type == LEFT_HAND ? "LEFT_HAND" : "RIGHT_HAND");
   return write_sdo_uint8(CONFIG_OBJECT_INDEX, HAND_TYPE_SUBINDEX, hand_type);
 }
 
-// 控制LED
+// Control LED
 int control_led(switch_state_t state) {
   printf("Setting LED to: %s\n", state == SWITCH_ON ? "ON" : "OFF");
   return write_sdo_uint8(CONFIG_OBJECT_INDEX, LED_SWITCH_SUBINDEX, state);
 }
 
-// 控制蜂鸣器
+// Control buzzer
 int control_buzzer(switch_state_t state) {
   printf("Setting buzzer to: %s\n", state == SWITCH_ON ? "ON" : "OFF");
   return write_sdo_uint8(CONFIG_OBJECT_INDEX, BUZZER_SWITCH_SUBINDEX, state);
 }
 
-// 控制振动马达
+// Control vibration motor
 int control_vibrator(switch_state_t state) {
   printf("Setting vibrator to: %s\n", state == SWITCH_ON ? "ON" : "OFF");
   return write_sdo_uint8(CONFIG_OBJECT_INDEX, VIBRATOR_SWITCH_SUBINDEX, state);
 }
 
-// 设置单位模式
+// Set unit mode
 int set_unit_mode(unit_mode_t mode) {
   printf("Setting unit mode to: %s\n", mode == NORMAL ? "NORMAL" : "PHYSICAL");
   return write_sdo_uint8(CONFIG_OBJECT_INDEX, UNIT_MODE_SUBINDEX, mode);
 }
 
-// 设置压力感知式数据类型
+// Set pressure-sensitive data type
 int set_touch_data_type(touch_data_type_t type) {
   printf("Setting touch data type to: %s\n", type == RAW ? "RAW" : type == CALIBRATED ? "CALIBRATED" : "FORCE");
   return write_sdo_uint8(TOUCH_OBJECT_INDEX, DATA_TYPE_SUBINDEX, type);
 }
 
-// 执行手动位置校准
+// Perform manual position calibration
 int perform_manual_calibration() {
   printf("Performing manual position calibration...\n");
   return write_sdo_uint8(CONFIG_OBJECT_INDEX, POS_CALIBRATION_SUBINDEX, 1);
 }
 
-// 设置自动校准
+// Set auto calibration
 int set_auto_calibration(switch_state_t state) {
   printf("Setting auto calibration to: %s\n",
          state == SWITCH_ON ? "ON" : "OFF");
   return write_sdo_uint8(CONFIG_OBJECT_INDEX, AUTO_CALIBRATION_SUBINDEX, state);
 }
 
-// 设置Turbo模式
+// Set Turbo mode
 int set_turbo_mode(switch_state_t state, uint16_t interval, uint16_t duration) {
   int ret = 0;
   uint32_t turbo_param = make_turbo_param(interval, duration);
@@ -630,7 +630,7 @@ int set_turbo_mode(switch_state_t state, uint16_t interval, uint16_t duration) {
   ret |= write_sdo_uint8(CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX, state);
 
   if (state == SWITCH_ON) {
-    // 写入Turbo参数（32位，大端序）
+    // Write Turbo parameter (32-bit, big-endian)
     ret |= write_sdo_uint32(CONFIG_OBJECT_INDEX, TURBO_PARAM_SUBINDEX,
                             turbo_param);
   }
@@ -639,7 +639,7 @@ int set_turbo_mode(switch_state_t state, uint16_t interval, uint16_t duration) {
 }
 
 /****************************************************************************/
-// 信号处理函数
+// Signal handler
 /****************************************************************************/
 
 void handler(int sig) {
@@ -653,7 +653,7 @@ void handler(int sig) {
 }
 
 /****************************************************************************/
-// 主函数
+// Main function
 /****************************************************************************/
 
 int main(int argc, char **argv) {
@@ -662,7 +662,7 @@ int main(int argc, char **argv) {
 
   printf("=== REVO2 SDO Configuration Tool ===\n");
 
-  // 1. 初始化 EtherCAT 主站
+  // 1. Initialize EtherCAT master
   printf("Requesting master...\n");
   master = ecrt_request_master(0);
   if (!master) {
@@ -670,7 +670,7 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  // 2. 创建从站配置
+  // 2. Create slave configuration
   printf("Requesting slave configuration...\n");
   slave_config = ecrt_master_slave_config(master, 0, 0, STARK_VENDOR_ID,
                                           STARK_PRODUCT_CODE);
@@ -680,10 +680,10 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  // 3. 演示各种SDO操作
+  // 3. Demonstrate various SDO operations
   printf("\n=== SDO Configuration Demo ===\n");
 
-  // 读取固件信息
+  // Read firmware information
   firmware_info_t fw_info;
   if (read_firmware_info(&fw_info) == 0) {
     printf("\nFirmware Information:\n");
@@ -693,7 +693,7 @@ int main(int argc, char **argv) {
     printf("  Wrist Board SN:   %s\n", fw_info.wrist_sn);
   }
 
-  // 读取当前通用配置
+  // Read current general configuration
   general_config_t gen_config;
   if (read_general_config(&gen_config) == 0) {
     uint16_t interval, duration;
@@ -713,7 +713,7 @@ int main(int argc, char **argv) {
            gen_config.turbo_param, interval, duration);
   }
 
-  // 读取触觉配置
+  // Read tactile configuration
   touch_config_t touch_config;
   if (read_touch_config(&touch_config) == 0) {
     printf("\nTouch Configuration:\n");
@@ -733,7 +733,7 @@ int main(int argc, char **argv) {
     printf("  Palm Touch SN: %s\n", touch_config.palm_touch_sn);
   }
 
-  // 读取保护电流配置
+  // Read protection current configuration
   protection_current_config_t prot_config;
   if (read_protection_current_config(&prot_config) == 0) {
     printf("\nProtection Current Configuration:\n");
@@ -746,10 +746,10 @@ int main(int argc, char **argv) {
     printf("  Thumb Lock: %u\n", prot_config.thumb_aux_lock_cur);
   }
 
-  // 演示配置修改
+  // Demonstrate configuration changes
   printf("\n=== Configuration Demo ===\n");
 
-  // 控制LED闪烁
+  // Control LED blinking
   printf("LED blink demo...\n");
   control_led(SWITCH_ON);
   sleep(0.5);
@@ -757,31 +757,31 @@ int main(int argc, char **argv) {
   sleep(0.5);
   control_led(SWITCH_ON);
 
-  // 设置手型
+  // Set hand type
   // set_hand_type(RIGHT_HAND);
   // sleep(1);
   // set_hand_type(LEFT_HAND);
 
-  // 设置单位模式
+  // Set unit mode
   set_unit_mode(PHYSICAL);
   sleep(0.5);
   set_unit_mode(NORMAL);
 
-  // 设置压力感知式数据类型
+  // Set pressure-sensitive data type
   set_touch_data_type(RAW);
   sleep(0.5);
   set_touch_data_type(CALIBRATED);
   sleep(0.5);
   set_touch_data_type(FORCE);
 
-  // 设置Turbo模式
+  // Set Turbo mode
   set_turbo_mode(SWITCH_ON, 1000, 2000); // interval=1000, duration=2000
   sleep(0.5);
   set_turbo_mode(SWITCH_OFF, 0, 0);
 
   printf("\n=== SDO Demo Completed ===\n");
 
-  // 4. 清理资源
+  // 4. Clean up resources
   ecrt_release_master(master);
   return 0;
 }

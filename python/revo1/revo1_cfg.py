@@ -1,18 +1,18 @@
 """
-Revo1灵巧手配置管理示例
+Revo1 Dexterous Hand Configuration Management Example
 
-本示例演示如何管理Revo1灵巧手的各种配置参数，包括：
-- 串口配置（从站ID、波特率）
-- 力量等级设置（大、中、小）
-- Turbo模式配置和管理
-- 位置校准设置和执行
-- 设备重启和重新连接
+This example demonstrates how to manage various configuration parameters of the Revo1 dexterous hand, including:
+- Serial port configuration (slave ID, baud rate)
+- Force level settings (large, medium, small)
+- Turbo mode configuration and management
+- Position calibration settings and execution
+- Device reboot and reconnection
 
-重要注意事项：
-- 修改从站ID或波特率后设备会自动重启
-- 重启后需要使用新的配置参数重新连接设备
-- 触觉版建议直接使用电流控制，基础版使用力量等级控制
-- 位置校准会影响手指的基准位置
+Important notes:
+- Device will automatically reboot after modifying slave ID or baud rate
+- Need to reconnect device with new configuration parameters after reboot
+- Touch version recommended to use current control directly, standard version uses force level control
+- Position calibration will affect finger reference position
 """
 
 import asyncio
@@ -22,19 +22,19 @@ from revo1_utils import *
 
 async def set_slave_id(client, slave_id, new_slave_id):
     """
-    修改设备从站ID
+    Modify device slave ID
 
-    修改后设备会自动重启，需要使用新的从站ID重新连接。
+    Device will automatically reboot after modification, need to reconnect with new slave ID.
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 当前从站ID
-        new_slave_id: 新的从站ID（范围：1-247）
+        client: Modbus client instance
+        slave_id: Current slave ID
+        new_slave_id: New slave ID (range: 1-247)
     """
     await client.set_slave_id(slave_id, new_slave_id)
     logger.info(f"Slave ID set to {new_slave_id}, device will reboot in 3 seconds")
 
-    # 关闭当前连接
+    # Close current connection
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     logger.info(f"New Slave ID: {new_slave_id}, please reconnect the device with new Slave ID")
@@ -43,24 +43,24 @@ async def set_slave_id(client, slave_id, new_slave_id):
 
 async def set_baudrate(client, slave_id, new_baudrate):
     """
-    修改设备波特率
+    Modify device baud rate
 
-    修改后设备会自动重启，需要使用新的波特率重新连接。
+    Device will automatically reboot after modification, need to reconnect with new baud rate.
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备从站ID
-        new_baudrate: 新的波特率（支持的波特率见libstark.Baudrate枚举）
+        client: Modbus client instance
+        slave_id: Device slave ID
+        new_baudrate: New baud rate (see libstark.Baudrate enum for supported baud rates)
     """
-    # 获取当前波特率
+    # Get current baud rate
     baudrate = await client.get_serialport_baudrate(slave_id)
     logger.info(f"Current Baudrate: {baudrate}")
 
-    # 设置新波特率
+    # Set new baud rate
     await client.set_serialport_baudrate(slave_id, new_baudrate)
     logger.info(f"Baudrate set to {new_baudrate}, device will reboot in 3 seconds")
 
-    # 关闭当前连接
+    # Close current connection
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     logger.info(f"New Baudrate: {new_baudrate}, please reconnect the device with new Baudrate")
@@ -69,121 +69,121 @@ async def set_baudrate(client, slave_id, new_baudrate):
 
 async def configure_force_level(client, slave_id):
     """
-    配置力量等级
+    Configure force level
 
-    触觉版本可直接使用电流控制，基础版使用该功能设置力量等级。
+    Touch version can use current control directly, standard version uses this function to set force level.
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备从站ID
+        client: Modbus client instance
+        slave_id: Device slave ID
     """
-    # 设置力量等级（可选）
-    # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Full)    # 最大力量
-    # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Normal)  # 正常力量
-    # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Small)   # 小力量
+    # Set force level (optional)
+    # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Full)    # Maximum force
+    # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Normal)  # Normal force
+    # await client.set_force_level(slave_id, force_level=libstark.ForceLevel.Small)   # Small force
 
-    # 获取并显示当前力量等级
+    # Get and display current force level
     level = await client.get_force_level(slave_id)
     logger.info(f"Current Force level: {level}")
 
 
 async def configure_turbo_mode(client, slave_id):
     """
-    配置Turbo模式
+    Configure Turbo mode
 
-    Turbo模式可以提高设备的响应速度和性能。
+    Turbo mode can improve device response speed and performance.
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备从站ID
+        client: Modbus client instance
+        slave_id: Device slave ID
     """
-    # 设置Turbo模式开关（可选）
-    # await client.set_turbo_mode_enabled(slave_id, True)   # 开启Turbo模式
-    # await client.set_turbo_mode_enabled(slave_id, False)  # 关闭Turbo模式
+    # Set Turbo mode switch (optional)
+    # await client.set_turbo_mode_enabled(slave_id, True)   # Enable Turbo mode
+    # await client.set_turbo_mode_enabled(slave_id, False)  # Disable Turbo mode
 
-    # 获取并显示Turbo模式状态
+    # Get and display Turbo mode status
     turbo_mode = await client.get_turbo_mode_enabled(slave_id)
     if turbo_mode:
         logger.info("Turbo mode: enabled")
     else:
         logger.info("Turbo mode: disabled")
 
-    # 配置Turbo参数（可选）
+    # Configure Turbo parameters (optional)
     # logger.debug("set_turbo_conf")
-    # turbo_interval = 2000  # Turbo间隔时间（毫秒）
-    # turbo_duration = 3000  # Turbo持续时间（毫秒）
+    # turbo_interval = 2000  # Turbo interval time (milliseconds)
+    # turbo_duration = 3000  # Turbo duration time (milliseconds)
     # turbo_conf = libstark.TurboConfig(turbo_interval, turbo_duration)
     # await client.set_turbo_config(slave_id, turbo_conf)
     #
-    # # 获取并显示Turbo配置
+    # # Get and display Turbo configuration
     # turbo_conf = await client.get_turbo_config(slave_id)
     # logger.info(f"Turbo conf: {turbo_conf.description}")
 
 
 async def configure_position_calibration(client, slave_id):
     """
-    配置位置校准
+    Configure position calibration
 
-    位置校准用于设置手指的基准位置，确保位置控制的准确性。
+    Position calibration is used to set finger reference position, ensuring position control accuracy.
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备从站ID
+        client: Modbus client instance
+        slave_id: Device slave ID
     """
-    # 设置是否在上电后自动执行位置校准（可选）
-    # 注意：修改此设置后设备会自动重启
+    # Set whether to automatically execute position calibration after power-on (optional)
+    # Note: Device will automatically reboot after modifying this setting
     # await client.set_auto_calibration(slave_id, False)
 
-    # 获取并显示自动校准状态
+    # Get and display auto calibration status
     # calibration_enabled = await client.get_auto_calibration_enabled(slave_id)
     # logger.info(f"Auto calibration enabled: {calibration_enabled}")
 
-    # 手动执行位置校准（可选）
-    # 建议在执行校准前先将手指移动到合适的位置
-    # await client.set_finger_positions(slave_id, [600, 600, 1000, 1000, 1000, 1000])  # 握手动作
-    # await client.calibrate_position(slave_id)  # 执行位置校准
+    # Manually execute position calibration (optional)
+    # Recommended to move fingers to appropriate position before executing calibration
+    # await client.set_finger_positions(slave_id, [600, 600, 1000, 1000, 1000, 1000])  # Grip action
+    # await client.calibrate_position(slave_id)  # Execute position calibration
     # logger.info("Position calibration completed")
 
 
 async def main():
     """
-    主函数：设备配置管理
+    Main function: Device configuration management
     """
-    # 连接Revo1设备
+    # Connect to Revo1 device
     (client, slave_id) = await open_modbus_revo1()
 
-    # 获取并显示串口配置信息
+    # Get and display serial port configuration information
     logger.debug("get_serialport_cfg")
     serialport_cfg = await client.get_serialport_cfg(slave_id)
     logger.info(f"Serial Port Config: {serialport_cfg.description}")
 
-    # 如果只需要查看当前配置，可以在此处退出
+    # If only need to view current configuration, can exit here
     # exit(0)
 
-    # 根据需要选择以下配置操作之一：
+    # Choose one of the following configuration operations as needed:
 
-    # 1. 修改从站ID（取消注释以使用）
+    # 1. Modify slave ID (uncomment to use)
     # logger.debug("set_slave_id")
-    # await set_slave_id(client, slave_id, new_slave_id=1)  # 修改slave_id为1
-    # await set_slave_id(client, slave_id, new_slave_id=2)  # 修改slave_id为2
-    # return  # 修改后会退出程序
+    # await set_slave_id(client, slave_id, new_slave_id=1)  # Modify slave_id to 1
+    # await set_slave_id(client, slave_id, new_slave_id=2)  # Modify slave_id to 2
+    # return  # Will exit program after modification
 
-    # 2. 修改波特率（取消注释以使用）
+    # 2. Modify baud rate (uncomment to use)
     # logger.debug("set_baudrate")
-    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud115200)  # 修改波特率为115200
-    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # 修改波特率为460800
-    # return  # 修改后会退出程序
+    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud115200)  # Modify baud rate to 115200
+    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # Modify baud rate to 460800
+    # return  # Will exit program after modification
 
-    # 3. 配置力量等级（仅适用于非触觉版）
+    # 3. Configure force level (only for non-touch version)
     await configure_force_level(client, slave_id)
 
-    # 4. 配置Turbo模式
+    # 4. Configure Turbo mode
     await configure_turbo_mode(client, slave_id)
 
-    # 5. 配置位置校准
+    # 5. Configure position calibration
     await configure_position_calibration(client, slave_id)
 
-    # 关闭资源
+    # Clean up resources
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     sys.exit(0)

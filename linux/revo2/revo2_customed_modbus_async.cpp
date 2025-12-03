@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <execinfo.h>
 
-// 声明函数
+// Function declarations
 void print_hex(unsigned char *data, int len);
 void handler(int sig);
 int modbus_operation_async(const uint8_t *values, int len, ModbusOperationResultCallback callback, void *user_data);
@@ -21,8 +21,8 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // 初始化配置
-  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // 替换为实际的串口名称, 传None会尝试自动检测
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // Initialize configuration
+  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // Replace with actual serial port name; passing NULL will try auto-detection
   if (cfg == NULL)
   {
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
@@ -37,13 +37,13 @@ int main(int argc, char const *argv[])
   while (true)
   {
     printf("Performing periodic operations...\n");
-    // 模拟一些操作
-    usleep(1000 * 1000); // 每秒执行一次
+    // Simulate some operations
+    usleep(1000 * 1000); // Execute once per second
   }
   return 0;
 }
 
-// 线程执行函数
+// Thread execution function
 void *get_device_info_thread(void *arg)
 {
   auto params = static_cast<decltype(set_modbus_operation_params) *>(arg);
@@ -53,7 +53,7 @@ void *get_device_info_thread(void *arg)
   uint32_t baudrate = stark_get_rs485_baudrate(modbus_handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
 
-  free(arg); // 释放参数内存
+  free(arg); // Free parameter memory
   pthread_exit(NULL);
   return NULL;
 }
@@ -67,7 +67,7 @@ void get_device_info(DeviceHandler *handler, uint8_t slave_id)
   }
   printf("Getting device info for slave ID: %hhu\n", slave_id);
 
-  // 创建线程
+  // Create thread
   pthread_t thread_id;
   auto params = new decltype(set_modbus_operation_params);
   if (!params)
@@ -83,7 +83,7 @@ void get_device_info(DeviceHandler *handler, uint8_t slave_id)
     fprintf(stderr, "Failed to create thread: %d\n", result);
     return;
   }
-  // 分离线程，让它在后台运行
+  // Detach thread so it runs in the background
   pthread_detach(thread_id);
 
   printf("Async get_device_info thread started.\n");
@@ -124,10 +124,10 @@ void handler(int sig)
   void *array[10];
   size_t size;
 
-  // 获取堆栈帧
+  // Get stack frames
   size = backtrace(array, 10);
 
-  // 打印所有堆栈帧到 stderr
+  // Print all stack frames to stderr
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);

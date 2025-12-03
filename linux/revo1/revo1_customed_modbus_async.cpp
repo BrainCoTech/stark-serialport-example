@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <execinfo.h>
 
-// 声明函数
+// Function declarations
 void print_hex(unsigned char *data, int len);
 void handler(int sig);
 int modbus_operation_async(const uint8_t *values, int len, ModbusOperationResultCallback callback, void *user_data);
@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
     return -1;
   }
-  
+
   auto handle = modbus_open(cfg->port_name, cfg->baudrate);
   uint8_t slave_id = cfg->slave_id;
   get_device_info(handle, slave_id);
@@ -37,13 +37,13 @@ int main(int argc, char const *argv[])
   while (true)
   {
     printf("Performing periodic operations...\n");
-    // 模拟一些操作
-    usleep(1000 * 1000); // 每秒执行一次
+    // Simulate some operations
+    usleep(1000 * 1000); // Execute once per second
   }
   return 0;
 }
 
-// 线程执行函数
+// Thread execution function
 void *get_device_info_thread(void *arg)
 {
   auto params = static_cast<decltype(set_modbus_operation_params) *>(arg);
@@ -56,7 +56,7 @@ void *get_device_info_thread(void *arg)
   auto voltage = stark_get_voltage(modbus_handle, slave_id);
   printf("Slave[%hhu] Voltage: %.2fV\n", slave_id, voltage / 1000.0);
 
-  free(arg); // 释放参数内存
+  free(arg); // Free parameter memory
   pthread_exit(NULL);
   return NULL;
 }
@@ -70,7 +70,7 @@ void get_device_info(DeviceHandler *handler, uint8_t slave_id)
   }
   printf("Getting device info for slave ID: %hhu\n", slave_id);
 
-  // 创建线程
+  // Create thread
   pthread_t thread_id;
   auto params = new decltype(set_modbus_operation_params);
   if (!params)
@@ -86,7 +86,7 @@ void get_device_info(DeviceHandler *handler, uint8_t slave_id)
     fprintf(stderr, "Failed to create thread: %d\n", result);
     return;
   }
-  // 分离线程，让它在后台运行
+  // Detach thread so it runs in the background
   pthread_detach(thread_id);
 
   printf("Async get_device_info thread started.\n");
@@ -127,10 +127,10 @@ void handler(int sig)
   void *array[10];
   size_t size;
 
-  // 获取堆栈帧
+  // Get stack frames
   size = backtrace(array, 10);
 
-  // 打印所有堆栈帧到 stderr
+  // Print all stack frames to stderr
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);

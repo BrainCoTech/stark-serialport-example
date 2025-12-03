@@ -1,8 +1,8 @@
-// 本示例为Revo2 结合 ZLG USB-CAN FD设备的简单控制示例
+// This example demonstrates basic control of Revo2 with a ZLG USB-CAN FD device.
 // USBCANFD-200U
 // USBCANFD-100U
 // USBCANFD-100U-mini
-// 需要下载厂商提供的.so
+// You need to download the vendor-provided .so
 // https://manual.zlg.cn/web/#/146
 #include <stdio.h>
 #include <unistd.h>
@@ -13,15 +13,15 @@
 #include "zlgcan/zcan.h"
 #include "stark-sdk.h"
 
-// ================== 常量定义 ==================
-#define ZCANFD_TYPE_USBCANFD 33 // 设备类型
-#define ZCANFD_CARD_INDEX 0     // 卡索引
-#define ZCANFD_CHANNEL_INDEX 0  // 通道索引
-#define MAX_CHANNELS 2          // 最大通道数量
-#define RX_WAIT_TIME 100        // 接收等待时间
-#define RX_BUFF_SIZE 1000       // 接收缓冲区大小
+// ================== Constant definitions ==================
+#define ZCANFD_TYPE_USBCANFD 33 // Device type
+#define ZCANFD_CARD_INDEX 0     // Card index
+#define ZCANFD_CHANNEL_INDEX 0  // Channel index
+#define MAX_CHANNELS 2          // Maximum number of channels
+#define RX_WAIT_TIME 100        // Receive wait time
+#define RX_BUFF_SIZE 1000       // Receive buffer size
 
-// ================== 函数声明 ==================
+// ================== Function declarations ==================
 void handler(int sig);
 bool init_can_device();
 bool start_can_channel();
@@ -29,21 +29,21 @@ void cleanup_resources();
 void setup_can_callbacks();
 void get_device_info(DeviceHandler *handle, uint8_t slave_id);
 
-// ================== 主函数 ==================
+// ================== Main function ==================
 
 int main(int argc, char const *argv[])
 {
-  // 设置信号处理器
+  // Set up signal handlers
   signal(SIGSEGV, handler);
   signal(SIGABRT, handler);
 
-  // 初始化 CAN 设备
+  // Initialize CAN device
   if (!init_can_device())
   {
     return -1;
   }
 
-  // 启动 CAN 通道
+  // Start CAN channel
   if (!start_can_channel())
   {
     cleanup_resources();
@@ -52,11 +52,11 @@ int main(int argc, char const *argv[])
 
   setup_can_callbacks();
 
-  // 初始化 STARK SDK
+  // Initialize STARK SDK
   init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_DEBUG);
   auto handle = create_device_handler();
-  // uint8_t slave_id = 1; // 二代手左手ID默认为1
-  uint8_t slave_id = 2; // 二代手右手ID默认为2
+  // uint8_t slave_id = 1; // Default left-hand ID for Revo2 is 1
+  uint8_t slave_id = 2; // Default right-hand ID for Revo2 is 2
   get_device_info(handle, slave_id);
 
   auto finger_id = STARK_FINGER_ID_MIDDLE;
@@ -64,9 +64,9 @@ int main(int argc, char const *argv[])
   while (running)
   {
     uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
-    uint16_t positions_fist_1000[] = {500, 500, 1000, 1000, 1000, 1000}; // 握拳
-    uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};                      // 张开
-    useconds_t delay = 1000 * 1000;                                      // 1000ms
+    uint16_t positions_fist_1000[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist
+    uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};                      // Open hand
+    useconds_t delay = 1000 * 1000;                                      // 1000 ms
     stark_set_finger_positions_and_durations(handle, slave_id, positions_fist_1000, durations, 6);
     usleep(delay);
     stark_set_finger_positions_and_durations(handle, slave_id, positions_open, durations, 6);
@@ -88,16 +88,16 @@ int main(int argc, char const *argv[])
     }
   }
 
-  // 清理资源
+  // Clean up resources
   cleanup_resources();
   return 0;
 }
 
-// ================== CANFD 设备管理 ==================
+// ================== CANFD device management ==================
 
 bool init_can_device()
 {
-  // 打开设备
+  // Open device
   if (!VCI_OpenDevice(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX))
   {
     printf("Failed to open device\n");
@@ -108,32 +108,32 @@ bool init_can_device()
 
 bool start_can_channel()
 {
-  ZCAN_INIT init;      // 波特率结构体，数据根据zcanpro的波特率计算器得出
-  init.mode = 0;       // 0-正常
-  init.clk = 60000000; // clock: 60M(V1.01) 80M(V1.03即以上)
+  ZCAN_INIT init;      // Baud rate configuration, values are based on zcanpro baud-rate calculator
+  init.mode = 0;       // 0 - normal mode
+  init.clk = 60000000; // clock: 60M (V1.01) or 80M (V1.03 and above)
 
-  // 仲裁域 1Mbps
+  // Arbitration domain 1 Mbps
   init.aset.sjw = 1;
   init.aset.brp = 5;
   init.aset.tseg1 = 6;
   init.aset.tseg2 = 1;
   init.aset.smp = 0;
 
-  // 数据域 5Mbps
+  // Data domain 5 Mbps
   init.dset.sjw = 1;
   init.dset.brp = 0;
   init.dset.tseg1 = 7;
   init.dset.tseg2 = 2;
   init.dset.smp = 0;
 
-  // 初始化 CAN 通道
+  // Initialize CAN channel
   if (!VCI_InitCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, &init))
   {
     printf("Failed to initialize CANFD channel\n");
     return false;
   }
 
-  // 启动 CAN 通道
+  // Start CAN channel
   if (!VCI_StartCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX))
   {
     printf("Failed to start CANFD channel\n");
@@ -143,11 +143,11 @@ bool start_can_channel()
   return true;
 }
 
-// ================== CAN 回调设置 ==================
+// ================== CAN callback setup ==================
 
 void setup_can_callbacks()
 {
-  // CAN 发送回调
+  // CAN transmit callback
   set_can_tx_callback([](uint8_t slave_id,
                          uint32_t can_id,
                          const uint8_t *data,
@@ -161,33 +161,33 @@ void setup_can_callbacks()
                         // }
                         // printf("\n");
 
-                        // 构造 CAN 发送数据结构体
+                        // Construct CAN transmit message
                         ZCAN_20_MSG can_msg;
                         memset(&can_msg, 0, sizeof(ZCAN_20_MSG));
 
-                        can_msg.hdr.inf.txm = 0; // 0-正常发送
-                        can_msg.hdr.inf.fmt = 0; // 0-CAN
-                        can_msg.hdr.inf.sdf = 0; // 0-数据帧, 1-远程帧
-                        can_msg.hdr.inf.sef = 0; // 0-标准帧, 1-扩展帧
+                        can_msg.hdr.inf.txm = 0; // 0 - normal transmit
+                        can_msg.hdr.inf.fmt = 0; // 0 - CAN
+                        can_msg.hdr.inf.sdf = 0; // 0 - data frame, 1 - remote frame
+                        can_msg.hdr.inf.sef = 0; // 0 - standard frame, 1 - extended frame
 
                         can_msg.hdr.id = can_id;                // ID
-                        can_msg.hdr.chn = ZCANFD_CHANNEL_INDEX; // 通道
-                        can_msg.hdr.len = data_len;             // 数据长度
+                        can_msg.hdr.chn = ZCANFD_CHANNEL_INDEX; // Channel
+                        can_msg.hdr.len = data_len;             // Data length
 
-                        // 填充数据
+                        // Fill data
                         for (uintptr_t i = 0; i < data_len && i < 8; ++i)
                         {
                           can_msg.dat[i] = data[i];
                         }
 
-                        // 发送 CAN 帧
+                        // Transmit CAN frame
                         int result = VCI_Transmit(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, &can_msg, 1);
                         if (result != 1)
                           printf("Transmit result: %d\n", result);
-                        return result == 1 ? 0 : -1; // 0 表示成功
+                        return result == 1 ? 0 : -1; // 0 indicates success
                       });
 
-  // CANFD 读取回调
+  // CANFD receive callback
   set_can_rx_callback([](uint8_t slave_id,
                          uint32_t *can_id_out,
                          uint8_t *data_out,
@@ -195,13 +195,13 @@ void setup_can_callbacks()
                       {
                         // printf("CAN Read: Slave ID: %d\n", slave_id);
 
-                        // 读取数据
+                        // Read data
                         ZCAN_20_MSG can_data[RX_BUFF_SIZE];
                         int len = VCI_Receive(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME); // CAN
                         if (len < 1)
                         {
                           printf("ZCAN Receive, len: %d\n", len);
-                          // 重试一次, 最后一包响应耗时比较长, 固件将数据写入到Flash，等待2s后继续
+                          // Retry once; the last response may take a long time while firmware writes to flash, wait 2 seconds then continue
                           usleep(2000 * 1000);
                           printf("Retrying ZCAN Receive...\n");
                           len = VCI_Receive(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME); // CANFD
@@ -212,7 +212,7 @@ void setup_can_callbacks()
                           return -1;
                         }
 
-                        // 拼接多个 CAN 帧，多个 CAN 帧的 CAN ID 应该一致
+                        // Concatenate multiple CAN frames; all frames should have the same CAN ID
                         *can_id_out = can_data[0].hdr.id & 0x1FFFFFFF;
 
                         int idx = 0;
@@ -230,13 +230,13 @@ void setup_can_callbacks()
                         }
 
                         *data_len_out = total_dlc;
-                        return 0; // 成功返回 0
+                        return 0; // Return 0 on success
                       });
 }
 
 void cleanup_resources()
 {
-  VCI_ResetCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX); // 重置 CANFD 通道
+  VCI_ResetCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX); // Reset CANFD channel
   VCI_CloseDevice(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX);
   printf("Resources cleaned up.\n");
 }
@@ -259,16 +259,16 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   }
 }
 
-// ================== 信号处理和工具函数 ==================
+// ================== Signal handler and utility functions ==================
 void handler(int sig)
 {
   void *array[10];
   size_t size;
 
-  // 获取堆栈帧
+  // Get stack frames
   size = backtrace(array, 10);
 
-  // 打印所有堆栈帧到 stderr
+  // Print all stack frames to stderr
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);

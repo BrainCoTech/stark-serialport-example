@@ -1,7 +1,7 @@
-# Revo 2 示例程序
+# Revo 2 Examples
 
 ```shell
-make clean # 清理旧的编译文件
-make # 编译
-make run_revo2_canfd # 运行 revo2_canfd_ctrl 示例
+make clean           # Clean old build artifacts
+make                 # Build
+make run_revo2_canfd # Run revo2_canfd_ctrl example
 ```

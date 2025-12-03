@@ -1,12 +1,12 @@
 """
-Revo1灵巧手自动控制示例
+Revo1 Dexterous Hand Automatic Control Example
 
-本示例演示如何实现Revo1灵巧手的自动控制，包括：
-- 灵巧手的初始化和连接
-- 电机状态的定期监控
-- 基于状态的自动握手和张开动作
-- 单个手指的精确控制
-- 异步任务的创建和管理
+This example demonstrates how to implement automatic control of the Revo1 dexterous hand, including:
+- Initialization and connection of the dexterous hand
+- Periodic monitoring of motor status
+- Automatic grip and open actions based on status
+- Precise control of individual fingers
+- Creation and management of asynchronous tasks
 """
 
 import asyncio
@@ -18,29 +18,29 @@ from revo1_utils import *
 
 async def get_motor_status_periodically(client, slave_id):
     """
-    定期获取电机状态并执行自动控制
+    Periodically get motor status and execute automatic control
 
-    该函数会持续监控电机状态，并根据手指位置执行自动开合动作：
-    - 当手指张开时，执行握手动作
-    - 当手指闭合时，执行张开动作
-    - 记录每次操作的耗时和状态信息
+    This function continuously monitors motor status and executes automatic open/close actions based on finger position:
+    - When fingers are open, execute grip action
+    - When fingers are closed, execute open action
+    - Record time cost and status information for each operation
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
     logger.info("Motor status monitoring started")
     index = 0
 
     while True:
         try:
-            # 获取电机状态
+            # Get motor status
             logger.debug("get_motor_status")
             start = time.perf_counter()
             status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
             cost_ms = (time.perf_counter() - start) * 1000
 
-            # 记录状态信息
+            # Log status information
             logger.info(
                 f"[{index}] Motor status - cost: {cost_ms:.2f}ms, "
                 f"is_idle: {status.is_idle()}, "
@@ -50,57 +50,57 @@ async def get_motor_status_periodically(client, slave_id):
             logger.info(f"[{index}] Motor status: {status.description}")
             index += 1
 
-            # 根据当前状态执行自动控制
+            # Execute automatic control based on current status
             if status.is_idle():
                 if status.is_opened():
-                    # 手指张开时，执行握手动作
-                    # 位置值：[拇指, 拇指辅助, 食指, 中指, 无名指, 小指]
+                    # When fingers are open, execute grip action
+                    # Position values: [Thumb, Thumb Auxiliary, Index, Middle, Ring, Pinky]
                     await client.set_finger_positions(
                         slave_id, [600, 600, 1000, 1000, 1000, 1000]
                     )
                 elif status.is_closed():
-                    # 手指闭合时，执行张开动作
-                    # 所有手指设置为最小位置值（0）
+                    # When fingers are closed, execute open action
+                    # Set all fingers to minimum position value (0)
                     await client.set_finger_positions(slave_id, [0] * 6)
 
         except Exception as e:
             logger.error(f"Error in motor status monitoring: {e}")
-            # 发生错误时等待1秒后重试
+            # Wait 1 second before retry when error occurs
             await asyncio.sleep(1)
 
 
 async def main():
     """
-    主函数：初始化灵巧手连接并启动自动控制任务
+    Main function: Initialize dexterous hand connection and start automatic control task
     """
-    # 设置关闭事件监听
+    # Set up shutdown event listener
     shutdown_event = setup_shutdown_event(logger)
 
-    # 检测灵巧手的波特率和设备ID，初始化client
-    (client, slave_id) = await open_modbus_revo1(port_name=None, quick=True) # 替换为实际的串口名称, 传None会尝试自动检测
+    # Detect baud rate and device ID of the dexterous hand, initialize client
+    (client, slave_id) = await open_modbus_revo1(port_name=None, quick=True) # Replace with actual serial port name, passing None will attempt auto-detection
 
-    # 执行初始化动作
-    # 设置单个手指控制：小指闭合到100%位置
+    # Execute initialization actions
+    # Set single finger control: Pinky closes to 100% position
     await client.set_finger_position(slave_id, libstark.FingerId.Pinky, 1000)
-    await asyncio.sleep(1)  # 等待1秒
+    await asyncio.sleep(1)  # Wait 1 second
 
-    # 执行握手动作：设置所有手指到预定位置
-    # 位置参数：[拇指60%, 拇指辅助60%, 食指100%, 中指100%, 无名指100%, 小指100%]
+    # Execute grip action: Set all fingers to predetermined positions
+    # Position parameters: [Thumb 60%, Thumb Auxiliary 60%, Index 100%, Middle 100%, Ring 100%, Pinky 100%]
     await client.set_finger_positions(slave_id, [600, 600, 1000, 1000, 1000, 1000])
-    await asyncio.sleep(1)  # 等待1秒
+    await asyncio.sleep(1)  # Wait 1 second
 
-    # 执行OPEN动作：设置所有手指到最小位置（0%）
+    # Execute OPEN action: Set all fingers to minimum position (0%)
     await client.set_finger_positions(slave_id, [0] * 6)
-    await asyncio.sleep(1)  # 等待1秒
+    await asyncio.sleep(1)  # Wait 1 second
 
-    # 创建并启动电机状态监控任务
+    # Create and start motor status monitoring task
     asyncio.create_task(get_motor_status_periodically(client, slave_id))
     logger.info("Motor status monitoring task started")
 
-    # 等待关闭事件（Ctrl+C 或其他关闭信号）
+    # Wait for shutdown event (Ctrl+C or other shutdown signals)
     await shutdown_event.wait()
 
-    # 关闭资源
+    # Clean up resources
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     sys.exit(0)

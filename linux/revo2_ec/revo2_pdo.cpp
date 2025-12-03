@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 /****************************************************************************/
-// 宏定义
+// Macro definitions
 /****************************************************************************/
 #define FREQUENCY 1000 // 1000 Hz
 #define MAX_WAIT_LOOP FREQUENCY * 0.1
@@ -36,10 +36,10 @@
 #define STARK_PRODUCT_CODE 0x00009252
 
 /****************************************************************************/
-// 枚举和结构体定义
+// Enum and struct definitions
 /****************************************************************************/
 
-// 控制模式枚举
+// Control mode enum
 typedef enum {
   PositionAndTime = 1,
   PositionAndSpeed = 2,
@@ -48,78 +48,78 @@ typedef enum {
   Pwm = 5
 } FingerCtrlMode;
 
-// 关节索引枚举
+// Joint index enum
 typedef enum {
-  // 拇指尖部
+  // Thumb tip
   THUMB_FLEX = 0,
-  // 拇指根部
+  // Thumb base
   THUMB_ABDUCT = 1,
-  // 食指
+  // Index finger
   INDEX_FINGER = 2,
-  // 中指
+  // Middle finger
   MIDDLE_FINGER = 3,
-  // 无名指
+  // Ring finger
   RING_FINGER = 4,
-  // 小指
+  // Pinky finger
   PINKY = 5
 } finger_index_t;
 
-// 轨迹控制结构体
+// Trajectory control struct
 typedef struct {
-  uint16_t positions[6]; // 6个关节的位置 (每个关节2字节)
-  uint16_t durations[6]; // 6个关节的持续时间 (每个关节2字节)
+  uint16_t positions[6]; // Positions of 6 joints (2 bytes per joint)
+  uint16_t durations[6]; // Durations of 6 joints (2 bytes per joint)
   bool trajectory_active;
   uint32_t start_time_ms;
 } TrajectoryControl;
 
-// 轨迹点结构体
+// Trajectory point struct
 typedef struct {
   uint16_t positions[6];
   uint16_t durations[6];
-  uint32_t start_time_offset; // 相对于轨迹开始的时间偏移
+  uint32_t start_time_offset; // Time offset relative to trajectory start
 } TrajectoryPoint;
 
 /****************************************************************************/
-// 全局变量
+// Global variables
 /****************************************************************************/
 
-// EtherCAT 相关
+// EtherCAT related
 static ec_master_t *master = NULL;
 static ec_master_state_t master_state = {};
 static ec_domain_t *domain = NULL;
 static ec_domain_state_t domain_state = {};
 static uint8_t *domain_data = NULL;
 
-// 计数器和时间
+// Counters and time
 static unsigned int counter = 0;
 static unsigned int sync_ref_counter = 0;
 const struct timespec cycletime = {0, PERIOD_NS};
 
-// PDO 偏移量
+// PDO offsets
 static unsigned int off_out;
 static unsigned int off_in;
 
-// 轨迹控制
+// Trajectory control
 static TrajectoryControl traj_ctrl = {0};
 static TrajectoryPoint trajectory_points[MAX_TRAJECTORY_POINTS];
 static int trajectory_point_count = 0;
 static int current_trajectory_point = 0;
 
 /****************************************************************************/
-// EtherCAT 配置
+// EtherCAT configuration
 /****************************************************************************/
 
-// PDO 域注册
+// PDO domain registration
 const ec_pdo_entry_reg_t domain_regs[] = {
     {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x6000, 0x01,
-     &off_in}, // 输入数据
+     &off_in}, // Input data
     {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x7000, 0x01,
-     &off_out}, // 输出数据
+     &off_out}, // Output data
     {}};
 
-// PDO 条目定义
+// PDO entry definitions
 ec_pdo_entry_info_t slave_pdo_entries[] = {
-    // RxPDO: 0x1600 (主站发送给从站)
+    // RxPDO: 0x1600 (Master to slave)
     {0x7000, 0x01, 16}, // mult_joint_ctrl_mode
     {0x7000, 0x02, 96}, // joint_param1 (positions)
     {0x7000, 0x03, 96}, // joint_param2 (durations/speeds)
@@ -128,21 +128,21 @@ ec_pdo_entry_info_t slave_pdo_entries[] = {
     {0x7010, 0x03, 16}, // single_joint_param1
     {0x7010, 0x04, 16}, // single_joint_param2
 
-    // TxPDO: 0x1A00 (从站发送给主站)
+    // TxPDO: 0x1A00 (Slave to master)
     {0x6000, 0x01, 96}, // joint_pos
     {0x6000, 0x02, 96}, // joint_spd
     {0x6000, 0x03, 96}, // joint_cur
     {0x6000, 0x04, 96}, // joint_status
 };
 
-// PDO 映射
+// PDO mapping
 ec_pdo_info_t slave_pdos[] = {
     {0x1600, 3, &slave_pdo_entries[0]}, // RxPDO: 0x7000:01-03
     {0x1601, 4, &slave_pdo_entries[3]}, // RxPDO: 0x7010:01-04
     {0x1A00, 4, &slave_pdo_entries[7]}, // TxPDO: 0x6000:01-04
 };
 
-// 同步管理器配置
+// Sync manager configuration
 ec_sync_info_t slave_syncs[] = {
     {0, EC_DIR_OUTPUT, 0, NULL, EC_WD_DISABLE},
     {1, EC_DIR_INPUT, 0, NULL, EC_WD_DISABLE},
@@ -151,7 +151,7 @@ ec_sync_info_t slave_syncs[] = {
     {0xff}};
 
 /****************************************************************************/
-// 函数声明
+// Function declarations
 /****************************************************************************/
 void print_hex(unsigned char *data, int len);
 int get_mills();
@@ -161,10 +161,10 @@ void check_master_state(void);
 void handler(int sig);
 
 /****************************************************************************/
-// 工具函数
+// Utility functions
 /****************************************************************************/
 
-// 获取关节名称字符串
+// Get joint name string
 const char *get_joint_name(finger_index_t joint_id) {
   switch (joint_id) {
   case THUMB_FLEX:
@@ -215,7 +215,7 @@ void print_hex(unsigned char *data, int len) {
 }
 
 /****************************************************************************/
-// EtherCAT 状态检查函数
+// EtherCAT status check functions
 /****************************************************************************/
 
 void check_domain_state(void) {
@@ -251,28 +251,28 @@ void check_master_state(void) {
 }
 
 /****************************************************************************/
-// 多关节控制函数
+// Multi-joint control functions
 /****************************************************************************/
 
-// 初始化轨迹控制
+// Initialize trajectory control
 void init_trajectory() {
   memset(&traj_ctrl, 0, sizeof(TrajectoryControl));
   traj_ctrl.trajectory_active = false;
   printf("Trajectory control initialized.\n");
 }
 
-// 1. 位置和时间控制模式
+// 1. Position and time control mode
 void set_position_and_time_mode(uint16_t *positions, uint16_t *durations) {
-  // 复制位置和持续时间数据
+  // Copy position and duration data
   memcpy(traj_ctrl.positions, positions, sizeof(uint16_t) * 6);
   memcpy(traj_ctrl.durations, durations, sizeof(uint16_t) * 6);
 
-  // 写入控制数据到EtherCAT域
+  // Write control data to EtherCAT domain
   EC_WRITE_U16(domain_data + off_out, PositionAndTime);
   memcpy(domain_data + off_out + 2, positions, 12);  // positions
   memcpy(domain_data + off_out + 14, durations, 12); // durations
 
-  // 记录开始时间
+  // Record start time
   traj_ctrl.start_time_ms = get_mills();
   traj_ctrl.trajectory_active = true;
 
@@ -288,9 +288,9 @@ void set_position_and_time_mode(uint16_t *positions, uint16_t *durations) {
   printf("\n");
 }
 
-// 2. 位置和速度控制模式
+// 2. Position and speed control mode
 void set_position_and_speed_mode(uint16_t *positions, uint16_t *speeds) {
-  // 写入控制数据
+  // Write control data
   EC_WRITE_U16(domain_data + off_out, PositionAndSpeed);
   memcpy(domain_data + off_out + 2, positions, 12); // positions
   memcpy(domain_data + off_out + 14, speeds, 12);   // speeds
@@ -307,12 +307,12 @@ void set_position_and_speed_mode(uint16_t *positions, uint16_t *speeds) {
   printf("\n");
 }
 
-// 3. 速度控制模式
+// 3. Speed control mode
 void set_speed_mode(int16_t *speeds) {
-  // 写入控制数据
+  // Write control data
   EC_WRITE_U16(domain_data + off_out, Speed);
   memcpy(domain_data + off_out + 2, speeds, 12); // speeds
-  memset(domain_data + off_out + 14, 0, 12);     // param2 清零
+  memset(domain_data + off_out + 14, 0, 12);     // Clear param2
 
   printf("Set Speed mode:\n");
   printf("Speeds: ");
@@ -322,12 +322,12 @@ void set_speed_mode(int16_t *speeds) {
   printf("\n");
 }
 
-// 4. 电流控制模式
+// 4. Current control mode
 void set_current_mode(int16_t *currents) {
-  // 写入控制数据
+  // Write control data
   EC_WRITE_U16(domain_data + off_out, Current);
   memcpy(domain_data + off_out + 2, currents, 12); // currents
-  memset(domain_data + off_out + 14, 0, 12);       // param2 清零
+  memset(domain_data + off_out + 14, 0, 12);       // Clear param2
 
   printf("Set Current mode:\n");
   printf("Currents: ");
@@ -337,12 +337,12 @@ void set_current_mode(int16_t *currents) {
   printf("\n");
 }
 
-// 5. PWM控制模式
+// 5. PWM control mode
 void set_pwm_mode(uint16_t *pwm_values) {
-  // 写入控制数据
+  // Write control data
   EC_WRITE_U16(domain_data + off_out, Pwm);
   memcpy(domain_data + off_out + 2, pwm_values, 12); // pwm_values
-  memset(domain_data + off_out + 14, 0, 12);         // param2 清零
+  memset(domain_data + off_out + 14, 0, 12);         // Clear param2
 
   printf("Set PWM mode:\n");
   printf("PWM values: ");
@@ -353,10 +353,10 @@ void set_pwm_mode(uint16_t *pwm_values) {
 }
 
 /****************************************************************************/
-// 单关节控制函数
+// Single joint control functions
 /****************************************************************************/
 
-// 单关节位置和时间控制
+// Single joint position and time control
 void set_single_joint_position_time(finger_index_t joint_id, uint16_t position,
                                     uint16_t duration) {
   size_t single_offset = 26;
@@ -369,7 +369,7 @@ void set_single_joint_position_time(finger_index_t joint_id, uint16_t position,
          get_joint_name(joint_id), joint_id, position, duration);
 }
 
-// 单关节位置和速度控制
+// Single joint position and speed control
 void set_single_joint_position_speed(finger_index_t joint_id, uint16_t position,
                                      uint16_t speed) {
   size_t single_offset = 26;
@@ -382,7 +382,7 @@ void set_single_joint_position_speed(finger_index_t joint_id, uint16_t position,
          get_joint_name(joint_id), joint_id, position, speed);
 }
 
-// 单关节速度控制
+// Single joint speed control
 void set_single_joint_speed(finger_index_t joint_id, uint16_t speed) {
   size_t single_offset = 26;
   EC_WRITE_U8(domain_data + off_out + single_offset, Speed);
@@ -394,7 +394,7 @@ void set_single_joint_speed(finger_index_t joint_id, uint16_t speed) {
          joint_id, speed);
 }
 
-// 单关节电流控制
+// Single joint current control
 void set_single_joint_current(finger_index_t joint_id, uint16_t current) {
   size_t single_offset = 26;
   EC_WRITE_U8(domain_data + off_out + single_offset, Current);
@@ -406,7 +406,7 @@ void set_single_joint_current(finger_index_t joint_id, uint16_t current) {
          joint_id, current);
 }
 
-// 单关节PWM控制
+// Single joint PWM control
 void set_single_joint_pwm(finger_index_t joint_id, uint16_t pwm_value) {
   size_t single_offset = 26;
   EC_WRITE_U8(domain_data + off_out + single_offset, Pwm);
@@ -419,10 +419,10 @@ void set_single_joint_pwm(finger_index_t joint_id, uint16_t pwm_value) {
 }
 
 /****************************************************************************/
-// 高级手势控制函数
+// Advanced gesture control functions
 /****************************************************************************/
 
-// 设置拇指控制
+// Set thumb control
 void set_thumb_control(uint16_t flex_pos, uint16_t abduct_pos,
                        uint16_t duration) {
   set_single_joint_position_time(THUMB_FLEX, flex_pos, duration);
@@ -431,7 +431,7 @@ void set_thumb_control(uint16_t flex_pos, uint16_t abduct_pos,
          abduct_pos, duration);
 }
 
-// 设置手指控制（食指、中指、无名指、小指）
+// Set finger control (index, middle, ring, pinky)
 void set_finger_control(finger_index_t finger, uint16_t position,
                         uint16_t duration) {
   if (finger >= INDEX_FINGER && finger <= PINKY) {
@@ -441,7 +441,7 @@ void set_finger_control(finger_index_t finger, uint16_t position,
   }
 }
 
-// 批量设置所有关节
+// Batch set all joints
 void set_all_joints_position_time(uint16_t positions[6],
                                   uint16_t durations[6]) {
   for (int i = 0; i < 6; i++) {
@@ -451,9 +451,9 @@ void set_all_joints_position_time(uint16_t positions[6],
   printf("All joints position and time set\n");
 }
 
-// 设置握拳动作
+// Set fist gesture
 void set_fist_gesture(uint16_t duration) {
-  uint16_t fist_positions[6] = {400, 400, 800, 800, 800, 800}; // 示例值
+  uint16_t fist_positions[6] = {400, 400, 800, 800, 800, 800}; // Example values
   uint16_t fist_durations[6] = {duration, duration, duration,
                                 duration, duration, duration};
 
@@ -461,9 +461,9 @@ void set_fist_gesture(uint16_t duration) {
   set_position_and_time_mode(fist_positions, fist_durations);
 }
 
-// 设置张开手掌动作
+// Set open hand gesture
 void set_open_hand_gesture(uint16_t duration) {
-  uint16_t open_positions[6] = {400, 400, 100, 100, 100, 100}; // 示例值
+  uint16_t open_positions[6] = {400, 400, 100, 100, 100, 100}; // Example values
   uint16_t open_durations[6] = {duration, duration, duration,
                                 duration, duration, duration};
 
@@ -471,10 +471,10 @@ void set_open_hand_gesture(uint16_t duration) {
   set_position_and_time_mode(open_positions, open_durations);
 }
 
-// 设置OK手势
+// Set OK gesture
 void set_ok_gesture(uint16_t duration) {
   uint16_t ok_positions[6] = {400, 400, 700,
-                              100, 100, 100}; // 拇指食指接触，其他张开
+                              100, 100, 100}; // Thumb and index touch, others open
   uint16_t ok_durations[6] = {duration, duration, duration,
                               duration, duration, duration};
 
@@ -483,10 +483,10 @@ void set_ok_gesture(uint16_t duration) {
 }
 
 /****************************************************************************/
-// 轨迹控制函数
+// Trajectory control functions
 /****************************************************************************/
 
-// 设置轨迹点序列（支持多段轨迹）
+// Set trajectory point sequence (supports multi-segment trajectory)
 void set_trajectory_sequence(TrajectoryPoint *points, int count) {
   if (count > MAX_TRAJECTORY_POINTS) {
     printf("Warning: Trajectory point count exceeds maximum, truncating\n");
@@ -497,14 +497,14 @@ void set_trajectory_sequence(TrajectoryPoint *points, int count) {
   trajectory_point_count = count;
   current_trajectory_point = 0;
 
-  // 开始第一个轨迹点
+  // Start first trajectory point
   if (count > 0) {
     set_position_and_time_mode(points[0].positions, points[0].durations);
     printf("Started trajectory sequence with %d points\n", count);
   }
 }
 
-// 周期性轨迹更新函数
+// Periodic trajectory update function
 void update_trajectory() {
   if (!traj_ctrl.trajectory_active) {
     return;
@@ -513,25 +513,25 @@ void update_trajectory() {
   uint32_t current_time = get_mills();
   uint32_t elapsed_time = current_time - traj_ctrl.start_time_ms;
 
-  // 检查每个关节是否需要更新轨迹
+  // Check if each joint needs trajectory update
   bool any_joint_active = false;
 
   for (int i = 0; i < 6; i++) {
-    // 检查当前关节的轨迹是否已完成
+    // Check if current joint trajectory is completed
     if (elapsed_time < traj_ctrl.durations[i]) {
       any_joint_active = true;
 
-      // 计算当前应该到达的位置（线性插值）
+      // Calculate current target position (linear interpolation)
       uint16_t target_pos = traj_ctrl.positions[i];
       float progress = (float)elapsed_time / (float)traj_ctrl.durations[i];
       uint16_t current_pos = (uint16_t)(target_pos * progress);
 
-      // 更新单个关节位置
+      // Update single joint position
       set_single_joint_position_time((finger_index_t)i, current_pos, 100);
 
-      // 可选：打印轨迹进度
+      // Optional: print trajectory progress
       static int debug_counter = 0;
-      if (debug_counter++ % 1000 == 0) { // 每秒打印一次
+      if (debug_counter++ % 1000 == 0) { // Print once per second
         printf("Joint %s(%d): progress=%.2f%%, current_pos=%d, target=%d\n",
                get_joint_name((finger_index_t)i), i, progress * 100,
                current_pos, target_pos);
@@ -539,14 +539,14 @@ void update_trajectory() {
     }
   }
 
-  // 如果所有关节轨迹都完成，停止轨迹控制
+  // If all joint trajectories completed, stop trajectory control
   if (!any_joint_active) {
     traj_ctrl.trajectory_active = false;
     printf("All joint trajectories completed after %d ms\n", elapsed_time);
   }
 }
 
-// 高级轨迹更新函数（支持多段轨迹）
+// Advanced trajectory update function (supports multi-segment trajectory)
 void update_advanced_trajectory() {
   if (!traj_ctrl.trajectory_active || trajectory_point_count == 0) {
     return;
@@ -555,7 +555,7 @@ void update_advanced_trajectory() {
   uint32_t current_time = get_mills();
   uint32_t elapsed_time = current_time - traj_ctrl.start_time_ms;
 
-  // 检查是否需要切换到下一个轨迹点
+  // Check if need to switch to next trajectory point
   if (current_trajectory_point < trajectory_point_count - 1) {
     TrajectoryPoint *next_point =
         &trajectory_points[current_trajectory_point + 1];
@@ -568,7 +568,7 @@ void update_advanced_trajectory() {
     }
   }
 
-  // 检查整个轨迹序列是否完成
+  // Check if entire trajectory sequence is completed
   TrajectoryPoint *last_point = &trajectory_points[trajectory_point_count - 1];
   uint32_t total_duration = last_point->start_time_offset;
   for (int i = 0; i < 6; i++) {
@@ -587,27 +587,27 @@ void update_advanced_trajectory() {
 }
 
 /****************************************************************************/
-// 反馈数据读取函数
+// Feedback data reading functions
 /****************************************************************************/
 
 void read_joint_feedback_data() {
-  // 读取关节位置
+  // Read joint positions
   uint8_t joint_pos[12];
   memcpy(joint_pos, domain_data + off_in, 12);
 
-  // 读取关节速度
+  // Read joint speeds
   uint8_t joint_spd[12];
   memcpy(joint_spd, domain_data + off_in + 12, 12);
 
-  // 读取关节电流
+  // Read joint currents
   uint8_t joint_cur[12];
   memcpy(joint_cur, domain_data + off_in + 24, 12);
 
-  // 读取关节状态
+  // Read joint status
   uint8_t joint_status[12];
   memcpy(joint_status, domain_data + off_in + 36, 12);
 
-  // 打印反馈数据
+  // Print feedback data
   printf("=== Joint Feedback Data ===\n");
   printf("Position: ");
   print_hex(joint_pos, 12);
@@ -621,14 +621,14 @@ void read_joint_feedback_data() {
 }
 
 /****************************************************************************/
-// 主循环任务
+// Main loop task
 /****************************************************************************/
 
 void cyclic_task() {
   struct timespec wakeupTime, time;
   clock_gettime(CLOCK_TO_USE, &wakeupTime);
 
-  // 初始化轨迹控制
+  // Initialize trajectory control
   init_trajectory();
 
   bool initial_command_sent = false;
@@ -656,65 +656,65 @@ void cyclic_task() {
       check_master_state();
     }
 
-    // 仅当从站处于 OPERATIONAL 状态时才执行读写操作
+    // Only perform read/write operations when slave is in OPERATIONAL state
     if (master_state.al_states == 0x08) {
-      // 演示不同控制模式和手势
+      // Demonstrate different control modes and gestures
       if (!initial_command_sent) {
         printf("=== Starting Joint Control Demo ===\n");
         initial_command_sent = true;
       }
 
-      // 每2秒切换一次演示模式
+      // Switch demo mode every 2 seconds
       if (demo_counter++ % (FREQUENCY * 2) == 0) {
-        switch (demo_stage % 8) { // 增加手势演示
+        switch (demo_stage % 8) { // Added gesture demonstrations
         case 0: {
           // set_single_joint_position_time((finger_index_t)PINKY, 1000, 100);
           // set_single_joint_position_time((finger_index_t)PINKY, 0, 100);
           // break;
 
-          // 位置和时间控制模式
+          // Position and time control mode
           uint16_t positions[6] = {400, 400, 1000, 1000, 1000, 1000};
           uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
           set_position_and_time_mode(positions, durations);
           break;
         }
         case 1: {
-          // 位置和速度控制模式
+          // Position and speed control mode
           uint16_t positions[6] = {400, 400, 0, 0, 0, 0};
           uint16_t speeds[6] = {300, 300, 300, 300, 300, 300};
           set_position_and_speed_mode(positions, speeds);
           break;
         }
         case 2: {
-          // 速度控制模式
+          // Speed control mode
           int16_t speeds[6] = {0, 0, 300, 300, 300, 300};
           set_speed_mode(speeds);
           break;
         }
         case 3: {
-          // 电流控制模式
+          // Current control mode
           int16_t currents[6] = {-100, -100, -500, -500, -500, -500};
           set_current_mode(currents);
           break;
         }
         case 4: {
-          // PWM控制模式
+          // PWM control mode
           uint16_t pwm_values[6] = {200, 100, 500, 500, 500, 500};
           set_pwm_mode(pwm_values);
           break;
         }
         case 5: {
-          // 握拳手势
+          // Fist gesture
           set_fist_gesture(400);
           break;
         }
         case 6: {
-          // 张开手掌
+          // Open hand
           set_open_hand_gesture(500);
           break;
         }
         case 7: {
-          // OK手势
+          // OK gesture
           set_ok_gesture(400);
           break;
         }
@@ -722,12 +722,12 @@ void cyclic_task() {
         demo_stage++;
       }
 
-      // 更新轨迹控制
+      // Update trajectory control
       update_trajectory();
 
-      // 定期打印反馈数据
+      // Periodically print feedback data
       static int print_counter = 0;
-      if (print_counter++ % (FREQUENCY * 2) == 0) { // 每2秒打印一次
+      if (print_counter++ % (FREQUENCY * 2) == 0) { // Print every 2 seconds
         read_joint_feedback_data();
       }
     }
@@ -748,7 +748,7 @@ void cyclic_task() {
 }
 
 /****************************************************************************/
-// 信号处理和主函数
+// Signal handling and main function
 /****************************************************************************/
 
 void handler(int sig) {
@@ -765,13 +765,13 @@ int main(int argc, char **argv) {
   signal(SIGSEGV, handler);
   signal(SIGABRT, handler);
 
-  // 1. 内存锁定
+  // 1. Memory locking
   if (mlockall(MCL_CURRENT | MCL_FUTURE) == -1) {
     perror("mlockall failed");
     return -1;
   }
 
-  // 2. 设置实时调度策略
+  // 2. Set real-time scheduling policy
   struct sched_param param = {};
   param.sched_priority = 49;
   // param.sched_priority = sched_get_priority_max(SCHED_FIFO);
@@ -780,7 +780,7 @@ int main(int argc, char **argv) {
     perror("sched_setscheduler failed");
   }
 
-  // 3. 初始化 EtherCAT 主站
+  // 3. Initialize EtherCAT master
   printf("Requesting master...\n");
   master = ecrt_request_master(0);
   if (!master)
@@ -791,7 +791,7 @@ int main(int argc, char **argv) {
   if (!domain)
     return -1;
 
-  // 4. 创建从站配置
+  // 4. Create slave configuration
   printf("Requesting slave...\n");
   ec_slave_config_t *sc;
   if (!(sc = ecrt_master_slave_config(master, 0, 0, STARK_VENDOR_ID,

@@ -1,12 +1,12 @@
 """
-Revo1灵巧手动作序列控制示例
+Revo1 Dexterous Hand Action Sequence Control Example
 
-本示例演示如何使用Revo1灵巧手的动作序列功能，包括：
-- 自定义动作序列的创建和配置
-- 动作序列的上传和存储
-- 内置动作序列的执行
-- 自定义动作序列的执行和管理
-- 动作序列数据的读取和验证
+This example demonstrates how to use the action sequence functionality of Revo1 dexterous hand, including:
+- Creating and configuring custom action sequences
+- Uploading and storing action sequences
+- Executing built-in action sequences
+- Executing and managing custom action sequences
+- Reading and verifying action sequence data
 """
 
 import asyncio
@@ -14,27 +14,27 @@ import sys
 from utils import setup_shutdown_event
 from revo1_utils import *
 
-# 一代灵巧手动作序列配置
-# 注意：当前版本中只有positions参数实际生效，speeds和forces参数为预留字段
+# First-generation dexterous hand action sequence configuration
+# Note: In current version, only positions parameter is actually effective, speeds and forces parameters are reserved fields
 sample_action_sequences = [
     {
-        "index": 0,                          # 动作序列索引
-        "duration_ms": 2000,                 # 动作持续时间（毫秒）
-        "positions": [0, 0, 100, 100, 100, 100],  # 手指位置：[拇指, 拇指辅助, 食指, 中指, 无名指, 小指]
-        "speeds": [10, 20, 30, 40, 50, 60],      # 手指速度（预留参数）
-        "forces": [5, 10, 15, 20, 25, 30],       # 手指力度（预留参数）
+        "index": 0,                          # Action sequence index
+        "duration_ms": 2000,                 # Action duration (milliseconds)
+        "positions": [0, 0, 100, 100, 100, 100],  # Finger positions: [Thumb, Thumb Aux, Index, Middle, Ring, Pinky]
+        "speeds": [10, 20, 30, 40, 50, 60],      # Finger speeds (reserved parameter)
+        "forces": [5, 10, 15, 20, 25, 30],       # Finger forces (reserved parameter)
     },
     {
         "index": 1,
         "duration_ms": 2000,
-        "positions": [100, 100, 0, 0, 0, 0],     # 拇指闭合，其他手指张开
+        "positions": [100, 100, 0, 0, 0, 0],     # Thumb closed, other fingers open
         "speeds": [15, 25, 35, 45, 55, 65],
         "forces": [6, 11, 16, 21, 26, 31],
     },
     {
         "index": 2,
         "duration_ms": 2000,
-        "positions": [0, 0, 100, 100, 100, 100], # 拇指张开，其他手指闭合
+        "positions": [0, 0, 100, 100, 100, 100], # Thumb open, other fingers closed
         "speeds": [10, 20, 30, 40, 50, 60],
         "forces": [5, 10, 15, 20, 25, 30],
     },
@@ -48,14 +48,14 @@ sample_action_sequences = [
     {
         "index": 4,
         "duration_ms": 2000,
-        "positions": [0, 0, 0, 0, 0, 0],         # 所有手指完全张开
+        "positions": [0, 0, 0, 0, 0, 0],         # All fingers fully open
         "speeds": [15, 25, 35, 45, 55, 65],
         "forces": [6, 11, 16, 21, 26, 31],
     },
     {
         "index": 5,
         "duration_ms": 2000,
-        "positions": [0, 0, 0, 0, 0, 0],         # 保持张开状态
+        "positions": [0, 0, 0, 0, 0, 0],         # Maintain open state
         "speeds": [15, 25, 35, 45, 55, 65],
         "forces": [6, 11, 16, 21, 26, 31],
     },
@@ -92,15 +92,15 @@ sample_action_sequences = [
 
 def action_sequence_info_to_list(action):
     """
-    将动作序列字典转换为列表格式
+    Convert action sequence dictionary to list format
 
-    将动作序列的配置信息转换为SDK所需的列表格式，用于上传到设备。
+    Convert action sequence configuration information to list format required by SDK for uploading to device.
 
     Args:
-        action (dict): 动作序列配置字典，包含index、duration_ms、positions、speeds、forces
+        action (dict): Action sequence configuration dictionary, containing index, duration_ms, positions, speeds, forces
 
     Returns:
-        list: 转换后的列表格式 [index, duration_ms, positions..., speeds..., forces...]
+        list: Converted list format [index, duration_ms, positions..., speeds..., forces...]
     """
     return (
         [action["index"]]
@@ -113,42 +113,42 @@ def action_sequence_info_to_list(action):
 
 async def main():
     """
-    主函数：初始化灵巧手并执行动作序列控制
+    Main function: Initialize dexterous hand and execute action sequence control
     """
-    # 设置关闭事件监听
+    # Set up shutdown event listener
     shutdown_event = setup_shutdown_event(logger)
 
-    # 检测灵巧手的波特率和设备ID，初始化client
-    (client, slave_id) = await open_modbus_revo1(port_name=None)  # 替换为实际的串口名称, 传None会尝试自动检测
+    # Detect baud rate and device ID of dexterous hand, initialize client
+    (client, slave_id) = await open_modbus_revo1(port_name=None)  # Replace with actual serial port name, passing None will attempt auto-detection
 
-    # 转换动作序列格式
-    # sample_action_sequences = random_action_sequences()  # 可选：使用随机动作序列
+    # Convert action sequence format
+    # sample_action_sequences = random_action_sequences()  # Optional: Use random action sequences
     mapped_sequences = map(lambda action: action_sequence_info_to_list(action), sample_action_sequences)
     action_sequences = list(mapped_sequences)
 
-    # 上传自定义动作序列到设备
-    # 设备最多支持6个自定义动作序列（CustomGesture1 ~ CustomGesture6）
+    # Upload custom action sequence to device
+    # Device supports up to 6 custom action sequences (CustomGesture1 ~ CustomGesture6)
     custom_action_id = libstark.ActionSequenceId.CustomGesture1
     await client.transfer_action_sequence(slave_id, custom_action_id, action_sequences)
     logger.info(f"Custom action sequence uploaded to {custom_action_id}")
 
-    # 读取并验证已上传的动作序列
+    # Read and verify uploaded action sequence
     action_result: libstark.ActionSequenceItem = await client.get_action_sequence(slave_id, custom_action_id)
     logger.info(f"Action sequence: {action_result.description}")
 
-    # 执行内置动作序列：握拳动作
+    # Execute built-in action sequence: fist gesture
     logger.info("Executing built-in fist gesture...")
     await client.run_action_sequence(slave_id, libstark.ActionSequenceId.DefaultGestureFist)
-    await asyncio.sleep(3)  # 等待内置动作序列执行完成
+    await asyncio.sleep(3)  # Wait for built-in action sequence to complete
 
-    # 执行自定义动作序列
+    # Execute custom action sequence
     logger.info("Executing custom action sequence...")
     await client.run_action_sequence(slave_id, custom_action_id)
 
-    # 等待关闭事件（Ctrl+C 或其他关闭信号）
+    # Wait for shutdown event (Ctrl+C or other shutdown signals)
     await shutdown_event.wait()
 
-    # 关闭资源
+    # Clean up resources
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     sys.exit(0)

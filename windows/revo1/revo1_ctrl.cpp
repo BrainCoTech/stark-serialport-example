@@ -2,7 +2,7 @@
 #include "stark-sdk.h"
 #include <windows.h>
 
-// 声明函数
+// Function declarations
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
@@ -20,8 +20,8 @@ int main(int argc, char const *argv[])
   get_device_info(handle, slave_id);
   if (cfg != NULL) free_device_config(cfg);
 
-  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // 握拳
-  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
+  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist
+  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};                 // Open hand
 
   int delay = 1000; // 1000ms
   // stark_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);
@@ -44,7 +44,7 @@ int main(int argc, char const *argv[])
   return 0;
 }
 
-// 获取设备序列号、固件版本等信息
+// Get device serial number, firmware version and other information
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto info = stark_get_device_info(handle, slave_id);
@@ -59,7 +59,7 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   }
 }
 
-// 获取设备信息, 串口波特率, 从机地址, 电压, LED信息, 按键事件
+// Get device information: serial baudrate, slave address, voltage, LED info, button events
 void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto baudrate = stark_get_rs485_baudrate(handle, slave_id);

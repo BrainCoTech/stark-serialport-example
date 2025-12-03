@@ -1,14 +1,14 @@
-# Revo 1 示例程序
+# Revo1 Example Programs
 
 ```shell
-make clean # 清理旧的编译文件
+make clean # Clean old build artifacts
 
-make # 编译默认模式（Modbus）
-make run_revo1_ctrl # 运行 revo1_modbus_ctrl 示例
-make run_revo1_ctrl_multi # 运行 revo1_modbus_ctrl_multi 示例
-make run_revo1_touch # 运行 revo1_modbus_touch 示例
-make run_revo1_dfu # 运行 revo1_dfu 示例
+make # Build with default mode (Modbus)
+make run_revo1_ctrl # Run revo1_modbus_ctrl example
+make run_revo1_ctrl_multi # Run revo1_modbus_ctrl_multi example
+make run_revo1_touch # Run revo1_modbus_touch example
+make run_revo1_dfu # Run revo1_dfu example
 
-make MODE=can # 编译 CAN/CANFD 接口模式
-make run_revo1_can # 运行 revo1_can_ctrl 示例
+make MODE=can # Build with CAN/CANFD interface mode
+make run_revo1_can # Run revo1_can_ctrl example
 ```

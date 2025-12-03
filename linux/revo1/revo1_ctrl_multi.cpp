@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include "stark-sdk.h"
 
-// 声明函数
+// Function declarations
 void get_touch_status(DeviceHandler *handle, uint8_t slave_id);
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
@@ -18,7 +18,7 @@ int main(int argc, char const *argv[])
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
     return -1;
   }
-  
+
   auto handle = modbus_open(cfg->port_name, cfg->baudrate);
   if (cfg != NULL) free_device_config(cfg);
 
@@ -27,8 +27,8 @@ int main(int argc, char const *argv[])
   get_device_info(handle, slave_id_1);
   get_device_info(handle, slave_id_2);
 
-  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // 握拳
-  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // 张开
+  uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist
+  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // Open hand
 
   useconds_t delay = 1000 * 1000; // 1000ms
   stark_set_finger_positions(handle, slave_id_1, positions_fist, 6);
@@ -47,15 +47,15 @@ int main(int argc, char const *argv[])
 
   // get_touch_status(handle, slave_id_1);
 
-  // // 循环控制手指位置，仅用于测试，delay时间过短会影响电机使用寿命
+  // // Loop to control finger positions, for testing only; too short delay may affect motor lifespan
   // while (1)
   // {
   //   printf("set_positions loop start\n");
   //   stark_set_finger_positions(handle, slave_id_1, positions_fist, 6);
   //   stark_set_finger_positions(handle, slave_id_2, positions_fist, 6);
   //   usleep(delay);
-  //   get_touch_status(handle, slave_id_1); // 调用 get_touch_status 函数
-  //   get_touch_status(handle, slave_id_2); // 调用 get_touch_status 函数
+  //   get_touch_status(handle, slave_id_1); // Call get_touch_status
+  //   get_touch_status(handle, slave_id_2); // Call get_touch_status
   //   stark_set_finger_positions(handle, slave_id_1, positions_open, 6);
   //   stark_set_finger_positions(handle, slave_id_2, positions_open, 6);
   //   usleep(delay);
@@ -64,7 +64,7 @@ int main(int argc, char const *argv[])
   return 0;
 }
 
-// 获取设备序列号、固件版本等信息
+// Get device serial number, firmware version and other information
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto info = stark_get_device_info(handle, slave_id);
@@ -73,7 +73,7 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n", slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
     if (info->hardware_type == STARK_HARDWARE_TYPE_REVO1_TOUCH || info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH)
     {
-      // 启用全部触觉传感器
+      // Enable all touch sensors
       stark_enable_touch_sensor(handle, slave_id, 0x1F);
       usleep(1000 * 1000); // wait for touch sensor to be ready
     }
@@ -85,7 +85,7 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id)
   }
 }
 
-// 获取触觉传感器状态，三维力数值、自接近、互接近电容值，以及传感器状态
+// Get touch sensor status, 3D force values, self-proximity, mutual-proximity capacitance values, and sensor status
 void get_touch_status(DeviceHandler *handle, uint8_t slave_id)
 {
   auto status = stark_get_touch_status(handle, slave_id);
@@ -116,14 +116,11 @@ void get_touch_status(DeviceHandler *handle, uint8_t slave_id)
   }
 }
 
-// 获取设备信息, 串口波特率, 从机地址, 电压, LED信息, 按键事件
+// Get device information: serial baudrate, slave address, voltage, LED info, button events
 void get_info(DeviceHandler *handle, uint8_t slave_id)
 {
   auto baudrate = stark_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
-  // 触觉版 deprecated
-  // auto force_level = stark_get_force_level(handle, slave_id);
-  // printf("Slave[%hhu] Force Level: %d\n", slave_id, force_level);
   auto voltage = stark_get_voltage(handle, slave_id);
   printf("Slave[%hhu] Voltage: %.2fV\n", slave_id, voltage / 1000.0);
   auto led_info = stark_get_led_info(handle, slave_id);

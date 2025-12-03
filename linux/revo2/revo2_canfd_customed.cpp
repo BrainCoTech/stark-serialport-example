@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <execinfo.h>
 
-// 声明函数
+// Function declarations
 void setup_canfd_callbacks();
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 
@@ -13,10 +13,10 @@ void handler(int sig)
   void *array[10];
   size_t size;
 
-  // 获取堆栈帧
+  // Get stack frames
   size = backtrace(array, 10);
 
-  // 打印所有堆栈帧到 stderr
+  // Print all stack frames to stderr
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);
@@ -27,18 +27,18 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  setup_canfd_callbacks(); // 设置读写回调
+  setup_canfd_callbacks(); // Set CAN FD read/write callbacks
 
   init_cfg(STARK_PROTOCOL_TYPE_CAN_FD, LOG_LEVEL_INFO);
   const int MASTER_ID = 1;
-  auto handle = canfd_init(MASTER_ID); // 这里不打开设备，只是初始化一个句柄
+  auto handle = canfd_init(MASTER_ID); // Only initialize a handle; the actual CAN FD device is managed externally
   get_device_info(handle, 0x7f);
   return 0;
 }
 
 void setup_canfd_callbacks()
 {
-  // 需要由接入方实现，开启CAN FD设备，和以下读写回调
+  // The integrator should implement CAN FD device startup and the following read/write callbacks
   set_can_tx_callback([](uint8_t slave_id,
                          uint32_t can_id,
                          const uint8_t *data,

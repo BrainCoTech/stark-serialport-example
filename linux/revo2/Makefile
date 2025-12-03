@@ -1,30 +1,30 @@
-# 设置变量
+# Variable definitions
 SCRIPT_DIR := $(shell pwd)
 DIST_DIR := $(abspath $(SCRIPT_DIR)/../../dist)
 LIB_DIR := $(abspath $(DIST_DIR)/shared/linux)
 HEADER_DIR := $(abspath $(DIST_DIR)/include)
 
-# 头文件目录
+# Header search paths
 INCLUDE := -I/usr/local/include -I$(HEADER_DIR)
 
-# 设置编译器
+# Compilers
 CC := gcc
 CXX := g++
 
-# 编译选项
+# Compile options
 CFLAGS := -g -Wall
-CXXFLAGS := -g -Wall -std=c++17  # 指定 C++17 标准
+CXXFLAGS := -g -Wall -std=c++17  # Use C++17 standard
 
-# ---------------- 模式选择 ----------------
-# MODE/mod 可选：none / can / ethercat
-# 默认值：none
-# 支持 MODE 和 mod 两种变量名，优先使用 mod（如果提供）
+# ---------------- Mode selection ----------------
+# MODE/mod options: none / can / ethercat
+# Default: none
+# Both MODE and mod are supported, with mod taking precedence if provided
 ifneq ($(mod),)
   MODE := $(mod)
 else
   MODE ?= none
 endif
-# 转换为小写以忽略大小写
+# Convert to lowercase to make it case-insensitive
 MODE := $(shell echo $(MODE) | tr '[:upper:]' '[:lower:]')
 
 ifeq ($(MODE),none)
@@ -51,37 +51,37 @@ ifeq ($(MODE),ethercat)
                  -lethercat # igH EtherCAT 库
 endif
 
-# ---------------- 文件与目标 ----------------
+# ---------------- Sources and targets ----------------
 C_SOURCES := $(wildcard *.c)
 BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 
-# 编译 C 文件
+# Build C files
 %: %.c
 	$(CC) $(CFLAGS) -o $@.exe $< \
 		$(INCLUDE) \
 		$(COMMON_LIBS)
 	@echo "\033[1;33m[linux] build $@.c done\033[0m"
 
-# 编译 C++ 文件
+# Build C++ files
 %: %.cpp
 	$(CXX) $(CXXFLAGS) -o $@.exe $< \
 		$(INCLUDE) \
 		$(COMMON_LIBS)
 	@echo "\033[1;33m[linux] build $@.cpp done\033[0m"
 
-# 默认目标
+# Default target
 all: $(BINARIES)
 	@echo "\033[1;32m[linux] build done, MODE=$(MODE)\033[0m"
 
-# 清理目标
+# Clean target
 clean:
 	rm -f *.exe
 
-# 运行支持
+# Runtime support
 export LD_LIBRARY_PATH := $(LIB_DIR):$(LD_LIBRARY_PATH)
 
 run_%:
 	./$*.exe
 
-# 伪目标声明
+# Phony targets
 .PHONY: clean all run

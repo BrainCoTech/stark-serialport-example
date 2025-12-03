@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <execinfo.h>
 
-// 声明函数
+// Function declarations
 void setup_modbus_callbacks();
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 
@@ -13,10 +13,10 @@ void handler(int sig)
   void *array[10];
   size_t size;
 
-  // 获取堆栈帧
+  // Get stack frames
   size = backtrace(array, 10);
 
-  // 打印所有堆栈帧到 stderr
+  // Print all stack frames to stderr
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);
@@ -27,10 +27,10 @@ int main(int argc, char const *argv[])
   signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
   signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
 
-  setup_modbus_callbacks(); // 设置读写回调
+  setup_modbus_callbacks(); // Set Modbus read/write callbacks
 
-  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // 初始化配置
-  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // 替换为实际的串口名称, 传None会尝试自动检测
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_DEBUG); // Initialize configuration
+  auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true); // Replace with actual serial port name; passing NULL will try auto-detection
   if (cfg == NULL)
   {
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
