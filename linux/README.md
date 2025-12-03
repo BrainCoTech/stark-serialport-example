@@ -10,15 +10,6 @@
 # First download libs, in project root directory
 rm VERSION
 ./download-lib.sh
-
-# 下载完成后目录包含如下
-ros2_stark_ws/src/ros2_stark_controller/lib
-└── libbc_stark_sdk.so
-
-ros2_stark_ws/src/ros2_stark_controller/include
-└── ros2_stark_controller
-    ├── stark-sdk.h
-    └── stark_node.hpp
 ```
 
 ## Revo1 RS-485/CAN 通信示例

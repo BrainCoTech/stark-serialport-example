@@ -14,7 +14,5 @@ C++ development examples and compilation instructions for Linux/Ubuntu environme
 
 ## ROS2 Examples
 
-ROS2 Custom message & Nodes integration examples: [ROS2 Examples](ros2_stark_ws/README.md)
-
 [brainco_hand_ros2](https://github.com/BrainCoTech/brainco_hand_ros2)
 [URDF](https://github.com/BrainCoTech/revo2_description_ros1)

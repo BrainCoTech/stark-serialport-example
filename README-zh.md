@@ -16,4 +16,5 @@
 
 ## ROS2 示例
 
-详细说明请参考：[ROS2 README](ros2_stark_ws/README.md)
+[brainco_hand_ros2](https://github.com/BrainCoTech/brainco_hand_ros2)
+[URDF](https://github.com/BrainCoTech/revo2_description_ros1)
