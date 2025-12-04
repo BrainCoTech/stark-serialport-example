@@ -27,7 +27,10 @@ class TactileGraspController:
         self.logger = getLogger(logging.INFO)
         self.contacted = False
         self.current_ctrl_list = [0] * 6
-
+        try:
+            self.algorithm.controller = self
+        except Exception:
+            pass
 
     def set_control_mode(self, mode: str):
         self.control_mode = mode.upper()
@@ -130,7 +133,7 @@ class TactileGraspController:
             position: List[int] = None,
             speed: int = 100,
             thumb_base_position: int = 500,
-            thumb_flex_position: int = 650
+            thumb_flex_position: int = 850
     ):
         """
         基于位置和速度控制的抓握方法
@@ -165,8 +168,8 @@ class TactileGraspController:
         self.current_ctrl_list = [(i > 0) - (i < 0) for i in position_all]
 
         # -------- Thumb_FLEX 位置控制 --------
-        await self.client.set_finger_positions_and_speeds(self.slave_id, [0, int(thumb_flex_position / 10), 0, 0, 0, 0], [500]*6)
-        await asyncio.sleep(0.05)
+        await self.client.set_finger_positions_and_speeds(self.slave_id, [0, int(thumb_flex_position), 0, 0, 0, 0], [500]*6)
+        await asyncio.sleep(1)
 
         # -------- 其他手指速度控制 --------
         await self.client.set_finger_positions_and_speeds(self.slave_id, position_all, speed_list)
