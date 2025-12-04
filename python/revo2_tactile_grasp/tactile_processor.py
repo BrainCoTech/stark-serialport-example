@@ -21,11 +21,13 @@ class AlgorithmModule:
         self.contact_threshold = contact_threshold
         self.sliding_threshold = slip_threshold
         self.device = device
+        self.num_fingers = 0
+                     
         self.stiffness_detect_step = stiffness_detect_step
-
+        self.full_contact = False
         slip_model_path = 'models/slip_detection_model.pkl'
         stiffness_model_path = 'models/stiffness_detect_model.pth'
-
+        self.controller = None
         # 加载所有检测模型
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
@@ -108,8 +110,43 @@ class AlgorithmModule:
             if var_force[2*i] > self.sliding_threshold and finger in contact_info:
                 sliding_info[finger] = {"score": round(var_force[2*i], 2)}
 
-        # 状态判断
-        if contact_info:
+        # 手指是否完全触碰
+        controller = getattr(self, "controller", None)
+        if controller is not None and hasattr(controller, "finger_num"):
+            self.num_fingers = controller.finger_num
+
+        Index_name = "Index"
+        Middle_name = "Middle"
+        Ring_name = "Ring"
+        Pinky_name = "Pinky"
+        thumb_name = "Thumb"
+        Thumb_contact=(thumb_name in contact_info)
+        Middle_contact=(Middle_name in contact_info)
+        Ring_contact=(Ring_name in contact_info)
+        Pinky_contact=(Pinky_name in contact_info)
+        Index_contact=(Index_name in contact_info)
+        # 根据当前参与动作的手指数判断是否达到 full_contact 条件
+        if self.num_fingers  == 2:
+            # 两指模式：拇指 + 食指接触即算完整接触
+            self.full_contact = Thumb_contact and Index_contact
+        elif self.num_fingers  == 3:
+            # 三指模式：拇指 + 食指 + 中指全部接触
+            self.full_contact = Thumb_contact and Index_contact and Middle_contact
+        elif self.num_fingers  == 5:
+            # 五指模式：拇指 + 四个手指
+            self.full_contact = (
+                    Thumb_contact and
+                    Index_contact and
+                    Middle_contact and
+                    Ring_contact and
+                    Pinky_contact
+            )
+        else:
+            # 默认情况：只要有接触就视为 full_contact（可按照需要修改）
+            self.full_contact = False
+            
+        # 接触检测
+        if self.full_contact:
             if sliding_info:
                 status = "CONTACT_SLIDING"
             else:
