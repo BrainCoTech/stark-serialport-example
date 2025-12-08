@@ -1,10 +1,10 @@
-# 臂环控制机械手示例
+# Example of Robotic Arm Control
 
-## EMG数据训练&推理
+## EMG data training & inference
 
-1. 通过臂环采集EMG数据样本进行训练手势分类（参考提供的上位机，每个手势采集3次，每次5秒）
-2. 根据收到的EMG数据推理当前手势（如采集3秒数据进行推理）
-3. 根据手势控制控制机械手
+1. Collect EMG data samples for gesture classification by using the arm ring and record 3 samples per gesture for 5 seconds each.
+2. Infer the current gesture based on the received EMG data (for example, record 3 seconds of data for inference).
+3. Control the robotic arm based on the gesture.
 
 ```shell
 # Conda Python 3.8 ~ 3.12
@@ -15,12 +15,12 @@
 (py310) ➜ python -V
 # Python 3.10.16
 
-(py310) ➜ pip install -r requirements.txt --index-url https://pypi.org/simple/ # 安装依赖
+(py310) ➜ pip install -r requirements.txt --index-url https://pypi.org/simple/ # Install dependencies
 
-# 无法通过以上方式安装的话，可尝试手动下载之后，再通过pip安装.whl文件
+# If the above method fails, you can try to manually download and then install the .whl file through pip
 # https://pypi.org/project/bc-edu-sdk/
 # (py310) ➜ pip install --force-reinstall '/path/to/bc_edu_sdk.whl'
 
-(py310) ➜ python glove_example.py # 连接遥操作手套，接收6通道手套数据(flex_data)
-(py310) ➜ python armband_example.py # 连接遥操作臂环，接收8通道EMG数据(afe_data)
+(py310) ➜ python glove_example.py # Connect to remote control glove, receive 6-channel glove data(flex_data)
+(py310) ➜ python armband_example.py # Connect to remote control arm ring, receive 8-channel EMG data(afe_data)
 ```

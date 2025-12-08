@@ -14,7 +14,7 @@ import sys
 from utils import setup_shutdown_event
 from revo1_utils import *
 
-# First-generation dexterous hand action sequence configuration
+# Revo1 dexterous hand action sequence configuration
 # Note: In current version, only positions parameter is actually effective, speeds and forces parameters are reserved fields
 sample_action_sequences = [
     {

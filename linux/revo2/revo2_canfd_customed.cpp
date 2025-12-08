@@ -1,86 +1,54 @@
-#include <stdio.h>
 #include "stark-sdk.h"
+#include "stark_common.h"
+#include <stdio.h>
 #include <unistd.h>
-#include <signal.h>
-#include <execinfo.h>
 
 // Function declarations
 void setup_canfd_callbacks();
 void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
 
-void handler(int sig)
-{
-  void *array[10];
-  size_t size;
-
-  // Get stack frames
-  size = backtrace(array, 10);
-
-  // Print all stack frames to stderr
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, STDERR_FILENO);
-  exit(1);
-}
-
-int main(int argc, char const *argv[])
-{
-  signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
-  signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
+int main(int argc, char const *argv[]) {
+  // Setup signal handlers for crash debugging
+  setup_signal_handlers();
 
   setup_canfd_callbacks(); // Set CAN FD read/write callbacks
 
   init_cfg(STARK_PROTOCOL_TYPE_CAN_FD, LOG_LEVEL_INFO);
   const int MASTER_ID = 1;
-  auto handle = canfd_init(MASTER_ID); // Only initialize a handle; the actual CAN FD device is managed externally
+  auto handle = canfd_init(MASTER_ID); // Only initialize a handle; the actual
+                                       // CAN FD device is managed externally
   get_device_info(handle, 0x7f);
   return 0;
 }
 
-void setup_canfd_callbacks()
-{
-  // The integrator should implement CAN FD device startup and the following read/write callbacks
-  set_can_tx_callback([](uint8_t slave_id,
-                         uint32_t can_id,
-                         const uint8_t *data,
-                         uintptr_t data_len) -> int
-                      {
-                        printf("CAN FD Send: Slave ID: %d, CAN ID: %d, Data Length: %zu\n", slave_id, can_id, data_len);
-                        // TODO: sending data
-                        return 0; // Return 0 to indicate success
-                      });
-  set_can_rx_callback([](uint8_t slave_id,
-                         uint32_t *can_id_out,
-                         uint8_t *data_out,
-                         uintptr_t *data_len_out) -> int
-                      {
-                        printf("CAN FD Read: Slave ID: %d\n", slave_id);
-                        // TODO: Read data
+void setup_canfd_callbacks() {
+  // The integrator should implement CAN FD device startup and the following
+  // read/write callbacks
+  set_can_tx_callback([](uint8_t slave_id, uint32_t can_id, const uint8_t *data,
+                         uintptr_t data_len) -> int {
+    printf("CAN FD Send: Slave ID: %d, CAN ID: %d, Data Length: %zu\n",
+           slave_id, can_id, data_len);
+    // TODO: sending data
+    return 0; // Return 0 to indicate success
+  });
+  set_can_rx_callback([](uint8_t slave_id, uint32_t *can_id_out,
+                         uint8_t *data_out, uintptr_t *data_len_out) -> int {
+    printf("CAN FD Read: Slave ID: %d\n", slave_id);
+    // TODO: Read data
 
-                        // Simulate read data returning
-                        *can_id_out = 0x123; // Example CAN ID
-                        *data_len_out = 64;  // Example data length
-                        for (uintptr_t i = 0; i < *data_len_out; ++i)
-                        {
-                          data_out[i] = i;
-                        }
-                        return 0; // Return 0 to indicate success
-                      });
+    // Simulate read data returning
+    *can_id_out = 0x123; // Example CAN ID
+    *data_len_out = 64;  // Example data length
+    for (uintptr_t i = 0; i < *data_len_out; ++i) {
+      data_out[i] = i;
+    }
+    return 0; // Return 0 to indicate success
+  });
 }
 
-void get_device_info(DeviceHandler *handle, uint8_t slave_id)
-{
-  DeviceInfo *info = stark_get_device_info(handle, slave_id);
-  if (info != NULL)
-  {
-    printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id, info->serial_number, info->firmware_version);
-    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO2_BASIC && info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH)
-    {
-      printf("Not Revo2, hardware type: %hhu\n", info->hardware_type);
-      exit(1);
-    }
-    free_device_info(info);
-  } else {
-    printf("Error: Failed to get device info\n");
+void get_device_info(DeviceHandler *handle, uint8_t slave_id) {
+  // Get device info and verify it's Revo2 in one call
+  if (!verify_device_is_revo2(handle, slave_id)) {
     exit(1);
   }
 }

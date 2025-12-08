@@ -5,8 +5,8 @@ class EMGData:
 
     def __init__(self, seq_num, lead_off_bits, channel_values):
         self.seq_num = seq_num
-        self.lead_off_bits = lead_off_bits # 8个通道的导联脱落状态
-        self.channel_values = channel_values  # 8 * 20, 8个通道，每个通道20个数据点
+        self.lead_off_status = lead_off_bits # 8 channels' lead-off status
+        self.channel_values = channel_values  # 8 * 20, 8 channels, each channel has 20 data points
 
     def __repr__(self):
         return f"EMG seq_num={self.seq_num}, lead_off_bits={self.lead_off_bits}, len={len(self.channel_values)}, values={self.channel_values[:3]}"
@@ -18,7 +18,7 @@ class FlexData:
 
     def __init__(self, seq_num, channel_values):
         self.seq_num = seq_num
-        self.channel_values = channel_values  # 6个通道
+        self.channel_values = channel_values  # 6 channels
 
     def __repr__(self):
         return f"FlexData seq_num={self.seq_num}, len={len(self.channel_values)}"

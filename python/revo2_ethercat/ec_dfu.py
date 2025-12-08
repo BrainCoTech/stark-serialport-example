@@ -32,7 +32,7 @@ async def main():
         "Revo2_V1.0.8.F_2509191719.bin",
     )
 
-    logger.info("DFU started, waiting for completion...") # 等待DFU完成, 大约25秒
+    logger.info("DFU started, waiting for completion...") # Wait for DFU to complete, about 25 seconds
     # await ctx.ec_start_dfu(slave_pos, libstark.EtherCATFoeType.Wrist, ota_bin_path)
     await ctx.ec_start_dfu(slave_pos, libstark.EtherCATFoeType.Control, ota_bin_path)
 

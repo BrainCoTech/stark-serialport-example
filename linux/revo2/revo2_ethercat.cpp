@@ -6,20 +6,8 @@
 
 // Function declarations
 void get_touch_status(DeviceHandler *handle, uint8_t slave_id);
-void* motor_pdo_thread_func(void *arg);
-void* touch_pdo_thread_func(void *arg);
-void handler(int sig) {
-  void *array[10];
-  size_t size;
-
-  // Get stack frames
-  size = backtrace(array, 10);
-
-  // Print all stack frames to stderr
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, STDERR_FILENO);
-  exit(1);
-}
+void *motor_pdo_thread_func(void *arg);
+void *touch_pdo_thread_func(void *arg);
 
 DeviceHandler *device_handle;
 uint16_t slave_pos = 0; // Device position
@@ -55,8 +43,7 @@ void start_pdo_thread_touch() {
 
 int main(int argc, char const *argv[]) {
   printf("main\n");
-  signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
-  signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
+  setup_signal_handlers();
 
   init_cfg(STARK_PROTOCOL_TYPE_ETHER_CAT, LOG_LEVEL_INFO);
   printf("ethercat_open_master...\n");
@@ -99,7 +86,8 @@ int main(int argc, char const *argv[]) {
   printf("start_loop...\n");
   ethercat_reserve_master(device_handle);
 
-  ethercat_start_loop(device_handle, slave_positions, 1, 0, 500000, 0, 0, 0); // Start PDO loop thread, DC synchronization disabled
+  ethercat_start_loop(device_handle, slave_positions, 1, 0, 500000, 0, 0,
+                      0); // Start PDO loop thread, DC synchronization disabled
   printf("start_loop done\n");
 
   start_pdo_thread();
@@ -114,12 +102,12 @@ int main(int argc, char const *argv[]) {
   return 0;
 }
 
-void* touch_pdo_thread_func(void *arg) {
+void *touch_pdo_thread_func(void *arg) {
   printf("Touch thread started.\n");
 
   while (1) {
     get_touch_status(device_handle, slave_pos);
-  usleep(500); // 0.5 ms
+    usleep(500); // 0.5 ms
   }
 
   pthread_exit(NULL);
@@ -127,22 +115,27 @@ void* touch_pdo_thread_func(void *arg) {
 }
 
 // Thread for controlling and retrieving motor status
-void* motor_pdo_thread_func(void *arg) {
+void *motor_pdo_thread_func(void *arg) {
   printf("Motor thread started.\n");
   useconds_t delay = 1000 * 1000; // 1000 ms
 
   // Single finger control by speed/current/PWM.
-  // The sign represents direction: positive for closing (grip), negative for opening (release).
+  // The sign represents direction: positive for closing (grip), negative for
+  // opening (release).
   auto finger_id = STARK_FINGER_ID_RING;
-  stark_set_finger_speed(device_handle, slave_pos, finger_id, 500); // -1000 ~ 1000
+  stark_set_finger_speed(device_handle, slave_pos, finger_id,
+                         500); // -1000 ~ 1000
   usleep(delay);               // Wait for finger to reach target position
-  stark_set_finger_current(device_handle, slave_pos, finger_id, -300); // -1000 ~ 1000
+  stark_set_finger_current(device_handle, slave_pos, finger_id,
+                           -300); // -1000 ~ 1000
   usleep(delay);                  // Wait for finger to reach target position
-  stark_set_finger_pwm(device_handle, slave_pos, finger_id, 700); // -1000 ~ 1000
+  stark_set_finger_pwm(device_handle, slave_pos, finger_id,
+                       700); // -1000 ~ 1000
   usleep(delay);             // Wait for finger to reach target position
 
   // Multiple fingers control by speed/current/PWM.
-  // The sign represents direction: positive for closing (grip), negative for opening (release).
+  // The sign represents direction: positive for closing (grip), negative for
+  // opening (release).
   int16_t speeds[6] = {500, 500, 500, 500, 500, 500};
   stark_set_finger_speeds(device_handle, slave_pos, speeds, 6);
   usleep(delay); // Wait for fingers to reach target position
@@ -202,7 +195,7 @@ void* motor_pdo_thread_func(void *arg) {
   return NULL;
 }
 
-// Get touch sensor status, 3D force, proximity values, and sensor status
+// Get tactile sensor status, 3D force, proximity values, and sensor status
 void get_touch_status(DeviceHandler *handle, uint8_t slave_id) {
   auto status = stark_get_touch_status(handle, slave_id);
   if (status != NULL) {
@@ -217,6 +210,6 @@ void get_touch_status(DeviceHandler *handle, uint8_t slave_id) {
     // Free the allocated memory
     free_touch_finger_data(status);
   } else {
-    printf("Error: Failed to get touch sensor status\n");
+    printf("Error: Failed to get tactile sensor status\n");
   }
 }

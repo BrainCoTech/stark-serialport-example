@@ -1,8 +1,8 @@
 """
-Revo1灵巧手控制双手示例
+Revo1 Dexterous Hand Dual Control Example
 
-连接方式说明：
-- 使用两个串口分别连接左手和右手（可以使用相同的设备ID，设备ID默认为1）
+Connection method:
+- Use two serial ports to connect left and right hands separately (can use the same device ID, default device ID is 1)
 """
 
 import asyncio
@@ -11,27 +11,27 @@ import time
 from revo1_utils import *
 from utils import setup_shutdown_event
 
-LEFT_PORT = "/dev/ttyUSB0" # 替换为实际左手设备端口
-RIGHT_PORT = "/dev/ttyUSB1" # 替换为实际右手设备端口
-LEFT_ID = 1 # 替换为实际左手设备ID
-RIGHT_ID = 1 # 替换为实际右手设备ID
+LEFT_PORT = "/dev/ttyUSB0" # Replace with actual left hand device port
+RIGHT_PORT = "/dev/ttyUSB1" # Replace with actual right hand device port
+LEFT_ID = 1 # Replace with actual left hand device ID
+RIGHT_ID = 1 # Replace with actual right hand device ID
 BAUDRATE = libstark.Baudrate.Baud115200
 
 async def main():
     """
-    主函数：初始化设备连接和控制任务
+    Main function: Initialize device connection and control tasks
     """
     libstark.init_config(libstark.StarkProtocolType.Modbus)
     shutdown_event = setup_shutdown_event(logger)
 
-    # 打开两个设备
+    # Open two devices
     client_left = await libstark.modbus_open(LEFT_PORT, BAUDRATE)
     client_right = await libstark.modbus_open(RIGHT_PORT, BAUDRATE)
     if not client_left or not client_right:
         logger.critical("Failed to open one or both serial ports.")
         sys.exit(1)
 
-    # 获取设备信息
+    # Get device information
     left_info = await client_left.get_device_info(LEFT_ID)
     right_info = await client_right.get_device_info(RIGHT_ID)
     if not left_info or not right_info:
@@ -40,15 +40,15 @@ async def main():
     logger.info(f"Left: {left_info.description}")
     logger.info(f"Right: {right_info.description}")
 
-    # 启动电机状态监控任务
+    # Start motor status monitoring task
     task = asyncio.create_task(
         monitor_and_control(client_left, client_right, LEFT_ID, RIGHT_ID)
     )
 
-    # 等待关闭事件
+    # Wait for shutdown event
     await shutdown_event.wait()
 
-    # 清理资源
+    # Clean up resources
     task.cancel()
     await asyncio.gather(task, return_exceptions=True)
     await client_left.modbus_close()
@@ -58,7 +58,7 @@ async def main():
 
 async def monitor_and_control(client_left, client_right, left_id, right_id):
     """
-    定期获取电机状态并执行自动控制
+    Periodically get motor status and execute automatic control
     """
     logger.info(f"Motor status monitoring started for devices {left_id:02x} and {right_id:02x}")
     index = 0
@@ -75,7 +75,7 @@ async def monitor_and_control(client_left, client_right, left_id, right_id):
             else:
                 positions = [0, 0, 1000, 1000, 1000, 1000]
 
-            # 获取电机状态
+            # Get motor status
             for client, dev_id, hand in [
                 (client_left, left_id, "Left"),
                 (client_right, right_id, "Right"),

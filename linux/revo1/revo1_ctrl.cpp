@@ -1,35 +1,18 @@
-#include <stdio.h>
 #include "stark-sdk.h"
+#include "stark_common.h"
+#include <stdio.h>
 #include <unistd.h>
-#include <signal.h>
-#include <execinfo.h>
 
 // Function declarations
-void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
+void get_device_info(DeviceHandler *handle, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
-void handler(int sig)
-{
-  void *array[10];
-  size_t size;
-
-  // Get stack frames
-  size = backtrace(array, 10);
-
-  // Print all stack frames to stderr
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, STDERR_FILENO);
-  exit(1);
-}
-
-int main(int argc, char const *argv[])
-{
-  signal(SIGSEGV, handler); // Install our handler for SIGSEGV (segmentation fault)
-  signal(SIGABRT, handler); // Install our handler for SIGABRT (abort signal)
+int main(int argc, char const *argv[]) {
+  // Setup signal handlers for crash debugging
+  setup_signal_handlers();
 
   auto cfg = auto_detect_modbus_revo1(NULL, true);
-  if (cfg == NULL)
-  {
+  if (cfg == NULL) {
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
     return -1;
   }
@@ -41,7 +24,7 @@ int main(int argc, char const *argv[])
     free_device_config(cfg);
 
   uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist
-  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};           // Open hand
+  uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};                 // Open hand
 
   useconds_t delay = 1000 * 1000; // 1000ms
   // stark_set_finger_position(handle, slave_id, STARK_FINGER_ID_PINKY, 100);
@@ -52,12 +35,23 @@ int main(int argc, char const *argv[])
   usleep(delay);
 
   auto finger_status = stark_get_motor_status(handle, slave_id);
-  if (finger_status != NULL)
-  {
-    printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n", finger_status->positions[0], finger_status->positions[1], finger_status->positions[2], finger_status->positions[3], finger_status->positions[4], finger_status->positions[5]);
-    printf("Speeds: %hd, %hd, %hd, %hd, %hd, %hd\n", finger_status->speeds[0], finger_status->speeds[1], finger_status->speeds[2], finger_status->speeds[3], finger_status->speeds[4], finger_status->speeds[5]);
-    printf("Currents: %hd, %hd, %hd, %hd, %hd, %hd\n", finger_status->currents[0], finger_status->currents[1], finger_status->currents[2], finger_status->currents[3], finger_status->currents[4], finger_status->currents[5]);
-    printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n", finger_status->states[0], finger_status->states[1], finger_status->states[2], finger_status->states[3], finger_status->states[4], finger_status->states[5]);
+  if (finger_status != NULL) {
+    printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n",
+           finger_status->positions[0], finger_status->positions[1],
+           finger_status->positions[2], finger_status->positions[3],
+           finger_status->positions[4], finger_status->positions[5]);
+    printf("Speeds: %hd, %hd, %hd, %hd, %hd, %hd\n", finger_status->speeds[0],
+           finger_status->speeds[1], finger_status->speeds[2],
+           finger_status->speeds[3], finger_status->speeds[4],
+           finger_status->speeds[5]);
+    printf("Currents: %hd, %hd, %hd, %hd, %hd, %hd\n",
+           finger_status->currents[0], finger_status->currents[1],
+           finger_status->currents[2], finger_status->currents[3],
+           finger_status->currents[4], finger_status->currents[5]);
+    printf("States: %hhu, %hhu, %hhu, %hhu, %hhu, %hhu\n",
+           finger_status->states[0], finger_status->states[1],
+           finger_status->states[2], finger_status->states[3],
+           finger_status->states[4], finger_status->states[5]);
     free_motor_status_data(finger_status);
   }
 
@@ -65,47 +59,16 @@ int main(int argc, char const *argv[])
 }
 
 // Get device serial number, firmware version and other information
-void get_device_info(DeviceHandler *handle, uint8_t slave_id)
-{
-  DeviceInfo *info = stark_get_device_info(handle, slave_id);
-  if (info != NULL)
-  {
-    printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id, info->serial_number, info->firmware_version);
-    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO1_BASIC && info->hardware_type != STARK_HARDWARE_TYPE_REVO1_TOUCH)
-    {
-      printf("Not Revo1, hardware type: %hhu\n", info->hardware_type);
-      exit(1);
-    }
-    free_device_info(info);
-  }
-  else
-  {
-    printf("Error: Failed to get device info\n");
+void get_device_info(DeviceHandler *handle, uint8_t slave_id) {
+  // Get device info and verify it's Revo1 in one call
+  if (!verify_device_is_revo1(handle, slave_id)) {
+    exit(1);
   }
 }
 
-// Get device information: serial baudrate, slave address, voltage, LED info, button events
-void get_info(DeviceHandler *handle, uint8_t slave_id)
-{
-  auto baudrate = stark_get_rs485_baudrate(handle, slave_id);
-  printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
-  // Touch version deprecated
-  // auto force_level = stark_get_force_level(handle, slave_id);
-  // printf("Slave[%hhu] Force Level: %d\n", slave_id, force_level);
-  auto voltage = stark_get_voltage(handle, slave_id);
-  printf("Slave[%hhu] Voltage: %.2fV\n", slave_id, voltage / 1000.0);
-
-  auto led_info = stark_get_led_info(handle, slave_id);
-  if (led_info != NULL)
-  {
-    printf("Slave[%hhu] LED Info: %hhu, %hhu\n", slave_id, led_info->mode, led_info->color);
-    free_led_info(led_info);
-  }
-
-  auto button_event = stark_get_button_event(handle, slave_id);
-  if (button_event != NULL)
-  {
-    printf("Slave[%hhu] Button Event: %d, %d, %hhu\n", slave_id, button_event->timestamp, button_event->button_id, button_event->press_state);
-    free_button_event(button_event);
-  }
+// Get device information: serial baudrate, slave address, voltage, LED info,
+// button events
+void get_info(DeviceHandler *handle, uint8_t slave_id) {
+  // Use common function to get and print extended device info
+  get_and_print_extended_info(handle, slave_id);
 }

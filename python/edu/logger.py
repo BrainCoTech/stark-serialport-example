@@ -3,26 +3,26 @@ import colorlog
 import datetime
 import os
 
-# 自定义时间格式化器，输出RFC3339格式
+# Custom time formatter, outputs RFC3339 format
 class RFC3339Formatter(colorlog.ColoredFormatter):
     def formatTime(self, record, datefmt=None):
-        # 创建RFC3339格式的时间戳，例如: 2025-07-24T02:04:23.466388Z
+        # Create RFC3339 format timestamp, e.g.: 2025-07-24T02:04:23.466388Z
         dt = datetime.datetime.fromtimestamp(record.created)
         return dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
-# 创建文件格式化器（不带颜色）
+# Create file formatter (without color)
 class PlainRFC3339Formatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
         dt = datetime.datetime.fromtimestamp(record.created)
         return dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
-# 控制台日志格式（带颜色，显示完整路径）
+# Console log format (with color, shows full path)
 CONSOLE_FORMAT = "%(asctime)s[%(log_color)s%(levelname)s%(reset)s][%(pathname)s:%(lineno)d] %(message)s"
 
-# 文件日志格式（不带颜色，显示完整路径）
+# File log format (without color, shows full path)
 FILE_FORMAT = "%(asctime)s[%(levelname)s][%(pathname)s:%(lineno)d] %(message)s"
 
-# 创建控制台格式化器（带颜色）
+# Create console formatter (with color)
 console_formatter = RFC3339Formatter(
     CONSOLE_FORMAT,
     datefmt=None,
@@ -53,31 +53,31 @@ console_formatter = RFC3339Formatter(
     style="%",
 )
 
-# 文件日志格式（不带颜色）
+# File log formatter (without color)
 file_formatter = PlainRFC3339Formatter(FILE_FORMAT)
 
-# 获取根日志记录器
+# Get root logger
 logger = logging.getLogger()
 
-# 创建一个控制台处理器
+# Create console handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(console_formatter)
 
-# 创建文件处理器
-# 确保logs目录存在
+# Create file handler
+# Ensure logs directory exists
 os.makedirs('logs', exist_ok=True)
 
-# 生成带时间戳的日志文件名
+# Generate log filename with timestamp
 log_filename = f"logs/python_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]}.log"
 file_handler = logging.FileHandler(log_filename, encoding='utf-8')
 file_handler.setFormatter(file_formatter)
 
-# 将处理器添加到日志记录器
+# Add handlers to logger
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
-# 示例日志消息
+# Example log messages
 # logger.debug("This is a debug message")
 # logger.info("This is an info message")
 # logger.warning("This is a warning message")

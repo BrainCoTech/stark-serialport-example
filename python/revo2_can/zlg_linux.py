@@ -10,83 +10,83 @@ sys.path.append(str(parent_dir))
 from dll.zlgcan.zlgcan_linux import *
 
 DEVICE_TYPE = 33  # USBCANFD
-DEVICE_INDEX = 0  # 卡索引
+DEVICE_INDEX = 0  # Card index
 
 def zlgcan_open():
-    """打开 ZLG CAN 设备"""
+    """Open ZLG CAN device"""
     try:
-        # 打开设备
+        # Open device
         open_device(DEVICE_TYPE, DEVICE_INDEX)
 
-        # 启动通道0
+        # Start channel 0
         canfd_start(DEVICE_TYPE, DEVICE_INDEX, 0)
 
     except Exception as e:
-        logger.error(f"打开设备失败: {e}")
+        logger.error(f"Failed to open device: {e}")
 
 
 def zlgcan_close():
-    """关闭 ZLG CAN 设备"""
+    """Close ZLG CAN device"""
     try:
         close_device(DEVICE_TYPE, DEVICE_INDEX)
     except Exception as e:
-        logger.error(f"关闭设备失败: {e}")
+        logger.error(f"Failed to close device: {e}")
 
 
 def zlgcan_send_message(can_id: int, data: bytes) -> bool:
-    """发送 CAN 消息"""
+    """Send CAN message"""
     try:
-        logger.debug(f"发送 CAN - ID: 0x{can_id:x}, Data: {data.hex()}")
+        logger.debug(f"Send CAN - ID: 0x{can_id:x}, Data: {data.hex()}")
         if not can_send(DEVICE_TYPE, DEVICE_INDEX, 0, can_id, data):
-            logger.error("发送数据失败!")
+            logger.error("Failed to send data!")
             return False
-        logger.debug("发送数据成功")
+        logger.debug("Send data successfully")
         return True
     except Exception as e:
-        logger.error(f"发送消息异常: {e}")
+        logger.error(f"Send message exception: {e}")
         return False
 
 def zlgcan_receive_message(quick_retries: int = 2, dely_retries: int = 0) -> Optional[tuple[int, list[int]]]:
     """
-    接收CAN总线消息，先尝试快速接收，若失败则尝试DFU模式下的慢速接收。
+    Receive CAN bus message, first try quick receive, if failed then try slow receive in DFU mode.
 
-    参数:
-        quick_retries (int): 快速接收尝试次数，默认2次。
-        dely_retries (int): DFU模式下的慢速接收尝试次数，默认0次。
+    Args:
+        quick_retries (int): Quick receive attempt次数，默认2次。
+        dely_retries (int): Slow receive attempt次数 in DFU mode，默认0次。
 
-    返回:
-        接收到的消息或None(接收失败)
+    Returns:
+        Received message or None(receive failed)
     """
-    # 快速接收尝试
+    # Quick receive attempt
     for _attempt in range(quick_retries):
-        time.sleep(0.001)  # 较短延时
+        time.sleep(0.001)  # Short delay
         message = _zlgcan_read_messages()
         if message is not None:
             return message
 
-    logger.warning("快速接收超时")
+    logger.warning("Quick receive timeout")
 
-    # 慢速接收尝试
+    # Slow receive attempt
     for _attempt in range(dely_retries):
-        time.sleep(2.0)  # 较长延时，适用于DFU模式最后一包数据
-        message = _zlgcan_read_messages()
+        time.sleep(2.0)  # Long delay, for the last packet in DFU mode
+        message = _zlgcan_read_messages() # type: ignore [report]
         if message is not None:
             return message
 
     if dely_retries > 0:
-        logger.error("慢速接收尝试也超时!")
+        logger.error("Slow receive attempt also timeout!")
     return None
 
 
 def _zlgcan_read_messages() -> Optional[tuple[int, list[int]]]:
     """
-    从 ZLG CAN 设备读取消息，支持多帧响应拼接
+    Read message from ZLG CAN device, support multi-frame response concatenation
 
-    返回:
-        (can_id, data) 元组，其中 data 可能包含多帧拼接后的数据
+    Returns:
+        (can_id, data) tuple, where data may contain data from multiple frames concatenated
     """
     try:
-        # 接收消息
+        # Receive message
         can_msgs = can_receive(DEVICE_TYPE, DEVICE_INDEX, 0)
 
         if can_msgs is None:
@@ -95,42 +95,42 @@ def _zlgcan_read_messages() -> Optional[tuple[int, list[int]]]:
         start_idx = 0
         rcount = len(can_msgs)
 
-        # 处理第一条接收消息
+        # Process the first received message
         first_msg = can_msgs[start_idx]
         can_id = first_msg.hdr.id
         data = [first_msg.dat[i] for i in range(first_msg.hdr.len)]
 
-        # 接收到多条消息, can_id 相同时，读取到多帧响应进行拼接
+        # Received multiple messages, when can_id is the same, read multiple frames of response for concatenation
         if rcount > (start_idx + 1):
-            # logger.debug(f"接收到 {rcount - start_idx} 条有效消息，尝试拼接多帧数据")
+            # logger.debug(f"Received {rcount - start_idx} valid messages, try to concatenate multiple frames of data")
             for i in range(start_idx + 1, rcount):
                 msg = can_msgs[i]
-                # 跳过 TX 回显
+                # Skip TX echo
                 if msg.hdr.inf.tx == 1:
                     continue
 
                 if msg.hdr.id != can_id:
                     logger.warning(
-                        f"接收到多条消息, can_id 不同: 0x{can_id:x} != 0x{msg.hdr.id:x}"
+                        f"Received multiple messages, can_id different: 0x{can_id:x} != 0x{msg.hdr.id:x}"
                     )
                     break
 
-                # 多数据帧，长度应该等于8
+                # Multiple data frames, length should be equal to 8 (8 bytes per frame)
                 if msg.hdr.len != 8:
                     logger.warning(
-                        f"接收到多条消息, data 长度不等于8: {msg.hdr.len}"
+                        f"Received multiple messages, data length not equal to 8: {msg.hdr.len}"
                     )
                     break
 
-                # 拼接数据
+                # Concatenate data
                 data.extend([msg.dat[j] for j in range(msg.hdr.len)])
 
-            # logger.debug(f"多帧拼接完成，总长度: {len(data)} 字节")
+            # logger.debug(f"Multi-frame concatenation completed, total length: {len(data)} bytes")
 
         return (can_id, data)
 
     except Exception as e:
-        logger.error(f"读取消息异常: {e}")
+        logger.error(f"Read message exception: {e}")
         import traceback
         logger.error(traceback.format_exc())
 

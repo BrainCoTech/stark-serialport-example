@@ -3,21 +3,20 @@ import math
 import time
 from ec_utils import *
 
-TRAJ_LEN = 10  # 轨迹点数
-CTRL_INTERVAL = 0.1  # 控制间隔 100ms
-TEST_DURATION = 400.0  # 测试时长 400秒
+TRAJ_LEN = 10  # number of trajectory points
+CTRL_INTERVAL = 0.1  # control interval 100ms
+TEST_DURATION = 400.0  # test duration 400s
 
 
-# 1. 初始化余弦轨迹
 def init_trajectory():
+    """Initialize cosine trajectory"""
     traj = []
     for i in range(TRAJ_LEN):
         value = 50.0 + 50.0 * math.cos(2 * math.pi * i / TRAJ_LEN)  # [0,100]
-        traj.append(int(value * 10))  # 转换为0.1%精度 [0,1000]
+        traj.append(int(value * 10))  # convert to 0.1% precision [0,1000]
     return traj
 
 
-# Main
 async def main():
     shutdown_event = setup_shutdown_event(logger)
 
@@ -26,24 +25,21 @@ async def main():
     slave_pos = 0
     await ctx.ec_setup_sdo(slave_pos)
 
-    # 获取设备信息
     logger.debug("get_device_info")
     device_info: libstark.DeviceInfo = await ctx.get_device_info(slave_pos)
     logger.info(f"Device info: {device_info.description}")
 
-    # 控制模式：千分比模式/物理量模式
-    logger.debug("set_finger_unit_mode")  # 设置手指控制参数的单位模式
+    # Control mode: normalized (per thousand) / physical units
+    logger.debug("set_finger_unit_mode")  # Set unit mode for finger control parameters
     await ctx.set_finger_unit_mode(
         slave_pos, libstark.FingerUnitMode.Normalized
-    )  # 千分比模式
-    # await ctx.set_finger_unit_mode(slave_pos, libstark.FingerUnitMode.Physical) # 物理量模式
-    # 获取手指控制模式
+    )  # Normalized mode (per thousand)
+    # await ctx.set_finger_unit_mode(slave_pos, libstark.FingerUnitMode.Physical)  # Physical units mode
+    # Get finger control mode
     logger.debug("get_finger_unit_mode")
     finger_unit_mode = await ctx.get_finger_unit_mode(slave_pos)
     logger.info(f"Finger unit mode: {finger_unit_mode}")
-    # https://www.brainco-hz.com/docs/revolimb-hand/revo2/modbus_foundation.html#%E5%8D%95%E4%BD%8D%E6%A8%A1%E5%BC%8F%E8%AE%BE%E7%BD%AE-937
 
-    # 设置/读取保护电流, 参数范围详见文档
     finger_id = libstark.FingerId.Ring
     # await ctx.set_finger_protected_current(slave_pos, finger_id,  500)
     protected_current = await ctx.get_finger_protected_current(slave_pos, finger_id)
@@ -64,7 +60,7 @@ async def main():
             logger.debug(f"Target: {target}, Index: {index}")
             await ctx.set_finger_position_with_millis(
                 slave_pos, finger_id, target, 1
-            )  # 1ms, 固件将以最快速度响应
+            )  # 1ms, the firmware will respond as fast as possible
             elapsed = time.perf_counter() - start_time
             logger.info(
                 f"[{(index - 1) % traj_len}] Target: {target}, Elapsed: {elapsed:.3f}s"
@@ -100,11 +96,11 @@ async def main():
                       touch_status: list[libstark.TouchFingerItem] = await ctx.get_touch_sensor_status(slave_pos)
                       elapsed = (time.perf_counter() - start_time) * 1000
                       logger.info(f"get_touch_sensor_status, elapsed:  {elapsed:.2f}ms")
-                      thumb: libstark.TouchFingerItem = touch_status[0]   # 拇指
-                      index: libstark.TouchFingerItem = touch_status[1]   # 食指
-                      middle: libstark.TouchFingerItem = touch_status[2]  # 中指
-                      ring: libstark.TouchFingerItem = touch_status[3]    # 无名指
-                      pinky: libstark.TouchFingerItem = touch_status[4]   # 小指
+                      thumb: libstark.TouchFingerItem = touch_status[0]   # Thumb
+                      index: libstark.TouchFingerItem = touch_status[1]   # Index finger
+                      middle: libstark.TouchFingerItem = touch_status[2]  # Middle finger
+                      ring: libstark.TouchFingerItem = touch_status[3]    # Ring finger
+                      pinky: libstark.TouchFingerItem = touch_status[4]   # Pinky finger
                       logger.debug(f"Touch Sensor Status Thumb: {thumb.description}")
                       logger.debug(f"Touch Sensor Status Index: {index.description}")
                       logger.debug(f"Touch Sensor Status Middle: {middle.description}")
@@ -114,16 +110,16 @@ async def main():
             except Exception as e:
                 logger.error(f"Read error: {e}")
 
-            await asyncio.sleep(0.001)  # 尽可能快，但防止过载
+            await asyncio.sleep(0.001)  # As fast as possible, but prevent overload
 
     await ctx.ec_reserve_master()
     logger.info("EtherCAT master reserved")
 
-    await ctx.ec_start_loop([slave_pos], 0, 1000_000, 0, 0, 0)  # 启动PDO循环Thread，不启用DC时钟同步
+    await ctx.ec_start_loop([slave_pos], 0, 1000_000, 0, 0, 0)  # Start PDO loop thread, no DC clock synchronization
     control = asyncio.create_task(control_task())
     reader = asyncio.create_task(read_task())
 
-    # 等待关闭事件
+    # Wait for shutdown event
     await shutdown_event.wait()
     await asyncio.sleep(TEST_DURATION)
 

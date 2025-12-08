@@ -11,6 +11,10 @@ This module provides common utility functions for Revo2 dexterous hand, includin
 import json
 import sys
 import logging
+import os
+
+# Add parent directory to path to import logger
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import getLogger
 
 # logger = getLogger(logging.DEBUG)
@@ -70,7 +74,7 @@ async def open_modbus_revo2(port_name=None, quick=True):
 
     if device_info.is_revo2():
         if device_info.is_revo2_touch():
-            logger.info(f"Touch version")
+            logger.info(f"Touch hand")
         else:
             logger.info(f"Standard version")
 

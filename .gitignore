@@ -12,3 +12,4 @@ mac.zip
 linux.zip
 log/
 **/logs/*.log
+linux/**/*.o

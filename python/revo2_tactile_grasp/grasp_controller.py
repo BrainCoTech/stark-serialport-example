@@ -15,7 +15,7 @@ class TactileGraspController:
         self.algorithm = algorithm
         self.running = False
         self.control_mode = "AUTO"
-        self.finger_num = 0  # 控制的手指数量，5=握拳 / 3=三指捏 / 2=两指捏
+        self.num_fingers = 0  # 控制的手指数量，5=握拳 / 3=三指捏 / 2=两指捏
         # 6 个关节，第0是 base，1~5 对应手指
         self.current_currents = [0] * 6
         self.latest_commanded_currents = [0] * 6
@@ -38,21 +38,21 @@ class TactileGraspController:
         self.current_currents = currents.copy()
 
     @staticmethod
-    def adjust_currents(cur_currents, base_current, finger_num):
+    def adjust_currents(cur_currents, base_current, num_fingers):
         """
-        根据 finger_num 设置指定手指的电流为 base_current
+        根据 num_fingers 设置指定手指的电流为 base_current
         cur_currents: 当前电流列表，长度必须为6
         base_current: 基础电流值
-        finger_num: 要控制的手指数量（2~5）
+        num_fingers: 要控制的手指数量（2~5）
         """
         if len(cur_currents) != 6:
             raise ValueError("currents 必须有 6 个值")
         
-        if finger_num < 2 or finger_num > 5:
-            print(f"finger_num 必须是2,3,4,5之一, 当前值为: {finger_num}")
-            raise ValueError(f"finger_num 必须是2,3,4,5之一, 当前值为: {finger_num}")
+        if num_fingers < 2 or num_fingers > 5:
+            print(f"num_fingers 必须是2,3,4,5之一, 当前值为: {num_fingers}")
+            raise ValueError(f"num_fingers 必须是2,3,4,5之一, 当前值为: {num_fingers}")
 
-        # 根据 finger_num 决定哪些手指需要赋值
+        # 根据 num_fingers 决定哪些手指需要赋值
         finger_map = {
             2: [0, 2],
             3: [0, 2, 3],
@@ -60,7 +60,7 @@ class TactileGraspController:
             5: [0, 2, 3, 4, 5]
         }
 
-        target_indices = finger_map[finger_num]
+        target_indices = finger_map[num_fingers]
 
         new_currents = []
         for i, val in enumerate(cur_currents):
@@ -126,7 +126,7 @@ class TactileGraspController:
 
     async def grasp_with_speed(
             self,
-            num_of_fingers: int = 5,
+            num_fingers: int = 5,
             position: List[int] = None,
             speed: int = 100,
             thumb_base_position: int = 500,
@@ -136,27 +136,28 @@ class TactileGraspController:
         基于位置和速度控制的抓握方法
         
         参数:
-            num_of_fingers: 控制的手指数量（2-5）
+            num_fingers: 控制的手指数量（2-5）
             position: 目标位置列表
             speed: 运动速度
             thumb_position: 拇指位置
         """
-        self.finger_num = num_of_fingers
+        self.num_fingers = num_fingers
+        self.algorithm.num_fingers = num_fingers
         position_all_default = [thumb_base_position, thumb_flex_position, 850, 1000, 1000, 1000]
 
-        if num_of_fingers == 0:
+        if num_fingers == 0:
             # 所有手指归零（除了拇指位置仍然控制位置）
             position_all = [0, 0, 0, 0, 0, 0]
             # thumb_position = 0
         else:
             if position is None:
-                position_all = position_all_default[:num_of_fingers + 1] + [0] * (5 - num_of_fingers)
-            elif len(position) != num_of_fingers:
+                position_all = position_all_default[:num_fingers + 1] + [0] * (5 - num_fingers)
+            elif len(position) != num_fingers:
                 raise ValueError("position must be equal to number of fingers")
             else:
                 position_all = position.copy()
                 position_all.insert(1, int(thumb_flex_position))
-                position_all += [0] * (5 - num_of_fingers)
+                position_all += [0] * (5 - num_fingers)
 
         # 速度列表
         speed_list = [int(speed), int(speed) * 2, int(speed), int(speed) * 2] + [int(speed)] * 2
@@ -183,14 +184,14 @@ class TactileGraspController:
             return 100
 
     def on_stiffness_update(self, stiffness: float):
-        if not self.running or self.finger_num == 0:
+        if not self.running or self.num_fingers == 0:
             return
         
         """事件驱动回调：stiffness 一算出就立刻执行"""
         if not self.current_set:
             base_current = self.compute_current(stiffness)
             try: 
-                self.current_currents = self.adjust_currents(self.current_currents, base_current, self.finger_num)
+                self.current_currents = self.adjust_currents(self.current_currents, base_current, self.num_fingers)
                 self.client.set_finger_currents(self.slave_id, self.current_currents)
                 self.logger.info(f"[Controller] detected stiffness: {stiffness}")
                 self.logger.info(f"[Controller] set base current: {self.current_currents}")

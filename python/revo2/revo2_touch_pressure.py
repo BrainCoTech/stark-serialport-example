@@ -1,14 +1,14 @@
 """
-Revo2触觉版灵巧手控制示例
+Revo2 Touch Version Dexterous Hand Control Example
 
-本示例演示如何控制Revo2触觉版（压感式传感器）灵巧手设备，包括：
-- 触觉传感器的配置和启用
-- 五指和手掌压力感知数据的获取
+This example demonstrates how to control the Revo2 Touch Version (pressure sensor) dexterous hand device, including:
+- Configuration and enabling of the tactile sensors
+- Acquiring pressure sensing data from five fingers and the palm
 
-注意事项：
-- 本示例仅适用于Revo2触觉版（压感式传感器）硬件
-- 触觉传感器开机默认开启
-- 执行零漂校准时传感器不能受力
+Notes:
+- This example is only applicable to Revo2 Touch Version (pressure sensor) hardware
+- Tactile sensors are enabled by default at startup
+- Do not apply force to the sensor when performing zero-drift calibration
 """
 
 import asyncio
@@ -18,12 +18,12 @@ from revo2_utils import *
 
 async def main():
     """
-    主函数：初始化触觉版灵巧手并执行触觉传感器控制
+    Main function: initialize the Revo2 Touch Version (pressure sensor) dexterous hand device and execute the tactile sensor control
     """
-    # 连接Revo2设备
+    # Connect Revo2 device
     (client, slave_id) = await open_modbus_revo2()
 
-    # 验证设备类型为触觉版
+    # Verify that the device type is Revo2 Touch Version (pressure sensor)
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
     if not device_info.is_revo2_touch():
         logger.error("This example is only for Revo2 Touch hardware")
@@ -34,13 +34,13 @@ async def main():
         libstark.modbus_close(client)
         sys.exit(1)
 
-    # 配置触觉传感器
+    # Configure tactile sensors
     await setup_touch_sensors(client, slave_id)
 
-    # 监控触觉传感器数据
+    # Monitor tactile sensor data
     await monitor_touch_sensors(client, slave_id)
 
-    # 关闭资源
+    # Clean up resources
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     sys.exit(0)
@@ -48,21 +48,21 @@ async def main():
 
 async def setup_touch_sensors(client, slave_id):
     """
-    配置和启用触觉传感器
+    Configure and enable tactile sensors
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    # bits = 0x3F  # 0x3F: 启用五指+手掌
+    # bits = 0x3F  # 0x3F: Enable five fingers + palm
     # await client.touch_sensor_setup(slave_id, bits)
-    # await asyncio.sleep(1)  # 等待触觉传感器准备就绪
+    # await asyncio.sleep(1)  # Wait for tactile sensors to be ready
 
-    # 验证传感器启用状态
+    # Verify sensor enabled status
     bits = await client.get_touch_sensor_enabled(slave_id)
     logger.info(f"Touch Sensor Enabled: {(bits & 0x3F):06b}")
 
-    # 获取触觉传感器固件版本（需要在启用后才能获取）
+    # Get tactile sensor firmware version (can only be obtained after enabling)
     touch_fw_versions = await client.get_touch_sensor_fw_versions(slave_id)
     logger.info(f"Touch Fw Versions: {touch_fw_versions}")
 
@@ -73,46 +73,46 @@ async def setup_touch_sensors(client, slave_id):
 
 async def monitor_touch_sensors(client, slave_id):
     """
-    监控触觉传感器数据
+    Monitor tactile sensor data
 
-    获取触觉传感器五指+手掌合力数据
-    获取触觉传感器五指+手掌全部采样点数据
+    Get tactile sensor five fingers + palm合力数据
+    Get tactile sensor five fingers + palm all sampling points data
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
     while True:
-        # 获取单个手指的触觉传感器状态（可选方式）
+        # Get single finger tactile sensor status (optional way)
         thumb = await client.get_single_modulus_touch_summary(slave_id, 0)
         pinky = await client.get_single_modulus_touch_summary(slave_id, 4)
         palm = await client.get_single_modulus_touch_summary(slave_id, 5)
         logger.info(f"Thumb: {thumb}")
         logger.info(f"Pinky: {pinky}")
         logger.info(f"Palm: {palm}")
-        
-        # 获取所有手指的触觉传感器状态
+
+        # Get all finger tactile sensor status
         touch_summary: list[int] = await client.get_modulus_touch_summary(slave_id)
         logger.info(f"Touch summary: {touch_summary}")
         touch_data: list[int] = await client.get_modulus_touch_data(slave_id)
         logger.info(f"Touch Data: {touch_data}")
 
-        await asyncio.sleep(0.05)  # 控制数据采集频率
-        # break  # 示例中只执行一次，实际应用中可根据需要调整
+        await asyncio.sleep(0.05)  # type: ignore  # Control data acquisition frequency
+        # break  # Only execute once in the example, adjust as needed in actual applications
 
 
 async def perform_sensor_maintenance(client, slave_id):
     """
-    执行传感器维护操作（可选）
+    Perform sensor maintenance operations (optional)
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
 
-    # 校准零漂
-    # 当空闲状态下的数值不为0时，可通过该指令进行校准
-    # 建议忽略校准后十秒内的数据，执行时手指传感器不能受力
+    # Zero drift calibration
+    # When the value in idle state is not 0, it can be calibrated through this instruction
+    # It is recommended to ignore the data within ten seconds after calibration, and the finger sensor cannot be applied during execution
     # await client.touch_sensor_calibrate(slave_id, 0x3f)
 
 

@@ -1,12 +1,12 @@
 """
-Revo1灵巧手基础控制示例
+Revo1 dexterous hand basic control example
 
-本示例演示如何控制Revo1灵巧手设备，包括：
-- 设备信息获取和串口配置
-- 电压和力量等级监控
-- 手指位置控制和动作执行
-- 电机状态监控和数据读取
-- 速度控制和电流控制示例
+This example demonstrates how to control Revo1 dexterous hand devices, including:
+- Device information acquisition and serial port configuration
+- Voltage and force level monitoring
+- Finger position control and action execution
+- Motor status monitoring and data reading
+- Speed control and current control example
 """
 
 import asyncio
@@ -15,42 +15,42 @@ from revo1_utils import *
 
 async def main():
     """
-    主函数：初始化灵巧手连接并执行基础控制操作
+    Main function: Initialize connection to the dexterous hand and perform basic control operations
     """
-    # 检测灵巧手的波特率和设备ID，初始化client
+    # Detect baud rate and device ID of the dexterous hand, initialize client
     (client, slave_id) = await open_modbus_revo1()
 
-    # 获取串口配置信息
-    logger.debug("get_serialport_cfg")  # 获取串口配置，波特率
+    # Get serial port configuration information
+    logger.debug("get_serialport_cfg")  # Get serial port configuration, baud rate
     baudrate = await client.get_serialport_baudrate(slave_id)
     logger.info(f"Baudrate: {baudrate}")
 
-    # 获取设备信息并检查设备类型
+    # Get device information and check device type
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
 
-    # 触觉版设备使用电流控制接口
-    # 非触觉版设备使用力量等级配置
+    # Touch hand uses current control interface
+    # Non-touch hand uses force level configuration
     if not device_info.is_revo1_touch():
-        logger.debug("get_force_level")  # 获取力量等级：大-中-小
+        logger.debug("get_force_level")  # Get force level: large-medium-small
         force_level = await client.get_force_level(slave_id)
         logger.info(f"Force level: {force_level}")
 
-    # 获取设备电压状态
-    logger.debug("get_voltage")  # 获取电池电量
+    # Get device voltage status
+    logger.debug("get_voltage")  # Get battery voltage
     voltage = await client.get_voltage(slave_id)
     logger.info(f"Voltage: {voltage:.1f} mV")
 
-    # 速度控制示例（已注释）
-    # await client.set_finger_speeds(slave_id, [100] * 6)  # 设置手指速度，速度环，手指闭合
-    # await client.set_finger_speeds(slave_id, [-100] * 6)  # 设置手指速度，速度环，手指张开
+    # Speed control example (commented out)
+    # await client.set_finger_speeds(slave_id, [100] * 6)  # Set finger speed, speed loop, fingers closed
+    # await client.set_finger_speeds(slave_id, [-100] * 6)  # Set finger speed, speed loop, fingers open
 
-    # 执行手指位置控制序列
+    # Execute finger movement sequence
     await execute_finger_movements(client, slave_id)
 
-    # 获取并显示电机状态信息
+    # Get and display motor status information
     await get_and_display_motor_status(client, slave_id)
 
-    # 关闭资源
+    # Clean up resources
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     sys.exit(0)
@@ -58,53 +58,53 @@ async def main():
 
 async def execute_finger_movements(client, slave_id):
     """
-    执行手指动作序列：设置角度 -> 握手 -> 张开
+    Execute finger movement sequence: set angle -> grip -> open
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    # 设置手指位置，使用物理角度
-    angles = [200] * 6  # 一代手角度范围 [550, 900, 700, 700, 700, 700]
+    # Set finger positions using physical angles
+    angles = [200] * 6  # First generation hand angle range [550, 900, 700, 700, 700, 700]
     await client.set_finger_positions(slave_id, convert_to_position(angles))
     await asyncio.sleep(1.0)
 
-    # 执行握手动作（所有手指设置为最大位置值）
+    # Execute grip action (set all fingers to maximum position value)
     await client.set_finger_positions(slave_id, [600, 600, 1000, 1000, 1000, 1000])
 
-    # 等待手指到达目标位置
+    # Wait for fingers to reach target position
     await asyncio.sleep(1.0)
 
-    # 执行张开动作（所有手指设置为最小位置值）
+    # Execute open action (set all fingers to minimum position value)
     await client.set_finger_positions(slave_id, [0] * 6)
     await asyncio.sleep(1.5)
 
 
 async def get_and_display_motor_status(client, slave_id):
     """
-    获取并显示电机状态信息
+    Get and display motor status information
 
-    包括：
-    - 手指位置（0~100范围和物理角度）
-    - 电机电流（原始值和mA单位）
-    - 电机运行状态
+    Includes:
+    - Finger positions (0~100 range and physical angles)
+    - Motor currents (original values and mA units)
+    - Motor running status
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    logger.debug("get_motor_status")  # 获取手指状态：位置、电流、motor状态
+    logger.debug("get_motor_status")  # Get motor status: position, current, motor status
     status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
 
-    # 显示位置信息
+    # Display position information
     logger.info(f"positions(0~100): {list(status.positions)}")
-    logger.info(f"angles(角度): {convert_to_angle(list(status.positions))}")  # 物理角度
+    logger.info(f"angles(degree): {convert_to_angle(list(status.positions))}")  # Physical angle
 
-    # 显示电流信息
+    # Display current information
     logger.info(f"currents: {list(status.currents)}")
-    logger.info(f"currents(mA): {convert_to_mA(list(status.currents))}")  # 转换为mA单位
+    logger.info(f"currents(mA): {convert_to_mA(list(status.currents))}")  # Convert to mA units
 
-    # 显示电机状态
+    # Display motor status
     logger.info(f"states: {list(status.states)}")
     logger.debug(f"motor status: {status.description}")
 

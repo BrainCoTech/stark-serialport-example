@@ -1,5 +1,10 @@
 import json
 import logging
+import sys
+import os
+
+# Add parent directory to path to import logger
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from logger import getLogger
 
 # logger = getLogger(logging.DEBUG)
@@ -54,7 +59,7 @@ async def open_modbus_revo1(port_name = None, quick = True):
 
     if device_info.is_revo1():
         if device_info.is_revo1_touch():
-            logger.info(f"Touch version")
+            logger.info(f"Touch hand")
         else:
             logger.info(f"Standard version")
 
@@ -150,7 +155,7 @@ def convert_to_mA(currents):
     """
     Convert current values to milliampere units
 
-    Convert current values to milliampere units based on the hardware characteristics of the first-generation dexterous hand.
+    Convert current values to milliampere units based on the hardware characteristics of the Revo1 dexterous hand.
 
     Args:
         currents (list): List of raw current values
@@ -159,6 +164,6 @@ def convert_to_mA(currents):
         list: List of current values in milliampere units
 
     Note:
-        Conversion factor is 6, this factor is specifically for first-generation dexterous hand hardware
+        Conversion factor is 6, this factor is specifically for Revo1 dexterous hand hardware
     """
     return [int(current * 6) for current in currents]

@@ -20,61 +20,61 @@ zcan_device_handler = None
 
 def zcan_open(device_type: int, channel: int, baudrate: int):
     """
-    打开标准 CAN 2.0 通道
+    Open standard CAN 2.0 channel
 
-    参数:
-        device_type: 设备类型
-        channel: 通道号
-        baudrate: 波特率，默认 1Mbps (支持 125K, 250K, 500K, 1M)
+    Args:
+        device_type: Device type
+        channel: Channel number
+        baudrate: Baud rate, default 1Mbps (supports 125K, 250K, 500K, 1M)
     """
     try:
         # open device
         dev_handler = zcan.OpenDevice(ZCAN_DEVICE_TYPE(device_type), 0, 0)
         if dev_handler == INVALID_DEVICE_HANDLE:
-            logger.error("打开设备失败, device_type: %d, channel: %d, baudrate: %d", device_type, channel, baudrate)
+            logger.error("Open device failed")
             return
 
-        # 配置标准 CAN 2.0 参数
+        # Configure standard CAN 2.0 parameters
         set_can_baudrate(dev_handler, channel, baudrate)
-        zcan.ZCAN_SetValue(dev_handler, f"{channel}/filter_clear", "0")  # 清除滤波器
-        # zcan.ZCAN_SetValue(dev_handler, f"{channel}/filter_mode", "0")               # 设置滤波模式
-        # zcan.ZCAN_SetValue(dev_handler, f"{channel}/acc_code", "0")                  # 验收码
-        # zcan.ZCAN_SetValue(dev_handler, f"{channel}/acc_mask", "0xffffffff")         # 验收屏蔽码
-        # zcan.ZCAN_SetValue(dev_handler, f"{channel}/brp", "1")                       # 波特率预分频
+        zcan.ZCAN_SetValue(dev_handler, f"{channel}/filter_clear", "0")  # Clear filter
+        # zcan.ZCAN_SetValue(dev_handler, f"{channel}/filter_mode", "0")               # Filter mode
+        # zcan.ZCAN_SetValue(dev_handler, f"{channel}/acc_code", "0")                  # Acceptance code
+        # zcan.ZCAN_SetValue(dev_handler, f"{channel}/acc_mask", "0xffffffff")         # Acceptance mask
+        # zcan.ZCAN_SetValue(dev_handler, f"{channel}/brp", "1")                       # Baud rate prescaler
 
-        # 初始化通道配置
+        # Initialize channel configuration
         chn_cfg = ZCAN_CHANNEL_INIT_CONFIG()
-        chn_cfg.can_type = ZCAN_TYPE_CAN  # 标准 CAN 2.0
+        chn_cfg.can_type = ZCAN_TYPE_CAN  # Standard CAN 2.0
 
-        # 配置标准 CAN 参数
-        # chn_cfg.config.can.acc_code = 0x00000000      # 验收码
-        # chn_cfg.config.can.acc_mask = 0xffffffff      # 验收屏蔽码 (接收所有帧)
-        # chn_cfg.config.can.filter = 0                 # 滤波器设置
-        chn_cfg.config.can.mode = 0  # 0: 正常模式, 1: 只听模式
+        # Configure standard CAN parameters
+        # chn_cfg.config.can.acc_code = 0x00000000      # Acceptance code
+        # chn_cfg.config.can.acc_mask = 0xffffffff      # Acceptance mask (receive all frames)
+        # chn_cfg.config.can.filter = 0                 # Filter settings
+        chn_cfg.config.can.mode = 0  # 0: normal mode, 1: listen only mode
 
         can_handler = zcan.InitCAN(dev_handler, channel, chn_cfg)
         if can_handler == INVALID_CHANNEL_HANDLE:
-            logger.error("初始化通道失败!")
+            logger.error("Initialize channel failed!")
             zcan.CloseDevice(dev_handler)
             return
 
         ret = zcan.StartCAN(can_handler)
         if ret != ZCAN_STATUS_OK:
-            logger.error("打开通道失败!")
+            logger.error("Open channel failed!")
             return
 
         global zcan_handler, zcan_device_handler
         zcan_handler = can_handler
         zcan_device_handler = dev_handler
 
-        logger.info(f"CAN 2.0 通道已成功开启: 波特率={baudrate}bps, 采样点=75%")
+        logger.info(f"CAN 2.0 channel opened successfully: Baud rate={baudrate}bps, Sample point=80%")
 
     except Exception as e:
-        logger.error(f"CAN初始化异常: {str(e)}")
+        logger.error(f"CAN initialization exception: {str(e)}")
 
 
 def zcan_close():
-    """关闭CAN通道和设备"""
+    """Close CAN channel and device"""
     global zcan_handler, zcan_device_handler
     if zcan_handler is not None:
         zcan.ResetCAN(zcan_handler)
@@ -84,111 +84,111 @@ def zcan_close():
         zcan.CloseDevice(zcan_device_handler)
         zcan_device_handler = None
 
-    logger.info("CAN设备已关闭")
+    logger.info("CAN device closed")
 
 
 def zcan_clear_buffer():
-    """清空接收缓冲区"""
+    """Clear receive buffer"""
     if zcan_handler is not None:
         zcan.ClearBuffer(zcan_handler)
 
 
 def zcan_send_message(slave_id: int, can_id: int, data: bytes):
     """
-    发送标准CAN消息
+    Send standard CAN message
 
-    参数:
-        slave_id: 从站ID (未使用，保持兼容性)
-        can_id: CAN标识符 (11-bit 标准帧)
-        data: 数据 (最大8字节)
+    Args:
+        slave_id: Slave ID (not used, for compatibility)
+        can_id: CAN identifier (11-bit standard frame)
+        data: Data (maximum 8 bytes)
     """
     if zcan_handler is None:
         logger.error("CAN handler is None")
         return False
 
-    # 检查数据长度
+    # Check data length
     if len(data) > 8:
-        logger.error(f"CAN 2.0 数据长度超限: {len(data)}字节 (最大8字节)")
+        logger.error(f"CAN 2.0 data length exceeds limit: {len(data)} bytes (maximum 8 bytes)")
         return False
 
-    # 检查CAN ID范围 (11-bit 标准帧)
+    # Check CAN ID range (11-bit standard frame)
     if can_id > 0x7FF:
-        logger.warning(f"CAN ID {can_id:03X} 超出标准帧范围，将使用扩展帧")
+        logger.warning(f"CAN ID {can_id:03X} exceeds standard frame range, using extended frame")
 
-    logger.debug(f"发送CAN消息 - ID: 0x{can_id:03X}, 数据: {data.hex()}")
+    logger.debug(f"Send CAN message - ID: 0x{can_id:03X}, data: {data.hex()}")
 
-    # 创建标准CAN消息
+    # Create standard CAN message
     msg = ZCAN_Transmit_Data()
-    msg.transmit_type = 0  # 0: 正常发送
-    msg.frame.can_id = can_id  # CAN标识符
-    msg.frame.can_dlc = len(data)  # 数据长度
+    msg.transmit_type = 0  # 0: normal send
+    msg.frame.can_id = can_id  # CAN identifier
+    msg.frame.can_dlc = len(data)  # data length
 
-    # 填充数据
+    # Fill data
     for i in range(len(data)):
         msg.frame.data[i] = data[i]
 
-    # 发送消息
+    # Send message
     ret = zcan.Transmit(zcan_handler, msg, 1)
     if ret != 1:
-        logger.error("发送CAN消息失败!")
+        logger.error("Send CAN message failed!")
         return False
 
-    logger.debug(f"发送数据成功: {ret}")
+    logger.debug(f"Send data successfully: {ret}")
     return True
 
 
 def zqwl_can_receive_message(quick_retries: int = 2, dely_retries: int = 0):
     """
-    接收CAN总线消息，先尝试快速接收，若失败则尝试DFU模式下的慢速接收。
+    Receive CAN bus message, first try quick receive, if failed then try slow receive in DFU mode.
 
-    参数:
-        quick_retries (int): 快速接收尝试次数，默认2次。
-        dely_retries (int): DFU模式下的慢速接收尝试次数，默认0次。
+    Args:
+        quick_retries (int): Quick receive attempt times, default 2 times.
+        dely_retries (int): Slow receive attempt times in DFU mode, default 0 times.
 
-    返回:
-        接收到的消息或None(接收失败)
+    Returns:
+        Received message or None(receive failed)
     """
     if zcan_handler is None:
-        logger.error("CAN handler is None")
+        logger.error("CANFD handler is None")
         return None
 
-    # 快速接收尝试
+    # Quick receive attempts
     for attempt in range(quick_retries):
-        # time.sleep(0.0001)  # 极短延时
-        time.sleep(0.001)  # 较短延时
+        # time.sleep(0.0001)  # Very short delay
+        time.sleep(0.02)  # Very short delay
         message = _zcan_read_messages(attempt)
         if message is not None:
             return message
 
-    logger.warning("快速接收超时")
+    logger.warning("Quick receive timeout")
 
-    # 慢速接收尝试
+    # Slow receive attempts
     for attempt in range(dely_retries):
-        time.sleep(0.5)  # 较长延时，适用于DFU模式
+        time.sleep(0.5)  # Long delay, suitable for DFU mode
         message = _zcan_read_messages(attempt)
         if message is not None:
             return message
 
     if dely_retries > 0:
-        logger.error("延时接收也超时!")
+        logger.error("Delay receive also timed out!")
     return None
 
 
 def _zcan_read_messages(index: int = 0):
-    """内部函数: 读取CAN消息"""
-    num = zcan.GetReceiveNum(zcan_handler, ZCAN_TYPE_CAN)  # 改为标准CAN类型
+    """Internal function: read CAN message"""
+    num = zcan.GetReceiveNum(zcan_handler, ZCAN_TYPE_CAN)  # Change to standard CAN type
     if num == 0:
-        logger.debug(f"未收到消息, 尝试次数: {index}")
+        logger.debug(f"No message received, attempt times: {index}")
         return None
 
-    # 接收标准CAN消息
+    # Receive standard CAN message
     recv_msgs, act_num = zcan.Receive(zcan_handler, num, c_int(read_timeout_ms))
     if act_num == 0:
-        logger.error("接收CAN消息失败!")
+        logger.error("Receive CAN message failed!")
         return None
 
-    logger.debug(f"接收到 {act_num} 条CAN消息")
-    debug_text = "接收数据: "
+    logger.debug(f"Received {act_num} CAN messages")
+    debug_text = "Received data: "
     for i in range(act_num):
         msg = recv_msgs[i]
         can_id = msg.frame.can_id
@@ -208,27 +208,27 @@ def _zcan_read_messages(index: int = 0):
         )
     logger.debug(f"Received message: %s" % debug_text)
 
-    # 收到多条消息时，返回第一条消息
+    # When multiple messages are received, return the first message
     if act_num > 0:
         recv_msg = recv_msgs[0]
         can_id = recv_msg.frame.can_id
         data = [recv_msg.frame.data[i] for i in range(recv_msg.frame.can_dlc)]
 
         if act_num > 1:
-            # 接收到多条消息, can_id 相同时，读取到多帧响应进行拼接
+            # Received multiple messages, when can_id is the same, read multiple frames for concatenation
             for i in range(act_num - 1):
                 msg = recv_msgs[i + 1]
                 if msg.frame.can_id != can_id:
                     logger.warning(
-                        f"接收到多条消息, can_id 不同: {can_id} != {msg.frame.can_id}"
+                        f"Received multiple messages, can_id is different: {can_id:03X} != {msg.frame.can_id:03X}"
                     )
                     break
-                # if msg.frame.can_dlc <= 2: # 多数据帧，长度大于2
-                if msg.frame.can_dlc != 8:  # 多数据帧，长度不等于8
+                # if msg.frame.can_dlc <= 2: # Multiple data frames, length greater than 2
+                if msg.frame.can_dlc != 8:  # Multiple data frames, length not equal to 8
                     logger.warning(
-                        f"接收到多条消息, data 长度小于等于2: {msg.frame.can_dlc}"
+                        f"Received multiple messages, data length is less than or equal to 2: {msg.frame.can_dlc}"
                     )
-                    break  # 数据长度小于等于2，认为是单条消息
+                    break  # Data length is less than or equal to 2, it is a single message
                 data.extend([msg.frame.data[j] for j in range(msg.frame.can_dlc)])
 
         return (can_id, data)
@@ -236,50 +236,47 @@ def _zcan_read_messages(index: int = 0):
     return None
 
 
-# 波特率预设配置
-# CAN 的一个 bit 时间 = Sync + TSEG1 + TSEG2
-# timing1 = 0x1C（TSEG1 = 12，TSEG2 = 7）→ 采样点靠后，容错性好，适用于低速率（如 125Kbps～500Kbps）
-# timing1 = 0x14（TSEG1 = 4，TSEG2 = 5） → 时隙短，采样点靠中间，适用于高速率（如 1Mbps）
-# 采样点 % = (1 + TSEG1) / (1 + TSEG1 + TSEG2) × 100%
-# 采样点为75%, 应该使用 0x12 (TSEG1=8, TSEG2=3)
+# Baud rate preset configuration
+# CAN one bit time = Sync + TSEG1 + TSEG2
+# timing1 = 0x1C（TSEG1 = 12，TSEG2 = 7）→ Sampling point is later, fault tolerance is good, suitable for low speed (e.g. 125Kbps～500Kbps)
+# timing1 = 0x14（TSEG1 = 4，TSEG2 = 5） → Time slot is short, sampling point is in the middle, suitable for high speed (e.g. 1Mbps)
+# Sampling point % = (1 + TSEG1) / (1 + TSEG1 + TSEG2) × 100%
+# Sampling point is 80%, should use 0x1C (i.e. TSEG1 = 12, TSEG2 = 3)
 CAN_BAUDRATE_CONFIGS = {
-    125000: {"timing0": 0x03, "timing1": 0x1B},
-    250000: {"timing0": 0x01, "timing1": 0x1B},
-    500000: {"timing0": 0x00, "timing1": 0x1B},
-    1000000: {"timing0": 0x00, "timing1": 0x12},
+    125000: {"timing0": 0x03, "timing1": 0x1C},
+    250000: {"timing0": 0x01, "timing1": 0x1C},
+    500000: {"timing0": 0x00, "timing1": 0x1C},
+    1000000: {"timing0": 0x00, "timing1": 0x14},
 }
 
 
 def set_can_baudrate(device_handler, channel: int, baudrate: int) -> bool:
     """
-    设置 CAN 波特率。
+    Set CAN baud rate.
 
-    参数:
-        device_handler: 设备句柄
-        channel: 通道号（如 0、1）
-        baudrate: 波特率（仅支持 125K, 250K, 500K, 1M）
+    Args:
+        device_handler: Device handle
+        channel: Channel number (e.g. 0, 1)
+        baudrate: Baud rate (only supports 125K, 250K, 500K, 1M)
 
-    返回:
-        True 表示设置成功，False 表示失败
+    Returns:
+        True if successful, False if failed
     """
     config = CAN_BAUDRATE_CONFIGS.get(baudrate)
     if not config:
-        logger.error(f"不支持的 CAN 波特率: {baudrate}")
+        logger.error(f"Unsupported CAN baud rate: {baudrate}")
         return False
 
     try:
         zcan.ZCAN_SetValue(device_handler, f"{channel}/baud_rate", str(baudrate))
-        # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_standard", "0")  # 标准CAN 2.0
-        # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_abit_baud_rate", str(baudrate))
-        # zcan.ZCAN_SetValue(device_handler, f"{channel}/canfd_dbit_baud_rate", str(baudrate))
         zcan.ZCAN_SetValue(
             device_handler, f"{channel}/abit_timing0", f"0x{config['timing0']:02X}"
         )
         zcan.ZCAN_SetValue(
             device_handler, f"{channel}/abit_timing1", f"0x{config['timing1']:02X}"
         )
-        logger.info(f"CAN波特率已设置为: {baudrate} bps")
+        logger.info(f"CAN baud rate has been set to: {baudrate} bps")
         return True
     except Exception as e:
-        logger.exception(f"设置 CAN 波特率失败: {e}")
+        logger.exception(f"Set CAN baud rate failed: {e}")
         return False

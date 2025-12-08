@@ -15,16 +15,16 @@ device_handle = None
 chn_handles = []
 
 thread_flag = True
-print_lock = threading.Lock()   # 线程锁，只是为了打印不冲突
-enable_merge_receive = 0        # 合并接收标识
+print_lock = threading.Lock()   # Thread lock, only to prevent printing conflicts
+enable_merge_receive = 0        # Merge receive identifier
 
-# 获取设备信息
+# Get device information
 def get_device_info(device_handle):
     info = zcanlib.GetDeviceInf(device_handle)
     if info is None:
-        logger.error("获取设备信息失败")
+        logger.error("Failed to get device information")
         return None
-    logger.info("设备信息: \n%s" % info)
+    logger.info("Device information: \n%s" % info)
 
     can_number = info.can_num
     return can_number
@@ -32,68 +32,51 @@ def get_device_info(device_handle):
 def zlgcan_open():
     global device_handle
     try:
-        # 打开设备
+        # Open device
         device_handle = zcanlib.OpenDevice(ZCAN_USBCANFD_100U, 0, 0)
         if device_handle == INVALID_DEVICE_HANDLE:
-            logger.error("打开设备失败！")
+            logger.error("Failed to open device!")
             exit(0)
-        logger.debug("设备句柄: %d." % device_handle)
+        logger.debug("Device handle: %d." % device_handle)
 
-        # 获取设备信息
+        # Get device information
         can_number = get_device_info(device_handle)
         if can_number is None:
-            logger.error("获取设备信息失败")
+            logger.error("Failed to get device information")
             return
 
-        # 启动通道
+        # Start channel
         for i in range(can_number):
             chn_handle = start_channel(zcanlib, device_handle, i)
             if chn_handle is None:
-                logger.error("启动通道%d失败！" % i)
+                logger.error("Failed to start channel%d!" % i)
                 exit(0)
-            chn_handles.append(chn_handle)  # 将通道句柄添加到列表中
-            logger.debug("通道句柄: %d." % chn_handle)
+            chn_handles.append(chn_handle)  # Add channel handle to list
+            logger.debug("Channel handle: %d." % chn_handle)
 
     except Exception as e:
         logger.error(str(e))
 
-    # if enable_merge_receive == 1:   #   若开启合并接收，所有通道都由一个接收线程处理
-    #     thread = threading.Thread(target=receive_thread, args=(handle,chn_handles[0]))    # 开启独立接收线程
-    #     threads.append(thread)
-    #     thread.start()
-    # else:                           #   若没有开启合并接收，所有通道的数据需要各自开一个线程接收
-    #     for i in range(len(chn_handles)):
-    #         thread = threading.Thread(target=receive_thread, args=(handle, chn_handles[i]))  # 开启独立接收线程
-    #         threads.append(thread)
-    #         thread.start()
-
 def zlgcan_close():
-    # 关闭 定时发送/队列发送 任务
+    # Close send/queue send task
     # Clear_Send_Task(handle, 0)
 
-    # 关闭接收线程
-    # if enable_merge_receive == 1:
-    #     threads[0].join()
-    # else:
-    #     for i in range(len(chn_handles)):
-    #         threads[i].join()
-
-    # 关闭通道
+    # Close receive thread
     for i in range(len(chn_handles)):
         ret = zcanlib.ResetCAN(chn_handles[i])
         if ret == 1:
-            print(f"关闭通道{i}成功")
+            print(f"Close channel{i} successfully")
 
-    # 关闭设备
+    # Close device
     if device_handle is not None:
         ret = zcanlib.CloseDevice(device_handle)
         if ret == 1:
-            print("关闭设备成功")
+            print("Close device successfully")
 
 def zlgcan_send_message(can_id: int, data: bytes):
     # if chn_handles is empty
     if len(chn_handles) == 0:
-        logger.error("通道句柄列表为空")
+        logger.error("Channel handle list is empty")
         return False
 
     channel_handle = chn_handles[0]
@@ -101,76 +84,76 @@ def zlgcan_send_message(can_id: int, data: bytes):
     logger.debug(f"can_id: 0x{can_id:0x} 0b{can_id:029b}")
     logger.debug(f"data: 0x{data.hex()}")
 
-    # 发送 CAN 报文
+    # Send CAN message
     transmit_can_num = 1
     can_msgs = (ZCAN_Transmit_Data * transmit_can_num)()
     for i in range(transmit_can_num):
-        can_msgs[i].transmit_type = 0     # 0-正常发送，2-自发自收
+        can_msgs[i].transmit_type = 0     # 0-normal send, 2-self-send-receive
         can_msgs[i].frame.can_id = can_id     # ID
-        # can_msgs[i].frame.can_id |= 1 << 31   # 最高位(bit31)为 扩展帧/标准帧 标识位 同理 bit30为 数据帧/远程帧
-        # CAN 最大数据长度为 8 字节
+        # can_msgs[i].frame.can_id |= 1 << 31   # The highest bit (bit31) is the extended frame/standard frame identifier, the same for bit30 data frame/remote frame
+        # The maximum data length of CAN is 8 bytes
         data_len = min(len(data), 8)
-        can_msgs[i].frame.can_dlc = data_len # 数据长度
-        # can_msgs[i].frame._pad |= 0x20       # 发送回显
-        can_msgs[i].frame._res0 = 10         # res0，res1共同表示队列发送间隔(可以理解为一个short 2Byte分开传入)
+        can_msgs[i].frame.can_dlc = data_len # Data length
+        # can_msgs[i].frame._pad |= 0x20       # Send echo, 0-disable, 1-enable
+        can_msgs[i].frame._res0 = 10         # res0, res1 together represent the queue send interval (can be understood as a short 2Byte separated input)
         can_msgs[i].frame._res1 = 0
-        # 复制数据
+        # Copy data
         for j in range(data_len):
             can_msgs[i].frame.data[j] = data[j]
     ret = zcanlib.Transmit(channel_handle, can_msgs, transmit_can_num)
     if ret != transmit_can_num:
-        logger.error(f"发送数据失败! ret: {ret}")
+        logger.error(f"Failed to send data! ret: {ret}")
         return False
-    logger.debug(f"发送数据成功: {ret}")
+    logger.debug(f"Send data successfully: {ret}")
     return True
 
 def zlgcan_receive_message(quick_retries: int = 2, dely_retries: int = 0) -> Optional[tuple[int, list[int]]]:
     """
-    接收CAN总线消息，先尝试快速接收，若失败则尝试DFU模式下的慢速接收。
+    Receive CAN bus message, first try quick receive, if failed then try slow receive in DFU mode.
 
-    参数:
-        quick_retries (int): 快速接收尝试次数，默认2次。
-        dely_retries (int): DFU模式下的慢速接收尝试次数，默认0次。
+    Args:
+        quick_retries (int): Quick receive retry times, default 2 times.
+        dely_retries (int): Slow receive retry times in DFU mode, default 0 times.
 
-    返回:
-        接收到的消息或None(接收失败)
+    Returns:
+        Received message or None(receive failed)
     """
     # if chn_handles is empty
     if len(chn_handles) == 0:
-        logger.error("通道句柄列表为空")
+        logger.error("Channel handle list is empty")
         return None
 
     channel_handle = chn_handles[0]
 
-    # 快速接收尝试
+    # Quick receive try
     for _attempt in range(quick_retries):
-        time.sleep(0.001)  # 较短延时
+        time.sleep(0.001)  # Short delay
         message = _zlgcan_read_messages(channel_handle)
         if message is not None:
             return message
 
-    logger.warning("快速接收超时")
+    logger.warning("Quick receive timeout")
 
-    # 慢速接收尝试
+    # Slow receive try
     for _attempt in range(dely_retries):
-        # time.sleep(0.5)  # 较长延时，适用于DFU模式
+        # time.sleep(0.5)  # Long delay, applicable to DFU mode
         time.sleep(0.005)
         message = _zlgcan_read_messages(channel_handle)
         if message is not None:
             return message
 
     if dely_retries > 0:
-        logger.error("慢速接收尝试也超时!")
+        logger.error("Slow receive try also timeout!")
     return None
 
 def _zlgcan_read_messages(channel_handle: int) -> Optional[tuple[int, list[int]]]:
     """
-    从 ZLG CAN 设备读取消息，支持多帧响应拼接
+    Read messages from ZLG CAN device, support multi-frame response merging
 
-    返回:
-        (can_id, data) 元组，其中 data 可能包含多帧拼接后的数据
+    Returns:
+        (can_id, data) tuple, where data may contain data from multiple frames merged
     """
-    # 方便打印对齐 --无实际作用
+    # For printing alignment -- no actual function
     CANType_width = len("CANFD加速    ")
     id_width = len(hex(0x1FFFFFFF))
 
@@ -182,14 +165,14 @@ def _zlgcan_read_messages(channel_handle: int) -> Optional[tuple[int, list[int]]
         else:
             rcv_can_msgs, rcv_can_num = zcanlib.Receive(channel_handle, rcv_can_num, c_int(100))
 
-        # 打印接收到的消息（调试用）
+        # Print received messages (for debugging)
         with print_lock:
             for msg in rcv_can_msgs[:rcv_can_num]:
                 can_type = "CAN   "
                 frame = msg.frame
                 direction = "TX" if frame._pad & 0x20 else "RX"
-                frame_type = "扩展帧" if frame.can_id & (1 << 31) else "标准帧"
-                frame_format = "远程帧" if frame.can_id & (1 << 30) else "数据帧"
+                frame_type = "Extended frame" if frame.can_id & (1 << 31) else "Standard frame"
+                frame_format = "Remote frame" if frame.can_id & (1 << 30) else "Data frame"
                 can_id = hex(frame.can_id & 0x1FFFFFFF)
 
                 if frame.can_id & (1 << 30):
@@ -203,101 +186,101 @@ def _zlgcan_read_messages(channel_handle: int) -> Optional[tuple[int, list[int]]
                         f" DLC: {dlc}\tDATA(hex): {data}")
 
         if rcv_can_num >= 1:
-            # 找到第一条接收消息（跳过 TX 回显）
+            # Find the first received message (skip TX echo)
             start_idx = 0
             for i in range(rcv_can_num):
-                # 检查是否为 TX 回显（_pad bit5 为 1 表示 TX）
-                if not (rcv_can_msgs[i].frame._pad & 0x20):  # 非 TX 回显
+                # Check if it is TX echo (_pad bit5 is 1 means TX)
+                if not (rcv_can_msgs[i].frame._pad & 0x20):  # Not TX echo
                     start_idx = i
                     break
             else:
-                # 所有消息都是 TX 回显，无有效接收数据
-                logger.debug("所有消息都是 TX 回显，无有效接收数据")
+                # All messages are TX echo, no valid received data
+                logger.debug("All messages are TX echo, no valid received data")
                 return None
 
-            # 处理第一条接收消息
+            # Process the first received message
             recv_msg = rcv_can_msgs[start_idx]
             can_id = recv_msg.frame.can_id
             data = [recv_msg.frame.data[i] for i in range(recv_msg.frame.can_dlc)]
 
-            # 接收到多条消息, can_id 相同时，读取到多帧响应进行拼接
+            # Received multiple messages, when can_id is the same, read multiple frames response for merging
             if rcv_can_num > (start_idx + 1):
-                logger.debug(f"接收到 {rcv_can_num - start_idx} 条有效消息，尝试拼接多帧数据")
+                logger.debug(f"Received {rcv_can_num - start_idx} valid messages, try merging multiple frames data")
                 for i in range(start_idx + 1, rcv_can_num):
                     msg = rcv_can_msgs[i]
-                    # 跳过 TX 回显
+                    # Skip TX echo
                     if msg.frame._pad & 0x20:
                         continue
 
                     if msg.frame.can_id != can_id:
                         logger.warning(
-                            f"接收到多条消息, can_id 不同: {can_id} != {msg.frame.can_id}"
+                            f"Received multiple messages, can_id different: {can_id} != {msg.frame.can_id}"
                         )
                         break
-                    # if msg.frame.can_dlc <= 2: # 多数据帧，长度大于2
-                    if msg.frame.can_dlc != 8:  # 多数据帧，长度不等于8
+                    # if msg.frame.can_dlc <= 2: # Multiple data frames, length greater than 2
+                    if msg.frame.can_dlc != 8:  # Multiple data frames, length not equal to 8
                         logger.warning(
-                            f"接收到多条消息, data 长度不等于8: {msg.frame.can_dlc}"
+                            f"Received multiple messages, data length not equal to 8: {msg.frame.can_dlc}"
                         )
-                        break  # 数据长度不等于8，认为不是多帧数据
+                        break  # Data length not equal to 8, it is considered as multiple frames data
                     data.extend([msg.frame.data[j] for j in range(msg.frame.can_dlc)])
 
-                logger.debug(f"多帧拼接完成，总长度: {len(data)} 字节")
+                logger.debug(f"Multiple frames merged successfully, total length: {len(data)} bytes")
 
             return (can_id, data)
 
     return None
 
-# 启动通道
+# Start channel
 def start_channel(zcanlib: ZCAN, device_handle: int, chn: int):
 
-    # 设置控制器设备类型，如果不是 Non-ISO CANFD 可注释掉按设备默认即可 CAN/CANFD 都是默认
+    # Set controller device type, if not Non-ISO CANFD, can be commented out according to device default, CAN/CANFD are both default
     # ret = zcanlib.ZCAN_SetValue(device_handle, str(chn) + "/canfd_standard", "0".encode("utf-8"))
 
-    # 仲裁域波特率 和 数据域波特率
+    # Arbitration domain baud rate and data domain baud rate
     ret = zcanlib.ZCAN_SetValue(device_handle, str(chn) + "/canfd_abit_baud_rate", "1000000".encode("utf-8"))
     ret = zcanlib.ZCAN_SetValue(device_handle, str(chn) + "/canfd_dbit_baud_rate", "5000000".encode("utf-8"))
     if ret != ZCAN_STATUS_OK:
         print("Set CH%d baud failed!" % chn)
         return None
 
-    # 自定义波特率    当产品波特率对采样点有要求，或者需要设置非常规波特率时使用   ---默认不管
+    # Custom baud rate     When the product baud rate has requirements for sampling points, or needs to set non-standard baud rates, use   --- default is ignored
     # ret = zcanlib.ZCAN_SetValue(device_handle, str(chn) + "/baud_rate_custom", "500Kbps(80%),2.0Mbps(80%),(80,07C00002,01C00002)".encode("utf-8"))
     # if ret != ZCAN_STATUS_OK:
     #     print("Set CH%d baud failed!" % chn)
     #     return None
 
-    # 终端电阻
+    # Terminal resistance
     # ret = zcanlib.ZCAN_SetValue(device_handle, str(chn) + "/initenal_resistance", "1".encode("utf-8"))
     # if ret != ZCAN_STATUS_OK:
     #     print("Open CH%d resistance failed!" % chn)
     #     return None
 
-    # 初始化通道
+    # Initialize channel
     chn_init_cfg = ZCAN_CHANNEL_INIT_CONFIG()
-    chn_init_cfg.can_type = ZCAN_TYPE_CANFD  # USBCANFD 必须选择CANFD
-    chn_init_cfg.config.canfd.mode = 0  # 0-正常模式 1-只听模式
+    chn_init_cfg.can_type = ZCAN_TYPE_CANFD  # USBCANFD must select CANFD
+    chn_init_cfg.config.canfd.mode = 0  # 0-normal mode 1-listen only mode
     chn_handle = zcanlib.InitCAN(device_handle, chn, chn_init_cfg)
     if chn_handle is None:
         print("initCAN failed!" % chn)
         return None
 
-    # 设置滤波
+    # Set filter
     # Set_Filter(device_handle, chn)
 
-    # 设置发送回显    USBCANFD系列老卡（无LIN口，设备白色标签值版本为V1.02即以下,包括V1.02）需要以下操作，否则由CAN报文结构体_pad结构体bit5标识，见Transmit_Test 发送示例
-    # ret = zcanlib.ZCAN_SetValue(device_handle,str(chn)+"/set_device_tx_echo","0".encode("utf-8"))   #发送回显设置，0-禁用，1-开启
+    # Set send echo    USBCANFD series old card (no LIN port, device white label value version is V1.02 or below, including V1.02) needs the following operations, otherwise the CAN message structure _pad structure bit5 identifies, see Transmit_Test send example
+    # ret = zcanlib.ZCAN_SetValue(device_handle,str(chn)+"/set_device_tx_echo","0".encode("utf-8"))   #Send echo setting, 0-disable, 1-enable
     # if ret != ZCAN_STATUS_OK:
     #     print("Set CH%d  set_device_tx_echo failed!" %(chn))
     #     return None
 
-    # 使能/关闭合并接收(startCAN 之前)    0-关闭 1-使能
+    # Enable/disable merge receive (before startCAN)    0-disable 1-enable
     ret = zcanlib.ZCAN_SetValue(device_handle, str(0) + "/set_device_recv_merge", repr(enable_merge_receive))
     if ret != ZCAN_STATUS_OK:
         print("Open CH%d recv merge failed!" % chn)
         return None
 
-    # 启动通道
+    # Start channel
     ret = zcanlib.StartCAN(chn_handle)
     if ret != ZCAN_STATUS_OK:
         print("startCAN failed!" % chn)

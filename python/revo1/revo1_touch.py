@@ -1,11 +1,11 @@
 """
-Revo1触觉版灵巧手控制示例
+Revo1 Touch Version Dexterous Hand Control Example
 
-本示例演示如何控制Revo1触觉版灵巧手设备，包括：
-- 触觉传感器的配置和启用
-- 触觉传感器数据的获取和处理
-- 电机状态监控和自动控制
-- 手指位置控制和电流控制
+This example demonstrates how to control Revo1 touch hand dexterous hand device, including:
+- Configuration and enabling of tactile sensors
+- Acquisition and processing of tactile sensor data
+- Motor status monitoring and automatic control
+- Finger position control and current control
 """
 
 import asyncio
@@ -16,123 +16,123 @@ from utils import setup_shutdown_event
 
 async def main():
     """
-    主函数：初始化触觉版灵巧手连接和控制任务
+    Main function: Initialize touch hand dexterous hand connection and control tasks
     """
-    # 设置关闭事件监听
+    # Set up shutdown event listener
     shutdown_event = setup_shutdown_event(logger)
 
-    # 检测灵巧手的波特率和设备ID，初始化client
+    # Detect baud rate and device ID of dexterous hand, initialize client
     (client, slave_id) = await open_modbus_revo1()
 
-    # 验证设备类型为触觉版
+    # Verify device type is touch hand
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
     if not device_info.is_revo1_touch():
         logger.error("This example is only for Revo1 Touch hardware")
         sys.exit(1)
 
-    # 配置触觉传感器
+    # Configure tactile sensors
     await setup_touch_sensor(client, slave_id)
 
-    # 启动电机状态监控任务
+    # Start motor status monitoring task
     asyncio.create_task(get_motor_status_periodically(client, slave_id))
     logger.info("Status task started")
 
-    # 等待关闭事件
+    # Wait for shutdown event
     await shutdown_event.wait()
 
-    # 关闭资源
+    # Clean up resources
     libstark.modbus_close(client)
     logger.info("Modbus client closed")
     sys.exit(0)
 
 async def setup_touch_sensor(client, slave_id):
     """
-    配置和启用触觉传感器
+    Configure and enable tactile sensors
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    # 启用触觉传感器功能（开机默认关闭）
-    bits = 0x1F  # 0x1f: 启用5个手指上的所有触觉传感器
+    # Enable tactile sensor function (disabled by default on boot)
+    bits = 0x1F  # 0x1f: Enable all tactile sensors on 5 fingers
     await client.touch_sensor_setup(slave_id, bits)
-    await asyncio.sleep(1)  # 等待触觉传感器准备就绪
+    await asyncio.sleep(1)  # Wait for tactile sensors to be ready
 
-    # 验证传感器启用状态
+    # Verify sensor enabled status
     bits = await client.get_touch_sensor_enabled(slave_id)
     logger.info(f"Touch Sensor Enabled: {(bits & 0x1F):05b}")
 
-    # 获取触觉传感器固件版本（需要在setup之后才能获取）
+    # Get tactile sensor firmware version (can only be obtained after setup)
     touch_fw_versions = await client.get_touch_sensor_fw_versions(slave_id)
     logger.info(f"Touch Fw Versions: {touch_fw_versions}")
 
-    # 触觉传感器维护命令（可选）
-    # 复位：发送传感器采集通道复位指令，执行时手指传感器尽量不要受力
+    # tactile sensor maintenance commands (optional)
+    # Reset: Send sensor acquisition channel reset command, try to avoid applying force to finger sensors during execution
     # await client.touch_sensor_reset(slave_id, 0x1f)
 
-    # 校准：当空闲状态下的三维力数值不为0时使用，执行时间较长
-    # 建议忽略校准后十秒内的数据，执行时手指传感器不能受力
+    # Calibration: Use when 3D force values are not zero in idle state, execution takes longer
+    # Recommended to ignore data within ten seconds after calibration, finger sensors must not be under force during execution
     # await client.touch_sensor_calibrate(slave_id, 0x1f)
 
 async def get_touch_status(client, slave_id):
     """
-    获取触觉传感器状态和数据
+    Get tactile sensor status and data
 
-    触觉传感器数据说明：
-    - 法向力：垂直于接触表面的力（压力）
-    - 切向力：沿接触面切线方向的力（摩擦力、惯性力等）
-    - 自接近：自电容变化值
-    - 互接近：互电容变化值
-    - 传感器状态：0=正常，1=数据异常，2=通信异常
+    tactile sensor data description:
+    - Normal force: Force perpendicular to the contact surface (pressure)
+    - Tangential force: Force along the contact surface tangent direction (friction force, inertia force, etc.)
+    - Self-proximity: Self-capacitance change value
+    - Mutual-proximity: Mutual-capacitance change value
+    - Sensor status: 0=normal, 1=data abnormal, 2=communication abnormal
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    # 获取所有手指的触觉传感器状态
+    # Get the tactile sensor status of all fingers
     touch_status: list[libstark.TouchFingerItem] = await client.get_touch_sensor_status(slave_id)
-    thumb = touch_status[0]   # 拇指
-    index = touch_status[1]   # 食指
-    middle = touch_status[2]  # 中指
-    ring = touch_status[3]    # 无名指
-    pinky = touch_status[4]   # 小指
+    thumb = touch_status[0]   # Thumb
+    index = touch_status[1]   # Index
+    middle = touch_status[2]  # Middle
+    ring = touch_status[3]    # Ring
+    pinky = touch_status[4]   # Pinky
 
-    # 记录食指传感器详细数据
+    # Record index sensor detailed data
     logger.debug(f"Index Sensor Desc: {index.description}")
-    logger.info(f"Index Sensor status: {index.status}")  # 触觉传感器状态
+    logger.info(f"Index Sensor status: {index.status}")  # Touch sensor status
     logger.info(f"Index normal_force1: {index.normal_force1}")  # 法向力1
-    logger.info(f"Index normal_force2: {index.normal_force2}")  # 法向力2
-    logger.info(f"Index normal_force3: {index.normal_force3}")  # 法向力3
-    logger.info(f"Index tangential_force1: {index.tangential_force1}")  # 切向力1
-    logger.info(f"Index tangential_force2: {index.tangential_force2}")  # 切向力2
-    logger.info(f"Index tangential_force3: {index.tangential_force3}")  # 切向力3
-    logger.info(f"Index tangential_direction1: {index.tangential_direction1}")  # 切向力方向1
-    logger.info(f"Index tangential_direction2: {index.tangential_direction2}")  # 切向力方向2
-    logger.info(f"Index tangential_direction3: {index.tangential_direction3}")  # 切向力方向3
-    logger.info(f"Index self_proximity1: {index.self_proximity1}")  # 自接近1
-    logger.info(f"Index self_proximity2: {index.self_proximity2}")  # 自接近2
-    logger.info(f"Index mutual_proximity: {index.mutual_proximity}")  # 互接近
+    logger.info(f"Index normal_force2: {index.normal_force2}")  # Normal force 2
+    logger.info(f"Index normal_force3: {index.normal_force3}")  # Normal force 3
+    logger.info(f"Index tangential_force1: {index.tangential_force1}")  # Tangential force 1
+    logger.info(f"Index tangential_force2: {index.tangential_force2}")  # Tangential force 2
+    logger.info(f"Index tangential_force3: {index.tangential_force3}")  # Tangential force 3
+    logger.info(f"Index tangential_direction1: {index.tangential_direction1}")  # Tangential direction 1
+    logger.info(f"Index tangential_direction2: {index.tangential_direction2}")  # Tangential direction 2
+    logger.info(f"Index tangential_direction3: {index.tangential_direction3}")  # Tangential direction 3
+    logger.info(f"Index self_proximity1: {index.self_proximity1}")  # Self proximity 1
+    logger.info(f"Index self_proximity2: {index.self_proximity2}")  # Self proximity 2
+    logger.info(f"Index mutual_proximity: {index.mutual_proximity}")  # Mutual proximity
 
-    # 获取单个手指的触觉传感器状态（另一种获取方式）
+    # Get single finger touch sensor status (another way)
     thumb = await client.get_single_touch_sensor_status(slave_id, 0)
     index = await client.get_single_touch_sensor_status(slave_id, 1)
     middle = await client.get_single_touch_sensor_status(slave_id, 2)
     ring = await client.get_single_touch_sensor_status(slave_id, 3)
     pinky = await client.get_single_touch_sensor_status(slave_id, 4)
 
-    # 记录拇指传感器数据
+    # Record thumb sensor data
     logger.debug(f"Thumb Sensor Desc: {thumb.description}")
     logger.info(f"Thumb Sensor status: {thumb.status}")
-    logger.info(f"Thumb normal_force1: {thumb.normal_force1}")  # 法向力1
-    logger.info(f"Thumb normal_force2: {thumb.normal_force2}")  # 法向力2
-    logger.info(f"Thumb tangential_force1: {thumb.tangential_force1}")  # 切向力1
-    logger.info(f"Thumb tangential_force2: {thumb.tangential_force2}")  # 切向力2
-    logger.info(f"Thumb tangential_direction1: {thumb.tangential_direction1}")  # 切向力方向1
-    logger.info(f"Thumb tangential_direction2: {thumb.tangential_direction2}")  # 切向力方向2
-    logger.info(f"Thumb self_proximity1: {thumb.self_proximity1}")  # 自接近1
+    logger.info(f"Thumb normal_force1: {thumb.normal_force1}")  # Normal force 1
+    logger.info(f"Thumb normal_force2: {thumb.normal_force2}")  # Normal force 2
+    logger.info(f"Thumb tangential_force1: {thumb.tangential_force1}")  # Tangential force 1
+    logger.info(f"Thumb tangential_force2: {thumb.tangential_force2}")  # Tangential force 2
+    logger.info(f"Thumb tangential_direction1: {thumb.tangential_direction1}")  # Tangential direction 1
+    logger.info(f"Thumb tangential_direction2: {thumb.tangential_direction2}")  # Tangential direction 2
+    logger.info(f"Thumb self_proximity1: {thumb.self_proximity1}")  # Self proximity 1
 
-    # 获取传感器原始通道值（可选，用于调试）
+    # Get sensor raw channel value (optional, for debugging)
     # touch_raw_data = await client.get_touch_sensor_raw_data(slave_id)
     # logger.info(f"Touch Sensor Raw Data: {touch_raw_data.description}")
     # logger.debug(f"Touch Sensor Raw Data Thumb: {touch_raw_data.thumb}")
@@ -143,32 +143,32 @@ async def get_touch_status(client, slave_id):
 
 async def get_motor_status_periodically(client, slave_id):
     """
-    定期获取电机状态并执行自动控制
+    Periodically get motor status and execute automatic control
 
-    该函数会持续监控电机状态，并根据手指位置执行简单的开合动作：
-    - 当手指张开时，执行握手动作
-    - 当手指闭合时，执行张开动作
+    This function will continuously monitor the motor status and execute simple open and close actions based on finger position:
+    - When the finger is opened, execute the handshake action
+    - When the finger is closed, execute the open action
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
     logger.info("Motor status monitoring started")
     index = 0
 
     while True:
         try:
-            # 获取触觉传感器状态
-            logger.debug("Getting touch sensor status...")
+            # Get tactile sensor status
+            logger.debug("Getting tactile sensor status...")
             await get_touch_status(client, slave_id)
 
-            # 获取电机状态
+            # Get motor status
             logger.debug("Getting motor status...")
             start = time.perf_counter()
             status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
             cost_ms = (time.perf_counter() - start) * 1000
 
-            # 记录状态信息
+            # Record status information
             logger.info(
                 f"[{index}] Motor status - cost: {cost_ms:.2f}ms, "
                 f"is_idle: {status.is_idle()}, "
@@ -178,47 +178,47 @@ async def get_motor_status_periodically(client, slave_id):
             logger.info(f"[{index}] Motor status: {status.description}")
             index += 1
 
-            # 根据当前状态执行动作
+            # Execute action based on current status
             if status.is_idle():
                 if status.is_opened():
-                    # 手指张开时，执行握手动作
+                    # When the finger is opened, execute the handshake action
                     await client.set_finger_positions(
                         slave_id, [60, 60, 100, 100, 100, 100]
                     )
                 elif status.is_closed():
-                    # 手指闭合时，执行张开动作
+                    # When the finger is closed, execute the open action
                     await client.set_finger_positions(slave_id, [0] * 6)
 
-            # 添加延时避免过于频繁的查询
+            # Add delay to avoid too frequent queries
             await asyncio.sleep(0.001)
 
         except Exception as e:
             logger.error(f"Error in motor status monitoring: {e}")
-            await asyncio.sleep(1)  # 发生错误时等待更长时间
+            await asyncio.sleep(1)  # Wait longer before retrying when an error occurs
 
 async def set_finger_current(client, slave_id: int):
     """
-    设置手指电流控制
+    Set finger current control
 
-    电流控制参数范围：-100~-20, 20~100
-    正数表示闭合方向，负数表示张开方向
+    Current control parameter range: -100~-20, 20~100
+    Positive number represents the closing direction, negative number represents the opening direction
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    # 选择要控制的手指
-    # finger_id = libstark.FingerId.Thumb     # 拇指
-    # finger_id = libstark.FingerId.ThumbAux  # 拇指辅助
-    # finger_id = libstark.FingerId.Index     # 食指
-    # finger_id = libstark.FingerId.Middle    # 中指
-    finger_id = libstark.FingerId.Ring       # 无名指
-    # finger_id = libstark.FingerId.Pinky     # 小指
+    # Select the finger to control
+    # finger_id = libstark.FingerId.Thumb     # Thumb
+    # finger_id = libstark.FingerId.ThumbAux  # Thumb auxiliary
+    # finger_id = libstark.FingerId.Index     # Index
+    # finger_id = libstark.FingerId.Middle    # Middle
+    finger_id = libstark.FingerId.Ring        # Ring
+    # finger_id = libstark.FingerId.Pinky     # Pinky
 
-    # 设置单个手指电流
+    # Set single finger current
     await client.set_finger_current(slave_id, finger_id, -20)
 
-    # 或设置所有手指电流
+    # Or set all fingers current
     # await client.set_finger_currents(slave_id, [-100] * 6)
 
 if __name__ == "__main__":

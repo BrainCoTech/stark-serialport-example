@@ -8,12 +8,12 @@ import time
 from zlg_win import *
 from canfd_utils import *
 
-# 固件升级文件路径
+# Firmware upgrade file path
 current_dir = pathlib.Path(__file__).resolve()
 parent_dir = current_dir.parent.parent
 logger.info(f"parent_dir: {parent_dir}")
 
-# ModbusV2固件
+# ModbusV2 firmware
 ota_bin_path = os.path.join(
     parent_dir,
     "ota_bin",
@@ -22,10 +22,10 @@ ota_bin_path = os.path.join(
 )
 
 if not os.path.exists(ota_bin_path):
-    logger.warning(f"OTA文件不存在: {ota_bin_path}")
+    logger.warning(f"OTA firmware file not found: {ota_bin_path}")
     sys.exit(0)
 else:
-    logger.info(f"OTA文件路径: {ota_bin_path}")
+    logger.info(f"OTA firmware file path: {ota_bin_path}")
 
 shutdown_event = None
 main_loop = None
@@ -34,7 +34,7 @@ main_loop = None
 def on_dfu_state(_slave_id, state):
     logger.info(f"DFU STATE: {libstark.DfuState(state)}")
     dfu_state = libstark.DfuState(state)
-    # 当升级完成或中止时，设置关闭事件
+    # When upgrade completed or aborted, set shutdown event
     if (
         dfu_state == libstark.DfuState.Completed
         or dfu_state == libstark.DfuState.Aborted
@@ -57,31 +57,30 @@ def canfd_send(slave_id: int, can_id: int, data: list):
 
 
 def canfd_read(slave_id: int):
-    recv_msg: Optional[ZCAN_ReceiveFD_Data] = zlgcan_receive_message()
+    recv_msg = zlgcan_receive_message()
     if recv_msg is None:
         logger.error("No message received")
         return 0, bytes([])
 
-    can_id = recv_msg.frame.can_id
-    data = [recv_msg.frame.data[i] for i in range(recv_msg.frame.len)]
+    (can_id, data) = recv_msg
     logger.debug(f"Received CAN ID: {can_id:029b}, Data: {bytes(data).hex()}")
     return can_id, data
 
 
 def exception_hook(exc_type, exc_value, exc_traceback):
-    """全局异常处理函数"""
+    """Global exception handler"""
     import traceback
 
     error_msg = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-    print(f"发生错误:\n{error_msg}")
+    print(f"Error occurred:\n{error_msg}")
 
-    # 将错误写入文件
+    # Write error to file
     with open("error_log.txt", "a", encoding="utf-8") as f:
-        f.write(f"\n--- {os.path.basename(__file__)} 错误 ---\n")
+        f.write(f"\n--- {os.path.basename(__file__)} Error ---\n")
         f.write(error_msg)
-        f.write("\n--- 错误结束 ---\n")
+        f.write("\n--- Error end ---\n")
 
-    # 调用原始的异常处理器
+    # Call original exception handler
     sys.__excepthook__(exc_type, exc_value, exc_traceback)
 
 
@@ -93,21 +92,21 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     master_id = 1
-    slave_id = 0x7F  # 左手默认ID为0x7e，右手默认ID为0x7f
+    slave_id = 0x7F  # Default left hand ID is 0x7e, right hand ID is 0x7f
     client = libstark.PyDeviceContext.init_canfd(master_id)
 
     zlgcan_open()
     libstark.set_can_tx_callback(canfd_send)
     libstark.set_can_rx_callback(canfd_read)
 
-    logger.debug("get_device_info")  # 获取设备信息
+    logger.debug("get_device_info")  # Get device information
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
 
     baudrate = await client.get_canfd_baudrate(slave_id)
     logger.info(f"CANFD, Baudrate: {baudrate}")
 
-    # 固件升级
+    # Firmware upgrade
     try:
         logger.info("start_dfu")
         start_time = time.perf_counter()
@@ -120,7 +119,7 @@ async def main():
             on_dfu_progress,
         )
 
-        # 等待升级完成
+        # Wait for upgrade to complete
         logger.info("ZLG CANFD DFU, Waiting for DFU to complete...")
         await shutdown_event.wait()
         logger.info("DFU completed, shutdown event received!")
@@ -134,7 +133,7 @@ async def main():
         logger.error(traceback.format_exc())
     finally:
         try:
-            # 关闭资源
+            # Clean up resources
             zlgcan_close()
             sys.exit(0)
         except:

@@ -1,14 +1,15 @@
 import asyncio
 import sys
+import platform
 from canfd_utils import *
 
-# 根据操作系统导入对应的 ZLG CAN 驱动模块
+# Import corresponding ZLG CAN driver module according to operating system
 if platform.system() == "Windows":
     from zlg_win import *
 elif platform.system() == "Linux":
     from zlg_linux import *
 else:
-    raise NotImplementedError(f"不支持的操作系统: {platform.system()}")
+    raise NotImplementedError(f"Unsupported operating system: {platform.system()}")
 
 def canfd_send(_slave_id: int, can_id: int, data: list):
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
@@ -18,7 +19,7 @@ def canfd_send(_slave_id: int, can_id: int, data: list):
 
 
 def canfd_read(_slave_id: int):
-    recv_msg = zlgcan_receive_message()
+    recv_msg = zlgcan_receive_message(quick_retries=5, dely_retries=2)
     if recv_msg is None:
         logger.error("No message received")
         return 0, bytes([])
@@ -30,20 +31,20 @@ def canfd_read(_slave_id: int):
 
 async def configure_control_mode(client, slave_id):
     """
-    配置手指控制模式
+    Configure finger control mode
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    # 设置手指控制参数的单位模式
+    # Set finger control parameter unit mode
     logger.debug("set_finger_unit_mode")
     await client.set_finger_unit_mode(
         slave_id, libstark.FingerUnitMode.Normalized
-    )  # 千分比模式
-    # await client.set_finger_unit_mode(slave_id, libstark.FingerUnitMode.Physical)  # 物理量模式
+    )  # Normalized mode
+    # await client.set_finger_unit_mode(slave_id, libstark.FingerUnitMode.Physical)  # Physical mode
 
-    # 获取并验证手指控制模式
+    # Get and verify finger control mode
     logger.debug("get_finger_unit_mode")
     finger_unit_mode = await client.get_finger_unit_mode(slave_id)
     logger.info(f"Finger unit mode: {finger_unit_mode}")
@@ -53,38 +54,38 @@ async def configure_control_mode(client, slave_id):
 
 async def configure_finger_parameters(client, slave_id):
     """
-    配置手指参数（可选）
+    Configure finger parameters (optional)
 
-    设置手指的最大角度、最小角度、最大速度、最大电流、保护电流等参数。
-    各个手指参数范围详见官方文档。
+    Set the maximum angle, minimum angle, maximum speed, maximum current, protected current, etc. of the finger.
+    The range of each finger parameter is detailed in the official documentation.
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    finger_id = libstark.FingerId.Middle  # 选择中指作为示例
+    finger_id = libstark.FingerId.Middle  # Select middle finger as example
 
-    # 设置最小位置（角度）
+    # Set minimum position (angle)
     # await client.set_finger_min_position(slave_id, finger_id, 0)
     # min_position = await client.get_finger_min_position(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] min position: {min_position}")
 
-    # 设置最大位置（角度）
+    # Set maximum position (angle)
     # await client.set_finger_max_position(slave_id, finger_id, 80)
     # max_position = await client.get_finger_max_position(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] max position: {max_position}")
 
-    # 设置最大速度
+    # Set maximum speed
     # await client.set_finger_max_speed(slave_id, finger_id, 130)
     # max_speed = await client.get_finger_max_speed(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] max speed: {max_speed}")
 
-    # 设置最大电流
+    # Set maximum current
     # await client.set_finger_max_current(slave_id, finger_id, 1000)
     # max_current = await client.get_finger_max_current(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] max current: {max_current}")
 
-    # 设置保护电流
+    # Set protected current
     # await client.set_finger_protected_current(slave_id, finger_id, 500)
     # protected_current = await client.get_finger_protected_current(slave_id, finger_id)
     # logger.info(f"Finger[{finger_id}] protected current: {protected_current}")
@@ -92,101 +93,100 @@ async def configure_finger_parameters(client, slave_id):
 
 async def execute_control_examples(client, slave_id):
     """
-    执行各种控制方式的示例
+    Execute various control examples
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    finger_id = libstark.FingerId.Index  # 选食指作为示例
+    finger_id = libstark.FingerId.Index  # Select index finger as example
 
-    # 单个手指控制示例
+    # Single finger control example
     await single_finger_control_examples(client, slave_id, finger_id)
 
-    # 全部手指控制示例
+    # All fingers control example
     await all_fingers_control_examples(client, slave_id)
 
 
 async def single_finger_control_examples(client, slave_id, finger_id):
     """
-    单个手指控制示例
+    Single finger control example
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
-        finger_id: 手指ID
+        client: Modbus client instance
+        slave_id: Device ID
+        finger_id: Finger ID
     """
-    # 速度控制：符号表示方向，正值为握紧方向，负值为松开方向
-    # await client.set_finger_speed(slave_id, finger_id, 500)  # 范围：-1000 ~ 1000
-    # await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    # Speed Mode: positive value for closing direction, negative value for opening direction
+    # await client.set_finger_speed(slave_id, finger_id, 500)  # Range: -1000 ~ 1000
+    # await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
-    # # 电流控制：符号表示方向，正值为握紧方向，负值为松开方向
-    # await client.set_finger_current(slave_id, finger_id, -300)  # 范围：-1000 ~ 1000
-    # await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    # Current Mode: positive value for closing direction, negative value for opening direction
+    # await client.set_finger_current(slave_id, finger_id, -300)  # Range: -1000 ~ 1000
+    # await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
-    # PWM控制：符号表示方向，正值为握紧方向，负值为松开方向
-    await client.set_finger_pwm(slave_id, finger_id, -1000)  # 范围：-1000 ~ 1000
-    await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    # PWM Mode: positive value for closing direction, negative value for opening direction
+    await client.set_finger_pwm(slave_id, finger_id, -1000)  # Range: -1000 ~ 1000
+    await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
-    # 位置控制：目标位置 + 期望时间
+    # Position Mode: target position + expected time
     await client.set_finger_position_with_millis(slave_id, finger_id, 1000, 300)
-    await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
-    # 位置控制：目标位置 + 期望速度
+    # Position Mode: target position + expected speed
     # await client.set_finger_position_with_speed(slave_id, finger_id, 1, 300)
-    # await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    # await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
 
 async def all_fingers_control_examples(client, slave_id):
     """
-    全部手指控制示例
+    All fingers control example
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
-    # 全部手指速度控制：符号表示方向，正值为握紧方向，负值为松开方向
+    # Speed Mode: positive value for closing direction, negative value for opening direction
     # await client.set_finger_speeds(slave_id, [500] * 6)
-    # await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    # await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
-    # # 全部手指电流控制：符号表示方向，正值为握紧方向，负值为松开方向
+    # Current Mode: positive value for closing direction, negative value for opening direction
     # await client.set_finger_currents(slave_id, [-300] * 6)
-    # await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    # await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
-    # # 全部手指PWM控制：符号表示方向，正值为握紧方向，负值为松开方向
+    # PWM Mode: positive value for closing direction, negative value for opening direction
     # await client.set_finger_pwms(slave_id, [700] * 6)
-    # await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    # await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
-    # # 全部手指位置控制：目标位置 + 期望时间
-    # # 位置值：[拇指, 食指, 中指, 无名指, 小指, 手腕]
+    # Position Mode: target position + expected time
     positions = [200, 200] + [0] * 4
-    durations = [300] * 6  # 到达目标位置的期望时间（毫秒）
+    durations = [300] * 6  # Expected time to reach the target position (milliseconds)
     await client.set_finger_positions_and_durations(slave_id, positions, durations)
-    await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
-    # 全部手指位置控制：目标位置 + 期望速度
+    # Position Mode: target position + expected speed
     positions = [500, 500] + [1000] * 4
-    speeds = [1000] * 6  # 到达目标位置的期望速度
+    speeds = [1000] * 6  # Expected speed to reach the target position
     await client.set_finger_positions_and_speeds(slave_id, positions, speeds)
-    await asyncio.sleep(1.0)  # 等待手指到达目标位置
+    await asyncio.sleep(1.0)  # Wait for the finger to reach the target position
 
 
 async def get_and_display_motor_status(client, slave_id):
     """
-    获取并显示电机状态信息
+    Get and display motor status information
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
     logger.debug("get_motor_status")
     status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
 
-    # 显示详细状态信息
-    # logger.info(f"positions: {list(status.positions)}")  # 位置
-    # logger.info(f"speeds: {list(status.speeds)}")        # 速度
-    # logger.info(f"currents: {list(status.currents)}")    # 电流
-    # logger.info(f"states: {list(status.states)}")        # 状态
+    # Display detailed status information
+    # logger.info(f"positions: {list(status.positions)}")  # Position
+    # logger.info(f"speeds: {list(status.speeds)}")        # Speed
+    # logger.info(f"currents: {list(status.currents)}")    # Current
+    # logger.info(f"states: {list(status.states)}")        # State
     logger.info(f"Finger status: {status.description}")
 
 
@@ -195,55 +195,55 @@ async def get_motor_status_periodically(client, slave_id):
     while True:
         try:
             await get_and_display_motor_status(client, slave_id)
-            # 添加延时避免过于频繁的查询
+            # Add delay to avoid too frequent queries
             await asyncio.sleep(0.001)
 
         except Exception as e:
             logger.error(
                 f"Error in motor status monitoring for device {slave_id:02x}: {e}"
             )
-            await asyncio.sleep(1)  # 发生错误时等待更长时间再重试
+            await asyncio.sleep(1)  # When an error occurs, wait longer before retrying
 
 
 async def main():
     # fmt: off
     """
-    主函数：初始化Revo2灵巧手并执行控制示例
+    Main function: Initialize Revo2 dexterous hand and execute control examples
     """
-    # 连接Revo2设备
+    # Connect to Revo2 device
     master_id = 1
-    slave_id = 0x7e # 左手默认ID为0x7e，右手默认ID为0x7f
+    slave_id = 0x7e # Left hand default ID is 0x7e, right hand default ID is 0x7f
     client = libstark.PyDeviceContext.init_canfd(master_id)
 
     zlgcan_open()
     libstark.set_can_tx_callback(canfd_send)
     libstark.set_can_rx_callback(canfd_read)
 
-    logger.debug("get_device_info")  # 获取设备信息
+    logger.debug("get_device_info")  # Get device information
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
 
     baudrate = await client.get_canfd_baudrate(slave_id)
     logger.info(f"CANFD, Baudrate: {baudrate}")
 
-    # 配置控制模式
+    # Configure control mode
     await configure_control_mode(client, slave_id)
 
-    # 配置手指参数（可选）
+    # Configure finger parameters (optional)
     await configure_finger_parameters(client, slave_id)
 
     shutdown_event = setup_shutdown_event(logger)
 
-    # 获取电机状态
+    # Get motor status
     reader_task = asyncio.create_task(get_motor_status_periodically(client, slave_id))
 
-    # 执行控制示例
+    # Execute control examples
     await execute_control_examples(client, slave_id)
 
-    await shutdown_event.wait()  # 等待关闭事件
+    await shutdown_event.wait()  # Wait for shutdown event
     logger.info("Shutdown event received, stopping motor status monitoring...")
-    reader_task.cancel()  # 取消电机状态监控任务
-    # 关闭资源
+    reader_task.cancel()  # Cancel motor status monitoring task
+    # Clean up resources
     zlgcan_close()
     sys.exit(0)
 

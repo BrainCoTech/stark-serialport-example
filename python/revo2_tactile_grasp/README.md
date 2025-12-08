@@ -24,12 +24,12 @@ Revo2 触觉灵巧手抓握示例
 系统的核心控制命令为：
 
 ```python
-await controller.grasp_with_speed(num_of_fingers=0)
+await controller.grasp_with_speed(num_fingers=0)
 
 该指令基于位置与速度控制模式执行抓握或释放动作，通过指定手指数量与动作时间来实现不同类型的抓握。
 ```
-num_of_fingers 参数含义
-| num_of_fingers 值 | 抓握类型   | 参与手指         | 说明                 |
+num_fingers 参数含义
+| num_fingers 值 | 抓握类型   | 参与手指         | 说明                 |
 | ---------------- | ------ | ------------ | ------------------ |
 | `0`              | 全部释放 | —            | 所有手指张开，回到初始位置      |
 | `2`              | 两指捏 | 拇指 + 食指      | 适合捏取小物体（如泡沫块）     |

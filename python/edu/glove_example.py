@@ -1,8 +1,8 @@
 """
 Glove Data Collection Example
 
-这个示例展示了如何使用 bc-edu-sdk 连接手套设备并收集传感器数据，
-包括 Flex（弯曲传感器）、IMU（惯性测量单元）和磁力计数据。
+This example demonstrates how to connect the glove device and collect sensor data using bc-edu-sdk,
+including Flex (bend sensor), IMU (Inertial Measurement Unit), and magnetometer data.
 """
 
 import asyncio
@@ -12,25 +12,25 @@ from typing import Optional, List
 from edu_utils import *
 from model import FlexData, IMUData, MagData
 
-# 配置常量
-NUM_CHANNELS = 6  # Flex传感器通道数
-FLEX_BUFFER_LENGTH = 1250  # Flex数据缓冲区长度（数据点数）
-FETCH_DATA_COUNT = 1000  # 每次获取的数据点数
-BAUDRATE = 115200  # 串口波特率
-DATA_PRINT_INTERVAL = 0.5  # 数据打印间隔（秒）
+# Constants
+NUM_CHANNELS = 6  # Flex sensor channel count
+FLEX_BUFFER_LENGTH = 1250  # Flex data buffer length (data points)
+FETCH_DATA_COUNT = 1000  # Number of data points to fetch
+BAUDRATE = 115200  # Serial port baud rate
+DATA_PRINT_INTERVAL = 0.5  # Data print interval (seconds)
 
-# 传感器系数
-ACC_COEFFICIENT = 0.0001220703125  # 加速度计系数 (1/8192)
-GYRO_COEFFICIENT = 0.06103515625  # 陀螺仪系数 (1/16.4)
-MAG_COEFFICIENT = 0.00152587890625  # 磁力计系数 (1/65536)
+# Sensor coefficients
+ACC_COEFFICIENT = 0.0001220703125  # Accelerometer coefficient (1/8192)
+GYRO_COEFFICIENT = 0.06103515625  # Gyroscope coefficient (1/16.4)
+MAG_COEFFICIENT = 0.00152587890625  # Magnetometer coefficient (1/65536)
 
-# 全局变量
-flex_seq_num: Optional[int] = None  # Flex数据包序号
-flex_values = np.zeros((NUM_CHANNELS, FLEX_BUFFER_LENGTH))  # Flex传感器数据缓冲区
+# Global variables
+flex_seq_num: Optional[int] = None  # Flex sequence number
+flex_values = np.zeros((NUM_CHANNELS, FLEX_BUFFER_LENGTH))  # Flex sensor data buffer
 
 def print_mag_data() -> None:
     """
-    获取并打印磁力计数据
+    Get and print magnetometer data
     """
     mag_buff = libedu.get_mag_buffer(FETCH_DATA_COUNT, clean=True)
     logger.info(f"Got mag buffer len={len(mag_buff)}")
@@ -38,14 +38,14 @@ def print_mag_data() -> None:
     if len(mag_buff) == 0:
         return
 
-    # 只打印第一条Mag数据作为示例
+    # Print the first magnetometer data as an example
     mag_data = MagData.from_data(mag_buff[0])
     logger.info(f"MagData: {mag_data}")
 
 
 def print_imu_data() -> None:
     """
-    获取并打印IMU（惯性测量单元）数据
+    Get and print IMU (Inertial Measurement Unit) data
     """
     imu_buff = libedu.get_imu_buffer(FETCH_DATA_COUNT, clean=True)
     logger.info(f"Got IMU buffer len={len(imu_buff)}")
@@ -53,7 +53,7 @@ def print_imu_data() -> None:
     if len(imu_buff) == 0:
         return
 
-    # 只打印第一条IMU数据作为示例
+    # Print the first IMU data as an example
     row = imu_buff[0]
     logger.info(f"IMU raw data: {row}")
     imu_data = IMUData.from_data(row)
@@ -62,40 +62,40 @@ def print_imu_data() -> None:
 
 def update_flex_buffer(flex_data: FlexData) -> None:
     """
-    更新Flex传感器数据缓冲区
+    Update Flex sensor data buffer
 
     Args:
-        flex_data: Flex传感器数据对象
+        flex_data: Flex sensor data object
     """
     global flex_seq_num
 
     seq_num = flex_data.seq_num
 
-    # 检查数据包序号连续性
+    # Check data packet sequence continuity
     if flex_seq_num is not None:
-        # 处理正常递增和重复序号的情况
+        # Handle normal increment and duplicate sequence number cases
         if seq_num < flex_seq_num:
             logger.warning(f"Data sequence backward: expected >= {flex_seq_num}, got {seq_num}")
         elif seq_num > flex_seq_num + 1:
             logger.warning(f"Data sequence gap: expected {flex_seq_num + 1}, got {seq_num}")
         elif seq_num == flex_seq_num:
             logger.debug(f"Duplicate sequence number: {seq_num}")
-            return  # 跳过重复的数据包
+            return  # Skip duplicate data packets
 
     flex_seq_num = seq_num
 
-    # 将通道数据分割为各个通道
+    # Split channel data into individual channels
     channel_values = np.array_split(flex_data.channel_values, NUM_CHANNELS)
 
-    # 更新每个通道的数据缓冲区
+    # Update each channel's data buffer
     for i in range(NUM_CHANNELS):
-        flex_values[i] = np.roll(flex_values[i], -1)  # 数据向左滚动
-        flex_values[i, -1] = channel_values[i][0]  # 添加最新数据
+        flex_values[i] = np.roll(flex_values[i], -1)  # Data shift left
+        flex_values[i, -1] = channel_values[i][0]  # Add latest data
 
 
 def print_flex_data() -> None:
     """
-    获取并打印Flex传感器数据
+    Get and print Flex sensor data
     """
     flex_buff = libedu.get_flex_buffer(FETCH_DATA_COUNT, clean=True)
     logger.info(f"Got flex buffer len={len(flex_buff)}")
@@ -113,17 +113,17 @@ def print_flex_data() -> None:
 
 def print_flex_timestamps(data: List[FlexData]) -> None:
     """
-    打印Flex数据的时间戳信息
+    Print Flex data timestamps
 
     Args:
-        data: Flex数据列表
+        data: Flex data list
     """
     if len(data) <= 6:
         for item in data:
             logger.info(f"{item}")
         return
 
-    # 如果数据太多，只打印前3个和后3个
+    # If there are too many data points, only print the first 3 and last 3
     for item in data[:3]:
         logger.info(f"{item}")
     logger.info("...")
@@ -133,7 +133,7 @@ def print_flex_timestamps(data: List[FlexData]) -> None:
 
 def print_all_sensor_data() -> None:
     """
-    打印所有传感器数据（IMU、磁力计、Flex）
+    Print all sensor data (IMU, magnetometer, Flex)
     """
     print_imu_data()
     print_mag_data()
@@ -142,10 +142,10 @@ def print_all_sensor_data() -> None:
 
 async def connect_device() -> bool:
     """
-    连接手套设备并开始数据流
+    Connect to the glove device and start data stream
 
     Returns:
-        bool: 连接成功返回True，失败返回False
+        bool: True if connection is successful, False otherwise
     """
     port_name = get_glove_port_name()
     if port_name is None:
@@ -157,15 +157,15 @@ async def connect_device() -> bool:
         await device.start_data_stream(libedu.MessageParser("Glove-device", libedu.MsgType.Edu))
         logger.info("Listening for messages...")
 
-        # 获取设备状态信息
+        # Get device status information
         await device.get_dongle_pair_stat()
         await asyncio.sleep(0.5)
 
-        # 可选：配置传感器采样率
+        # Optional: Configure sensor sampling rate
         await device.set_flex_config(libedu.SamplingRate.SAMPLING_RATE_50)
         await asyncio.sleep(0.5)
 
-        # 开始传感器数据流
+        # Start sensor data stream
         await device.start_sensor_data_stream()
         logger.info("Sensor data stream started successfully")
         return True
@@ -177,7 +177,7 @@ async def connect_device() -> bool:
 
 def initialize_configuration() -> None:
     """
-    初始化SDK配置
+    Initialize SDK configuration
     """
     logger.info("Initializing configuration...")
     libedu.set_flex_buffer_cfg(FLEX_BUFFER_LENGTH)
@@ -188,7 +188,7 @@ def initialize_configuration() -> None:
 
 async def main() -> None:
     """
-    主函数：初始化配置，连接设备，开始数据收集循环
+    Main function: initialize configuration, connect to device, and start data collection loop
     """
     initialize_configuration()
 

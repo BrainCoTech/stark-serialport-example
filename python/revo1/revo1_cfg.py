@@ -11,7 +11,7 @@ This example demonstrates how to manage various configuration parameters of the 
 Important notes:
 - Device will automatically reboot after modifying slave ID or baud rate
 - Need to reconnect device with new configuration parameters after reboot
-- Touch version recommended to use current control directly, standard version uses force level control
+- Touch hand recommended to use current control directly, standard version uses force level control
 - Position calibration will affect finger reference position
 """
 
@@ -71,7 +71,7 @@ async def configure_force_level(client, slave_id):
     """
     Configure force level
 
-    Touch version can use current control directly, standard version uses this function to set force level.
+    Touch hand can use current control directly, standard version uses this function to set force level.
 
     Args:
         client: Modbus client instance
@@ -174,7 +174,7 @@ async def main():
     # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)  # Modify baud rate to 460800
     # return  # Will exit program after modification
 
-    # 3. Configure force level (only for non-touch version)
+    # 3. Configure force level (only for non-touch hand)
     await configure_force_level(client, slave_id)
 
     # 4. Configure Turbo mode

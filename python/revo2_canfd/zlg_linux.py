@@ -10,96 +10,96 @@ sys.path.append(str(parent_dir))
 from dll.zlgcan.zlgcan_linux import *
 
 DEVICE_TYPE = 33  # USBCANFD
-DEVICE_INDEX = 0  # 卡索引
+DEVICE_INDEX = 0  # Card index
 
 def zlgcan_open():
-    """打开 ZLG CAN 设备"""
+    """Open ZLG CAN device"""
     try:
-        # 打开设备
+        # Open device
         open_device(DEVICE_TYPE, DEVICE_INDEX)
 
-        # 启动通道0
+        # Start channel 0
         canfd_start(DEVICE_TYPE, DEVICE_INDEX, 0)
 
     except Exception as e:
-        logger.error(f"打开设备失败: {e}")
+        logger.error(f"Failed to open device: {e}")
 
 
 def zlgcan_close():
-    """关闭 ZLG CAN 设备"""
+    """Close ZLG CAN device"""
     try:
         close_device(DEVICE_TYPE, DEVICE_INDEX)
     except Exception as e:
-        logger.error(f"关闭设备失败: {e}")
+        logger.error(f"Failed to close device: {e}")
 
 
 def zlgcan_send_message(can_id: int, data: bytes) -> bool:
-    """发送 CANFD 消息"""
+    """Send CANFD message"""
     try:
-        logger.debug(f"发送 CANFD - ID: 0x{can_id:x}, Data: {data.hex()}")
+        logger.debug(f"Send CANFD - ID: 0x{can_id:x}, Data: {data.hex()}")
         if not canfd_send(DEVICE_TYPE, DEVICE_INDEX, 0, can_id, data):
-            logger.error("发送数据失败!")
+            logger.error("Failed to send data!")
             return False
-        logger.debug("发送数据成功")
+        logger.debug("Send data successfully")
         return True
     except Exception as e:
-        logger.error(f"发送消息异常: {e}")
+        logger.error(f"Failed to send message: {e}")
         return False
 
 def zlgcan_receive_message(quick_retries: int = 2, dely_retries: int = 0) -> Optional[tuple[int, list[int]]]:
     """
-    接收CAN总线消息，先尝试快速接收，若失败则尝试DFU模式下的慢速接收。
+    Receive CAN bus messages, first try quick reception, if failed, try slow reception in DFU mode.
 
-    参数:
-        quick_retries (int): 快速接收尝试次数，默认2次。
-        dely_retries (int): DFU模式下的慢速接收尝试次数，默认0次。
+    Parameters:
+        quick_retries (int): Number of quick reception attempts, default is 2.
+        dely_retries (int): Number of slow reception attempts in DFU mode, default is 0.
 
-    返回:
-        接收到的消息或None(接收失败)
+    Returns:
+        Received message or None (receive failed)
     """
-    # 快速接收尝试
+    # Quick reception attempt
     for _attempt in range(quick_retries):
-        time.sleep(0.001)  # 较短延时
+        time.sleep(0.01)  # short delay, Adjust based on actual situation
         message = _zlgcan_read_messages()
         if message is not None:
             return message
 
-    logger.warning("快速接收超时")
+    logger.warning("Quick reception timeout")
 
-    # 慢速接收尝试
+    # Slow reception attempt
     for _attempt in range(dely_retries):
-        time.sleep(2.0)  # 较长延时，适用于DFU模式最后一包数据
+        time.sleep(2.0)  # Longer delay, suitable for the last packet of data in DFU mode
         message = _zlgcan_read_messages()
         if message is not None:
             return message
 
     if dely_retries > 0:
-        logger.error("慢速接收尝试也超时!")
+        logger.error("Slow reception timeout!")
     return None
 
 
 def _zlgcan_read_messages() -> Optional[tuple[int, list[int]]]:
     """
-    从 ZLG CAN 设备读取消息，支持多帧响应拼接
+    Read messages from ZLG CAN device, support multi-frame response concatenation
 
-    返回:
-        (can_id, data) 元组，其中 data 可能包含多帧拼接后的数据
+    Returns:
+        (can_id, data) tuple, where data may contain multi-frame concatenated data
     """
     try:
-        # 接收消息
+        # Receive messages
         can_msgs = canfd_receive(DEVICE_TYPE, DEVICE_INDEX, 0)
 
         if can_msgs is None:
             return None
 
-        # 处理第一条接收消息
+        # Process the first received message
         first_msg = can_msgs[0]
         can_id = first_msg.hdr.id
         data = [first_msg.dat[i] for i in range(first_msg.hdr.len)]
         return (can_id, data)
 
     except Exception as e:
-        logger.error(f"读取消息异常: {e}")
+        logger.error(f"Failed to read message: {e}")
         import traceback
         logger.error(traceback.format_exc())
 

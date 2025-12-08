@@ -1,14 +1,25 @@
 import asyncio
 import sys
+import platform
 from canfd_utils import *
 
-# 根据操作系统导入对应的 ZLG CAN 驱动模块
+# Import corresponding ZLG CAN driver module according to operating system
 if platform.system() == "Windows":
-    from zlg_win import *
+    from zlg_win import (
+        zlgcan_open,
+        zlgcan_close,
+        zlgcan_send_message,
+        zlgcan_receive_message,
+    )
 elif platform.system() == "Linux":
-    from zlg_linux import *
+    from zlg_linux import (
+        zlgcan_open,
+        zlgcan_close,
+        zlgcan_send_message,
+        zlgcan_receive_message,
+    )
 else:
-    raise NotImplementedError(f"不支持的操作系统: {platform.system()}")
+    raise NotImplementedError(f"Unsupported operating system: {platform.system()}")
 
 def canfd_send(_slave_id: int, can_id: int, data: list):
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
@@ -28,31 +39,31 @@ def canfd_read(_slave_id: int):
 
 async def get_and_display_motor_status(client, slave_id):
     """
-    获取并显示电机状态信息
+    Get and display motor status information
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
     logger.debug("get_motor_status")
     status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
 
-    # 显示详细状态信息
-    # logger.info(f"positions: {list(status.positions)}")  # 位置
-    # logger.info(f"speeds: {list(status.speeds)}")        # 速度
-    # logger.info(f"currents: {list(status.currents)}")    # 电流
-    # logger.info(f"states: {list(status.states)}")        # 状态
+    # Display detailed status information
+    # logger.info(f"positions: {list(status.positions)}")  # Position
+    # logger.info(f"speeds: {list(status.speeds)}")        # Speed
+    # logger.info(f"currents: {list(status.currents)}")    # Current
+    # logger.info(f"states: {list(status.states)}")        # State
     logger.info(f"Finger status: {status.description}")
-    
-    # 获取单个手指的触觉传感器状态（可选方式）
+
+    # Get single finger touch sensor status (optional way)
     thumb = await client.get_single_modulus_touch_summary(slave_id, 0)
     pinky = await client.get_single_modulus_touch_summary(slave_id, 4)
     palm = await client.get_single_modulus_touch_summary(slave_id, 5)
     logger.info(f"Thumb: {thumb}")
     logger.info(f"Pinky: {pinky}")
     logger.info(f"Palm: {palm}")
-    
-    # 获取所有手指的触觉传感器状态
+
+    # Get all finger touch sensor status
     touch_summary: list[int] = await client.get_modulus_touch_summary(slave_id)
     logger.info(f"Touch summary: {touch_summary}")
     touch_data: list[int] = await client.get_modulus_touch_data(slave_id)
@@ -63,7 +74,7 @@ async def get_motor_status_periodically(client, slave_id):
     while True:
         try:
             await get_and_display_motor_status(client, slave_id)
-            # 添加延时避免过于频繁的查询
+            # Add delay to avoid too frequent queries
             await asyncio.sleep(0.001)
             # break
 
@@ -71,27 +82,27 @@ async def get_motor_status_periodically(client, slave_id):
             logger.error(
                 f"Error in motor status monitoring for device {slave_id:02x}: {e}"
             )
-            await asyncio.sleep(1)  # 发生错误时等待更长时间再重试
+            await asyncio.sleep(1)  # Wait longer before retrying when an error occurs
 
 async def setup_touch_sensors(client, slave_id):
     """
-    配置和启用触觉传感器
+    Configure and enable touch sensors
 
     Args:
-        client: Modbus客户端实例
-        slave_id: 设备ID
+        client: Modbus client instance
+        slave_id: Device ID
     """
     # logger.debug("setup_touch_sensors")
-    # bits = 0x3F  # 0x3F: 启用五指+手掌
+    # bits = 0x3F  # 0x3F: Enable five fingers + palm
     # await client.touch_sensor_setup(slave_id, bits)
     # await asyncio.sleep(1)  # 等待触觉传感器准备就绪
 
-    # 验证传感器启用状态
+    # Verify sensor enabled status
     logger.debug("get_touch_sensor_enabled")
     bits = await client.get_touch_sensor_enabled(slave_id)
     logger.info(f"Touch Sensor Enabled: {(bits & 0x3F):06b}")
 
-    # 获取触觉传感器固件版本（需要在启用后才能获取）
+    # Get touch sensor firmware version (can only be obtained after enabling)
     touch_fw_versions = await client.get_touch_sensor_fw_versions(slave_id)
     logger.info(f"Touch Fw Versions: {touch_fw_versions}")
 
@@ -102,41 +113,41 @@ async def setup_touch_sensors(client, slave_id):
 async def main():
     # fmt: off
     """
-    主函数：初始化Revo2灵巧手并执行控制示例
+    Main function: initialize Revo2 dexterous hand and execute control example
     """
-    # 连接Revo2设备
+    # Connect Revo2 device
     master_id = 1
-    slave_id = 0x7e # 左手默认ID为0x7e，右手默认ID为0x7f
+    slave_id = 0x7e # Default left hand ID is 0x7e, right hand ID is 0x7f
     client = libstark.PyDeviceContext.init_canfd(master_id)
 
     zlgcan_open()
     libstark.set_can_tx_callback(canfd_send)
     libstark.set_can_rx_callback(canfd_read)
 
-    logger.debug("get_device_info")  # 获取设备信息
+    logger.debug("get_device_info")  # Get device information
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
 
     baudrate = await client.get_canfd_baudrate(slave_id)
     logger.info(f"CANFD, Baudrate: {baudrate}")
-    
+
     if not client.is_touch_pressure():
         logger.error("This example is only for Revo2 Touch Pressure hardware")
         zlgcan_close()
         sys.exit(1)
 
-    # 配置触觉传感器
+    # Configure touch sensors
     await setup_touch_sensors(client, slave_id)
 
     shutdown_event = setup_shutdown_event(logger)
 
-    # 获取电机状态
+    # Get motor status
     reader_task = asyncio.create_task(get_motor_status_periodically(client, slave_id))
 
-    await shutdown_event.wait()  # 等待关闭事件
+    await shutdown_event.wait()  # Wait for shutdown event
     logger.info("Shutdown event received, stopping motor status monitoring...")
-    reader_task.cancel()  # 取消电机状态监控任务
-    # 关闭资源
+    reader_task.cancel()  # Cancel motor status monitoring task
+    # Clean up resources
     zlgcan_close()
     sys.exit(0)
 

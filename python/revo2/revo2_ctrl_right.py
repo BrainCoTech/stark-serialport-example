@@ -3,20 +3,19 @@ import sys
 import time
 from revo2_utils import *
 
-SLAVE_ID = 0x7f  # 右手
-PORT = "/dev/ttyUSB1" # 替换为实际的串口名称
+SLAVE_ID = 0x7f  # Right hand
+PORT = "/dev/ttyUSB1" # Replace with actual serial port name
 BAUDRATE = libstark.Baudrate.Baud460800
 
 async def main():
     client: libstark.PyDeviceContext = await libstark.modbus_open(PORT, BAUDRATE)
-    if not client:
-        logger.critical(f"Failed to open serial port: {PORT}")
-        sys.exit(1)
+
     info = await client.get_device_info(SLAVE_ID)
     if not info:
         logger.critical(f"Failed to get device info for right hand. Id: {SLAVE_ID}")
         sys.exit(1)
     logger.info(f"Right: {info.description}")
+
     await client.set_finger_unit_mode(SLAVE_ID, libstark.FingerUnitMode.Normalized)
     period = 2.0
     speeds = [1000] * 6
