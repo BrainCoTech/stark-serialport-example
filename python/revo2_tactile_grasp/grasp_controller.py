@@ -130,7 +130,7 @@ class TactileGraspController:
             position: List[int] = None,
             speed: int = 100,
             thumb_base_position: int = 500,
-            thumb_flex_position: int = 650
+            thumb_flex_position: int = 850
     ):
         """
         基于位置和速度控制的抓握方法
@@ -167,7 +167,7 @@ class TactileGraspController:
 
         # -------- Thumb_FLEX 位置控制 --------
         await self.client.set_finger_positions_and_speeds(self.slave_id, [0, int(thumb_flex_position / 10), 0, 0, 0, 0], [500]*6)
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(1)
 
         # -------- 其他手指速度控制 --------
         await self.client.set_finger_positions_and_speeds(self.slave_id, position_all, speed_list)
