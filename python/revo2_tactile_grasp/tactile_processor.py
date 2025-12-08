@@ -8,6 +8,8 @@ import pickle
 import torch
 import logging
 import warnings
+from collections import defaultdict
+from typing import Callable, Any
 
 from stiffness_classifier import StiffnessClassifier
 from logger import getLogger
@@ -50,6 +52,9 @@ class AlgorithmModule:
         self.logger = getLogger(logging.INFO)
         self.running = False
 
+        # Callback registry: event_name -> list[Callable]
+        self._callbacks = defaultdict(list)
+
     """简单 hardness(stiffness) 判断模型"""
     async def start(self):
         """异步循环，持续读取数据并分析"""
@@ -76,6 +81,29 @@ class AlgorithmModule:
     def stop(self):
         """停止算法循环"""
         self.running = False
+
+    # ---------- Callback management ----------
+    def register_callback(self, event: str, fn: Callable[[Any], Any]):
+        """Register a callback for a given event name (e.g., 'stiffness')."""
+        if not callable(fn):
+            raise TypeError("callback must be callable")
+        self._callbacks[event].append(fn)
+
+    def unregister_callback(self, event: str, fn: Callable[[Any], Any]):
+        """Remove a previously registered callback for an event."""
+        if event in self._callbacks and fn in self._callbacks[event]:
+            self._callbacks[event].remove(fn)
+            if not self._callbacks[event]:
+                del self._callbacks[event]
+
+    def _emit(self, event: str, payload: Any):
+        """Invoke all callbacks registered to an event; sync only for now."""
+        callbacks = list(self._callbacks.get(event, []))
+        for cb in callbacks:
+            try:
+                cb(payload)
+            except Exception as e:
+                self.logger.error(f"Callback error on event '{event}': {e}")
 
     def _analyze(self, buffer, stiffness_):
         """
@@ -153,8 +181,8 @@ class AlgorithmModule:
             stiffness = self._analyze_stiffness(data, self.stiffness_detect_model)
             stiffness_.append(stiffness)
 
-            if self.controller:
-                self.controller.on_stiffness_update(stiffness)
+            # Emit stiffness event (replaces direct controller reference)
+            self._emit("stiffness", stiffness)
 
         # ===== 状态判断 =====
         status = "CONTACT_SLIDING" if sliding_info else "CONTACT"
