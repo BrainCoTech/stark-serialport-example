@@ -8,7 +8,7 @@ void print_hex(unsigned char *data, int len);
 int modbus_operation_async(const uint8_t *values, int len,
                            ModbusOperationResultCallback callback,
                            void *user_data);
-void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
+void get_device_info(DeviceHandler *handle, uint8_t slave_id);
 
 struct {
   DeviceHandler *handle;

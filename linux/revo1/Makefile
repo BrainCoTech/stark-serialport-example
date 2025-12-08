@@ -92,7 +92,7 @@ revo1_%.exe: revo1_%.c $(COMMON_OBJ)
 	@echo "\033[1;32m[Built] $@\033[0m"
 
 # Default target
-all: $(BINARIES) $(addsuffix .exe,$(BINARIES))
+all: $(addsuffix .exe,$(BINARIES))
 	@echo "\033[1;32m[linux] build done, MODE=$(MODE)\033[0m"
 
 # Clean target

@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 // Function declarations
-void get_device_info(DeviceHandler *handleint, uint8_t slave_id);
+void get_device_info(DeviceHandler *handle, uint8_t slave_id);
 void get_info(DeviceHandler *handle, uint8_t slave_id);
 
 int main(int argc, char const *argv[]) {
