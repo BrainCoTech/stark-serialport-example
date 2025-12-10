@@ -14,7 +14,6 @@
 
 详细说明请参考：[Ubuntu C++ README](linux/README.md)
 
-## ROS2 示例
+## ROS/ROS2 示例
 
-[brainco_hand_ros2](https://github.com/BrainCoTech/brainco_hand_ros2)
-[URDF](https://github.com/BrainCoTech/revo2_description_ros1)
+[ROS Development Guide](https://github.com/BrainCoTech/brainco_hand_ros2)

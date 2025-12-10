@@ -12,7 +12,6 @@ Python development examples and usage instructions: [Python Development Guide](p
 
 C++ development examples and compilation instructions for Linux/Ubuntu environments: [Ubuntu C++ Development Guide](linux/README.md)
 
-## ROS2 Examples
+## ROS/ROS2 Examples
 
-[brainco_hand_ros2](https://github.com/BrainCoTech/brainco_hand_ros2)
-[URDF](https://github.com/BrainCoTech/revo2_description_ros1)
+[ROS Development Guide](https://github.com/BrainCoTech/brainco_hand_ros2)
