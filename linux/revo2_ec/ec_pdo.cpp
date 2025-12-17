@@ -142,33 +142,23 @@ static ec_sync_info_t touch_pressure_slave_syncs[] = {
 // Domain Registration
 /****************************************************************************/
 
-// Domain registrations for different configurations
-static unsigned int off_in, off_out;
-
-// Basic domain registration (only joint data, no touch)
-// Note: Only register the first entry of each PDO - EtherCAT calculates the
-// rest automatically
-static const ec_pdo_entry_reg_t basic_domain_regs[] = {
-    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x7000, 0x01, &off_out,
-     NULL}, // RxPDO: output data
-    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x6000, 0x01, &off_in,
-     NULL}, // TxPDO: input data
+// Domain registrations for different configurations (templates)
+// Note: offset pointers are placeholders; build_domain_regs will override
+static ec_pdo_entry_reg_t basic_domain_regs[] = {
+    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x7000, 0x01, NULL, NULL},
+    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x6000, 0x01, NULL, NULL},
     {}};
 
 // Touch domain registration (joint data + basic touch data)
-static const ec_pdo_entry_reg_t touch_domain_regs[] = {
-    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x7000, 0x01, &off_out,
-     NULL}, // RxPDO: output data
-    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x6000, 0x01, &off_in,
-     NULL}, // TxPDO: input data
+static ec_pdo_entry_reg_t touch_domain_regs[] = {
+    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x7000, 0x01, NULL, NULL},
+    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x6000, 0x01, NULL, NULL},
     {}};
 
 // Pressure touch domain registration (joint data + pressure touch data)
-static const ec_pdo_entry_reg_t pressure_touch_domain_regs[] = {
-    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x7000, 0x01, &off_out,
-     NULL}, // RxPDO: output data
-    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x6000, 0x01, &off_in,
-     NULL}, // TxPDO: input data
+static ec_pdo_entry_reg_t pressure_touch_domain_regs[] = {
+    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x7000, 0x01, NULL, NULL},
+    {0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE, 0x6000, 0x01, NULL, NULL},
     {}};
 
 /****************************************************************************/
@@ -177,25 +167,82 @@ static const ec_pdo_entry_reg_t pressure_touch_domain_regs[] = {
 
 const ec_pdo_entry_reg_t *get_domain_regs(pdo_config_type_t config_type,
                                           unsigned int *off_in_ptr,
-                                          unsigned int *off_out_ptr) {
+                                          unsigned int *off_out_ptr,
+                                          uint16_t slave_pos) {
+  static unsigned int off_in, off_out;
   if (off_in_ptr)
     *off_in_ptr = off_in;
   if (off_out_ptr)
     *off_out_ptr = off_out;
 
+  ec_pdo_entry_reg_t *regs = NULL;
+
   switch (config_type) {
   case PDO_CONFIG_BASIC:
-    return basic_domain_regs;
+    regs = basic_domain_regs;
+    break;
 
   case PDO_CONFIG_TOUCH:
-    return touch_domain_regs;
+    regs = touch_domain_regs;
+    break;
 
   case PDO_CONFIG_TOUCH_PRESSURE:
-    return pressure_touch_domain_regs;
+    regs = pressure_touch_domain_regs;
+    break;
 
   default:
-    return basic_domain_regs; // fallback to basic
+    regs = basic_domain_regs; // fallback to basic
+    break;
   }
+
+  // Set slave position for all entries
+  if (regs) {
+    for (int i = 0; regs[i].index != 0 || regs[i].subindex != 0; i++) {
+      regs[i].alias = 0; // Reset alias
+      regs[i].position = slave_pos; // Set slave position
+    }
+  }
+
+  return regs;
+}
+
+// Build caller-provided domain_regs buffer (length >=3) with proper offsets
+void build_domain_regs(pdo_config_type_t config_type, uint16_t slave_pos,
+                       unsigned int *off_in_ptr, unsigned int *off_out_ptr,
+                       ec_pdo_entry_reg_t *out_regs) {
+  // Choose template
+  ec_pdo_entry_reg_t *tmpl = NULL;
+  switch (config_type) {
+  case PDO_CONFIG_BASIC:
+    tmpl = basic_domain_regs;
+    break;
+  case PDO_CONFIG_TOUCH:
+    tmpl = touch_domain_regs;
+    break;
+  case PDO_CONFIG_TOUCH_PRESSURE:
+    tmpl = pressure_touch_domain_regs;
+    break;
+  default:
+    tmpl = basic_domain_regs;
+    break;
+  }
+
+  int i = 0;
+  for (; tmpl[i].index != 0 || tmpl[i].subindex != 0; ++i) {
+    out_regs[i] = tmpl[i];
+    out_regs[i].alias = 0;
+    out_regs[i].position = slave_pos;
+    // Set offset pointer based on index (0x7000 Rx -> off_out, 0x6000 Tx -> off_in)
+    if (tmpl[i].index == 0x7000) {
+      out_regs[i].offset = off_out_ptr;
+    } else {
+      out_regs[i].offset = off_in_ptr;
+    }
+  }
+  // terminator
+  out_regs[i] = {};
+
+  // offsets will be populated by ecrt_domain_reg_pdo_entry_list
 }
 
 ec_sync_info_t *get_slave_pdo_syncs(pdo_config_type_t config_type) {

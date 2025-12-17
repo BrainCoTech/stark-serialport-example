@@ -24,6 +24,52 @@ extern "C" {
 #define STARK_PRODUCT_CODE 0x00009252     // REVO2 product code
 
 /****************************************************************************/
+// PDO structure offsets
+/****************************************************************************/
+
+// Multi-finger control PDO (RxPDO 0x1600) structure:
+// - 0x7000:01 (mult_joint_ctrl_mode): 16 bit = 2 bytes
+// - 0x7000:02 (joint_param1): 96 bit = 12 bytes (6 x uint16)
+// - 0x7000:03 (joint_param2): 96 bit = 12 bytes (6 x uint16)
+// Total: 2 + 12 + 12 = 26 bytes
+#define MULTI_FINGER_PDO_SIZE 26
+
+// Multi-finger PDO field offsets (relative to off_out)
+#define MULTI_FINGER_CTRL_MODE_OFFSET 0      // 16 bit = 2 bytes
+#define MULTI_FINGER_PARAM1_OFFSET 2         // 96 bit = 12 bytes (positions)
+#define MULTI_FINGER_PARAM2_OFFSET 14        // 96 bit = 12 bytes (durations/speeds)
+
+// Helper macros to calculate multi-finger PDO field addresses
+#define MULTI_FINGER_CTRL_MODE_ADDR(data, off_out) \
+  ((data) + (off_out) + MULTI_FINGER_CTRL_MODE_OFFSET)
+#define MULTI_FINGER_PARAM1_ADDR(data, off_out) \
+  ((data) + (off_out) + MULTI_FINGER_PARAM1_OFFSET)
+#define MULTI_FINGER_PARAM2_ADDR(data, off_out) \
+  ((data) + (off_out) + MULTI_FINGER_PARAM2_OFFSET)
+
+// Single-finger control PDO (RxPDO 0x1601) starts after multi-finger PDO
+#define SINGLE_FINGER_PDO_OFFSET MULTI_FINGER_PDO_SIZE
+
+// Helper macro to calculate single-finger PDO base address
+#define SINGLE_FINGER_BASE(off_out) ((off_out) + SINGLE_FINGER_PDO_OFFSET)
+
+// Single-finger PDO field offsets (relative to off_out + SINGLE_FINGER_PDO_OFFSET)
+#define SINGLE_FINGER_CTRL_MODE_OFFSET 0     // 8 bit = 1 byte
+#define SINGLE_FINGER_JOINT_ID_OFFSET 1       // 8 bit = 1 byte
+#define SINGLE_FINGER_PARAM1_OFFSET 2        // 16 bit = 2 bytes
+#define SINGLE_FINGER_PARAM2_OFFSET 4        // 16 bit = 2 bytes
+
+// Helper macros to calculate single-finger PDO field addresses
+#define SINGLE_FINGER_CTRL_MODE_ADDR(data, off_out) \
+  ((data) + SINGLE_FINGER_BASE(off_out) + SINGLE_FINGER_CTRL_MODE_OFFSET)
+#define SINGLE_FINGER_JOINT_ID_ADDR(data, off_out) \
+  ((data) + SINGLE_FINGER_BASE(off_out) + SINGLE_FINGER_JOINT_ID_OFFSET)
+#define SINGLE_FINGER_PARAM1_ADDR(data, off_out) \
+  ((data) + SINGLE_FINGER_BASE(off_out) + SINGLE_FINGER_PARAM1_OFFSET)
+#define SINGLE_FINGER_PARAM2_ADDR(data, off_out) \
+  ((data) + SINGLE_FINGER_BASE(off_out) + SINGLE_FINGER_PARAM2_OFFSET)
+
+/****************************************************************************/
 // SDO object indices
 /****************************************************************************/
 

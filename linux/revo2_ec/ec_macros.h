@@ -9,6 +9,9 @@
 #ifndef EC_MACROS_H
 #define EC_MACROS_H
 
+#include <stdio.h>
+#include <time.h>
+
 /****************************************************************************/
 // Timing and frequency macros
 /****************************************************************************/
@@ -78,19 +81,97 @@
 // Debug and logging macros
 /****************************************************************************/
 
+// Common time prefix helper for logs
+static inline void EC_LOG_TIME_PREFIX(FILE *stream) {
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  struct tm tm_now;
+  localtime_r(&ts.tv_sec, &tm_now);
+  int ms = ts.tv_nsec / 1000000;
+  fprintf(stream, "[%02d:%02d:%02d.%03d] ",
+          tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec, ms);
+}
+
 #ifdef DEBUG
-#define DEBUG_PRINT(fmt, ...) \
-  printf("[DEBUG] %s:%d: " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define DEBUG_PRINT(fmt, ...)                          \
+  do {                                                 \
+    EC_LOG_TIME_PREFIX(stdout);                        \
+    printf("[DEBUG] %s:%d: " fmt "\n",                 \
+           __FILE__, __LINE__, ##__VA_ARGS__);         \
+  } while (0)
 #else
 #define DEBUG_PRINT(fmt, ...) do {} while(0)
 #endif
 
+// Demo debug output (default: disabled)
+// Enable with: -DDEBUG_DEMO or #define DEBUG_DEMO
+#ifdef DEBUG_DEMO
+#define DEMO_DEBUG(fmt, ...)                           \
+  do {                                                 \
+    EC_LOG_TIME_PREFIX(stdout);                        \
+    printf("[Demo] " fmt "\n", ##__VA_ARGS__);         \
+  } while (0)
+#else
+#define DEMO_DEBUG(fmt, ...) do {} while(0)
+#endif
+
+// Loop debug output (default: disabled)
+// Enable with: -DDEBUG_LOOP or #define DEBUG_LOOP
+#ifdef DEBUG_LOOP
+#define LOOP_DEBUG(fmt, ...)                           \
+  do {                                                 \
+    EC_LOG_TIME_PREFIX(stdout);                        \
+    printf("[Debug] " fmt "\n", ##__VA_ARGS__);        \
+  } while (0)
+#else
+#define LOOP_DEBUG(fmt, ...) do {} while(0)
+#endif
+
+// Data send/receive debug output (default: disabled)
+// Enable with: -DDEBUG_DATA or #define DEBUG_DATA
+#ifdef DEBUG_DATA
+#define DATA_DEBUG(fmt, ...)                           \
+  do {                                                 \
+    EC_LOG_TIME_PREFIX(stdout);                        \
+    printf("[Debug] " fmt "\n", ##__VA_ARGS__);        \
+  } while (0)
+#else
+#define DATA_DEBUG(fmt, ...) do {} while(0)
+#endif
+
+// Feedback data debug output (default: enabled)
+// Disable with: -DNO_DEBUG_FEEDBACK or #define NO_DEBUG_FEEDBACK
+// Print frequency can be controlled via FEEDBACK_PRINT_INTERVAL (default: 100 cycles = 100ms at 1kHz)
+#ifndef FEEDBACK_PRINT_INTERVAL
+#define FEEDBACK_PRINT_INTERVAL 2000  // Print every 2000 cycles (2000ms at 1kHz)
+#endif
+#ifndef NO_DEBUG_FEEDBACK
+#define DEBUG_FEEDBACK
+#endif
+#ifdef DEBUG_FEEDBACK
+#define FEEDBACK_DEBUG(fmt, ...)                       \
+  do {                                                 \
+    EC_LOG_TIME_PREFIX(stdout);                        \
+    printf("[Feedback] " fmt "\n", ##__VA_ARGS__);     \
+  } while (0)
+#else
+#define FEEDBACK_DEBUG(fmt, ...) do {} while(0)
+#endif
+
 // Error logging macro
-#define ERROR_PRINT(fmt, ...) \
-  fprintf(stderr, "[ERROR] %s:%d: " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define ERROR_PRINT(fmt, ...)                          \
+  do {                                                 \
+    EC_LOG_TIME_PREFIX(stderr);                        \
+    fprintf(stderr, "[ERROR] %s:%d: " fmt "\n",        \
+            __FILE__, __LINE__, ##__VA_ARGS__);        \
+  } while (0)
 
 // Warning logging macro
-#define WARN_PRINT(fmt, ...) \
-  printf("[WARN] %s:%d: " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define WARN_PRINT(fmt, ...)                           \
+  do {                                                 \
+    EC_LOG_TIME_PREFIX(stdout);                        \
+    printf("[WARN] %s:%d: " fmt "\n",                  \
+           __FILE__, __LINE__, ##__VA_ARGS__);         \
+  } while (0)
 
 #endif // EC_MACROS_H

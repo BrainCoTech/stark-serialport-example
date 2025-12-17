@@ -17,6 +17,7 @@
  */
 
 #include "ec_common.h"
+#include <stdlib.h> // for atoi
 
 /****************************************************************************/
 // Main cyclic task
@@ -29,5 +30,9 @@ void cyclic_task() {
 }
 
 int main(int argc, char **argv) {
-  return ec_app_main_pdo(PDO_CONFIG_BASIC, cyclic_task);
+  uint16_t slave_pos = 0; // Slave position (can be changed via command line argument)
+  if (argc > 1) {
+    slave_pos = (uint16_t)atoi(argv[1]);
+  }
+  return ec_app_main_pdo(PDO_CONFIG_BASIC, slave_pos, cyclic_task);
 }

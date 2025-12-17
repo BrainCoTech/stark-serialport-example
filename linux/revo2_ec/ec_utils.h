@@ -113,6 +113,14 @@ void check_domain_state(ec_domain_t *domain, ec_domain_state_t *domain_state);
  */
 void check_master_state(ec_master_t *master, ec_master_state_t *master_state);
 
+/**
+ * @brief Check if a specific slave is in OPERATIONAL state
+ * @param master EtherCAT master pointer
+ * @param slave_pos Slave position to check
+ * @return 1 if slave is in OP (0x08), 0 otherwise
+ */
+int check_slave_operational(ec_master_t *master, uint16_t slave_pos);
+
 #ifdef __cplusplus
 }
 #endif

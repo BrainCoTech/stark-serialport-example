@@ -113,72 +113,128 @@ void ec_read_pressure_touch_feedback_data(uint8_t *domain_data,
 
 /****************************************************************************/
 // Feedback Display Functions Implementation
+// Note: These functions check DEBUG_FEEDBACK and use FEEDBACK_PRINT_INTERVAL
+// for rate limiting. Call them every cycle - printing is controlled internally.
 /****************************************************************************/
 
 void ec_print_joint_feedback_data(const joint_feedback_t *feedback) {
+#ifndef DEBUG_FEEDBACK
+  (void)feedback;  // Suppress unused parameter warning
+  return;
+#else
   if (!feedback) {
-    printf("Error: Invalid feedback data pointer\n");
+    ERROR_PRINT("Invalid feedback data pointer");
     return;
   }
 
-  printf("=== Joint Feedback Data ===\n");
+  // Rate limiting: only print at FEEDBACK_PRINT_INTERVAL
+  static int counter = 0;
+  if (++counter < FEEDBACK_PRINT_INTERVAL) {
+    return;
+  }
+  counter = 0;
+
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  struct tm tm_now;
+  localtime_r(&ts.tv_sec, &tm_now);
+  int ms = ts.tv_nsec / 1000000;
+  FEEDBACK_DEBUG("=== Joint Feedback Data (t=%02d:%02d:%02d.%03d) ===",
+                 tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec, ms);
 
   const char *joint_names[6] = {"Thumb_Flex", "Thumb_Abduct", "Index",
                                 "Middle",     "Ring",         "Pinky"};
 
   for (int i = 0; i < 6; i++) {
-    printf("  %s: pos=%u, spd=%u, cur=%d, status=0x%04X\n", joint_names[i],
-           feedback->positions[i], feedback->speeds[i], feedback->currents[i],
-           feedback->status[i]);
+    FEEDBACK_DEBUG("  %s: pos=%u, spd=%u, cur=%d, status=0x%04X", joint_names[i],
+                   feedback->positions[i], feedback->speeds[i], feedback->currents[i],
+                   feedback->status[i]);
   }
-  printf("===========================\n");
+  FEEDBACK_DEBUG("===========================");
+#endif
 }
 
 void ec_print_touch_feedback_data(const touch_feedback_t *feedback) {
+#ifndef DEBUG_FEEDBACK
+  (void)feedback;
+  return;
+#else
   if (!feedback) {
-    printf("Error: Invalid feedback data pointer\n");
+    ERROR_PRINT("Invalid feedback data pointer");
     return;
   }
 
-  printf("=== Touch Feedback Data ===\n");
+  // Rate limiting: only print at FEEDBACK_PRINT_INTERVAL
+  static int counter = 0;
+  if (++counter < FEEDBACK_PRINT_INTERVAL) {
+    return;
+  }
+  counter = 0;
+
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  struct tm tm_now;
+  localtime_r(&ts.tv_sec, &tm_now);
+  int ms = ts.tv_nsec / 1000000;
+  FEEDBACK_DEBUG("=== Touch Feedback Data (t=%02d:%02d:%02d.%03d) ===",
+                 tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec, ms);
 
   const char *finger_names[5] = {"Thumb", "Index", "Middle", "Ring", "Pinky"};
 
   for (int i = 0; i < 5; i++) {
-    printf(
-        "  %s: normal=%u, index=%u, middle=%u, ring=%u, pinky=%u, status=%u\n",
+    FEEDBACK_DEBUG(
+        "  %s: normal=%u, index=%u, middle=%u, ring=%u, pinky=%u, status=%u",
         finger_names[i], feedback->force_normal[i], feedback->force_index[i],
         feedback->force_middle[i], feedback->force_ring[i],
         feedback->force_pinky[i], feedback->touch_status[i]);
   }
-  printf("===========================\n");
+  FEEDBACK_DEBUG("===========================");
+#endif
 }
 
 void ec_print_pressure_touch_feedback_data(
     const pressure_touch_feedback_t *feedback) {
+#ifndef DEBUG_FEEDBACK
+  (void)feedback;
+  return;
+#else
   if (!feedback) {
-    printf("Error: Invalid feedback data pointer\n");
+    ERROR_PRINT("Invalid feedback data pointer");
     return;
   }
 
-  printf("=== Pressure Touch Feedback Data ===\n");
+  // Rate limiting: only print at FEEDBACK_PRINT_INTERVAL
+  static int counter = 0;
+  if (++counter < FEEDBACK_PRINT_INTERVAL) {
+    return;
+  }
+  counter = 0;
+
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  struct tm tm_now;
+  localtime_r(&ts.tv_sec, &tm_now);
+  int ms = ts.tv_nsec / 1000000;
+  FEEDBACK_DEBUG("=== Pressure Touch Feedback Data (t=%02d:%02d:%02d.%03d) ===",
+                 tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec, ms);
 
   // Print summary data (first 3 points of each finger)
-  printf("  Thumb Force (first 3): %u, %u, %u\n", feedback->thumb_force[0],
-         feedback->thumb_force[1], feedback->thumb_force[2]);
-  printf("  Index Force (first 3): %u, %u, %u\n", feedback->index_force[0],
-         feedback->index_force[1], feedback->index_force[2]);
-  printf("  Middle Force (first 3): %u, %u, %u\n", feedback->middle_force[0],
-         feedback->middle_force[1], feedback->middle_force[2]);
-  printf("  Ring Force (first 3): %u, %u, %u\n", feedback->ring_force[0],
-         feedback->ring_force[1], feedback->ring_force[2]);
-  printf("  Pinky Force (first 3): %u, %u, %u\n", feedback->pinky_force[0],
-         feedback->pinky_force[1], feedback->pinky_force[2]);
-  printf("  Palm Force (first 3): %u, %u, %u\n", feedback->palm_force[0],
-         feedback->palm_force[1], feedback->palm_force[2]);
+  FEEDBACK_DEBUG("  Thumb Force (first 3): %u, %u, %u", feedback->thumb_force[0],
+                 feedback->thumb_force[1], feedback->thumb_force[2]);
+  FEEDBACK_DEBUG("  Index Force (first 3): %u, %u, %u", feedback->index_force[0],
+                 feedback->index_force[1], feedback->index_force[2]);
+  FEEDBACK_DEBUG("  Middle Force (first 3): %u, %u, %u", feedback->middle_force[0],
+                 feedback->middle_force[1], feedback->middle_force[2]);
+  FEEDBACK_DEBUG("  Ring Force (first 3): %u, %u, %u", feedback->ring_force[0],
+                 feedback->ring_force[1], feedback->ring_force[2]);
+  FEEDBACK_DEBUG("  Pinky Force (first 3): %u, %u, %u", feedback->pinky_force[0],
+                 feedback->pinky_force[1], feedback->pinky_force[2]);
+  FEEDBACK_DEBUG("  Palm Force (first 3): %u, %u, %u", feedback->palm_force[0],
+                 feedback->palm_force[1], feedback->palm_force[2]);
 
-  printf("  Force Total (first 3): %u, %u, %u\n", feedback->force_total[0],
-         feedback->force_total[1], feedback->force_total[2]);
+  FEEDBACK_DEBUG("  Force Total (first 3): %u, %u, %u", feedback->force_total[0],
+                 feedback->force_total[1], feedback->force_total[2]);
 
-  printf("====================================\n");
+  FEEDBACK_DEBUG("====================================");
+#endif
 }

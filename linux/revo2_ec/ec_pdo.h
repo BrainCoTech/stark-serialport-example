@@ -25,9 +25,23 @@ extern "C" {
  * @param config_type PDO configuration type
  * @param off_in_ptr Pointer to store input offset
  * @param off_out_ptr Pointer to store output offset
+ * @param slave_pos Slave position
  * @return Pointer to domain registration array
  */
-const ec_pdo_entry_reg_t* get_domain_regs(pdo_config_type_t config_type, unsigned int *off_in_ptr, unsigned int *off_out_ptr);
+const ec_pdo_entry_reg_t* get_domain_regs(pdo_config_type_t config_type, unsigned int *off_in_ptr, unsigned int *off_out_ptr, uint16_t slave_pos);
+
+/**
+ * @brief Build domain registration entries into caller-provided buffer
+ *        (used for multi-slave support; buffer must have size >=3)
+ * @param config_type PDO configuration type
+ * @param slave_pos slave position
+ * @param off_in_ptr pointer to store input offset
+ * @param off_out_ptr pointer to store output offset
+ * @param out_regs caller-provided array (length >=3)
+ */
+void build_domain_regs(pdo_config_type_t config_type, uint16_t slave_pos,
+                       unsigned int *off_in_ptr, unsigned int *off_out_ptr,
+                       ec_pdo_entry_reg_t *out_regs);
 
 /**
  * @brief Get sync manager configuration for specific PDO type

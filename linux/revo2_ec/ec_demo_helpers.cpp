@@ -6,6 +6,7 @@
 #include "ec_demo_helpers.h"
 #include "ec_control.h"
 #include "ec_utils.h"
+#include "ec_macros.h"
 #include <cstdio>
 #include <cstring>
 #include <ecrt.h>
@@ -35,37 +36,42 @@ static const uint16_t POINTING_POSITIONS[6] = {400, 400, 100, 800, 800, 800};
 
 void ec_set_fist_gesture(uint8_t *domain_data, unsigned int off_out,
                          uint16_t duration) {
-  printf("Setting fist gesture (duration: %u ms)...\n", duration);
+  DEMO_DEBUG("Setting fist gesture (duration: %u ms)", duration);
+  uint16_t durations[6] = {duration, duration, duration, duration, duration, duration};
   ec_write_all_joints_position_duration(domain_data, off_out, FIST_POSITIONS,
-                                        duration);
+                                        durations);
 }
 
 void ec_set_open_hand_gesture(uint8_t *domain_data, unsigned int off_out,
                               uint16_t duration) {
-  printf("Setting open hand gesture (duration: %u ms)...\n", duration);
+  DEMO_DEBUG("Setting open hand gesture (duration: %u ms)", duration);
+  uint16_t durations[6] = {duration, duration, duration, duration, duration, duration};
   ec_write_all_joints_position_duration(domain_data, off_out,
-                                        OPEN_HAND_POSITIONS, duration);
+                                        OPEN_HAND_POSITIONS, durations);
 }
 
 void ec_set_ok_gesture(uint8_t *domain_data, unsigned int off_out,
                        uint16_t duration) {
-  printf("Setting OK gesture (duration: %u ms)...\n", duration);
+  DEMO_DEBUG("Setting OK gesture (duration: %u ms)", duration);
+  uint16_t durations[6] = {duration, duration, duration, duration, duration, duration};
   ec_write_all_joints_position_duration(domain_data, off_out, OK_POSITIONS,
-                                        duration);
+                                        durations);
 }
 
 void ec_set_peace_gesture(uint8_t *domain_data, unsigned int off_out,
                           uint16_t duration) {
-  printf("Setting peace gesture (duration: %u ms)...\n", duration);
+  DEMO_DEBUG("Setting peace gesture (duration: %u ms)", duration);
+  uint16_t durations[6] = {duration, duration, duration, duration, duration, duration};
   ec_write_all_joints_position_duration(domain_data, off_out, PEACE_POSITIONS,
-                                        duration);
+                                        durations);
 }
 
 void ec_set_pointing_gesture(uint8_t *domain_data, unsigned int off_out,
                              uint16_t duration) {
-  printf("Setting pointing gesture (duration: %u ms)...\n", duration);
+  DEMO_DEBUG("Setting pointing gesture (duration: %u ms)", duration);
+  uint16_t durations[6] = {duration, duration, duration, duration, duration, duration};
   ec_write_all_joints_position_duration(domain_data, off_out,
-                                        POINTING_POSITIONS, duration);
+                                        POINTING_POSITIONS, durations);
 }
 
 /****************************************************************************/
@@ -75,7 +81,7 @@ void ec_set_pointing_gesture(uint8_t *domain_data, unsigned int off_out,
 void ec_init_trajectory(TrajectoryControl *traj_ctrl) {
   memset(traj_ctrl, 0, sizeof(TrajectoryControl));
   traj_ctrl->trajectory_active = false;
-  printf("Trajectory control initialized.\n");
+  DATA_DEBUG("Trajectory control initialized");
 }
 
 void ec_set_all_joints_position_duration(TrajectoryControl *traj_ctrl,
@@ -91,11 +97,10 @@ void ec_set_all_joints_position_duration(TrajectoryControl *traj_ctrl,
   traj_ctrl->start_time_ms = get_mills();
   traj_ctrl->trajectory_active = true;
 
-  printf("Trajectory started: ");
-  for (int i = 0; i < 6; i++) {
-    printf("J%d(pos=%d,dur=%d) ", i, positions[i], durations[i]);
-  }
-  printf("\n");
+  DATA_DEBUG("Trajectory started: J0(pos=%d,dur=%d) J1(pos=%d,dur=%d) J2(pos=%d,dur=%d) J3(pos=%d,dur=%d) J4(pos=%d,dur=%d) J5(pos=%d,dur=%d)",
+             positions[0], durations[0], positions[1], durations[1], 
+             positions[2], durations[2], positions[3], durations[3],
+             positions[4], durations[4], positions[5], durations[5]);
 }
 
 void ec_update_trajectory(TrajectoryControl *traj_ctrl, uint8_t *domain_data,
@@ -125,7 +130,7 @@ void ec_update_trajectory(TrajectoryControl *traj_ctrl, uint8_t *domain_data,
       // Optional: print trajectory progress (reduce frequency to avoid spam)
       static int debug_counter = 0;
       if (debug_counter++ % 1000 == 0) {
-        printf("Joint %s: progress=%.1f%%, pos=%d/%d, time=%d/%d ms\n",
+        DATA_DEBUG("Joint %s: progress=%.1f%%, pos=%d/%d, time=%d/%d ms",
                get_joint_name((finger_index_t)i), progress * 100, current_pos,
                traj_ctrl->positions[i], elapsed_time, traj_ctrl->durations[i]);
       }
@@ -135,7 +140,7 @@ void ec_update_trajectory(TrajectoryControl *traj_ctrl, uint8_t *domain_data,
   // Stop trajectory if all joints have finished
   if (!any_joint_active) {
     traj_ctrl->trajectory_active = false;
-    printf("Trajectory completed after %d ms\n", elapsed_time);
+    DATA_DEBUG("Trajectory completed after %d ms", elapsed_time);
   }
 }
 
@@ -145,7 +150,7 @@ bool ec_is_trajectory_active(const TrajectoryControl *traj_ctrl) {
 
 void ec_stop_trajectory(TrajectoryControl *traj_ctrl) {
   traj_ctrl->trajectory_active = false;
-  printf("Trajectory stopped\n");
+  DATA_DEBUG("Trajectory stopped");
 }
 
 float ec_get_trajectory_progress(const TrajectoryControl *traj_ctrl) {

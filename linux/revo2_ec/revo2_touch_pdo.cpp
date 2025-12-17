@@ -10,6 +10,7 @@
  */
 
 #include "ec_common.h"
+#include <stdlib.h> // for atoi
 
 /****************************************************************************/
 // Touch feedback wrapper
@@ -18,7 +19,7 @@
 static void read_touch_feedback_wrapper() {
   ec_app_context_t *ctx = ec_app_get_context();
   touch_feedback_t feedback;
-  ec_read_touch_feedback_data(ctx->domain_data, ctx->off_in, &feedback);
+  ec_read_touch_feedback_data(ctx->domain_data, ctx->slaves[0].off_in, &feedback);
   ec_print_touch_feedback_data(&feedback);
 }
 
@@ -32,5 +33,9 @@ void cyclic_task() {
 }
 
 int main(int argc, char **argv) {
-  return ec_app_main_pdo(PDO_CONFIG_TOUCH, cyclic_task);
+  uint16_t slave_pos = 0; // Slave position (can be changed via command line argument)
+  if (argc > 1) {
+    slave_pos = (uint16_t)atoi(argv[1]);
+  }
+  return ec_app_main_pdo(PDO_CONFIG_TOUCH, slave_pos, cyclic_task);
 }

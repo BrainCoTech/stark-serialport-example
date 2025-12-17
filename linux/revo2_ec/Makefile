@@ -15,6 +15,34 @@ CXX := g++
 CFLAGS := -g -Wall
 CXXFLAGS := -g -Wall -std=c++17
 
+# Debug flags (can be set via command line: make DEBUG_DEMO=1 or make DEBUG_FLAGS="-DDEBUG_DEMO -DDEBUG_DATA")
+# Available debug options:
+#   DEBUG_DEMO  - Enable demo mode debug output
+#   DEBUG_LOOP  - Enable loop debug output
+#   DEBUG_DATA  - Enable data send/receive debug output
+#   DEBUG       - Enable general debug output
+DEBUG_FLAGS ?=
+ifdef DEBUG_DEMO
+  DEBUG_FLAGS += -DDEBUG_DEMO
+endif
+ifdef DEBUG_LOOP
+  DEBUG_FLAGS += -DDEBUG_LOOP
+endif
+ifdef DEBUG_DATA
+  DEBUG_FLAGS += -DDEBUG_DATA
+endif
+ifdef DEBUG_FEEDBACK
+  DEBUG_FLAGS += -DDEBUG_FEEDBACK
+endif
+ifdef FEEDBACK_PRINT_INTERVAL
+  DEBUG_FLAGS += -DFEEDBACK_PRINT_INTERVAL=$(FEEDBACK_PRINT_INTERVAL)
+endif
+ifdef DEBUG
+  DEBUG_FLAGS += -DDEBUG
+endif
+CXXFLAGS += $(DEBUG_FLAGS)
+CFLAGS += $(DEBUG_FLAGS)
+
 # Paths and libraries
 INCLUDE := -I/usr/local/include
 COMMON_LIBS := -L/usr/local/lib -Wl,-rpath,/usr/local/lib:/usr/lib -lethercat
@@ -50,7 +78,12 @@ ec_demo_helpers.o: ec_control.h ec_feedback.h ec_utils.h
 ################################################################################
 
 # SDO programs (no capabilities needed)
+# Exclude library modules (ec_*.cpp) from this rule
 %sdo: %sdo.cpp $(COMMON_OBJ)
+	@if echo "$@" | grep -q "^ec_"; then \
+		echo "\033[1;31m[ERROR] $@ is a library module, not an executable. Use revo2_sdo instead.\033[0m"; \
+		exit 1; \
+	fi
 	$(CXX) $(CXXFLAGS) -o $@.exe $< $(COMMON_OBJ) \
 		$(INCLUDE) \
 		$(COMMON_LIBS)
@@ -58,7 +91,12 @@ ec_demo_helpers.o: ec_control.h ec_feedback.h ec_utils.h
 	@echo "\033[1;32m[SDO] No capabilities needed for SDO operations\033[0m"
 
 # PDO programs (require capabilities for realtime and network access)
+# Exclude library modules (ec_*.cpp) from this rule
 %_pdo: %_pdo.cpp $(COMMON_OBJ)
+	@if echo "$@" | grep -q "^ec_"; then \
+		echo "\033[1;31m[ERROR] $@ is a library module, not an executable.\033[0m"; \
+		exit 1; \
+	fi
 	$(CXX) $(CXXFLAGS) -o $@.exe $< $(COMMON_OBJ) \
 		$(INCLUDE) \
 		$(COMMON_LIBS)
@@ -79,7 +117,7 @@ clean:
 # Run Targets
 ################################################################################
 
-.PHONY: run_revo2_pdo run_revo2_sdo run_revo2_touch_pdo run_revo2_touch_pressure_pdo run_revo2_touch_sdo run_revo2_touch_pressure_sdo
+.PHONY: run_revo2_pdo run_revo2_multi_pdo run_revo2_sdo run_revo2_touch_pdo run_revo2_touch_pressure_pdo run_revo2_touch_sdo run_revo2_touch_pressure_sdo
 
 # Pattern rule for run targets
 run_%: %.exe
@@ -92,8 +130,9 @@ run_%: %.exe
 	@exit 1
 
 # Short aliases
-.PHONY: run_pdo run_sdo run_touch_pdo run_touch_sdo run_touch_pressure_pdo run_touch_pressure_sdo
+.PHONY: run_pdo run_multi_pdo run_sdo run_touch_pdo run_touch_sdo run_touch_pressure_pdo run_touch_pressure_sdo
 run_pdo: run_revo2_pdo
+run_multi_pdo: run_revo2_multi_pdo
 run_sdo: run_revo2_sdo
 run_touch_pdo: run_revo2_touch_pdo
 run_touch_sdo: run_revo2_touch_sdo
@@ -165,9 +204,11 @@ help:
 	@echo "  make run <target>                 - Generic run command"
 	@echo "  make run revo2_pdo                - Run PDO example"
 	@echo "  make run revo2_sdo                - Run SDO example"
+	@echo "  make run revo2_multi_pdo          - Run multi-slave PDO example"
 	@echo ""
 	@echo "  make run_revo2_pdo                - Run PDO example"
 	@echo "  make run_revo2_sdo                - Run SDO example"
+	@echo "  make run_revo2_multi_pdo          - Run multi-slave PDO example"
 	@echo "  make run_revo2_touch_pdo          - Run touch PDO example"
 	@echo "  make run_revo2_touch_pressure_pdo - Run touch pressure PDO example"
 	@echo "  make run_revo2_touch_sdo          - Run touch SDO example"
@@ -176,11 +217,27 @@ help:
 	@echo "\033[1;33mShort aliases:\033[0m"
 	@echo "  make run_pdo                      - Same as run_revo2_pdo"
 	@echo "  make run_sdo                      - Same as run_revo2_sdo"
+	@echo "  make run_multi_pdo                - Same as run_revo2_multi_pdo"
 	@echo "  make run_touch_pdo                - Same as run_revo2_touch_pdo"
 	@echo "  make run_touch_sdo                - Same as run_revo2_touch_sdo"
 	@echo ""
 	@echo "\033[1;33mAvailable executables:\033[0m"
 	@echo "  $(BINARIES)"
+	@echo ""
+	@echo "\033[1;33mDebug options:\033[0m"
+	@echo "  make DEBUG_DEMO=1 <target>   - Enable demo debug output"
+	@echo "  make DEBUG_LOOP=1 <target>   - Enable loop debug output"
+	@echo "  make DEBUG_DATA=1 <target>   - Enable data debug output"
+	@echo "  make DEBUG_FEEDBACK=1 <target> - Enable feedback debug output"
+	@echo "  make DEBUG=1 <target>        - Enable general debug output"
+	@echo "  make FEEDBACK_PRINT_INTERVAL=200 <target> - Set feedback print interval (default: 100 cycles)"
+	@echo "  make DEBUG_FLAGS=\"-DDEBUG_DEMO -DDEBUG_DATA\" <target>  - Custom debug flags"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make DEBUG_DEMO=1 revo2_pdo"
+	@echo "  make DEBUG_DEMO=1 DEBUG_DATA=1 revo2_pdo"
+	@echo "  make DEBUG_FEEDBACK=1 FEEDBACK_PRINT_INTERVAL=500 revo2_pdo"
+	@echo "  make DEBUG_FLAGS=\"-DDEBUG_DEMO -DDEBUG_LOOP -DDEBUG_DATA\" revo2_pdo"
 
 ################################################################################
 # Phony Targets Declaration

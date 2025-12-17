@@ -7,7 +7,7 @@ echo "=== Killing EtherCAT Processes ==="
 PIDS=$(sudo fuser /dev/EtherCAT0 2>/dev/null)
 
 if [ -z "$PIDS" ]; then
-    echo "✅ No processes using EtherCAT device"
+    echo "[OK] No processes using EtherCAT device"
     exit 0
 fi
 
@@ -24,7 +24,7 @@ sleep 2
 # Check if still running
 PIDS=$(sudo fuser /dev/EtherCAT0 2>/dev/null)
 if [ -z "$PIDS" ]; then
-    echo "✅ All processes terminated successfully"
+    echo "[OK] All processes terminated successfully"
     exit 0
 fi
 
@@ -40,9 +40,9 @@ sleep 1
 # Final check
 PIDS=$(sudo fuser /dev/EtherCAT0 2>/dev/null)
 if [ -z "$PIDS" ]; then
-    echo "✅ All processes terminated"
+    echo "[OK] All processes terminated"
 else
-    echo "⚠️  Warning: Some processes in uninterruptible sleep state (D state)"
+    echo "[WARN] Some processes in uninterruptible sleep state (D state)"
     echo "   PIDs: $PIDS"
     echo "   These processes are blocked in kernel and cannot be killed."
     echo "   Solution: Restart EtherCAT service or reboot system"

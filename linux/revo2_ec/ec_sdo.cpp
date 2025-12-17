@@ -19,8 +19,8 @@ void ec_sdo_set_master(ec_master_t *master) { g_master = master; }
 // Basic SDO read/write functions
 /****************************************************************************/
 
-int read_sdo_uint8(ec_slave_config_t *slave_config, uint16_t index,
-                   uint8_t subindex, uint8_t *value) {
+int read_sdo_uint8(ec_slave_config_t *slave_config, uint16_t slave_pos,
+                   uint16_t index, uint8_t subindex, uint8_t *value) {
   if (!g_master) {
     fprintf(stderr, "Master not set. Call ec_sdo_set_master() first.\n");
     return -1;
@@ -30,7 +30,7 @@ int read_sdo_uint8(ec_slave_config_t *slave_config, uint16_t index,
   uint32_t abort_code;
 
   int ret =
-      ecrt_master_sdo_upload(g_master, 0, index, subindex, (uint8_t *)value,
+      ecrt_master_sdo_upload(g_master, slave_pos, index, subindex, (uint8_t *)value,
                              sizeof(uint8_t), &result_size, &abort_code);
   if (ret) {
     fprintf(stderr,
@@ -49,8 +49,8 @@ int read_sdo_uint8(ec_slave_config_t *slave_config, uint16_t index,
   return 0;
 }
 
-int read_sdo_uint16(ec_slave_config_t *slave_config, uint16_t index,
-                    uint8_t subindex, uint16_t *value) {
+int read_sdo_uint16(ec_slave_config_t *slave_config, uint16_t slave_pos,
+                    uint16_t index, uint8_t subindex, uint16_t *value) {
   if (!g_master) {
     fprintf(stderr, "Master not set. Call ec_sdo_set_master() first.\n");
     return -1;
@@ -60,7 +60,7 @@ int read_sdo_uint16(ec_slave_config_t *slave_config, uint16_t index,
   uint32_t abort_code;
 
   int ret =
-      ecrt_master_sdo_upload(g_master, 0, index, subindex, (uint8_t *)value,
+      ecrt_master_sdo_upload(g_master, slave_pos, index, subindex, (uint8_t *)value,
                              sizeof(uint16_t), &result_size, &abort_code);
   if (ret) {
     fprintf(stderr,
@@ -79,8 +79,8 @@ int read_sdo_uint16(ec_slave_config_t *slave_config, uint16_t index,
   return 0;
 }
 
-int read_sdo_uint32(ec_slave_config_t *slave_config, uint16_t index,
-                    uint8_t subindex, uint32_t *value) {
+int read_sdo_uint32(ec_slave_config_t *slave_config, uint16_t slave_pos,
+                    uint16_t index, uint8_t subindex, uint32_t *value) {
   if (!g_master) {
     fprintf(stderr, "Master not set. Call ec_sdo_set_master() first.\n");
     return -1;
@@ -90,7 +90,7 @@ int read_sdo_uint32(ec_slave_config_t *slave_config, uint16_t index,
   uint32_t abort_code;
 
   int ret =
-      ecrt_master_sdo_upload(g_master, 0, index, subindex, (uint8_t *)value,
+      ecrt_master_sdo_upload(g_master, slave_pos, index, subindex, (uint8_t *)value,
                              sizeof(uint32_t), &result_size, &abort_code);
   if (ret) {
     fprintf(stderr,
@@ -109,8 +109,8 @@ int read_sdo_uint32(ec_slave_config_t *slave_config, uint16_t index,
   return 0;
 }
 
-int read_sdo_string(ec_slave_config_t *slave_config, uint16_t index,
-                    uint8_t subindex, char *buffer, size_t buffer_size) {
+int read_sdo_string(ec_slave_config_t *slave_config, uint16_t slave_pos,
+                    uint16_t index, uint8_t subindex, char *buffer, size_t buffer_size) {
   if (!g_master) {
     fprintf(stderr, "Master not set. Call ec_sdo_set_master() first.\n");
     return -1;
@@ -120,7 +120,7 @@ int read_sdo_string(ec_slave_config_t *slave_config, uint16_t index,
   uint32_t abort_code;
 
   int ret =
-      ecrt_master_sdo_upload(g_master, 0, index, subindex, (uint8_t *)buffer,
+      ecrt_master_sdo_upload(g_master, slave_pos, index, subindex, (uint8_t *)buffer,
                              buffer_size - 1, &result_size, &abort_code);
   if (ret) {
     fprintf(stderr,
@@ -134,8 +134,8 @@ int read_sdo_string(ec_slave_config_t *slave_config, uint16_t index,
   return 0;
 }
 
-int write_sdo_uint8(ec_slave_config_t *slave_config, uint16_t index,
-                    uint8_t subindex, uint8_t value) {
+int write_sdo_uint8(ec_slave_config_t *slave_config, uint16_t slave_pos,
+                    uint16_t index, uint8_t subindex, uint8_t value) {
   if (!g_master) {
     fprintf(stderr, "Master not set. Call ec_sdo_set_master() first.\n");
     return -1;
@@ -144,7 +144,7 @@ int write_sdo_uint8(ec_slave_config_t *slave_config, uint16_t index,
   uint32_t abort_code;
 
   int ret =
-      ecrt_master_sdo_download(g_master, 0, index, subindex, (uint8_t *)&value,
+      ecrt_master_sdo_download(g_master, slave_pos, index, subindex, (uint8_t *)&value,
                                sizeof(uint8_t), &abort_code);
   if (ret) {
     fprintf(stderr,
@@ -156,8 +156,8 @@ int write_sdo_uint8(ec_slave_config_t *slave_config, uint16_t index,
   return 0;
 }
 
-int write_sdo_uint16(ec_slave_config_t *slave_config, uint16_t index,
-                     uint8_t subindex, uint16_t value) {
+int write_sdo_uint16(ec_slave_config_t *slave_config, uint16_t slave_pos,
+                     uint16_t index, uint8_t subindex, uint16_t value) {
   if (!g_master) {
     fprintf(stderr, "Master not set. Call ec_sdo_set_master() first.\n");
     return -1;
@@ -166,7 +166,7 @@ int write_sdo_uint16(ec_slave_config_t *slave_config, uint16_t index,
   uint32_t abort_code;
 
   int ret =
-      ecrt_master_sdo_download(g_master, 0, index, subindex, (uint8_t *)&value,
+      ecrt_master_sdo_download(g_master, slave_pos, index, subindex, (uint8_t *)&value,
                                sizeof(uint16_t), &abort_code);
   if (ret) {
     fprintf(stderr,
@@ -178,8 +178,8 @@ int write_sdo_uint16(ec_slave_config_t *slave_config, uint16_t index,
   return 0;
 }
 
-int write_sdo_uint32(ec_slave_config_t *slave_config, uint16_t index,
-                     uint8_t subindex, uint32_t value) {
+int write_sdo_uint32(ec_slave_config_t *slave_config, uint16_t slave_pos,
+                     uint16_t index, uint8_t subindex, uint32_t value) {
   if (!g_master) {
     fprintf(stderr, "Master not set. Call ec_sdo_set_master() first.\n");
     return -1;
@@ -189,7 +189,7 @@ int write_sdo_uint32(ec_slave_config_t *slave_config, uint16_t index,
   uint32_t network_value =
       htonl(value); // Host to network byte order (big-endian)
 
-  int ret = ecrt_master_sdo_download(g_master, 0, index, subindex,
+  int ret = ecrt_master_sdo_download(g_master, slave_pos, index, subindex,
                                      (uint8_t *)&network_value,
                                      sizeof(uint32_t), &abort_code);
   if (ret) {
@@ -206,33 +206,33 @@ int write_sdo_uint32(ec_slave_config_t *slave_config, uint16_t index,
 // Control functions implementation
 /****************************************************************************/
 
-int set_led_control(ec_slave_config_t *slave_config, uint8_t state) {
+int set_led_control(ec_slave_config_t *slave_config, uint16_t slave_pos, uint8_t state) {
   printf("Setting LED control to: %s\n", state == SWITCH_ON ? "ON" : "OFF");
-  return write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, LED_SWITCH_SUBINDEX,
+  return write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, LED_SWITCH_SUBINDEX,
                          state);
 }
 
-int set_buzzer_control(ec_slave_config_t *slave_config, uint8_t state) {
+int set_buzzer_control(ec_slave_config_t *slave_config, uint16_t slave_pos, uint8_t state) {
   printf("Setting buzzer control to: %s\n", state == SWITCH_ON ? "ON" : "OFF");
-  return write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX,
+  return write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          BUZZER_SWITCH_SUBINDEX, state);
 }
 
-int set_vibrator_control(ec_slave_config_t *slave_config, uint8_t state) {
+int set_vibrator_control(ec_slave_config_t *slave_config, uint16_t slave_pos, uint8_t state) {
   printf("Setting vibrator control to: %s\n",
          state == SWITCH_ON ? "ON" : "OFF");
-  return write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX,
+  return write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          VIBRATOR_SWITCH_SUBINDEX, state);
 }
 
-int set_unit_mode(ec_slave_config_t *slave_config, uint8_t mode) {
+int set_unit_mode(ec_slave_config_t *slave_config, uint16_t slave_pos, uint8_t mode) {
   printf("Setting unit mode to: %s\n",
          mode == PHYSICAL ? "PHYSICAL" : "NORMAL");
-  return write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, UNIT_MODE_SUBINDEX,
+  return write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, UNIT_MODE_SUBINDEX,
                          mode);
 }
 
-int set_turbo_mode(ec_slave_config_t *slave_config, switch_state_t state,
+int set_turbo_mode(ec_slave_config_t *slave_config, uint16_t slave_pos, switch_state_t state,
                    uint16_t interval, uint16_t duration) {
   int ret = 0;
   uint32_t turbo_param = MAKE_TURBO_PARAM(interval, duration);
@@ -241,25 +241,25 @@ int set_turbo_mode(ec_slave_config_t *slave_config, switch_state_t state,
       "Setting turbo mode to: %s, interval: %u, duration: %u (param: 0x%08X)\n",
       state == SWITCH_ON ? "ON" : "OFF", interval, duration, turbo_param);
 
-  ret |= write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX,
+  ret |= write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX,
                          state);
 
   if (state == SWITCH_ON) {
     // Write Turbo parameter (32-bit)
-    ret |= write_sdo_uint32(slave_config, CONFIG_OBJECT_INDEX,
+    ret |= write_sdo_uint32(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                             TURBO_PARAM_SUBINDEX, turbo_param);
   }
 
   return ret;
 }
 
-int set_pressure_touch_data_type(ec_slave_config_t *slave_config,
+int set_pressure_touch_data_type(ec_slave_config_t *slave_config, uint16_t slave_pos,
                                  pressure_data_type_t data_type) {
   printf("Setting pressure touch data type to: %s\n", data_type == RAW ? "RAW"
                                                       : data_type == CALIBRATED
                                                           ? "CALIBRATED"
                                                           : "FORCE");
-  return write_sdo_uint8(slave_config, TOUCH_OBJECT_INDEX,
+  return write_sdo_uint8(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                          PRESSURE_DATA_TYPE_SUBINDEX, (uint8_t)data_type);
 }
 
@@ -267,165 +267,165 @@ int set_pressure_touch_data_type(ec_slave_config_t *slave_config,
 // High-level configuration functions implementation
 /****************************************************************************/
 
-int read_general_config(ec_slave_config_t *slave_config,
+int read_general_config(ec_slave_config_t *slave_config, uint16_t slave_pos,
                         general_config_t *config) {
   int ret = 0;
 
-  ret |= read_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, HAND_TYPE_SUBINDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, HAND_TYPE_SUBINDEX,
                         &config->hand_type);
-  ret |= read_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, LED_SWITCH_SUBINDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, LED_SWITCH_SUBINDEX,
                         &config->led_switch);
-  ret |= read_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                         BUZZER_SWITCH_SUBINDEX, &config->buzzer_switch);
-  ret |= read_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, UNIT_MODE_SUBINDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, UNIT_MODE_SUBINDEX,
                         &config->unit_mode);
-  ret |= read_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                         AUTO_CALIBRATION_SUBINDEX, &config->auto_calibration);
-  ret |= read_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX,
                         &config->turbo_mode);
-  ret |= read_sdo_uint32(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= read_sdo_uint32(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          TURBO_PARAM_SUBINDEX, &config->turbo_param);
 
   return ret;
 }
 
-int write_general_config(ec_slave_config_t *slave_config,
+int write_general_config(ec_slave_config_t *slave_config, uint16_t slave_pos,
                          const general_config_t *config) {
   int ret = 0;
 
-  ret |= write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, HAND_TYPE_SUBINDEX,
+  ret |= write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, HAND_TYPE_SUBINDEX,
                          config->hand_type);
-  ret |= write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, LED_SWITCH_SUBINDEX,
+  ret |= write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, LED_SWITCH_SUBINDEX,
                          config->led_switch);
-  ret |= write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          BUZZER_SWITCH_SUBINDEX, config->buzzer_switch);
-  ret |= write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, UNIT_MODE_SUBINDEX,
+  ret |= write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, UNIT_MODE_SUBINDEX,
                          config->unit_mode);
-  ret |= write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          AUTO_CALIBRATION_SUBINDEX, config->auto_calibration);
-  ret |= write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX,
+  ret |= write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX, TURBO_MODE_SUBINDEX,
                          config->turbo_mode);
-  ret |= write_sdo_uint32(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= write_sdo_uint32(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                           TURBO_PARAM_SUBINDEX, config->turbo_param);
 
   return ret;
 }
 
-int read_protection_current_config(ec_slave_config_t *slave_config,
+int read_protection_current_config(ec_slave_config_t *slave_config, uint16_t slave_pos,
                                    protection_current_config_t *config) {
   int ret = 0;
 
   ret |=
-      read_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+      read_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                       THUMB_FLEX_PRO_CUR_SUBINDEX, &config->thumb_flex_pro_cur);
   ret |=
-      read_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+      read_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                       THUMB_AUX_PRO_CUR_SUBINDEX, &config->thumb_aux_pro_cur);
-  ret |= read_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= read_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          INDEX_PRO_CUR_SUBINDEX, &config->index_pro_cur);
-  ret |= read_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= read_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          MIDDLE_PRO_CUR_SUBINDEX, &config->middle_pro_cur);
-  ret |= read_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= read_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          RING_PRO_CUR_SUBINDEX, &config->ring_pro_cur);
-  ret |= read_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= read_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          PINKY_PRO_CUR_SUBINDEX, &config->pinky_pro_cur);
 
   return ret;
 }
 
-int write_protection_current_config(ec_slave_config_t *slave_config,
+int write_protection_current_config(ec_slave_config_t *slave_config, uint16_t slave_pos,
                                     const protection_current_config_t *config) {
   int ret = 0;
 
   ret |=
-      write_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+      write_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                        THUMB_FLEX_PRO_CUR_SUBINDEX, config->thumb_flex_pro_cur);
   ret |=
-      write_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+      write_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                        THUMB_AUX_PRO_CUR_SUBINDEX, config->thumb_aux_pro_cur);
-  ret |= write_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= write_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                           INDEX_PRO_CUR_SUBINDEX, config->index_pro_cur);
-  ret |= write_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= write_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                           MIDDLE_PRO_CUR_SUBINDEX, config->middle_pro_cur);
-  ret |= write_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= write_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                           RING_PRO_CUR_SUBINDEX, config->ring_pro_cur);
-  ret |= write_sdo_uint16(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= write_sdo_uint16(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                           PINKY_PRO_CUR_SUBINDEX, config->pinky_pro_cur);
 
   return ret;
 }
 
-int read_firmware_info(ec_slave_config_t *slave_config, firmware_info_t *info) {
+int read_firmware_info(ec_slave_config_t *slave_config, uint16_t slave_pos, firmware_info_t *info) {
   int ret = 0;
 
   ret |= read_sdo_string(
-      slave_config, CONFIG_OBJECT_INDEX, CTRL_WRIST_FW_VERSION_SUBINDEX,
+      slave_config, slave_pos, CONFIG_OBJECT_INDEX, CTRL_WRIST_FW_VERSION_SUBINDEX,
       info->ctrl_wrist_fw_version, sizeof(info->ctrl_wrist_fw_version));
-  ret |= read_sdo_string(slave_config, CONFIG_OBJECT_INDEX, CTRL_SN_SUBINDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, CONFIG_OBJECT_INDEX, CTRL_SN_SUBINDEX,
                          info->ctrl_sn, sizeof(info->ctrl_sn));
-  ret |= read_sdo_string(slave_config, CONFIG_OBJECT_INDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          WRIST_FW_VERSION_SUBINDEX, info->wrist_fw_version,
                          sizeof(info->wrist_fw_version));
-  ret |= read_sdo_string(slave_config, CONFIG_OBJECT_INDEX, WRIST_SN_SUBINDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, CONFIG_OBJECT_INDEX, WRIST_SN_SUBINDEX,
                          info->wrist_sn, sizeof(info->wrist_sn));
 
   return ret;
 }
 
-int read_touch_config(ec_slave_config_t *slave_config, touch_config_t *config) {
+int read_touch_config(ec_slave_config_t *slave_config, uint16_t slave_pos, touch_config_t *config) {
   int ret = 0;
 
-  ret |= read_sdo_uint8(slave_config, TOUCH_OBJECT_INDEX, TOUCH_VENDOR_SUBINDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, TOUCH_OBJECT_INDEX, TOUCH_VENDOR_SUBINDEX,
                         &config->vendor_id);
   ret |= read_sdo_string(
-      slave_config, TOUCH_OBJECT_INDEX, THUMB_TOUCH_FW_VERSION_SUBINDEX,
+      slave_config, slave_pos, TOUCH_OBJECT_INDEX, THUMB_TOUCH_FW_VERSION_SUBINDEX,
       config->thumb_touch_fw_version, sizeof(config->thumb_touch_fw_version));
   ret |= read_sdo_string(
-      slave_config, TOUCH_OBJECT_INDEX, INDEX_TOUCH_FW_VERSION_SUBINDEX,
+      slave_config, slave_pos, TOUCH_OBJECT_INDEX, INDEX_TOUCH_FW_VERSION_SUBINDEX,
       config->index_touch_fw_version, sizeof(config->index_touch_fw_version));
   ret |= read_sdo_string(
-      slave_config, TOUCH_OBJECT_INDEX, MID_TOUCH_FW_VERSION_SUBINDEX,
+      slave_config, slave_pos, TOUCH_OBJECT_INDEX, MID_TOUCH_FW_VERSION_SUBINDEX,
       config->middle_touch_fw_version, sizeof(config->middle_touch_fw_version));
   ret |= read_sdo_string(
-      slave_config, TOUCH_OBJECT_INDEX, RING_TOUCH_FW_VERSION_SUBINDEX,
+      slave_config, slave_pos, TOUCH_OBJECT_INDEX, RING_TOUCH_FW_VERSION_SUBINDEX,
       config->ring_touch_fw_version, sizeof(config->ring_touch_fw_version));
   ret |= read_sdo_string(
-      slave_config, TOUCH_OBJECT_INDEX, PINK_TOUCH_FW_VERSION_SUBINDEX,
+      slave_config, slave_pos, TOUCH_OBJECT_INDEX, PINK_TOUCH_FW_VERSION_SUBINDEX,
       config->pinky_touch_fw_version, sizeof(config->pinky_touch_fw_version));
   // Note: Basic touch configuration does not include palm firmware version
 
   return ret;
 }
 
-int read_pressure_touch_config(ec_slave_config_t *slave_config,
+int read_pressure_touch_config(ec_slave_config_t *slave_config, uint16_t slave_pos,
                                pressure_touch_config_t *config) {
   int ret = 0;
 
-  ret |= read_sdo_uint8(slave_config, TOUCH_OBJECT_INDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                         PRESSURE_VENDOR_SUBINDEX, &config->vendor_id);
-  ret |= read_sdo_uint8(slave_config, TOUCH_OBJECT_INDEX,
+  ret |= read_sdo_uint8(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                         PRESSURE_DATA_TYPE_SUBINDEX, &config->data_type);
-  ret |= read_sdo_string(slave_config, TOUCH_OBJECT_INDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                          PRESSURE_FW_VERSION_THUMB_SUBINDEX,
                          config->thumb_pressure_fw_version,
                          sizeof(config->thumb_pressure_fw_version));
-  ret |= read_sdo_string(slave_config, TOUCH_OBJECT_INDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                          PRESSURE_FW_VERSION_INDEX_SUBINDEX,
                          config->index_pressure_fw_version,
                          sizeof(config->index_pressure_fw_version));
-  ret |= read_sdo_string(slave_config, TOUCH_OBJECT_INDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                          PRESSURE_FW_VERSION_MIDDLE_SUBINDEX,
                          config->middle_pressure_fw_version,
                          sizeof(config->middle_pressure_fw_version));
-  ret |= read_sdo_string(slave_config, TOUCH_OBJECT_INDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                          PRESSURE_FW_VERSION_RING_SUBINDEX,
                          config->ring_pressure_fw_version,
                          sizeof(config->ring_pressure_fw_version));
-  ret |= read_sdo_string(slave_config, TOUCH_OBJECT_INDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                          PRESSURE_FW_VERSION_PINKY_SUBINDEX,
                          config->pinky_pressure_fw_version,
                          sizeof(config->pinky_pressure_fw_version));
-  ret |= read_sdo_string(slave_config, TOUCH_OBJECT_INDEX,
+  ret |= read_sdo_string(slave_config, slave_pos, TOUCH_OBJECT_INDEX,
                          PRESSURE_FW_VERSION_PALM_SUBINDEX,
                          config->palm_pressure_fw_version,
                          sizeof(config->palm_pressure_fw_version));
@@ -433,11 +433,11 @@ int read_pressure_touch_config(ec_slave_config_t *slave_config,
   return ret;
 }
 
-int set_auto_calibration(ec_slave_config_t *slave_config,
+int set_auto_calibration(ec_slave_config_t *slave_config, uint16_t slave_pos,
                          switch_state_t state) {
   printf("Setting auto calibration to: %s\n",
          state == SWITCH_ON ? "ON" : "OFF");
-  return write_sdo_uint8(slave_config, CONFIG_OBJECT_INDEX,
+  return write_sdo_uint8(slave_config, slave_pos, CONFIG_OBJECT_INDEX,
                          AUTO_CALIBRATION_SUBINDEX, state);
 }
 
@@ -445,9 +445,9 @@ int set_auto_calibration(ec_slave_config_t *slave_config,
 // Demo helper functions implementation
 /****************************************************************************/
 
-void print_firmware_info(ec_slave_config_t *slave_config) {
+void print_firmware_info(ec_slave_config_t *slave_config, uint16_t slave_pos) {
   firmware_info_t fw_info;
-  if (read_firmware_info(slave_config, &fw_info) == 0) {
+  if (read_firmware_info(slave_config, slave_pos, &fw_info) == 0) {
     printf("\nFirmware Information:\n");
     printf("  Control Board FW: %s\n", fw_info.ctrl_wrist_fw_version);
     printf("  Control Board SN: %s\n", fw_info.ctrl_sn);
@@ -456,9 +456,9 @@ void print_firmware_info(ec_slave_config_t *slave_config) {
   }
 }
 
-void print_general_config(ec_slave_config_t *slave_config) {
+void print_general_config(ec_slave_config_t *slave_config, uint16_t slave_pos) {
   general_config_t gen_config;
-  if (read_general_config(slave_config, &gen_config) == 0) {
+  if (read_general_config(slave_config, slave_pos, &gen_config) == 0) {
     uint16_t interval = GET_TURBO_INTERVAL(gen_config.turbo_param);
     uint16_t duration = GET_TURBO_DURATION(gen_config.turbo_param);
 
@@ -476,9 +476,9 @@ void print_general_config(ec_slave_config_t *slave_config) {
   }
 }
 
-void print_protection_current_config(ec_slave_config_t *slave_config) {
+void print_protection_current_config(ec_slave_config_t *slave_config, uint16_t slave_pos) {
   protection_current_config_t prot_config;
-  if (read_protection_current_config(slave_config, &prot_config) == 0) {
+  if (read_protection_current_config(slave_config, slave_pos, &prot_config) == 0) {
     printf("\nProtection Current Configuration:\n");
     printf("  Thumb Flex: %u\n", prot_config.thumb_flex_pro_cur);
     printf("  Thumb Aux:  %u\n", prot_config.thumb_aux_pro_cur);
@@ -490,9 +490,9 @@ void print_protection_current_config(ec_slave_config_t *slave_config) {
   }
 }
 
-void print_touch_config(ec_slave_config_t *slave_config) {
+void print_touch_config(ec_slave_config_t *slave_config, uint16_t slave_pos) {
   touch_config_t touch_config;
-  if (read_touch_config(slave_config, &touch_config) == 0) {
+  if (read_touch_config(slave_config, slave_pos, &touch_config) == 0) {
     printf("\nTouch Configuration:\n");
     printf("  Vendor ID: %u\n", touch_config.vendor_id);
     printf("  Thumb Touch FW: %s\n", touch_config.thumb_touch_fw_version);
@@ -504,9 +504,9 @@ void print_touch_config(ec_slave_config_t *slave_config) {
   }
 }
 
-void print_pressure_touch_config(ec_slave_config_t *slave_config) {
+void print_pressure_touch_config(ec_slave_config_t *slave_config, uint16_t slave_pos) {
   pressure_touch_config_t pressure_config;
-  if (read_pressure_touch_config(slave_config, &pressure_config) == 0) {
+  if (read_pressure_touch_config(slave_config, slave_pos, &pressure_config) == 0) {
     printf("\nPressure Touch Configuration:\n");
     printf("  Vendor ID: %u\n", pressure_config.vendor_id);
     printf("  Thumb Pressure FW: %s\n",
@@ -524,26 +524,26 @@ void print_pressure_touch_config(ec_slave_config_t *slave_config) {
   }
 }
 
-void demo_basic_controls(ec_slave_config_t *slave_config) {
+void demo_basic_controls(ec_slave_config_t *slave_config, uint16_t slave_pos) {
   printf("\n=== Demonstrating Configuration Changes ===\n");
 
   // Set LED control
-  set_led_control(slave_config, SWITCH_ON);
+  set_led_control(slave_config, slave_pos, SWITCH_ON);
   usleep(500000); // 500ms
-  set_led_control(slave_config, SWITCH_OFF);
+  set_led_control(slave_config, slave_pos, SWITCH_OFF);
 
   // Set buzzer control
-  set_buzzer_control(slave_config, SWITCH_ON);
+  set_buzzer_control(slave_config, slave_pos, SWITCH_ON);
   usleep(500000); // 500ms
-  set_buzzer_control(slave_config, SWITCH_OFF);
+  set_buzzer_control(slave_config, slave_pos, SWITCH_OFF);
 
   // Set unit mode
-  set_unit_mode(slave_config, PHYSICAL);
+  set_unit_mode(slave_config, slave_pos, PHYSICAL);
   usleep(500000); // 500ms
-  set_unit_mode(slave_config, NORMAL);
+  set_unit_mode(slave_config, slave_pos, NORMAL);
 
   // Set Turbo mode
-  set_turbo_mode(slave_config, SWITCH_ON, 1000, 2000);
+  set_turbo_mode(slave_config, slave_pos, SWITCH_ON, 1000, 2000);
   usleep(500000); // 500ms
-  set_turbo_mode(slave_config, SWITCH_OFF, 0, 0);
+  set_turbo_mode(slave_config, slave_pos, SWITCH_OFF, 0, 0);
 }

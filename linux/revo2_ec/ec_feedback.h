@@ -89,23 +89,28 @@ void ec_read_pressure_touch_feedback_data(uint8_t *domain_data, unsigned int off
 
 /****************************************************************************/
 // Feedback Display Functions
+// Note: These functions have internal rate limiting via FEEDBACK_PRINT_INTERVAL.
+// They can be called every cycle - actual printing only occurs at the interval.
 /****************************************************************************/
 
 /**
  * @brief Print joint feedback data in a formatted way
  * @param feedback Pointer to joint feedback data
+ * @note Rate limited by FEEDBACK_PRINT_INTERVAL (default: 100 cycles = 100ms)
  */
 void ec_print_joint_feedback_data(const joint_feedback_t *feedback);
 
 /**
  * @brief Print touch feedback data in a formatted way
  * @param feedback Pointer to touch feedback data
+ * @note Rate limited by FEEDBACK_PRINT_INTERVAL (default: 100 cycles = 100ms)
  */
 void ec_print_touch_feedback_data(const touch_feedback_t *feedback);
 
 /**
  * @brief Print pressure touch feedback data in a formatted way
  * @param feedback Pointer to pressure touch feedback data
+ * @note Rate limited by FEEDBACK_PRINT_INTERVAL (default: 100 cycles = 100ms)
  */
 void ec_print_pressure_touch_feedback_data(const pressure_touch_feedback_t *feedback);
 

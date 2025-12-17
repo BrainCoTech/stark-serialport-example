@@ -11,6 +11,7 @@
  */
 
 #include "ec_common.h"
+#include <stdlib.h> // for atoi
 
 /****************************************************************************/
 // Pressure touch feedback wrapper
@@ -19,7 +20,8 @@
 static void read_pressure_touch_feedback_wrapper() {
   ec_app_context_t *ctx = ec_app_get_context();
   pressure_touch_feedback_t feedback;
-  ec_read_pressure_touch_feedback_data(ctx->domain_data, ctx->off_in,
+  // Use first slave's input offset for feedback
+  ec_read_pressure_touch_feedback_data(ctx->domain_data, ctx->slaves[0].off_in,
                                        &feedback);
   ec_print_pressure_touch_feedback_data(&feedback);
 }
@@ -34,5 +36,9 @@ void cyclic_task() {
 }
 
 int main(int argc, char **argv) {
-  return ec_app_main_pdo(PDO_CONFIG_TOUCH_PRESSURE, cyclic_task);
+  uint16_t slave_pos = 0; // Slave position (can be changed via command line argument)
+  if (argc > 1) {
+    slave_pos = (uint16_t)atoi(argv[1]);
+  }
+  return ec_app_main_pdo(PDO_CONFIG_TOUCH_PRESSURE, slave_pos, cyclic_task);
 }

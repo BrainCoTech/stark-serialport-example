@@ -81,10 +81,10 @@ void ec_set_single_joint_pwm(uint8_t *domain_data, unsigned int off_out,
  * @param domain_data Pointer to domain data
  * @param off_out Output offset in domain data
  * @param positions Array of target positions for 6 joints
- * @param duration Duration in milliseconds (same for all joints)
+ * @param durations Array of durations in milliseconds for 6 joints
  */
 void ec_write_all_joints_position_duration(uint8_t *domain_data, unsigned int off_out,
-                                           const uint16_t positions[6], uint16_t duration);
+                                           const uint16_t positions[6], const uint16_t durations[6]);
 
 /**
  * @brief Set position and speed control mode for all joints (writes to PDO)
@@ -95,6 +95,33 @@ void ec_write_all_joints_position_duration(uint8_t *domain_data, unsigned int of
  */
 void ec_write_all_joints_position_speed(uint8_t *domain_data, unsigned int off_out,
                                         const uint16_t positions[6], const uint16_t speeds[6]);
+
+/**
+ * @brief Set speed control mode for all joints (writes to PDO)
+ * @param domain_data Pointer to domain data
+ * @param off_out Output offset in domain data
+ * @param speeds Array of target speeds for 6 joints (int16_t, can be negative)
+ */
+void ec_write_all_joints_speed(uint8_t *domain_data, unsigned int off_out,
+                               const int16_t speeds[6]);
+
+/**
+ * @brief Set current control mode for all joints (writes to PDO)
+ * @param domain_data Pointer to domain data
+ * @param off_out Output offset in domain data
+ * @param currents Array of target currents for 6 joints (int16_t, can be negative)
+ */
+void ec_write_all_joints_current(uint8_t *domain_data, unsigned int off_out,
+                                 const int16_t currents[6]);
+
+/**
+ * @brief Set PWM control mode for all joints (writes to PDO)
+ * @param domain_data Pointer to domain data
+ * @param off_out Output offset in domain data
+ * @param pwm_values Array of PWM values for 6 joints
+ */
+void ec_write_all_joints_pwm(uint8_t *domain_data, unsigned int off_out,
+                             const uint16_t pwm_values[6]);
 
 #ifdef __cplusplus
 }

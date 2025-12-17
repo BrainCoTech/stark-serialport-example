@@ -5,6 +5,7 @@
  */
 
 #include "ec_common.h"
+#include <errno.h>
 #include <execinfo.h>
 #include <malloc.h>
 #include <sched.h>
@@ -79,6 +80,7 @@ static int setup_realtime(int priority) {
 static int init_ethercat_master_domain(ec_master_t **master_ptr,
                                        ec_domain_t **domain_ptr) {
   // 1. Request EtherCAT master
+  EC_LOG_TIME_PREFIX(stdout);
   printf("Requesting master...\n");
   *master_ptr = ecrt_request_master(0);
   if (!*master_ptr) {
@@ -88,6 +90,7 @@ static int init_ethercat_master_domain(ec_master_t **master_ptr,
 
   // 2. Create domain (if domain_ptr is not NULL)
   if (domain_ptr) {
+    EC_LOG_TIME_PREFIX(stdout);
     printf("Creating domain...\n");
     *domain_ptr = ecrt_master_create_domain(*master_ptr);
     if (!*domain_ptr) {
@@ -132,17 +135,19 @@ static ec_app_context_t g_app_ctx = {0};
 // Internal helper functions
 /****************************************************************************/
 
-static int setup_slave_config(ec_app_context_t *ctx,
+static int setup_slave_config(ec_app_context_t *ctx, uint16_t slave_pos,
                               ec_sync_info_t *slave_syncs) {
-  printf("Requesting slave configuration...\n");
+  EC_LOG_TIME_PREFIX(stdout);
+  printf("Requesting slave configuration (slave_pos=%u)...\n", slave_pos);
   ctx->slave_config = ecrt_master_slave_config(
-      ctx->master, 0, 0, STARK_VENDOR_ID, STARK_PRODUCT_CODE);
+      ctx->master, 0, slave_pos, STARK_VENDOR_ID, STARK_PRODUCT_CODE);
   if (!ctx->slave_config) {
     fprintf(stderr, "Failed to get slave configuration.\n");
     return -1;
   }
 
   if (slave_syncs) {
+    EC_LOG_TIME_PREFIX(stdout);
     printf("Configuring PDOs...\n");
     if (ecrt_slave_config_pdos(ctx->slave_config, EC_END, slave_syncs)) {
       fprintf(stderr, "Failed to configure PDOs.\n");
@@ -153,25 +158,96 @@ static int setup_slave_config(ec_app_context_t *ctx,
   return 0;
 }
 
-static int setup_pdo_registration(ec_app_context_t *ctx,
-                                  pdo_config_type_t pdo_type) {
-  printf("Setting up PDO registration...\n");
+static int setup_pdo_registration_multi(ec_app_context_t *ctx, ec_slave_runtime_t *slave_rt) {
+  EC_LOG_TIME_PREFIX(stdout);
+  printf("Setting up PDO registration (slave_pos=%u)...\n", slave_rt->slave_pos);
 
-  // Get appropriate domain registration based on PDO config type
-  ctx->domain_regs = get_domain_regs(pdo_type, &ctx->off_in, &ctx->off_out);
+  build_domain_regs(slave_rt->pdo_type, slave_rt->slave_pos,
+                    &slave_rt->off_in, &slave_rt->off_out, slave_rt->domain_regs);
 
-  printf("Registering PDO entries...\n");
-  if (ecrt_domain_reg_pdo_entry_list(ctx->domain, ctx->domain_regs)) {
-    fprintf(stderr, "PDO entry registration failed!\n");
+  EC_LOG_TIME_PREFIX(stdout);
+  printf("Registering PDO entries (slave_pos=%u)...\n", slave_rt->slave_pos);
+  if (ecrt_domain_reg_pdo_entry_list(ctx->domain, slave_rt->domain_regs)) {
+    fprintf(stderr, "Failed to register PDO entry: %s\n", strerror(errno));
+    fprintf(stderr, "PDO entry registration failed for slave %u!\n", slave_rt->slave_pos);
     return -1;
   }
 
-  printf("PDO entry registration successful, off_in: %d, off_out: %d\n",
-         ctx->off_in, ctx->off_out);
+  EC_LOG_TIME_PREFIX(stdout);
+  printf("PDO entry registration successful, slave_pos=%u, off_in: %u, off_out: %u\n",
+         slave_rt->slave_pos, slave_rt->off_in, slave_rt->off_out);
   return 0;
 }
 
+// Demo control: cycle gestures for all slaves every DEMO_INTERVAL
+static void demo_apply_gesture_all(ec_app_context_t *ctx, uint8_t *domain_data, int demo_stage) {
+  int slave_count = ctx->slave_count;
+  switch (demo_stage) {
+  case 0:
+    printf("[Demo] Fist gesture (all slaves)\n");
+    for (int i = 0; i < slave_count; ++i) {
+      ec_set_fist_gesture(domain_data, ctx->slaves[i].off_out, 500);
+    }
+    break;
+  case 1:
+    printf("[Demo] Open-hand gesture (all slaves)\n");
+    for (int i = 0; i < slave_count; ++i) {
+      ec_set_open_hand_gesture(domain_data, ctx->slaves[i].off_out, 500);
+    }
+    break;
+  case 2:
+    printf("[Demo] OK gesture (all slaves)\n");
+    for (int i = 0; i < slave_count; ++i) {
+      ec_set_ok_gesture(domain_data, ctx->slaves[i].off_out, 500);
+    }
+    break;
+  case 3:
+    printf("[Demo] Peace gesture (all slaves)\n");
+    for (int i = 0; i < slave_count; ++i) {
+      ec_set_peace_gesture(domain_data, ctx->slaves[i].off_out, 500);
+    }
+    break;
+  }
+}
+
+#ifdef DEBUG_DATA
+// Debug sent data on mode change (caller controls sampling)
+static void debug_print_sent_data(ec_app_context_t *ctx, ec_master_state_t master_state, uint8_t *domain_data) {
+  static uint16_t last_multi_mode[EC_MAX_SLAVES] = {0};
+  static uint8_t last_single_mode[EC_MAX_SLAVES] = {0};
+  if (!(master_state.al_states & 0x08)) return; // skip if no OP
+
+  for (int i = 0; i < ctx->slave_count && i < EC_MAX_SLAVES; ++i) {
+    unsigned int off_out = ctx->slaves[i].off_out;
+    uint16_t multi_mode = *(uint16_t*)MULTI_FINGER_CTRL_MODE_ADDR(domain_data, off_out);
+    if (multi_mode != 0 && multi_mode != last_multi_mode[i]) {
+      if (multi_mode == Speed || multi_mode == Current) {
+        int16_t first_val = *(int16_t*)MULTI_FINGER_PARAM1_ADDR(domain_data, off_out);
+        DATA_DEBUG("[Slave %u] Multi-finger: mode=%u, first_val=%d (int16_t)",
+                   ctx->slaves[i].slave_pos, multi_mode, first_val);
+      } else {
+        uint16_t first_val = *(uint16_t*)MULTI_FINGER_PARAM1_ADDR(domain_data, off_out);
+        DATA_DEBUG("[Slave %u] Multi-finger: mode=%u, first_val=%u (uint16_t)",
+                   ctx->slaves[i].slave_pos, multi_mode, first_val);
+      }
+      last_multi_mode[i] = multi_mode;
+    }
+
+    uint8_t single_mode = *(uint8_t*)SINGLE_FINGER_CTRL_MODE_ADDR(domain_data, off_out);
+    if (single_mode != 0 && single_mode != last_single_mode[i]) {
+      uint8_t single_id = *(uint8_t*)SINGLE_FINGER_JOINT_ID_ADDR(domain_data, off_out);
+      uint16_t single_param1 = *(uint16_t*)SINGLE_FINGER_PARAM1_ADDR(domain_data, off_out);
+      uint16_t single_param2 = *(uint16_t*)SINGLE_FINGER_PARAM2_ADDR(domain_data, off_out);
+      DATA_DEBUG("[Slave %u] Single-finger: mode=%u, joint_id=%u, param1=%u, param2=%u",
+                 ctx->slaves[i].slave_pos, single_mode, single_id, single_param1, single_param2);
+      last_single_mode[i] = single_mode;
+    }
+  }
+}
+#endif
+
 static int activate_master(ec_app_context_t *ctx) {
+  EC_LOG_TIME_PREFIX(stdout);
   printf("Activating master...\n");
   if (ecrt_master_activate(ctx->master)) {
     fprintf(stderr, "Failed to activate master.\n");
@@ -184,6 +260,17 @@ static int activate_master(ec_app_context_t *ctx) {
       fprintf(stderr, "Failed to get domain data.\n");
       return -1;
     }
+
+    // Run one minimal cycle after activation so slaves see a PDO frame (some
+    // devices require at least one PDO before entering OP; low-cost, keep enabled)
+    ecrt_domain_queue(ctx->domain);
+    ecrt_master_send(ctx->master);
+    usleep(1000);  // Small delay to allow frame transmission
+    ecrt_master_receive(ctx->master);
+    ecrt_domain_process(ctx->domain);
+
+    EC_LOG_TIME_PREFIX(stdout);
+    printf("Initial RxPDO cycle completed (all slaves queued/sent/received once).\n");
   }
 
   return 0;
@@ -194,22 +281,50 @@ static int activate_master(ec_app_context_t *ctx) {
 /****************************************************************************/
 
 int ec_app_init_pdo(ec_app_context_t *ctx, pdo_config_type_t pdo_type,
-                    ec_sync_info_t *slave_syncs, int realtime_priority) {
+                    uint16_t slave_pos, ec_sync_info_t *slave_syncs, int realtime_priority) {
+  ec_slave_runtime_t slave_cfg = {
+      .slave_pos = slave_pos,
+      .pdo_type = pdo_type,
+      .syncs = slave_syncs,
+  };
+  return ec_app_init_pdo_multi(ctx, &slave_cfg, 1, realtime_priority);
+}
+
+int ec_app_init_pdo_multi(ec_app_context_t *ctx,
+                          const ec_slave_runtime_t *slave_cfgs,
+                          int slave_count,
+                          int realtime_priority) {
+  if (slave_count <= 0 || slave_count > EC_MAX_SLAVES) {
+    fprintf(stderr, "Invalid slave_count=%d (max=%d)\n", slave_count, EC_MAX_SLAVES);
+    return -1;
+  }
+
   ctx->app_type = EC_APP_PDO_ONLY;
+  ctx->slave_count = slave_count;
+
+  // Copy slave configs into context
+  for (int i = 0; i < slave_count; ++i) {
+    ctx->slaves[i] = slave_cfgs[i];
+  }
 
   // Setup EtherCAT system (signal handling + realtime + master/domain)
   if (setup_ethercat(&ctx->master, &ctx->domain, realtime_priority) != 0) {
     return -1;
   }
 
-  // Setup slave configuration
-  if (setup_slave_config(ctx, slave_syncs) != 0) {
-    return -1;
-  }
+  // Configure each slave
+  for (int i = 0; i < slave_count; ++i) {
+    ec_slave_runtime_t *rt = &ctx->slaves[i];
 
-  // Setup PDO registration
-  if (setup_pdo_registration(ctx, pdo_type) != 0) {
-    return -1;
+    // Setup slave configuration
+    if (setup_slave_config(ctx, rt->slave_pos, rt->syncs) != 0) {
+      return -1;
+    }
+
+    // Register PDO entries for this slave
+    if (setup_pdo_registration_multi(ctx, rt) != 0) {
+      return -1;
+    }
   }
 
   // Activate master and get domain data
@@ -217,11 +332,13 @@ int ec_app_init_pdo(ec_app_context_t *ctx, pdo_config_type_t pdo_type,
     return -1;
   }
 
-  printf("EtherCAT PDO application initialized successfully.\n");
+  EC_LOG_TIME_PREFIX(stdout);
+  printf("EtherCAT multi-slave PDO application initialized successfully. count=%d\n",
+         slave_count);
   return 0;
 }
 
-int ec_app_init_sdo(ec_app_context_t *ctx) {
+int ec_app_init_sdo(ec_app_context_t *ctx, uint16_t slave_pos) {
   ctx->app_type = EC_APP_SDO_ONLY;
 
   // Setup EtherCAT system (no domain needed for SDO-only)
@@ -233,10 +350,11 @@ int ec_app_init_sdo(ec_app_context_t *ctx) {
   ec_sdo_set_master(ctx->master);
 
   // Setup slave configuration (no PDO sync needed)
-  if (setup_slave_config(ctx, NULL) != 0) {
+  if (setup_slave_config(ctx, slave_pos, NULL) != 0) {
     return -1;
   }
 
+  EC_LOG_TIME_PREFIX(stdout);
   printf("EtherCAT SDO application initialized successfully.\n");
 
   return 0;
@@ -244,6 +362,7 @@ int ec_app_init_sdo(ec_app_context_t *ctx) {
 
 void ec_app_cleanup(ec_app_context_t *ctx) {
   if (ctx->master) {
+    EC_LOG_TIME_PREFIX(stdout);
     printf("Releasing EtherCAT master...\n");
     ecrt_release_master(ctx->master);
     ctx->master = NULL;
@@ -253,7 +372,6 @@ void ec_app_cleanup(ec_app_context_t *ctx) {
   ctx->domain = NULL;
   ctx->slave_config = NULL;
   ctx->domain_data = NULL;
-  ctx->domain_regs = NULL;
 }
 
 ec_app_context_t *ec_app_get_context(void) { return &g_app_ctx; }
@@ -262,20 +380,22 @@ ec_app_context_t *ec_app_get_context(void) { return &g_app_ctx; }
 // Simplified main function helpers
 /****************************************************************************/
 
-int ec_app_main_pdo(pdo_config_type_t pdo_type, ec_callback_t cyclic_func) {
+int ec_app_main_pdo(pdo_config_type_t pdo_type, uint16_t slave_pos, ec_callback_t cyclic_func) {
   ec_app_context_t *ctx = &g_app_ctx;
   const int REALTIME_PRIORITY = 49;
 
+  EC_LOG_TIME_PREFIX(stdout);
   printf("=== EtherCAT PDO Application Starting ===\n");
 
   // Initialize PDO application
-  if (ec_app_init_pdo(ctx, pdo_type, get_slave_pdo_syncs(pdo_type),
+  if (ec_app_init_pdo(ctx, pdo_type, slave_pos, get_slave_pdo_syncs(pdo_type),
                       REALTIME_PRIORITY) != 0) {
     ec_app_cleanup(ctx);
     return -1;
   }
 
   // Run cyclic function
+  EC_LOG_TIME_PREFIX(stdout);
   printf("Starting cyclic function.\n");
   if (cyclic_func) {
     cyclic_func();
@@ -286,13 +406,14 @@ int ec_app_main_pdo(pdo_config_type_t pdo_type, ec_callback_t cyclic_func) {
   return 0;
 }
 
-int ec_app_main_sdo(ec_callback_t demo_func) {
+int ec_app_main_sdo(uint16_t slave_pos, ec_callback_t demo_func) {
   ec_app_context_t *ctx = &g_app_ctx;
 
+  EC_LOG_TIME_PREFIX(stdout);
   printf("=== EtherCAT SDO Application Starting ===\n");
 
   // Initialize SDO application
-  if (ec_app_init_sdo(ctx) != 0) {
+  if (ec_app_init_sdo(ctx, slave_pos) != 0) {
     ec_app_cleanup(ctx);
     return -1;
   }
@@ -317,8 +438,12 @@ void ec_app_run_cyclic_task(ec_callback_t read_feedback_func) {
   ec_master_t *master = ctx->master;
   ec_domain_t *domain = ctx->domain;
   uint8_t *domain_data = ctx->domain_data;
-  unsigned int off_in = ctx->off_in;
-  unsigned int off_out = ctx->off_out;
+  int slave_count = ctx->slave_count;
+  if (slave_count <= 0) {
+    EC_LOG_TIME_PREFIX(stdout);
+    printf("No slaves configured, aborting cyclic task.\n");
+    return;
+  }
 
   // Local state variables
   ec_master_state_t master_state = {};
@@ -327,17 +452,23 @@ void ec_app_run_cyclic_task(ec_callback_t read_feedback_func) {
   unsigned int sync_ref_counter = 0;
   const struct timespec cycletime = {0, PERIOD_NS};
 
-  // Trajectory control
-  TrajectoryControl traj_ctrl = {0};
-  ec_init_trajectory(&traj_ctrl);
-
   // Demo control state
-  bool initial_command_sent = false;
   int demo_stage = 0;
-  int demo_counter = 0;
+  int demo_interval_counter = 0;
+  bool demo_started = false;
 
   struct timespec wakeupTime, time;
   clock_gettime(CLOCK_TO_USE, &wakeupTime);
+
+  // Initialize master state before entering loop
+  check_master_state(master, &master_state);
+  for (int i = 0; i < slave_count; ++i) {
+    int slave_op = check_slave_operational(master, ctx->slaves[i].slave_pos);
+    EC_LOG_TIME_PREFIX(stdout);
+    printf("Initial Master AL state: 0x%02X, Slave %u: %s\n",
+           master_state.al_states, ctx->slaves[i].slave_pos,
+           slave_op ? "OPERATIONAL" : "not operational");
+  }
 
   printf("Press Ctrl+C to exit gracefully.\n");
 
@@ -355,103 +486,59 @@ void ec_app_run_cyclic_task(ec_callback_t read_feedback_func) {
     // check process data state (optional)
     check_domain_state(domain, &domain_state);
 
+    // Update master state periodically (every second)
     if (counter) {
       counter--;
     } else {
       counter = FREQUENCY;
       check_master_state(master, &master_state);
-      printf("Master AL state: 0x%02X (need 0x08 for OPERATIONAL)\n",
-             master_state.al_states);
+      // Check each configured slave
+      for (int i = 0; i < slave_count; ++i) {
+        int slave_op = check_slave_operational(master, ctx->slaves[i].slave_pos);
+        EC_LOG_TIME_PREFIX(stdout);
+        printf("Master AL state: 0x%02X, Slave %u: %s\n",
+               master_state.al_states, ctx->slaves[i].slave_pos,
+               slave_op ? "OPERATIONAL" : "not operational");
+      }
     }
 
-    // Only perform read/write operations when the slave is in OPERATIONAL state
-    if (master_state.al_states == 0x08) {
-      // Demonstrate different control modes and gestures
-      if (!initial_command_sent) {
-        printf("=== Starting Joint Control Demo ===\n");
-        initial_command_sent = true;
+    // Only perform read/write operations when the configured slave is in OPERATIONAL state
+    // Master AL state can be 0x08 (all slaves OP) or 0x0C (some OP, some SAFEOP)
+    // We check if OP state (0x08) is present, which means at least our slave is in OP
+    // Note: Check master_state.al_states directly - it's updated by check_master_state()
+    if (master_state.al_states & 0x08) {
+      // Demo: switch gesture every 2 seconds
+      // FREQUENCY=1000 cycles/sec, so 2000 cycles = 2 seconds
+      const int DEMO_INTERVAL = FREQUENCY * 2;
+      
+      // First time entering OP: start demo immediately
+      if (!demo_started) {
+        printf("=== Starting Gesture Demo ===\n");
+        demo_started = true;
+        demo_interval_counter = DEMO_INTERVAL;  // Trigger first gesture immediately
+      }
+      
+      // Check if it's time to switch gesture
+      if (++demo_interval_counter >= DEMO_INTERVAL) {
+        demo_interval_counter = 0;
+        
+        // Cycle through 4 gestures, applied to all slaves
+        demo_apply_gesture_all(ctx, domain_data, demo_stage);
+        
+        // Move to next stage (0 -> 1 -> 2 -> 3 -> 0 -> ...)
+        demo_stage = (demo_stage + 1) % 4;
       }
 
-      // Switch demo mode every 20 seconds
-      if (demo_counter++ % (FREQUENCY * 20) == 0) {
-        switch (demo_stage % 8) {
-        case 0: {
-          // Position-and-time control mode
-          uint16_t positions[6] = {400, 400, 1000, 1000, 1000, 1000};
-          uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
-          EC_WRITE_U16(domain_data + off_out, PositionWithDuration);
-          memcpy(domain_data + off_out + 2, positions, 12);
-          memcpy(domain_data + off_out + 14, durations, 12);
-          ec_set_all_joints_position_duration(&traj_ctrl, positions, durations);
-          break;
-        }
-        case 1: {
-          // Position-and-speed control mode
-          uint16_t positions[6] = {400, 400, 0, 0, 0, 0};
-          uint16_t speeds[6] = {300, 300, 300, 300, 300, 300};
-          EC_WRITE_U16(domain_data + off_out, PositionWithSpeed);
-          memcpy(domain_data + off_out + 2, positions, 12);
-          memcpy(domain_data + off_out + 14, speeds, 12);
-          break;
-        }
-        case 2: {
-          // Speed control mode
-          int16_t speeds[6] = {0, 0, 300, 300, 300, 300};
-          EC_WRITE_U16(domain_data + off_out, Speed);
-          memcpy(domain_data + off_out + 2, speeds, 12);
-          memset(domain_data + off_out + 14, 0, 12);
-          break;
-        }
-        case 3: {
-          // Current control mode
-          int16_t currents[6] = {-100, -100, -500, -500, -500, -500};
-          EC_WRITE_U16(domain_data + off_out, Current);
-          memcpy(domain_data + off_out + 2, currents, 12);
-          memset(domain_data + off_out + 14, 0, 12);
-          break;
-        }
-        case 4: {
-          // PWM control mode
-          uint16_t pwm_values[6] = {200, 100, 500, 500, 500, 500};
-          EC_WRITE_U16(domain_data + off_out, Pwm);
-          memcpy(domain_data + off_out + 2, pwm_values, 12);
-          memset(domain_data + off_out + 14, 0, 12);
-          break;
-        }
-        case 5: {
-          // Fist gesture
-          ec_set_fist_gesture(domain_data, off_out, 400);
-          break;
-        }
-        case 6: {
-          // Open-hand gesture
-          ec_set_open_hand_gesture(domain_data, off_out, 500);
-          break;
-        }
-        case 7: {
-          // OK gesture
-          ec_set_ok_gesture(domain_data, off_out, 400);
-          break;
-        }
-        }
-        demo_stage++;
-      }
-
-      // Update trajectory control
-      ec_update_trajectory(&traj_ctrl, domain_data, off_out);
-
-      // Periodically print feedback data
-      static int print_counter = 0;
-      if (print_counter++ % 10 == 0) {
-        // Read joint feedback (always)
+      // Read joint feedback every cycle (1kHz) for each slave
+      for (int i = 0; i < slave_count; ++i) {
         joint_feedback_t feedback;
-        ec_read_joint_feedback_data(domain_data, off_in, &feedback);
-        ec_print_joint_feedback_data(&feedback);
+        ec_read_joint_feedback_data(domain_data, ctx->slaves[i].off_in, &feedback);
+        ec_print_joint_feedback_data(&feedback); // Already rate-limited & timestamped
+      }
 
-        // Read additional feedback if callback provided
-        if (read_feedback_func) {
-          read_feedback_func();
-        }
+      // Read additional feedback if callback provided
+      if (read_feedback_func) {
+        read_feedback_func();
       }
     }
 
@@ -467,5 +554,10 @@ void ec_app_run_cyclic_task(ec_callback_t read_feedback_func) {
     // send process data
     ecrt_domain_queue(domain);
     ecrt_master_send(master);
+    
+    // Debug: Print sent data on change (sampled every 1000 cycles ~1s)
+#ifdef DEBUG_DATA
+    debug_print_sent_data(ctx, master_state, domain_data);
+#endif
   }
 }
