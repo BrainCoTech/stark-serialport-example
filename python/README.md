@@ -12,26 +12,26 @@
 ```shell
 cd python
 
-# 安装依赖
+# Install dependencies
 pip3 install -r requirements.txt
 ```
 
-## Revo1 RS-485 通信示例
+## Revo1 RS-485 Communication Example
 
-详细说明请参考：[Revo1 RS-485 README](revo1/README.md)
+For detailed instructions, please refer to: [Revo1 RS-485 README](revo1/README.md)
 
-## Revo1 CAN 通信示例
+## Revo1 CAN Communication Example
 
-详细说明请参考：[Revo1 CAN README](revo1_CAN/README.md)
+For detailed instructions, please refer to: [Revo1 CAN README](revo1_CAN/README.md)
 
-## Revo2 RS-485 通信示例
+## Revo2 RS-485 Communication Example
 
-详细说明请参考：[Revo2 RS-485 README](revo2/README.md)
+For detailed instructions, please refer to: [Revo2 RS-485 README](revo2/README.md)
 
-## Revo2 CANFD 通信示例
+## Revo2 CANFD Communication Example
 
-详细说明请参考：[Revo2 CANFD README](revo2_canfd/README.md)
+For detailed instructions, please refer to: [Revo2 CANFD README](revo2_canfd/README.md)
 
-## Revo2 EtherCAT 通信示例
+## Revo2 EtherCAT Communication Example
 
-详细说明请参考：[Revo2 EtherCAT README](revo2_ethercat/README.md)
+For detailed instructions, please refer to: [Revo2 EtherCAT README](revo2_ethercat/README.md)
