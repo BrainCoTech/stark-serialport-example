@@ -38,7 +38,7 @@ typedef struct {
   unsigned int off_in;
   unsigned int off_out;
   ec_pdo_entry_reg_t domain_regs[3]; // two entries + terminator
-  ec_sync_info_t *syncs;
+  ec_sync_info_t *syncs;  // Can be NULL if using dynamic PDO reading
 } ec_slave_runtime_t;
 
 // Application context structure
@@ -86,14 +86,26 @@ int ec_app_main_sdo(uint16_t slave_pos, ec_callback_t demo_func);
 
 /**
  * @brief Simplified main function for PDO applications
- * @param pdo_type PDO configuration type
+ * @param pdo_type PDO configuration type (can be auto-detected if not provided)
  * @param slave_pos Slave position
  * @param cyclic_func Cyclic function to run
  * @return Exit code
  *
  * Note: Real-time priority is fixed at 49
+ * Note: If pdo_type is not critical, consider using ec_app_main_pdo_auto() for auto-detection
  */
 int ec_app_main_pdo(pdo_config_type_t pdo_type, uint16_t slave_pos, ec_callback_t cyclic_func);
+
+/**
+ * @brief Simplified main function for PDO applications with auto-detection
+ * @param slave_pos Slave position
+ * @param cyclic_func Cyclic function to run
+ * @return Exit code
+ *
+ * This version auto-detects the PDO configuration type from the slave's configured sync managers.
+ * Note: Real-time priority is fixed at 49
+ */
+int ec_app_main_pdo_auto(uint16_t slave_pos, ec_callback_t cyclic_func);
 
 /**
  * @brief Initialize multi-slave PDO application (no built-in demo)

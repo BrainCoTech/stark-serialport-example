@@ -37,5 +37,5 @@ int main(int argc, char **argv) {
   if (argc > 1) {
     slave_pos = (uint16_t)atoi(argv[1]);
   }
-  return ec_app_main_pdo(PDO_CONFIG_TOUCH, slave_pos, cyclic_task);
+  return ec_app_main_pdo_auto(slave_pos, cyclic_task);
 }

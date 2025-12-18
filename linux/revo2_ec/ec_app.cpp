@@ -135,38 +135,64 @@ static ec_app_context_t g_app_ctx = {0};
 // Internal helper functions
 /****************************************************************************/
 
-static int setup_slave_config(ec_app_context_t *ctx, uint16_t slave_pos,
-                              ec_sync_info_t *slave_syncs) {
+static int setup_slave_config(ec_app_context_t *ctx, ec_slave_runtime_t *slave_rt) {
   EC_LOG_TIME_PREFIX(stdout);
-  printf("Requesting slave configuration (slave_pos=%u)...\n", slave_pos);
+  printf("Requesting slave configuration (slave_pos=%u)...\n", slave_rt->slave_pos);
   ctx->slave_config = ecrt_master_slave_config(
-      ctx->master, 0, slave_pos, STARK_VENDOR_ID, STARK_PRODUCT_CODE);
+      ctx->master, 0, slave_rt->slave_pos, STARK_VENDOR_ID, STARK_PRODUCT_CODE);
   if (!ctx->slave_config) {
     fprintf(stderr, "Failed to get slave configuration.\n");
     return -1;
   }
 
-  if (slave_syncs) {
-    EC_LOG_TIME_PREFIX(stdout);
-    printf("Configuring PDOs...\n");
-    if (ecrt_slave_config_pdos(ctx->slave_config, EC_END, slave_syncs)) {
-      fprintf(stderr, "Failed to configure PDOs.\n");
-      return -1;
-    }
-  }
-
+  // Configure PDOs if syncs is available (will be set in setup_pdo_registration)
+  // Note: syncs may be NULL initially, it will be set during setup_pdo_registration
+  // We configure PDOs after setup_pdo_registration sets syncs
   return 0;
 }
 
-static int setup_pdo_registration_multi(ec_app_context_t *ctx, ec_slave_runtime_t *slave_rt) {
+static int setup_pdo_registration(ec_app_context_t *ctx, ec_slave_runtime_t *slave_rt) {
   EC_LOG_TIME_PREFIX(stdout);
   printf("Setting up PDO registration (slave_pos=%u)...\n", slave_rt->slave_pos);
 
-  build_domain_regs(slave_rt->pdo_type, slave_rt->slave_pos,
-                    &slave_rt->off_in, &slave_rt->off_out, slave_rt->domain_regs);
+  // Try to read PDO mappings from slave's configured sync managers
+  // This reads from currently active sync managers (similar to Rust's ioctl method)
+  // Note: This requires master to be activated and slave to be configured
+  int pdo_count = read_pdo_from_sync_managers(ctx->master, slave_rt);
+  if (pdo_count <= 0) {
+    // Fallback to hardcoded PDO configuration if sync manager read fails
+    EC_LOG_TIME_PREFIX(stdout);
+    printf("Sync manager read failed (slave may not be configured yet), "
+           "falling back to hardcoded configuration (slave_pos=%u, pdo_type=%d)...\n",
+           slave_rt->slave_pos, slave_rt->pdo_type);
+    build_domain_regs(slave_rt->pdo_type, slave_rt->slave_pos,
+                      &slave_rt->off_in, &slave_rt->off_out, slave_rt->domain_regs);
+    slave_rt->syncs = get_slave_pdo_syncs(slave_rt->pdo_type);
+  } else {
+    EC_LOG_TIME_PREFIX(stdout);
+    printf("Successfully read %d PDO entries from sync managers (slave %u)\n", 
+           pdo_count, slave_rt->slave_pos);
+    // syncs is already set by read_pdo_from_sync_managers
+  }
 
   EC_LOG_TIME_PREFIX(stdout);
   printf("Registering PDO entries (slave_pos=%u)...\n", slave_rt->slave_pos);
+  
+  // Debug: Print domain_regs before registration
+  for (int i = 0; i < 3; i++) {
+    if (slave_rt->domain_regs[i].index == 0 && slave_rt->domain_regs[i].subindex == 0) {
+      EC_LOG_TIME_PREFIX(stdout);
+      printf("  Entry[%d]: terminator\n", i);
+      break;
+    }
+    EC_LOG_TIME_PREFIX(stdout);
+    printf("  Entry[%d]: alias=%u, pos=%u, vendor=0x%08X, product=0x%08X, "
+           "index=0x%04X, subindex=0x%02X\n",
+           i, slave_rt->domain_regs[i].alias, slave_rt->domain_regs[i].position,
+           slave_rt->domain_regs[i].vendor_id, slave_rt->domain_regs[i].product_code,
+           slave_rt->domain_regs[i].index, slave_rt->domain_regs[i].subindex);
+  }
+  
   if (ecrt_domain_reg_pdo_entry_list(ctx->domain, slave_rt->domain_regs)) {
     fprintf(stderr, "Failed to register PDO entry: %s\n", strerror(errno));
     fprintf(stderr, "PDO entry registration failed for slave %u!\n", slave_rt->slave_pos);
@@ -281,11 +307,19 @@ static int activate_master(ec_app_context_t *ctx) {
 /****************************************************************************/
 
 int ec_app_init_pdo(ec_app_context_t *ctx, pdo_config_type_t pdo_type,
-                    uint16_t slave_pos, ec_sync_info_t *slave_syncs, int realtime_priority) {
+                    uint16_t slave_pos, int realtime_priority) {
   ec_slave_runtime_t slave_cfg = {
       .slave_pos = slave_pos,
-      .pdo_type = pdo_type,
-      .syncs = slave_syncs,
+      .pdo_type = pdo_type,  // Will be auto-detected if using master API, otherwise use provided
+  };
+  return ec_app_init_pdo_multi(ctx, &slave_cfg, 1, realtime_priority);
+}
+
+// Overloaded version without pdo_type - will auto-detect
+int ec_app_init_pdo_auto(ec_app_context_t *ctx, uint16_t slave_pos, int realtime_priority) {
+  ec_slave_runtime_t slave_cfg = {
+      .slave_pos = slave_pos,
+      .pdo_type = PDO_CONFIG_BASIC,  // Will be auto-detected during setup_pdo_registration
   };
   return ec_app_init_pdo_multi(ctx, &slave_cfg, 1, realtime_priority);
 }
@@ -316,14 +350,25 @@ int ec_app_init_pdo_multi(ec_app_context_t *ctx,
   for (int i = 0; i < slave_count; ++i) {
     ec_slave_runtime_t *rt = &ctx->slaves[i];
 
-    // Setup slave configuration
-    if (setup_slave_config(ctx, rt->slave_pos, rt->syncs) != 0) {
+    // Setup slave configuration (creates slave_config, but doesn't configure PDOs yet)
+    if (setup_slave_config(ctx, rt) != 0) {
       return -1;
     }
 
-    // Register PDO entries for this slave
-    if (setup_pdo_registration_multi(ctx, rt) != 0) {
+    // Register PDO entries for this slave (this will set rt->syncs)
+    // If syncs is NULL, we rely on dynamic PDO reading or slave's existing PDO configuration
+    if (setup_pdo_registration(ctx, rt) != 0) {
       return -1;
+    }
+
+    // Configure PDOs now that syncs is set (if available)
+    if (rt->syncs) {
+      EC_LOG_TIME_PREFIX(stdout);
+      printf("Configuring PDOs for slave %u...\n", rt->slave_pos);
+      if (ecrt_slave_config_pdos(ctx->slave_config, EC_END, rt->syncs)) {
+        fprintf(stderr, "Failed to configure PDOs for slave %u.\n", rt->slave_pos);
+        return -1;
+      }
     }
   }
 
@@ -350,7 +395,11 @@ int ec_app_init_sdo(ec_app_context_t *ctx, uint16_t slave_pos) {
   ec_sdo_set_master(ctx->master);
 
   // Setup slave configuration (no PDO sync needed)
-  if (setup_slave_config(ctx, slave_pos, NULL) != 0) {
+  ec_slave_runtime_t dummy_rt = {
+      .slave_pos = slave_pos,
+      .pdo_type = PDO_CONFIG_BASIC,  // Not used for SDO-only
+  };
+  if (setup_slave_config(ctx, &dummy_rt) != 0) {
     return -1;
   }
 
@@ -388,8 +437,7 @@ int ec_app_main_pdo(pdo_config_type_t pdo_type, uint16_t slave_pos, ec_callback_
   printf("=== EtherCAT PDO Application Starting ===\n");
 
   // Initialize PDO application
-  if (ec_app_init_pdo(ctx, pdo_type, slave_pos, get_slave_pdo_syncs(pdo_type),
-                      REALTIME_PRIORITY) != 0) {
+  if (ec_app_init_pdo(ctx, pdo_type, slave_pos, REALTIME_PRIORITY) != 0) {
     ec_app_cleanup(ctx);
     return -1;
   }
@@ -422,6 +470,29 @@ int ec_app_main_sdo(uint16_t slave_pos, ec_callback_t demo_func) {
   if (demo_func) {
     demo_func();
   }
+
+  // Cleanup
+  ec_app_cleanup(ctx);
+  return 0;
+}
+
+int ec_app_main_pdo_auto(uint16_t slave_pos, ec_callback_t cyclic_func) {
+  ec_app_context_t *ctx = &g_app_ctx;
+  const int REALTIME_PRIORITY = 49;
+
+  EC_LOG_TIME_PREFIX(stdout);
+  printf("=== EtherCAT PDO Application Starting (Auto-detect mode) ===\n");
+
+  // Initialize PDO application with auto-detection
+  if (ec_app_init_pdo_auto(ctx, slave_pos, REALTIME_PRIORITY) != 0) {
+    ec_app_cleanup(ctx);
+    return -1;
+  }
+
+  // Run cyclic function
+  EC_LOG_TIME_PREFIX(stdout);
+  printf("Starting cyclic function.\n");
+  cyclic_func();
 
   // Cleanup
   ec_app_cleanup(ctx);
