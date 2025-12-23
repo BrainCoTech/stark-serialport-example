@@ -33,13 +33,56 @@ int main(int argc, char const *argv[]) {
   uint8_t slave_id = 2; // Default right-hand ID for Revo2 is 2
   get_device_info(handle, slave_id);
 
+  // Loop through positions from 0 to 1000, incrementing by 50 each time
+  // with 5ms interval between each position
+  useconds_t delay = 5 * 1000; // 5ms in microseconds
+
+  struct timeval last_time, current_time;
+  gettimeofday(&last_time, NULL);
+
+  while (true)
+  {
+    for (uint16_t pos = 0; pos <= 1000; pos += 50)
+    {
+      gettimeofday(&current_time, NULL);
+      long interval_us = (current_time.tv_sec - last_time.tv_sec) * 1000000 + 
+                         (current_time.tv_usec - last_time.tv_usec);
+      double interval_ms = interval_us / 1000.0;
+      
+      uint16_t thumb_pos = pos * 2 / 5;
+      uint16_t positions[6] = {thumb_pos, thumb_pos, pos, pos, pos, pos}; // Set all fingers to same position
+      printf("positions: %hu, %hu, %hu, %hu, %hu, %hu, interval: %.2f ms\n", 
+             positions[0], positions[1], positions[2], positions[3], positions[4], positions[5], interval_ms);
+      stark_set_finger_positions(handle, slave_id, positions, 6);
+      last_time = current_time;
+      usleep(delay);
+    }
+
+    for (uint16_t pos = 1000; pos > 0; pos -= 50)
+    {
+      gettimeofday(&current_time, NULL);
+      long interval_us = (current_time.tv_sec - last_time.tv_sec) * 1000000 + 
+                         (current_time.tv_usec - last_time.tv_usec);
+      double interval_ms = interval_us / 1000.0;
+      
+      uint16_t thumb_pos = pos * 2 / 5;
+      uint16_t positions[6] = {thumb_pos, thumb_pos, pos, pos, pos, pos}; // Set all fingers to same position
+      printf("positions: %hu, %hu, %hu, %hu, %hu, %hu, interval: %.2f ms\n", 
+             positions[0], positions[1], positions[2], positions[3], positions[4], positions[5], interval_ms);
+      stark_set_finger_positions(handle, slave_id, positions, 6);
+      last_time = current_time;
+      usleep(delay);
+    }
+  }
+
   auto finger_id = STARK_FINGER_ID_MIDDLE;
   bool running = true;
-  while (running) {
+  while (running)
+  {
     uint16_t durations[6] = {300, 300, 300, 300, 300, 300};
     uint16_t positions_fist_1000[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist
-    uint16_t positions_open[] = {0, 0, 0, 0, 0, 0}; // Open hand
-    useconds_t delay = 1000 * 1000;                 // 1000 ms
+    uint16_t positions_open[] = {0, 0, 0, 0, 0, 0};                      // Open hand
+    useconds_t delay = 1000 * 1000;                                      // 1000 ms
     stark_set_finger_positions_and_durations(handle, slave_id,
                                              positions_fist_1000, durations, 6);
     usleep(delay);
@@ -54,7 +97,8 @@ int main(int argc, char const *argv[]) {
     // running = false;
 
     auto finger_status = stark_get_motor_status(handle, slave_id);
-    if (finger_status != NULL) {
+    if (finger_status != NULL)
+    {
       printf("Positions: %hu, %hu, %hu, %hu, %hu, %hu\n",
              finger_status->positions[0], finger_status->positions[1],
              finger_status->positions[2], finger_status->positions[3],
@@ -80,23 +124,29 @@ int main(int argc, char const *argv[]) {
   return 0;
 }
 
-void cleanup_resources() {
+void cleanup_resources()
+{
   cleanup_can_resources(); // Use common cleanup function
   printf("Resources cleaned up.\n");
 }
 
-void get_device_info(DeviceHandler *handle, uint8_t slave_id) {
+void get_device_info(DeviceHandler *handle, uint8_t slave_id)
+{
   DeviceInfo *info = stark_get_device_info(handle, slave_id);
-  if (info != NULL) {
+  if (info != NULL)
+  {
     printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id,
            info->serial_number, info->firmware_version);
     if (info->hardware_type != STARK_HARDWARE_TYPE_REVO2_BASIC &&
-        info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH) {
+        info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    {
       printf("Not Revo2, hardware type: %hhu\n", info->hardware_type);
       exit(1);
     }
     free_device_info(info);
-  } else {
+  }
+  else
+  {
     printf("Error: Failed to get device info\n");
     exit(1);
   }

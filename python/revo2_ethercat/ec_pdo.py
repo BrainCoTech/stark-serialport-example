@@ -23,6 +23,7 @@ async def main():
     master_pos = 0
     ctx = libstark.PyDeviceContext.open_ethercat_master(master_pos)
     slave_pos = 0
+    # slave_pos = 1
     await ctx.ec_setup_sdo(slave_pos)
 
     logger.debug("get_device_info")
