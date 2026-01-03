@@ -22,8 +22,35 @@ CXXFLAGS := -g -Wall -std=c++17  # Use C++17 standard
 # Mode selection: modbus(default) / can / ethercat / all
 MODE := $(shell echo $(if $(mod),$(mod),$(if $(MODE),$(MODE),modbus)) | tr '[:upper:]' '[:lower:]')
 
+# CAN backend selection: zlg / socketcan / both(default)
+CAN_BACKEND := $(shell echo $(if $(CAN_BACKEND),$(CAN_BACKEND),$(if $(STARK_CAN_BACKEND),$(STARK_CAN_BACKEND),both)) | tr '[:upper:]' '[:lower:]')
+CAN_COMMON_OBJ := $(COMMON_DIR)/can_common.$(CAN_BACKEND).o
+
 # Base libraries
-BASE_LIBS := -L/usr/local/lib -L$(LIB_DIR) -Wl,-rpath,/usr/local/lib:/usr/lib:$(LIB_DIR) -lbc_stark_sdk
+ZLG_LIB_DIR ?=
+BASE_LIB_DIRS := /usr/local/lib /usr/lib $(LIB_DIR) $(ZLG_LIB_DIR)
+BASE_LIBS := $(foreach d,$(BASE_LIB_DIRS),-L$(d)) -Wl,-rpath,/usr/local/lib:/usr/lib:$(LIB_DIR) -lbc_stark_sdk
+
+ifeq ($(CAN_BACKEND),socketcan)
+  CAN_LIBS :=
+  CAN_DEFS := -DSTARK_USE_ZLG=0 -DSTARK_USE_SOCKETCAN=1
+else ifeq ($(CAN_BACKEND),both)
+  CAN_LIBS := -lusbcanfd
+  CAN_DEFS := -DSTARK_USE_ZLG=1 -DSTARK_USE_SOCKETCAN=1
+else
+  CAN_LIBS := -lusbcanfd
+  CAN_DEFS := -DSTARK_USE_ZLG=1 -DSTARK_USE_SOCKETCAN=0
+endif
+
+# Validate ZLG library when needed (skip for clean-only targets)
+ifneq ($(filter clean,$(MAKECMDGOALS)),clean)
+  ifneq ($(filter zlg both,$(CAN_BACKEND)),)
+    ZLG_LIB_FILE := $(firstword $(foreach d,$(BASE_LIB_DIRS),$(wildcard $(d)/libusbcanfd.so)))
+    ifeq ($(ZLG_LIB_FILE),)
+      $(error libusbcanfd.so not found. Run ./download-lib.sh or set ZLG_LIB_DIR=<path> to ZLG library.)
+    endif
+  endif
+endif
 
 # Mode-specific settings
 ifeq ($(MODE),modbus)
@@ -31,13 +58,13 @@ ifeq ($(MODE),modbus)
   COMMON_LIBS := $(BASE_LIBS)
 else ifeq ($(MODE),can)
   CPP_SOURCES := $(wildcard revo2_can*.cpp)
-  COMMON_LIBS := $(BASE_LIBS) -lusbcanfd
+  COMMON_LIBS := $(BASE_LIBS) $(CAN_LIBS)
 else ifeq ($(MODE),ethercat)
   CPP_SOURCES := $(wildcard revo2_ethercat*.cpp)
   COMMON_LIBS := $(BASE_LIBS) -lethercat
 else ifeq ($(MODE),all)
   CPP_SOURCES := $(wildcard revo2*.cpp)
-  COMMON_LIBS := $(BASE_LIBS) -lusbcanfd -lethercat
+  COMMON_LIBS := $(BASE_LIBS) $(CAN_LIBS) -lethercat
 endif
 
 # ---------------- Sources and targets ----------------
@@ -46,17 +73,16 @@ BINARIES := $(C_SOURCES:.c=) $(CPP_SOURCES:.cpp=)
 
 # Common library object files
 COMMON_OBJ := $(COMMON_DIR)/stark_common.o
-CAN_COMMON_OBJ := $(COMMON_DIR)/can_common.o
 DFU_COMMON_OBJ := $(COMMON_DIR)/dfu_common.o
 
 # Build common library (C++ file)
 $(COMMON_OBJ): $(COMMON_DIR)/stark_common.cpp $(COMMON_DIR)/stark_common.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $< $(INCLUDE)
+	$(CXX) $(CXXFLAGS) $(CAN_DEFS) -c -o $@ $< $(INCLUDE)
 	@echo "\033[1;32m[linux] built common library stark_common.o\033[0m"
 
 # Build CAN common library (C++ file)
 $(CAN_COMMON_OBJ): $(COMMON_DIR)/can_common.cpp $(COMMON_DIR)/can_common.h
-	$(CXX) $(CXXFLAGS) -c -o $@ $< $(INCLUDE)
+	$(CXX) $(CXXFLAGS) $(CAN_DEFS) -c -o $@ $< $(INCLUDE)
 	@echo "\033[1;32m[linux] built CAN common library can_common.o\033[0m"
 
 # Build DFU common library (C++ file)
@@ -103,7 +129,7 @@ all: $(addsuffix .exe,$(BINARIES))
 
 # Clean target
 clean:
-	rm -f *.exe $(COMMON_OBJ) $(CAN_COMMON_OBJ) $(DFU_COMMON_OBJ)
+	rm -f *.exe $(COMMON_OBJ) $(CAN_COMMON_OBJ) $(DFU_COMMON_OBJ) $(COMMON_DIR)/can_common.o
 
 # Runtime support
 export LD_LIBRARY_PATH := $(LIB_DIR):$(LD_LIBRARY_PATH)
@@ -147,6 +173,8 @@ endif
 help:
 	@echo "\033[1;32m=== Revo2 Makefile ===\033[0m"
 	@echo "Modes: make [MODE=modbus|can|ethercat|all]"
+	@echo "CAN backend: make [CAN_BACKEND=zlg|socketcan|both]"
+	@echo "ZLG library dir: make [ZLG_LIB_DIR=/path/to/lib]"
 	@echo "Run:   make run_<target> OR make run <target>"
 	@echo "Clean: make clean"
 

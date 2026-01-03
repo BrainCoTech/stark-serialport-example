@@ -108,15 +108,15 @@ int main() {
 | 协议 | 说明 | 示例目录 | 所需硬件 |
 |------|------|---------|---------|
 | RS-485 (Modbus) | 串口通信 | [revo1/](revo1/) | USB 转 RS485 适配器 |
-| CAN | 控制器局域网络 | [revo1/](revo1/) | ZLG USB-CAN 设备 |
+| CAN | 控制器局域网络 | [revo1/](revo1/) | ZLG USB-CAN 设备或 SocketCAN |
 
 ### Revo2 支持的协议
 
 | 协议 | 说明 | 示例目录 | 所需硬件 |
 |------|------|---------|---------|
 | RS-485 (Modbus) | 串口通信 | [revo2/](revo2/) | USB 转 RS485 适配器 |
-| CAN | 控制器局域网络 | [revo2/](revo2/) | ZLG USB-CAN 设备 |
-| CANFD | 灵活数据速率 CAN | [revo2/](revo2/) | ZLG USB-CANFD 设备 |
+| CAN | 控制器局域网络 | [revo2/](revo2/) | ZLG USB-CAN 设备或 SocketCAN |
+| CANFD | 灵活数据速率 CAN | [revo2/](revo2/) | ZLG USB-CANFD 设备或 SocketCAN |
 | EtherCAT | 工业以太网 | [revo2_ec/](revo2_ec/) | EtherCAT 主站 |
 
 ## 📚 API 参考
@@ -391,6 +391,7 @@ get_and_print_extended_info(handle, slave_id);
 | 多手控制 | 控制多只手 | [revo2_ctrl_multi.cpp](revo2/revo2_ctrl_multi.cpp) |
 | CAN 控制 | 通过 CAN 协议控制 | [revo2_can_ctrl.cpp](revo2/revo2_can_ctrl.cpp) |
 | CANFD 控制 | 通过 CANFD 协议控制 | [revo2_canfd.cpp](revo2/revo2_canfd.cpp) |
+| CANFD 触觉 | 通过 CANFD 控制触觉版本 | [revo2_canfd_touch.cpp](revo2/revo2_canfd_touch.cpp) |
 | 自定义 Modbus | 自定义 Modbus 实现 | [revo2_customed_modbus.cpp](revo2/revo2_customed_modbus.cpp) |
 | 异步 Modbus | 异步 Modbus 控制 | [revo2_customed_modbus_async.cpp](revo2/revo2_customed_modbus_async.cpp) |
 | 固件更新 | OTA 固件升级 | [revo2_dfu.cpp](revo2/revo2_dfu.cpp) |
@@ -451,8 +452,11 @@ make run_revo2_ctrl           # 运行 revo2_ctrl 示例
 | 模式 | 说明 | 所需硬件 |
 |------|------|---------|
 | (默认) | Modbus/RS-485 | USB 转 RS485 适配器 |
-| `MODE=can` | CAN/CANFD | ZLG USB-CAN(FD) 设备 |
+| `MODE=can` | CAN/CANFD | ZLG USB-CAN(FD) 设备或 SocketCAN 适配器 |
 | `MODE=ethercat` | EtherCAT | EtherCAT 主站 |
+
+若使用 ZLG USB-CAN(FD)，请确保已安装 `libusbcanfd.so`。缺失时可运行
+`./download-lib.sh` 写入 `dist/shared/linux`，或设置 `ZLG_LIB_DIR=/path/to/lib`。
 
 ### 编译标志
 
@@ -460,8 +464,49 @@ make run_revo2_ctrl           # 运行 revo2_ctrl 示例
 - `-I../../dist/include` - SDK 头文件
 - `-L../../dist/lib` - SDK 库
 - `-lstark-sdk` - Stark SDK 库
-- `-lusbcanfd` - USB-CANFD 库（CAN 模式）
+- `-lusbcanfd` - USB-CANFD 库（CAN 模式，仅 ZLG 后端需要）
 - `-std=c++11` - C++11 标准
+
+### SocketCAN 后端（Linux）
+
+使用 SocketCAN 可支持 Linux 标准 CAN/CANFD 接口（如 `can0`、`can1`、`vcan0`）。
+
+```bash
+# 构建时同时编译 ZLG + SocketCAN 后端
+make MODE=can
+
+# 仅使用 ZLG USB-CAN(FD) 后端构建
+make MODE=can CAN_BACKEND=zlg
+
+# 构建时不链接 ZLG USB-CANFD 库
+make MODE=can CAN_BACKEND=socketcan
+
+# 同时编译 ZLG + SocketCAN 后端
+make MODE=can CAN_BACKEND=both
+
+# 运行时选择后端与接口名
+export STARK_CAN_BACKEND=socketcan
+export STARK_SOCKETCAN_IFACE=can0
+```
+
+典型 CANFD 接口配置示例（仅供参考）：
+
+```bash
+sudo ip link set can0 down
+sudo ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
+sudo ip link set can0 up
+```
+
+使用 SocketCAN 运行示例：
+
+```bash
+# CAN
+STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo1_can
+STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_can_ctrl
+
+# CANFD
+STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_canfd
+```
 
 ### EtherCAT 构建注意事项
 
