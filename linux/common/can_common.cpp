@@ -5,26 +5,296 @@
 
 #include "can_common.h"
 #include "stark-sdk.h"
-#include "zlgcan/zcan.h"
+#include <errno.h>
+#include <poll.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
+
+#ifndef STARK_USE_ZLG
+#define STARK_USE_ZLG 1
+#endif
+
+#if STARK_USE_ZLG
+#include "zlgcan/zcan.h"
+#endif
+
+#ifndef STARK_USE_SOCKETCAN
+#define STARK_USE_SOCKETCAN 1
+#endif
+
+#if STARK_USE_SOCKETCAN
+#include <fcntl.h>
+#include <linux/can.h>
+#include <linux/can/raw.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#endif
 
 /****************************************************************************/
 // Device initialization
 /****************************************************************************/
 
+enum CanBackend {
+  kBackendZlg,
+  kBackendSocketcan,
+};
+
+static CanBackend get_can_backend(void) {
+  static CanBackend backend = kBackendZlg;
+  static bool initialized = false;
+  if (initialized) {
+    return backend;
+  }
+  initialized = true;
+
+  const char *env = getenv("STARK_CAN_BACKEND");
+  if (env && (strcasecmp(env, "socketcan") == 0 || strcasecmp(env, "socket_can") == 0 ||
+              strcasecmp(env, "socket") == 0)) {
+#if STARK_USE_SOCKETCAN
+    backend = kBackendSocketcan;
+#else
+    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+#endif
+  }
+  return backend;
+}
+
+#if STARK_USE_SOCKETCAN
+static int g_socketcan_fd = -1;
+static bool g_socketcan_is_canfd = false;
+
+static const char *get_socketcan_iface(void) {
+  const char *iface = getenv("STARK_SOCKETCAN_IFACE");
+  if (iface && iface[0] != '\0') {
+    return iface;
+  }
+  return "can0";
+}
+
+static bool set_socketcan_nonblocking(int fd) {
+  int flags = fcntl(fd, F_GETFL, 0);
+  if (flags < 0) {
+    return false;
+  }
+  if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+    return false;
+  }
+  return true;
+}
+
+static bool init_socketcan_device(bool enable_fd) {
+  if (g_socketcan_fd >= 0) {
+    if (!enable_fd || g_socketcan_is_canfd) {
+      return true;
+    }
+    close(g_socketcan_fd);
+    g_socketcan_fd = -1;
+  }
+
+  int fd = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+  if (fd < 0) {
+    printf("Failed to open SocketCAN socket: %s\n", strerror(errno));
+    return false;
+  }
+
+  if (enable_fd) {
+    int enable = 1;
+    if (setsockopt(fd, SOL_CAN_RAW, CAN_RAW_FD_FRAMES, &enable, sizeof(enable)) != 0) {
+      printf("Failed to enable CANFD on SocketCAN: %s\n", strerror(errno));
+      close(fd);
+      return false;
+    }
+  }
+
+  struct ifreq ifr;
+  memset(&ifr, 0, sizeof(ifr));
+  const char *iface = get_socketcan_iface();
+  strncpy(ifr.ifr_name, iface, IFNAMSIZ - 1);
+  if (ioctl(fd, SIOCGIFINDEX, &ifr) < 0) {
+    printf("Failed to get SocketCAN iface %s: %s\n", iface, strerror(errno));
+    close(fd);
+    return false;
+  }
+
+  struct sockaddr_can addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.can_family = AF_CAN;
+  addr.can_ifindex = ifr.ifr_ifindex;
+  if (bind(fd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) < 0) {
+    printf("Failed to bind SocketCAN iface %s: %s\n", iface, strerror(errno));
+    close(fd);
+    return false;
+  }
+
+  if (!set_socketcan_nonblocking(fd)) {
+    printf("Failed to set SocketCAN socket nonblocking: %s\n", strerror(errno));
+    close(fd);
+    return false;
+  }
+
+  g_socketcan_fd = fd;
+  g_socketcan_is_canfd = enable_fd;
+  return true;
+}
+
+static int socketcan_wait_for_frame(void) {
+  struct pollfd pfd;
+  pfd.fd = g_socketcan_fd;
+  pfd.events = POLLIN;
+  pfd.revents = 0;
+  return poll(&pfd, 1, RX_WAIT_TIME);
+}
+
+static int socketcan_send_can(uint32_t can_id, const uint8_t *data, uintptr_t data_len) {
+  if (g_socketcan_fd < 0) {
+    return -1;
+  }
+
+  struct can_frame frame;
+  memset(&frame, 0, sizeof(frame));
+  if (can_id > CAN_SFF_MASK) {
+    frame.can_id = (can_id & CAN_EFF_MASK) | CAN_EFF_FLAG;
+  } else {
+    frame.can_id = can_id & CAN_SFF_MASK;
+  }
+  frame.can_dlc = (data_len > 8) ? 8 : static_cast<uint8_t>(data_len);
+  memcpy(frame.data, data, frame.can_dlc);
+
+  int nbytes = write(g_socketcan_fd, &frame, sizeof(frame));
+  return (nbytes == static_cast<int>(sizeof(frame))) ? 0 : -1;
+}
+
+static int socketcan_recv_can(uint32_t *can_id_out, uint8_t *data_out, uintptr_t *data_len_out) {
+  if (g_socketcan_fd < 0) {
+    return -1;
+  }
+
+  int ret = socketcan_wait_for_frame();
+  if (ret <= 0) {
+    return -1;
+  }
+
+  struct can_frame frame;
+  int nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
+  if (nbytes != static_cast<int>(sizeof(frame))) {
+    return -1;
+  }
+  if (frame.can_id & CAN_RTR_FLAG) {
+    return -1;
+  }
+
+  uint32_t can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK)
+                                                  : (frame.can_id & CAN_SFF_MASK);
+  *can_id_out = can_id;
+  int total_dlc = 0;
+
+  int can_dlc = frame.can_dlc;
+  for (int i = 0; i < can_dlc; ++i) {
+    data_out[total_dlc++] = frame.data[i];
+  }
+
+  while (1) {
+    nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
+    if (nbytes < 0) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        break;
+      }
+      return -1;
+    }
+    if (nbytes != static_cast<int>(sizeof(frame))) {
+      break;
+    }
+    if (frame.can_id & CAN_RTR_FLAG) {
+      continue;
+    }
+    can_dlc = frame.can_dlc;
+    for (int i = 0; i < can_dlc; ++i) {
+      data_out[total_dlc++] = frame.data[i];
+    }
+  }
+
+  *data_len_out = total_dlc;
+  return 0;
+}
+
+static int socketcan_send_canfd(uint32_t can_id, const uint8_t *data, uintptr_t data_len) {
+  if (g_socketcan_fd < 0 || !g_socketcan_is_canfd) {
+    return -1;
+  }
+
+  struct canfd_frame frame;
+  memset(&frame, 0, sizeof(frame));
+  frame.can_id = (can_id & CAN_EFF_MASK) | CAN_EFF_FLAG;
+  frame.len = (data_len > 64) ? 64 : static_cast<uint8_t>(data_len);
+  frame.flags = CANFD_BRS;
+  memcpy(frame.data, data, frame.len);
+
+  int nbytes = write(g_socketcan_fd, &frame, sizeof(frame));
+  return (nbytes == static_cast<int>(sizeof(frame))) ? 0 : -1;
+}
+
+static int socketcan_recv_canfd(uint32_t *can_id_out, uint8_t *data_out, uintptr_t *data_len_out) {
+  if (g_socketcan_fd < 0 || !g_socketcan_is_canfd) {
+    return -1;
+  }
+
+  int ret = socketcan_wait_for_frame();
+  if (ret <= 0) {
+    return -1;
+  }
+
+  struct canfd_frame frame;
+  int nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
+  if (nbytes != static_cast<int>(sizeof(frame))) {
+    return -1;
+  }
+
+  uint32_t can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK)
+                                                  : (frame.can_id & CAN_SFF_MASK);
+  *can_id_out = can_id;
+  *data_len_out = frame.len;
+  memcpy(data_out, frame.data, frame.len);
+  return 0;
+}
+#endif
+
 bool init_can_device(void) {
+  if (get_can_backend() == kBackendSocketcan) {
+#if STARK_USE_SOCKETCAN
+    return init_socketcan_device(false);
+#else
+    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+    return false;
+#endif
+  }
+#if STARK_USE_ZLG
   // Open device
   if (!VCI_OpenDevice(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX)) {
     printf("Failed to open CAN device\n");
     return false;
   }
   return true;
+#else
+  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+  return false;
+#endif
 }
 
 bool init_canfd_device(void) {
-  // Same as CAN device initialization
+  if (get_can_backend() == kBackendSocketcan) {
+#if STARK_USE_SOCKETCAN
+    return init_socketcan_device(true);
+#else
+    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+    return false;
+#endif
+  }
+  // Same as CAN device initialization for ZLG
   return init_can_device();
 }
 
@@ -33,6 +303,10 @@ bool init_canfd_device(void) {
 /****************************************************************************/
 
 bool start_can_channel(void) {
+  if (get_can_backend() == kBackendSocketcan) {
+    return true;
+  }
+#if STARK_USE_ZLG
   ZCAN_INIT init;      // Baud rate configuration, values are based on zcanpro baud-rate calculator
   init.mode = 0;       // 0 - normal mode
   init.clk = 60000000; // clock: 60M (V1.01) or 80M (V1.03 and above)
@@ -64,10 +338,14 @@ bool start_can_channel(void) {
   }
 
   return true;
+#else
+  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+  return false;
+#endif
 }
 
 bool start_canfd_channel(void) {
-  // Same configuration as CAN channel
+  // Same configuration as CAN channel for ZLG
   return start_can_channel();
 }
 
@@ -76,6 +354,29 @@ bool start_canfd_channel(void) {
 /****************************************************************************/
 
 void setup_can_callbacks(void) {
+  if (get_can_backend() == kBackendSocketcan) {
+#if STARK_USE_SOCKETCAN
+    set_can_tx_callback([](uint8_t slave_id,
+                           uint32_t can_id,
+                           const uint8_t *data,
+                           uintptr_t data_len) -> int {
+      (void)slave_id;
+      return socketcan_send_can(can_id, data, data_len);
+    });
+
+    set_can_rx_callback([](uint8_t slave_id,
+                           uint32_t *can_id_out,
+                           uint8_t *data_out,
+                           uintptr_t *data_len_out) -> int {
+      (void)slave_id;
+      return socketcan_recv_can(can_id_out, data_out, data_len_out);
+    });
+#else
+    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+#endif
+    return;
+  }
+#if STARK_USE_ZLG
   // CAN transmit callback
   set_can_tx_callback([](uint8_t slave_id,
                          uint32_t can_id,
@@ -144,6 +445,9 @@ void setup_can_callbacks(void) {
     *data_len_out = total_dlc;
     return 0; // Return 0 on success
   });
+#else
+  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+#endif
 }
 
 /****************************************************************************/
@@ -151,6 +455,29 @@ void setup_can_callbacks(void) {
 /****************************************************************************/
 
 void setup_canfd_callbacks(void) {
+  if (get_can_backend() == kBackendSocketcan) {
+#if STARK_USE_SOCKETCAN
+    set_can_tx_callback([](uint8_t slave_id,
+                           uint32_t can_id,
+                           const uint8_t *data,
+                           uintptr_t data_len) -> int {
+      (void)slave_id;
+      return socketcan_send_canfd(can_id, data, data_len);
+    });
+
+    set_can_rx_callback([](uint8_t slave_id,
+                           uint32_t *can_id_out,
+                           uint8_t *data_out,
+                           uintptr_t *data_len_out) -> int {
+      (void)slave_id;
+      return socketcan_recv_canfd(can_id_out, data_out, data_len_out);
+    });
+#else
+    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+#endif
+    return;
+  }
+#if STARK_USE_ZLG
   // CANFD transmit callback
   set_can_tx_callback([](uint8_t slave_id,
                          uint32_t canfd_id,
@@ -212,6 +539,9 @@ void setup_canfd_callbacks(void) {
     }
     return 0; // Return 0 on success
   });
+#else
+  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+#endif
 }
 
 /****************************************************************************/
@@ -265,7 +595,24 @@ bool setup_canfd(void) {
 }
 
 void cleanup_can_resources(void) {
+  if (get_can_backend() == kBackendSocketcan) {
+#if STARK_USE_SOCKETCAN
+    if (g_socketcan_fd >= 0) {
+      close(g_socketcan_fd);
+      g_socketcan_fd = -1;
+      g_socketcan_is_canfd = false;
+    }
+    printf("SocketCAN resources cleaned up.\n");
+#else
+    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+#endif
+    return;
+  }
+#if STARK_USE_ZLG
   VCI_ResetCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX);
   VCI_CloseDevice(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX);
   printf("CAN/CANFD resources cleaned up.\n");
+#else
+  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+#endif
 }

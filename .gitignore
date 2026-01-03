@@ -13,3 +13,4 @@ linux.zip
 log/
 **/logs/*.log
 linux/**/*.o
+ros2_stark_ws/

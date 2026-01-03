@@ -108,15 +108,15 @@ int main() {
 | Protocol | Description | Example Directory | Hardware Required |
 |----------|-------------|-------------------|-------------------|
 | RS-485 (Modbus) | Serial communication | [revo1/](revo1/) | USB-to-RS485 adapter |
-| CAN | Controller Area Network | [revo1/](revo1/) | ZLG USB-CAN device |
+| CAN | Controller Area Network | [revo1/](revo1/) | ZLG USB-CAN device or SocketCAN |
 
 ### Revo2 Supported Protocols
 
 | Protocol | Description | Example Directory | Hardware Required |
 |----------|-------------|-------------------|-------------------|
 | RS-485 (Modbus) | Serial communication | [revo2/](revo2/) | USB-to-RS485 adapter |
-| CAN | Controller Area Network | [revo2/](revo2/) | ZLG USB-CAN device |
-| CANFD | CAN with Flexible Data-Rate | [revo2/](revo2/) | ZLG USB-CANFD device |
+| CAN | Controller Area Network | [revo2/](revo2/) | ZLG USB-CAN device or SocketCAN |
+| CANFD | CAN with Flexible Data-Rate | [revo2/](revo2/) | ZLG USB-CANFD device or SocketCAN |
 | EtherCAT | Industrial Ethernet | [revo2_ec/](revo2_ec/) | EtherCAT master |
 
 ## 📚 API Reference
@@ -579,6 +579,7 @@ Get and print extended device information (baudrate, voltage, LED, button).
 | Multi Hand | Control multiple hands | [revo2_ctrl_multi.cpp](revo2/revo2_ctrl_multi.cpp) |
 | CAN Control | Control via CAN protocol | [revo2_can_ctrl.cpp](revo2/revo2_can_ctrl.cpp) |
 | CANFD Control | Control via CANFD protocol | [revo2_canfd.cpp](revo2/revo2_canfd.cpp) |
+| CANFD Touch | Touch control via CANFD | [revo2_canfd_touch.cpp](revo2/revo2_canfd_touch.cpp) |
 | Custom Modbus | Custom Modbus implementation | [revo2_customed_modbus.cpp](revo2/revo2_customed_modbus.cpp) |
 | Async Modbus | Asynchronous Modbus control | [revo2_customed_modbus_async.cpp](revo2/revo2_customed_modbus_async.cpp) |
 | Firmware Update | OTA firmware update | [revo2_dfu.cpp](revo2/revo2_dfu.cpp) |
@@ -639,8 +640,11 @@ make run_revo2_ctrl           # Run revo2_ctrl example
 | Mode | Description | Required Hardware |
 |------|-------------|-------------------|
 | (default) | Modbus/RS-485 | USB-to-RS485 adapter |
-| `MODE=can` | CAN/CANFD | ZLG USB-CAN(FD) device |
+| `MODE=can` | CAN/CANFD | ZLG USB-CAN(FD) device or SocketCAN adapter |
 | `MODE=ethercat` | EtherCAT | EtherCAT master |
+
+For ZLG USB-CAN(FD), ensure `libusbcanfd.so` is installed. If missing, run `./download-lib.sh`
+to populate `dist/shared/linux` or set `ZLG_LIB_DIR=/path/to/lib`.
 
 ### Compilation Flags
 
@@ -648,8 +652,49 @@ The build system automatically includes:
 - `-I../../dist/include` - SDK headers
 - `-L../../dist/lib` - SDK libraries
 - `-lstark-sdk` - Stark SDK library
-- `-lusbcanfd` - USB-CANFD library (CAN mode)
+- `-lusbcanfd` - USB-CANFD library (CAN mode, ZLG backend only)
 - `-std=c++11` - C++11 standard
+
+### SocketCAN Backend (Linux)
+
+Use SocketCAN for standard Linux CAN/CANFD interfaces (e.g., `can0`, `can1`, `vcan0`).
+
+```bash
+# Build with both backends (ZLG + SocketCAN)
+make MODE=can
+
+# Build with ZLG USB-CAN(FD) backend only
+make MODE=can CAN_BACKEND=zlg
+
+# Build without ZLG USB-CANFD library
+make MODE=can CAN_BACKEND=socketcan
+
+# Build with both backends (ZLG + SocketCAN)
+make MODE=can CAN_BACKEND=both
+
+# Select backend + interface at runtime
+export STARK_CAN_BACKEND=socketcan
+export STARK_SOCKETCAN_IFACE=can0
+```
+
+Typical CANFD interface setup (example only):
+
+```bash
+sudo ip link set can0 down
+sudo ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
+sudo ip link set can0 up
+```
+
+Run examples with SocketCAN:
+
+```bash
+# CAN
+STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo1_can
+STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_can_ctrl
+
+# CANFD
+STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_canfd
+```
 
 ### EtherCAT Build Notes
 
@@ -693,4 +738,3 @@ For technical support:
 ---
 
 **Version:** Compatible with Stark SDK v1.0.1
-
