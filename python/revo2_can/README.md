@@ -19,9 +19,11 @@ cd python
 # ZLG USBCAN-FD device, supports Windows and Linux
 (py310) ➜  revo2_can git:(main) ✗ python zlgcan_can.py # Read device info, control device
 
+# SocketCAN (Linux)
+(py310) ➜  revo2_can git:(main) ✗ STARK_SOCKETCAN_IFACE=can0 python socketcan_can.py # Read device info, control device
+
 # ZQWL CAN device, currently only Windows dependencies are provided
 (py310) ➜  revo2_can git:(main) ✗ python zqwl_can.py # Read device info, control device
 # ZLG CAN device, both Windows and Linux are supported
 (py310) ➜  revo2_can git:(main) ✗ python zlg_can.py # Read device info, control device
 ```
-
