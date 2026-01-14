@@ -1,0 +1,6 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+<config>
+  <datamng temp="#@APP_DATA#/Temp/" minmemory="8" maxmemory="1024" block="8" cache="1"/>
+  <!-- <viewmng config="#@APP_PATH#/source/ui/ViewManager.xml"/> -->
+  <!-- <measure path="#@APP_PATH#/source/measure/measuremanager.xml"/> -->
+</config>

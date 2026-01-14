@@ -1,0 +1,51 @@
+<cmds>
+	<!---系统级配置-->
+    <cmd id="SetSysResetDefaut"  param="" send_str=":SYStem:RESet:DEFault"  visible="false"  ch="ch0"/>
+    <cmd id="SetSysResetFactory"  param="" send_str=":SYStem:RESet:FACTory"  visible="false"  ch="ch0"/>
+    <cmd id="SetIPType"  param="IP_TYPE:A" send_str=":SYStem:IP:TYPE {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetIPType"  param="IP_TYPE&amp;:A" send_str=":SYStem:IP:TYPE?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetIPAddr"  param="STRING:A" send_str=":SYStem:IP:ADDR {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetIPAddr"  param="STRING&amp;:A" send_str=":SYStem:IP:ADDR?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetIPMark"  param="STRING:A" send_str=":SYStem:IP:MASK {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetIPMark"  param="STRING&amp;:A" send_str=":SYStem:IP:MASK?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetIPGateway"  param="STRING:A" send_str=":SYStem:IP:GATEway {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetIPGateway"  param="STRING&amp;:A" send_str=":SYStem:IP:GATEway?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	
+	<cmd id="GetSysInitState"  param="INT8&amp;:A" send_str=":SYStem:INIT:STATe?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSysVerUpdate"  param="STRING&amp;:A" send_str=":SYStem:VERSion:UPDAte?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSysVerSoftwate"  param="STRING&amp;:A" send_str=":SYStem:VERSion:SOFTware?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSysHWVersion"  param="STRING&amp;:A" send_str=":SYSTem:VERSion:HW?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSysFPGAVersion"  param="STRING&amp;:A" send_str=":SYSTem:VERSion:fpga?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSerialNum"  param="STRING&amp;:A" send_str=":SYStem:DEVice:ID?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	
+	<cmd id="GetSysDeviceName"  param="STRING&amp;:A" send_str=":SYStem:DEVice:NAME?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSysMANUFACTURE"  param="STRING&amp;:A" send_str=":SYStem:MANUFACTURE?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSysMANUFACTUREDate"  param="STRING&amp;:A" send_str=":SYStem:MANUFACTURE:DATE?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSysVerPower"  param="STRING&amp;:A" send_str=":SYStem:VERSion:POWer?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	
+	<cmd id="SetSysLANGuage"  param="LABGUAGE_TYPE:A" send_str=":SYStem:LANGuage {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetSysLANGuage"  param="LABGUAGE_TYPE&amp;:A" send_str=":SYStem:LANGuage?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetSysEncode"  param="STRING:A" send_str=":SYStem:ENCODE {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetSysEncode"  param="STRING&amp;:A" send_str=":SYStem:ENCODE?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetSysDate"  param="STRING:A" send_str=":SYStem:DATE {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetSysDate"  param="STRING&amp;:A" send_str=":SYStem:DATE?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetSysTime"  param="STRING:A" send_str=":SYStem:TIME {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetSysTime"  param="STRING&amp;:A" send_str=":SYStem:TIME?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetSysZone"  param="INT32:A" send_str=":SYStem:ZONE {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetSysZone"  param="INT32&amp;:A" send_str=":SYStem:ZONE?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	
+	
+    <cmd id="SetPowerOFF" param="" send_str=":SYSTem:POWER:OFF"  visible="false"  ch="ch0"/>
+    <cmd id="SetPowerREPEtition" param="" send_str=":SYSTem:POWER:REPEtition"  visible="false"  ch="ch0"/>
+    <cmd id="SetAutoPowerRestart" param="ON_OFF_BOOL_TYPE:A" send_str=":SYSTem:POWER:REStart {A}"  visible="false"  ch="ch0"/>
+    <cmd id="GetAutoPowerRestart" param="ON_OFF_BOOL_TYPE&amp;:A" send_str=":SYSTem:POWER:REStart?" recv_str="{A}"  visible="false"  ch="ch0"/>
+	
+    <cmd id="SetSysRun"         param=""             send_str=":RUN"  visible="false"  ch="ch0"/>
+    <cmd id="SetSysStop"        param=""             send_str=":STOP"  visible="false"  ch="ch0"/>
+    <cmd id="SetSysStatus"      param="RUN_STOP_BOOL_TYPE:A" send_str=":{A}"  visible="false"  ch="ch0"/>
+    <cmd id="GetSysStatus" param="RUN_STOP_BOOL_TYPE&amp;:A" send_str=":RUN?" recv_str="{A}"  visible="false"  ch="ch0"/>
+    <cmd id="GetTimeStamp" param="DOUBLE&amp;:A"     send_str=":RUN:TIMEStamp?" recv_str="{A}"  visible="false"  ch="ch0"/>
+    <cmd id="GetSysTimeStamp" param="UINT64&amp;:A"     send_str=":SYStem:TIMEStamp?" recv_str="{A}"  visible="false"  ch="ch0"/>
+	
+    <cmd id="ZpsAuthenticator" param="UINT8_POINT:indata,UINT8_POINT:outdata"     send_str=":authenticate:challenge? {b:indata}" recv_str="${outdata}$"  visible="false"  ch="ch0"/>
+</cmds>

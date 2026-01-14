@@ -1,0 +1,22 @@
+<dialog id="globalshowdialog_test" bind="NULL:source{title=title;width=width;height=height}" result="0"  titlebar="title" form="appmodal">
+    <view id="showview" >
+		<vlayout sizeConstraint="default" alignment="AlignCenter">
+			<image id="testimage" x="0" y="0" bind="source{image=imagePath}" />
+			<text bind="source{text=message}" objectName="DialogText"/>		
+			<hlayout sizeConstraint="default" alignment="AlignCenter" contentsMargins="0,28,0,0" >        
+				<button id="ok" bind="source{text=buttonOk}" fixWidth="60">
+					<event id="clicked">
+						<setter data="globalshowdialog_test.result=1"/>
+						<show id="globalshowdialog_test" status="hide"/>
+					</event>
+				</button>
+				<button id="cancel" bind="source{text=buttonCancel}" fixWidth="60">
+					<event id="clicked">
+						<setter data="globalshowdialog_test.result=0"/>
+						<show id="globalshowdialog_test" status="hide"/>
+					</event>
+				</button>
+			</hlayout>
+		</vlayout>
+    </view>
+</dialog>

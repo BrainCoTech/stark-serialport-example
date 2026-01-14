@@ -40,7 +40,7 @@ class TestConfig:
     timeout_ms: float = 100.0        # Timeout threshold (milliseconds)
 
     # Frequency test parameters
-    target_frequency: int = 100      # Target frequency (Hz)
+    target_frequency: int = 500      # Target frequency (Hz)
     min_interval_ms: float = 1.0     # Minimum interval (milliseconds)
 
     # Stability test parameters
@@ -539,10 +539,10 @@ async def main():
 
     # Create test configuration
     config = TestConfig(
-        test_duration=15.0,          # Each test duration 15 seconds
-        target_frequency=100,        # Target frequency 100Hz
+        test_duration=10.0,          # Each test duration 10 seconds
+        target_frequency=500,        # Target frequency 500Hz
         min_interval_ms=1.0,         # Minimum 1ms interval
-        stability_duration=30.0      # Stability test duration 30 seconds
+        stability_duration=10.0      # Stability test duration 10 seconds
     )
 
     # Create tester

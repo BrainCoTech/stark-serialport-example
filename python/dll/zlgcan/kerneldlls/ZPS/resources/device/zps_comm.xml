@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<device>
+  <localsource>
+  </localsource>
+  <connect>
+   <links LinkPiror="MULTI_NET;USB" alias="MULTI_NET=TCP">
+     <link type="USB" Pid="0x0010" Vid="0x3068">
+        <config id="io1" ch_id="ch0" OutEndPoint="0x01" InEndPoint="0x81" />
+		<config id="io2"  ch_id="ch1" type="IN" InEndPoint="0x82"  delay_time="5000" comment="5ms" tran_size="1024000" tran_count="4" buff_size="16" auto_listen="true"/>
+     </link>
+     <link DefaultComm="tcp1"  type="MULTI_NET" followDefault="IP" >
+		<link  id="tcp1"  ch_id="ch0" IP="172.16.26.123"  Port="5025"  type="ALL"/>
+		<link  id="tcp2"  ch_id="ch1" IP="172.16.26.123"  Port="5026" type="IN"  buff_size="16"/>
+	 </link>
+   </links>
+  </connect>
+
+
+  <datachannel>
+    <ch id="ch0" type="NORMAL" />
+    <ch id="ch1" type="LISTEN"   Listener="Listener1" />
+  </datachannel>
+  
+<!-- 异步功能码
+ZBUS_FC_STD HEART_BEAT = Ox11    // 心跳帧           17
+ZBUS FC STD CAN FRAME            // CAN报文异步      18
+ZBUS FC STD_CAN1 RX              // CAN1 RX异步		 19
+ZBUS_FC_STD_CAN1_TX              // CAN1 TX异步      20
+ZBUS_FC_STD_CAN2 RX              // CAN2 RX异步      21
+ZBUS_FC_STD_CAN2_TX              // CAN2 TX异步      22
+ZBUS_FC_STD_CAN3 RX              // CAN3 RX异步      23
+ZBUS_FC_STD_CAN3 TX,             // CAN3 TX异步      24
+ZBUS_FC_STD_WAVEO HEAD           // CANL报文波形头   25
+ZBUS_FC STD WAVE1 HEAD           // CANH报文波形头   26
+ZBUS_FC_STD AIO                  // AI 采样数据      27
+ZBUS_FC_STD_AI1                  // AI 采样数据		 28
+ZBUS FC STD AI2                  // AI 采样数据      29
+ZBUS_FC STD AI3                  // AI 采样数据      30
+ZBUS FC STD DI                   // DI 采样数据      31
+ZBUS FC STD DSO，                // DSO 异步数据     32
+kCan1BusLoad = 34,//   can-busload     CAN1负载率数据
+kCan2BusLoad = 35,//   can-busload     CAN2负载率数据
+kCan3BusLoad = 36,//   can-busload     CAN3负载率数据
+ZBUS FC STD TEST                 // 测试          
+-->
+<listeners>
+	<Listen id="Listener1" key="func_code" parse_var="UINT32 func_code,ZBUFF Data" parse="code=func_code;data=Data" parse_type="ubus">
+	   <!-- <item key="33" catch="Data" asyn="1">
+	   		<log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/>
+			<func name="LogBin" param="Data" />
+			<log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/>
+	   </item> -->
+	   <item key="17" catch="Data" asyn="1">
+			<!-- <ctr id="heartbeat" event="heartbeat_update" /> -->
+	   		<!-- <log text="IN FUNC_CODE 17, show Data： ${Data}" level="info"/> -->
+			<!-- <func name="LogBin" param="Data" /> -->
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   <item key="18" catch="Data,&amp;autoprocess" asyn="1" comment="报文数据">
+		    <!-- <func name="ZPS.ProcessData" param="Data"/>  -->
+			<code statement="autoprocess._can_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   <item key="19" catch="Data,&amp;autoprocess" asyn="1" comment="can1rx数据">
+		    <!-- <func name="LogBin" param="Data"/>  -->
+			<code statement="autoprocess._can1rx_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   <item key="20" catch="Data,&amp;autoprocess" asyn="1" comment="can1tx数据">
+		    <!-- <func name="ZPS.ProcessData" param="Data"/>  -->
+			<code statement="autoprocess._can1tx_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   <item key="21" catch="Data,&amp;autoprocess" asyn="1" comment="can2rx_数据">
+		    <!-- <func name="ZPS.ProcessData" param="Data"/>  -->
+			<code statement="autoprocess._can2rx_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   <item key="22" catch="Data,&amp;autoprocess" asyn="1" comment="can2tx数据">
+		    <!-- <func name="ZPS.ProcessData" param="Data"/>  -->
+			<code statement="autoprocess._can2tx_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   <item key="23" catch="Data,&amp;autoprocess" asyn="1" comment="can3rx数据">
+		    <!-- <func name="ZPS.ProcessData" param="Data"/>  -->
+			<code statement="autoprocess._can3rx_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   <item key="24" catch="Data,&amp;autoprocess" asyn="1" comment="can3tx数据">
+		    <!-- <func name="ZPS.ProcessData" param="Data"/>  -->
+			<code statement="autoprocess._can3tx_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   <item key="27" catch="Data,&amp;autoprocess" asyn="1" comment="AI数据">
+		    <!-- <func name="ZPS.ProcessData" param="Data"/>  -->
+			<code statement="autoprocess._ai1_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	   	   <item key="31" catch="Data,&amp;autoprocess" asyn="1" comment="DI数据">
+		    <!-- <func name="ZPS.ProcessData" param="Data"/>  -->
+			<code statement="autoprocess._di_.FetchData(Data)"/>
+			<!-- <log text="IN FUNC_CODE 33, show Data： ${Data}" level="info"/> -->
+	   </item>
+	 </Listen>
+</listeners>
+
+  <!-- <cmds Eof="0x0d;0x0a"> -->
+  <cmds silence="1" Eof="0x0a" defautincludepath="#@ZPS_DEVICE_RES#/" include="sys_cmd.xml;can_cmd.xml;dio_cmd.xml;aio_cmd.xml;send_cmd.xml;async_cmd.xml;wave_cmd.xml;dso_cmd.xml;receivedisturb.xml;">
+    <cmd id="IsOnline" param="STRING&amp;:A" send_str="*IDN?"  recv_str="{A}"  visible="false" ch="ch0" silence="1"/>
+    <cmd id="GetRegValue_int" param="STRING:A,INT64&amp;:value" send_str=":reg? {A}"  recv_str="{value}" visible="false"  ch="ch0" />
+    <cmd id="SetRegValue_int" param="STRING:A,INT64:value" send_str=":reg {A},{value}" visible="false"  ch="ch0" />
+	<!--RC业务-->
+  </cmds>
+  
+  <heartbeat cmd="IsOnline" args="Arg" period="3000" valid_time="2000" valid_delay_time="100"/>
+  <!-- <heartbeat cmd="" args="" period="3000" valid_time="2000" valid_delay_time="100"/> -->
+  <funcs>
+  </funcs>
+	
+  <vars>
+    <var id="Arg" vtype="STRING" value="world!" def="hello!"  connect="chnum=1" comment="心跳使用" />
+	<!-- <var id="multi_reader" vtype="CMultiStructReader"  connect="__LinkData=DataMng.{CanfdDataSet}" caption="" /> -->
+  </vars>
+  
+  <events>
+    <sub_event>
+      <event event="DEVICE_OPEN">
+        <log text="ZPS 连接成功" level="info" />
+      </event>
+    </sub_event>
+  </events>
+</device>

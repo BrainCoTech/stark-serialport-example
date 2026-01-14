@@ -1,0 +1,188 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<uitypes>
+  <uitype moduletype="item"    id="titlebar"       ctr="titlebar" custom_ignore="1"/>
+  <uitype moduletype="item"    id="combobox"       ctr="combobox"/>
+  <uitype moduletype="item"    id="stretch"        ctr="stretch"/>
+  <uitype moduletype="item"    id="spacing"        ctr="spacing"/>
+  <uitype moduletype="layout"  id="hlayout"        ctr="hlayout"/>
+  <uitype moduletype="layout"  id="vlayout"        ctr="vlayout"/>
+  <uitype moduletype="layout"  id="flayout"        ctr="flayout"/>
+  <uitype moduletype="layout"  id="glayout"        ctr="glayout"/>
+  <uitype moduletype="layout"  id="nonelayout"     ctr="nonelayout"/>
+  <uitype moduletype="layout"  id="splitter"       ctr="splitter"/>
+  <uitype moduletype="compose" id="compose"        ctr="compose"/>
+  <uitype moduletype="compose" id="view"           ctr="view"/>
+  <uitype moduletype="compose" id="groupbox"       ctr="groupbox"/>
+  <uitype moduletype="compose" id="localctr"       ctr="localctr"/>
+  <uitype moduletype="compose" id="scrollarea"     ctr="scrollarea"/>
+  <uitype moduletype="form"    id="dialog"         ctr="dialog"/>
+  <uitype moduletype="form"    id="fullkeyboard"   ctr="fullkeyboard"/>
+  <uitype moduletype="form"    id="numkeyboard"    ctr="numkeyboard"/>
+  <uitype moduletype="form"    id="hexnumkeyboard" ctr="hexnumkeyboard"/>
+  <uitype moduletype="form"    id="dock"           ctr="dock"/>
+  <uitype moduletype="form"    id="dockpanel"      ctr="dockpanel"/>
+  <uitype moduletype="form"    id="embedWindow"    ctr="embedWindow"/>
+  <uitype moduletype="form"    id="filedialog"     ctr="filedialog"/>
+  <uitype moduletype="form"    id="calendardialog" ctr="calendardialog"/>
+  <uitype moduletype="form"    id="progressdialog" ctr="progressdialog"/>
+  <uitype moduletype="form"    id="messagedialog"  ctr="messagedialog"/>
+  <uitype moduletype="form"    id="normaldialog"   ctr="normaldialog"/>
+  <uitype moduletype="form"    id="mainform"       ctr="mainform"    extend="mainformex"/>
+  <uitype moduletype="item"    id="button"         ctr="button" />
+  <uitype moduletype="item"    id="indicator"      ctr="indicator"   extend="indicatorex"/>
+  <uitype moduletype="item"    id="exclusive"      ctr="exclusive" />
+  <uitype moduletype="item"    id="toolbutton"     ctr="toolbutton" />
+  <uitype moduletype="item"    id="textbrowser"    ctr="textbrowser" />
+  <uitype moduletype="item"    id="radiobutton"    ctr="radiobutton"/>
+  <uitype moduletype="item"    id="text"           ctr="text"/>
+  <uitype moduletype="item"    id="datetime"       ctr="datetime"/>
+  <uitype moduletype="item"    id="pathedit"       ctr="pathedit"/>
+  <uitype moduletype="item"    id="filelist"       ctr="filelist"/>
+  <uitype moduletype="item"    id="drivescombobox" ctr="drivescombobox"/>
+  <uitype moduletype="item"    id="color"          ctr="color"/>
+  <uitype moduletype="item"    id="developer"      ctr="developer"/>
+  <uitype moduletype="item"    id="image"          ctr="image"/>
+  <uitype moduletype="item"    id="checkbox"       ctr="checkbox"/>
+  <uitype moduletype="item"    id="edit"           ctr="edit"/>
+  <uitype moduletype="item"    id="progressbar"    ctr="progressbar"/>
+  <uitype moduletype="item"    id="slider"         ctr="slider"/>
+  <uitype moduletype="item"    id="ipedit"         ctr="ipedit"/>
+  <uitype moduletype="item"    id="highlighttext"  ctr="highlighttext"/>
+  <uitype moduletype="item"    id="progresswater"  ctr="progresswater"/>
+  <uitype moduletype="item"    id="gaugecar"       ctr="gaugecar"/>
+  <uitype moduletype="item"    id="filepathedit"   ctr="filepathedit"/>
+  <uitype moduletype="item"    id="resetedit"      ctr="resetedit"/>
+  <uitype moduletype="item"    id="buttonbox"      ctr="buttonbox"/>
+  <uitype moduletype="item"    id="menu"           ctr="menu"         extend="menuex"/>
+  <uitype moduletype="item"    id="action"         ctr="action"/>
+    <uitype moduletype="item"    id="gridlinetool"   ctr="gridlinetool"/> <!--该控件仅用于生成合并单元格xml语句的小工具,不建议使用-->
+  <uitype moduletype="item"    id="varmenu"        ctr="varmenu"/>
+  <uitype moduletype="item"    id="navigation"     ctr="navigation"   extend="navex"/>
+  <uitype moduletype="item"    id="toolbox"        ctr="toolbox"      extend="toolboxex"/>
+  <uitype moduletype="item"    id="propertyview"   ctr="propertyview" extend="propertyviewex"/>
+  <uitype moduletype="item"    id="category"       ctr="category"/>
+  <uitype moduletype="item"    id="propertytree"   ctr="propertytree" extend="propertyviewex"/>
+  <uitype moduletype="item"    id="selectview"     ctr="selectview"   extend="listviewex"/>
+  <uitype moduletype="item"    id="popupDialog"    ctr="popupDialog"/>
+  <uitype moduletype="item"    id="listview"       ctr="listview"     extend="listviewex"/>
+  <uitype moduletype="item"    id="customlist"     ctr="customlist"   extend="listviewex"/>
+  <uitype moduletype="item"    id="dragdataview"   ctr="dragdataview" extend="listviewex"/>
+  <uitype moduletype="item"    id="tableview"      ctr="tableview"    extend="listviewex"/>
+  <uitype moduletype="item"    id="listline"       ctr="listline"     extend="listlineex"/>
+  <uitype moduletype="item"    id="simpleline"     ctr="simpleline"   extend="listlineex"/>
+  <uitype moduletype="item"    id="gridline"       ctr="gridline"     extend="gridlineex"/>
+  <uitype moduletype="item"    id="logline"        ctr="logline"      extend="gridlineex"/>
+  <uitype moduletype="item"    id="barchart"       ctr="barchart"     extend="listviewex"/>
+  <uitype moduletype="item"    id="barsgroup"      ctr="barsgroup"    extend="gridlineex"/>
+  <uitype moduletype="item"    id="baritem"        ctr="baritem"/>
+  <uitype moduletype="item"    id="columns"        ctr="columns"      extend="columnsex"/>
+  <uitype moduletype="item"    id="column"         ctr="column"/>
+  <uitype moduletype="item"    id="linetext"       ctr="linetext"/>
+  <uitype moduletype="item"    id="yaxis"          ctr="yaxis"/>
+  <uitype moduletype="item"    id="lcd_7"          ctr="lcd_7"/>
+  <uitype moduletype="item"    id="activatebtn"    ctr="activatebtn"/>
+  <uitype moduletype="item"    id="log_ui"         ctr="log_ui"/>
+  <uitype moduletype="item"    id="waveview"       ctr="waveview"     extend="waveviewex"/>
+  <uitype moduletype="item"    id="wavelegend"     ctr="wavelegend" />
+  <uitype moduletype="item"    id="wavesearch"     ctr="wavesearch"/>
+  <uitype moduletype="item"    id="webwindow"      ctr="webwindow"/>
+  <uitype moduletype="item"    id="hotarea"        ctr="hotarea"      extend="hotareaex"/>
+  <uitype moduletype="item"    id="hotrect"        ctr="hotrect"/>
+  <uitype moduletype="item"    id="oldUIDialog"    ctr="oldUIDialog"  extend="oldui"/>
+  <uitype moduletype="item"    id="oldUIDock"      ctr="oldUIDock"    extend="oldui"/>
+  <uitype moduletype="item"    id="designertest"      ctr="designertest"  />
+  <uitype moduletype="item"    id="hexdataview"      ctr="hexdataview" extend="hexdataviewex" />
+  <uitype moduletype="compose"    id="designer"      ctr="designer" extend="designerex" />
+  <uitype moduletype="compose" id="viewex" base="view" width="400" height="300">
+    <nonelayout id="defaultLayout">
+      
+    </nonelayout>
+  </uitype>
+  <uitype moduletype="compose" id="hlayout_view" base="view" width="100" height="100">
+    <hlayout id="hlayout" contentsMargins="10,5,10,5">
+
+    </hlayout>
+  </uitype>
+  <uitype moduletype="compose" id="vlayout_view" base="view" width="100" height="100">
+    <vlayout id="vlayout" contentsMargins="5,10,5,10">
+
+    </vlayout>
+  </uitype>
+  <uitype moduletype="compose" id="flayout_view" base="view" width="100" height="100">
+    <flayout id="flayout" spacing="10">
+
+    </flayout>
+  </uitype>
+  <uitype moduletype="compose" id="glayout_view" base="view" width="100" height="100">
+    <glayout id="glayout" spacing="10">
+
+    </glayout>
+  </uitype>
+  <uitype moduletype="form" id="dialogex" base="dialog" title="hello world" titlebar="title;min;max;close">
+    <view id="showview">
+      <nonelayout id="defaultDialogLayout">
+
+      </nonelayout>      
+    </view>
+  </uitype>
+  <uitype id="logview"         base="listview"     objectName="LogView" rootIsDecorated="false" headerVisible="false" autoScroll="true" multiSelect="false">
+    <extend>
+      <columns>
+        <column name="Log" title="日志" alignment="AlignCenter"/>
+      </columns>
+      <lineinfos mainKey="vartype" BackColor="">
+        <logline key="__def__" init="extend" style="data;visible" BackColor="" bind="__line__{_other=try}" color="STRING#getColor(__line__.level)"/>
+      </lineinfos>
+    </extend>
+    <func id="getColor" param="STRING:level" return="STRING">
+      <switch target="@level" type="STRING">
+        <!-- 支持中文 -->
+        <return case="Debug"   value="purple" />
+        <return case="Error"   value="red"/>
+        <return case="Warning" value="orange"/>
+        <return case="Info"    value="white"/>
+      </switch>
+    </func>
+  </uitype>
+  <uitype id="wavetree"  base="view"  alias="WaveTree">
+    <vlayout spacing="0" contentsMargins="0,0,0,0">
+      <splitter orientation="Vertical" >
+        <waveview id="waveview" cursor="CursorMgr" proportion="7" eventUpLoad="1">
+          <extend>
+            <xaxis isFixedDivNumber="false" divNumber="10" zeroLineK="0" calcK="1" sizeIsFormat="false" />
+            <yaxis isFixedDivNumber="false" divNumber="5"  zeroLineK="0" calcK="1" sizeIsFormat="false" style="OR"/>
+          </extend>
+        </waveview>
+        <listview id="listview" dragType="Drag" copyPaste="true" proportion="3" eventUpLoad="1">
+          <extend>
+            <columns>
+              <column name="Name"   title="通道名"    toolTip="通道名"    alignment="AlignCenter" />
+              <column name="A"      title="A"         toolTip="A"         alignment="AlignCenter" />
+              <column name="B"      title="B"         toolTip="B"         alignment="AlignCenter" />
+              <column name="Delta"  title="Delta"     toolTip="Delta"     alignment="AlignCenter" />
+              <column name="Slope"  title="Slope[/s]" toolTip="Slope[/s]" alignment="AlignCenter" />
+              <column name="Min"    title="Min"       toolTip="Min"       alignment="AlignCenter" />
+              <column name="Max"    title="Max"       toolTip="Max"       alignment="AlignCenter" />
+              <column name="Avg"    title="Avg"       toolTip="Avg"       alignment="AlignCenter" />
+              <column name="RMS"    title="RMS"       toolTip="RMS"       alignment="AlignCenter" />
+            </columns>
+            <lineinfos mainKey="vartype" BackColor="">
+              <listline key="__def__" init="extend" style="data" child="">
+                <linetext name="Name"  bind="__line__{text=name}"  alignment="AlignCenter"/>
+                <linetext name="A"     bind="__line__{text=A}"     alignment="AlignCenter"/>
+                <linetext name="B"     bind="__line__{text=B}"     alignment="AlignCenter"/>
+                <linetext name="Delta" bind="__line__{text=Delta}" alignment="AlignCenter"/>
+                <linetext name="Slope" bind="__line__{text=Slope}" alignment="AlignCenter"/>
+                <linetext name="Min"   bind="__line__{text=Min}"   alignment="AlignCenter"/>
+                <linetext name="Max"   bind="__line__{text=Max}"   alignment="AlignCenter"/>
+                <linetext name="Avg"   bind="__line__{text=Avg}"   alignment="AlignCenter"/>
+                <linetext name="RMS"   bind="__line__{text=RMS}"   alignment="AlignCenter"/>
+              </listline>
+            </lineinfos>
+          </extend>
+        </listview>
+      </splitter>
+    </vlayout>
+  </uitype>
+
+</uitypes>

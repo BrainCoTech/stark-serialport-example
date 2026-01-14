@@ -13,3 +13,7 @@ linux.zip
 log/
 **/logs/*.log
 linux/**/*.o
+python/revo2/revo2_quick_comm_test.py
+bc_stark_sdk.dll
+kerneldlls/
+windows/dll/zlgcan.dll

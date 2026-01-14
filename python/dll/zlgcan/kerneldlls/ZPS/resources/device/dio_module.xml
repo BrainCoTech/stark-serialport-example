@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <doc>
+ <localsource>
+ 	<type  type="z_comm:DeviceDataTypeCreator" id="diConfig" vtype="z_comm:DeviceVar" bindType="diParaConfig"  AutoAsync="0" connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetDIConfig" get_func="GetDIConfig" set_func_param="channelnum,_base_" get_func_param="channelnum,_base_">
+		<!-- <sub_data id="dac_ref_volt"      var_type="config"  /> -->
+		<!-- <sub_data id="measure_enable"    var_type="config"  /> -->
+		<!-- <sub_data id="measure_window"    var_type="config"  /> -->
+		<!-- <sub_data id="measure_time_out"  var_type="config"  /> -->
+	</type>
+	<type  type="z_comm:DeviceDataTypeCreator" id="doConfig" vtype="z_comm:DeviceVar" bindType="doParaConfig"  connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetDOConfig" get_func="GetDOConfig" set_func_param="channelnum,_base_" get_func_param="channelnum,_base_">
+		<sub_data id="pwm_level"      var_type="config" />
+		<sub_data id="pwm_width"      var_type="config" />
+		<sub_data id="pwm_period"     var_type="config" />
+		<sub_data id="pwm_times" 	  var_type="config" />
+		<sub_data id="out_mode"       var_type="config" />
+		<sub_data id="out_type"    	  var_type="config" />
+		<sub_data id="out_value"      var_type="config" />
+		<sub_data id="out_enable_ch"  var_type="config" />
+	</type>
+ </localsource>
+   <init_item>
+		<var id="DIEnable22"    vtype="z_comm:DeviceVar" res="Comm" bindType="ON_OFF_BOOL_TYPE" channelnum="NEWITEM(UINT8:1)" var_type="config"  set_func="SetDOChannelEnable"     set_func_param="channelnum,_base_" get_func="GetDOChannelEnable" get_func_param="channelnum,_base_"/>
+		<var id="diTest" vtype="diParaConfig"/>
+		<var id="di1config" vtype="diConfig" channelnum="NEWITEM(UINT8:1)" />
+		<var id="di2config" vtype="diConfig" channelnum="NEWITEM(UINT8:2)" />
+		<var id="di3config" vtype="diConfig" channelnum="NEWITEM(UINT8:3)" />
+		<var id="di4config" vtype="diConfig" channelnum="NEWITEM(UINT8:4)" />
+		<var id="di5config" vtype="diConfig" channelnum="NEWITEM(UINT8:5)" />
+		<var id="di6config" vtype="diConfig" channelnum="NEWITEM(UINT8:6)" />
+		<var id="di7config" vtype="diConfig" channelnum="NEWITEM(UINT8:7)" />
+		<var id="di8config" vtype="diConfig" channelnum="NEWITEM(UINT8:8)" />
+		
+	    <var id="do1config" vtype="doConfig" channelnum="NEWITEM(UINT8:1)" />
+		<var id="do2config" vtype="doConfig" channelnum="NEWITEM(UINT8:2)" />
+		<var id="do3config" vtype="doConfig" channelnum="NEWITEM(UINT8:3)" />
+		<var id="do4config" vtype="doConfig" channelnum="NEWITEM(UINT8:4)" />
+		<var id="do5config" vtype="doConfig" channelnum="NEWITEM(UINT8:5)" />
+		<var id="do6config" vtype="doConfig" channelnum="NEWITEM(UINT8:6)" />
+		<var id="do7config" vtype="doConfig" channelnum="NEWITEM(UINT8:7)" />
+		<var id="do8config" vtype="doConfig" channelnum="NEWITEM(UINT8:8)" />
+		<init id="A"  channelnum="NEWITEM(UINT8:8)" />
+		
+		<var id="DIRun"    vtype="z_comm:DeviceVar" bindType="STRING" channelnum="NEWITEM(UINT8:1)" var_type="config"  set_func="SetDIRun"     set_func_param="_base_" get_func="GetDIRun" get_func_param="_base_"/>
+		
+		<var id="DIEnable"  local_init="OFF"  vtype="z_comm:DeviceVar"  bindType="ON_OFF_BOOL_TYPE" channelnum="NEWITEM(UINT8:1)" var_type="config"  set_func="SetDOChannelEnable"     set_func_param="channelnum,_base_" get_func="GetDOChannelEnable" get_func_param="channelnum,_base_"/>
+		
+		<var id="DI1Data"  vtype="z_comm:DeviceVar" bindType="STRING" var_type="config"  channelnum="NEWITEM(UINT8:1)" get_func="GetDIChannelData"     get_func_param="channelnum,_base_"/>
+		
+		<var id="DI1MeasureValue"  vtype="z_comm:DeviceVar" bindType="diMeaSureValue" var_type="config"  channelnum="NEWITEM(UINT8:1)" get_func="GetDIMEASureValue"     get_func_param="channelnum,_base_.cycle,_base_.pwmratio,_base_.times,"/>
+		
+   </init_item>
+</doc>

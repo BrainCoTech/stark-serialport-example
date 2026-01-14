@@ -1,0 +1,106 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<senddata  version="20200219">
+  <outputdata>
+    <localsource>
+      <alias    id="SEND_TYPE_ALIAS" key="UINT32">
+        <!-- <item name="立即"	value="DIREct"/> -->
+        <item name="普通发送"	value="2"/>
+        <item name="触发发送"	value="6"/>
+        <!-- <item name="错误发送"	value="ERROR"/> -->
+      </alias>
+      <alias    id="SEND_STATUS_ALIAS">
+        <item name="发送"	value="0"/>
+        <item name="停止"	value="1"/>
+      </alias>
+      <memberfunc id="constructor" comment="在创建完成后进行初始化">
+        <!-- <ctr id="Channel"  ctr="SubEvent  ValueChange" callback="ChannlChange()"/> -->
+        <func  name="ChannlChange"/>
+      </memberfunc>
+      <memberfunc id="release" comment="在析构时调用的函数">
+        <func  name="StopSend"/>
+      </memberfunc>
+      <memberfunc id="ChannlChange" comment="在析构时调用的函数">
+        <setter data="SendType.option=AUTO(parent.Channel.bind.TriggerFactory.TriggerTypes)"/>
+        <!-- <setter data="SendDataType.option=AUTO(parent.Channel.bind.SendDataTypes)"/> -->
+      </memberfunc>
+      <!-- <publicproperty Info="DYNAMIC(通道:#@Channel.bind.caption#,发送类型:#$SendType#,数据类型:#$SendDataType#,#@TriggerInfo.Info#)"> -->
+      <publicproperty confirmbtn="1" canclebtn="1" Info="DYNAMIC(通道:#@Channel.bind.caption#,发送类型:#$SendType#,#@TriggerInfo.Info#)">
+        <!-- <childgroup id="aaa" caption="bbb" childs="Channel;SendType;Cycle;Times;TriggerInfo;SendData"> -->
+        <childgroup id="aaa" caption="bbb" childs="Channel;SendType;CHILD(TriggerInfo)">
+          <item  id="Status"          enabled="1"/>
+          <item  id="Description"     	type="edit" />
+          <item  id="Channel"       type="enum_s"   caption="发送通道"      option="AUTO(OutputMng.SendChannel:caption)"    tooltip="选择发送所需要的通道" on_BindChanged="parent.ChannlChange" />
+          <item  id="SendType"      type="enum_s"   caption="发送类型"      tooltip="选择发送类型" />
+          <!-- <item  id="SendDataType"  type="enum_s"   caption="数据类型"      tooltip="选择数据类型"/> -->
+          <!-- <item  id="Cycle"         type="edit"     caption="发送周期"      value_unit="ms"   regexp="" -->
+          <!-- visible="INT8(IF @parent.SendType==`DIREct` THEN 0 ELSE 1)" /> -->
+          <!-- <item  id="Times"         type="edit"     caption="发送次数"      value_unit="次"  regexp="" tooltip="" -->
+          <!-- visible="INT8(IF @parent.SendType==`DIREct` THEN 0 ELSE 1)" /> -->
+        </childgroup>
+        <triggers>
+          <trigger id="Channel">
+            <log text="channel11111111"/>
+          </trigger>
+
+        </triggers>
+      </publicproperty>
+    </localsource>
+  </outputdata>
+  <sendDataViewListConfig>
+    <!--
+    <columns   BackColor="">
+      <column name="SendChannel"	title="通道" width="70"  toolips=""/>
+      <column name="SendType"	    title="发送类型" width="60"  toolips=""/>
+	  <column name="CycleDelay"	title="延时(s)" width="70"  toolips=""/>
+      <column name="CycleTime"	title="周期(s)" width="70"  toolips=""/>
+      <column name="SendTimes"	title="次数(次)" width="70"  toolips=""/>
+      <column name="Info"	        title="数据" width="400" toolips=""/>
+      <column name="SendStatus"	title="状态" width="70"  toolips=""/>
+       <column name="delete"	 title="操作" width="70"  toolips=""/>
+    </columns>
+    <lineinfos  BackColor="">
+      <line key="" BackColor="">
+        <item type="text"   name="SendChannel"  value="Channel.bind.bind.caption" comment="是否支持列表，使用Channel.listenable"/>
+        <item type="text"   name="SendType"     value="SendType.value"/>
+        <item type="text"   name="CycleTime"    value="Cycle" />
+        <item type="text"   name="SendTimes"    value="Times" />
+        <item type="text"   name="Info"         value="SendData.Info" />
+        <item type="button" name="SendStatus"   value="Status"  eventName="SendMSG" />
+        <item type="image_button" name="delete"       value=""  eventName="Delete" />
+      </line>
+    </lineinfos>
+	-->
+    <columns   BackColor="">
+      <!-- <column name="SendChannel"	title="通道选择" width="60"  toolips=""/> -->
+      <column name="SendInfo"	title="发送信息" width="1000"  toolips=""/>
+      <!-- <column name="moveup"	 title="操作" width="70"  toolips=""/> -->
+      <!-- <column name="moveoff"	 title="操作" width="70"  toolips=""/> -->
+      <!-- <column name="add"	 title="操作" width="70"  toolips=""/> -->
+      <!-- <column name="delete"	 title="操作" width="70"  toolips=""/> -->
+      <column name="Status"	 title="状态" width="70"  toolips=""/>
+    </columns>
+    <lineinfos  BackColor="">
+      <line key="default" child="SendItem.SendList" BackColor="">
+        <!-- <item type="text"   name="SendChannel"  value="Channel.bind.bind.caption" comment="是否支持列表，使用Channel.listenable"/> -->
+        <item type="text"   name="SendInfo"  value="Info" comment=""/>
+        <item type="image_button" name="add"       value=""  eventName="Add" />
+        <item type="image_button" name="moveup"       value=""  eventName="Moveup" />
+        <item type="image_button" name="moveoff"       value=""  eventName="Moveoff" />
+        <item type="image_button" name="delete"       value=""  eventName="Delete" />
+        <item type="image_button" name="Status"       value="Status"  eventName="Status" />
+      </line>
+      <line key="StructSendData"  BackColor="">
+        <item type="text"   name="SendInfo"  value="Info" comment="子数据信息"/>
+        <item type="image_button" name="moveup"       value=""  eventName="Moveup" />
+        <item type="image_button" name="moveoff"       value=""  eventName="Moveoff" />
+        <item type="image_button" name="delete"       value=""  eventName="Delete" />
+      </line>
+      <line key="DisturData"  BackColor="">
+        <item type="text"   name="SendInfo"  value="Info" comment="子数据信息"/>
+        <item type="image_button" name="moveup"       value=""  eventName="Moveup" />
+        <item type="image_button" name="moveoff"       value=""  eventName="Moveoff" />
+        <item type="image_button" name="delete"       value=""  eventName="Delete" />
+      </line>
+    </lineinfos>
+  </sendDataViewListConfig>
+</senddata>

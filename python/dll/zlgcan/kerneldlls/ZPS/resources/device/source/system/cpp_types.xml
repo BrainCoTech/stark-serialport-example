@@ -1,0 +1,12 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+<types>
+  <AppSettings>
+    <localsource>
+      <publicproperty id="Z" caption="系统属性设置" type="category">
+        <childgroup childs="cachePath;commMethods;ip;port">
+          <item  id="cachePath"   type="file"       caption="文件路径"    width="150" btn_text="..."  btn_toolTip="选择文件" readonly="true"  value=""  isfolder="1"/>
+        </childgroup>
+      </publicproperty>
+    </localsource>
+  </AppSettings>
+</types>

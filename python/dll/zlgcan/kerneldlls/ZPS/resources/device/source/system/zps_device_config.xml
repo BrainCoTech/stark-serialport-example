@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<device>
+  <!-- commnet="0x.state.dso.wavehead.dio.aio.frame; 0x000011表示默认开启frame和aio的异步开关" -->
+  <connect links_value="0x001" type="async">
+  </connect>
+</device>

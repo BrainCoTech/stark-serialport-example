@@ -1,0 +1,68 @@
+<root>
+  <imports>
+    <import name="zps_device" as="zps_device" />
+    <import name="zps_function" as="zps_function" />
+  </imports>
+  <localsource>
+    <type type="z_comm:DeviceType" id="DevCom" path="#@ZPS_DEVICE_RES#/source/dev/pa_comm.ztdev" />
+  </localsource>
+  <cpp_funcs>
+    <!--<cpp_func id="ZPS_SampointTest">
+      <params>
+        <param comment="帧ID" data_type_value="INT32"  default_value="" description="" edit_type_value="EDIT" editable="0" id="帧ID" type_value="IN" />
+        <param comment="帧DLC" data_type_value="INT32"  default_value="" description="" edit_type_value="EDIT" editable="0" id="帧DLC" type_value="IN" />
+        <param comment="测试变速" data_type_value="INT32"  default_value="" description="" edit_type_value="EDIT" editable="0" id="测试变速" type_value="IN" />
+        <param comment="Rx数据通道接在DSO1/DSO2" data_type_value="INT32"  default_value="" description="" edit_type_value="EDIT"  option="DSO1;DSO2" editable="0" id="Rx数据通道" type_value="IN" />
+        <param comment="采样点结果" data_type_value="DOUBLE"  default_value="" description="" edit_type_value="EDIT" editable="0" id="采样点结果" type_value="OUT" />
+      </params>
+    </cpp_func>-->
+    <cpp_func id="ZPS_SampointTest">
+      <params>
+        <param comment="是否测试变速域"    value="0" data_type_value="INT32"  default_value="0" description="" edit_type_value="EDIT" editable="0" id="是否测试变速域" type_value="IN" />
+        <param comment="仲裁域采样点结果"  data_type_value="DOUBLE"  default_value="" description="" edit_type_value="EDIT" editable="0" id="仲裁域采样点结果" type_value="OUT" />
+        <param comment="数据域采样点结果"  data_type_value="DOUBLE"  default_value="" description="" edit_type_value="EDIT" editable="0" id="数据域采样点结果" type_value="OUT" />
+      </params>
+    </cpp_func>
+    <cpp_func id="ZPS_Can1Config">
+      <params>
+        <param comment="仲裁域波特率"        value="1000000"     data_type_value="DOUBLE"  default_value="1000000" description="" edit_type_value="EDIT" editable="0" id="仲裁域波特率" type_value="IN" />
+        <param comment="仲裁域采样点位置" value="75"   	   	    data_type_value="DOUBLE"  default_value="75" description="" edit_type_value="EDIT" editable="0" id="仲裁域采样点位置" type_value="IN" />
+        <param comment="数据域波特率"        value="1000000"    data_type_value="DOUBLE"  default_value="1000000" description="" edit_type_value="EDIT" editable="0" id="数据域波特率" type_value="IN" />
+        <param comment="数据域采样点位置" value="75"  	 		   data_type_value="DOUBLE"  default_value="75" description="" edit_type_value="EDIT" editable="0" id="数据域采样点位置" type_value="IN" />
+        <param comment="是否接入电阻"        value="1"  		           data_type_value="INT32"    default_value="1"  description="" edit_type_value="EDIT" editable="0" id="是否接入电阻" type_value="IN"/>
+      </params>
+    </cpp_func>
+    <cpp_func id="ZPS_SimpleSend">
+      <params>
+        <param comment="发送通道"    value="1"   data_type_value="INT32"  default_value="1" description="" edit_type_value="EDIT" editable="0" id="发送通道" type_value="IN" />
+        <param comment="发送周期"    value="1"   data_type_value="INT32"  default_value="1" description="" edit_type_value="EDIT" editable="0" id="发送周期" type_value="IN" />
+        <param comment="发送次数"    value="1"   data_type_value="INT32"  default_value="1" description="" edit_type_value="EDIT" editable="0" id="发送次数" type_value="IN" />
+        <param comment="报文ID"    		value="1"   data_type_value="INT32"  default_value="1" description="" edit_type_value="EDIT" editable="0" id="报文ID" type_value="IN" />
+        <param comment="报文DLC"    value="8"    data_type_value="INT32"    default_value="8"  description="" edit_type_value="EDIT" editable="0" id="报文DLC" type_value="IN"/>
+        <param comment="是否为扩展帧" value="0"   data_type_value="INT32"    default_value="0"  description="" edit_type_value="EDIT" editable="0" id="是否发送扩展帧" type_value="IN"/>
+        <param comment="是否为FD帧"  value="0"   data_type_value="INT32"    default_value="0"  description="" edit_type_value="EDIT" editable="0" id="是否发送FD帧" type_value="IN"/>
+        <param comment="是否为变速帧" value="0"  data_type_value="INT32"    default_value="0"  description="" edit_type_value="EDIT" editable="0" id="是否发送变速帧" type_value="IN"/>
+        <param comment="帧数据"        value="00 00 00 00 00 00 00 00" data_type_value="STRING"    default_value="00 00 00 00 00 00 00 00"  description="" edit_type_value="EDIT" editable="0" id="帧数据" type_value="IN"/>
+      </params>
+    </cpp_func>
+    <cpp_func id="ZPS_DomRecTest">
+      <params>
+        <!--->param comment="CANH显性结果"           data_type_value="DOUBLE"  default_value="" description="" edit_type_value="EDIT" editable="0" id="CANH显性结果" type_value="OUT" />
+        <param comment="CANH隐性结果"           data_type_value="DOUBLE"  default_value="" description="" edit_type_value="EDIT" editable="0" id="CANH隐性结果" type_value="OUT" />
+        <param comment="CANL显性结果"            data_type_value="DOUBLE"  default_value="" description="" edit_type_value="EDIT" editable="0" id="CANL显性结果" type_value="OUT" />
+        <param comment="CANL隐性结果"            data_type_value="DOUBLE"  default_value="" description="" edit_type_value="EDIT" editable="0" id="CANL隐性结果" type_value="OUT" /-->
+        <param comment="测试样本数量"    value="1"      data_type_value="INT32"    default_value=""  description="" edit_type_value="EDIT" editable="0" id="测试样本数量" type_value="IN"/>
+        <param comment="显性结果"        data_type_value="DOUBLE"    default_value=""  description="" edit_type_value="EDIT" editable="0" id="CANDIFF显性" type_value="OUT"/>
+        <param comment="隐性结果"        data_type_value="DOUBLE"    default_value=""  description="" edit_type_value="EDIT" editable="0" id="CANDIFF隐性" type_value="OUT"/>
+      </params>
+    </cpp_func>
+    <cpp_func id="ZPS_Can1Open" >
+      <params>
+      </params>
+    </cpp_func>
+    <cpp_func id="ZPS_Can1Close" >
+      <params>
+      </params>
+    </cpp_func>
+  </cpp_funcs>
+</root>

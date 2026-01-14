@@ -1,0 +1,19 @@
+<cmds>
+	<cmd id="Passive_DisturbBus"     		param="STRING:A" send_str=":CANFD1:RITFR:SELect {A}"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_DisturbMatchInfo"  	param="UIN64:A,UIN64:B,UIN64:C" send_str=":CANFD1:RITFR:MATch {A},{B},{C}"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_MatchEnableON"  		param="" send_str=":CANFD1:RITFR:NORmal:ENAble 1"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_MatchEnableOFF"  		param="" send_str=":CANFD1:RITFR:NORmal:ENAble 0"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_MatchDisturbInfo"  	param="UIN64:A,UIN64:B" send_str=":CANFD1:RITFR:NORmal:SET {A},{B}"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_FillBitEnableON"  		param="" send_str=":CANFD1:RITFR:STUFF:ENAble 1"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_FillBitEnableOFF"  	param="" send_str=":CANFD1:RITFR:STUFF:ENAble 0"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_FillBitDisturbInfo"  	param="UIN64:A" send_str=":CANFD1:RITFR:STUFF:SET  {A}"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_RitfrEnableON"  		param="" send_str=":CANFD1:RITFR:ENable 1"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_RitfrEnableOFF"  		param="" send_str=":CANFD1:RITFR:ENable 0"      visible="false"  ch="ch0"/>
+
+	<cmd id="Passive_SetDelay"  			param="UINT32:A" send_str=":CANFD1:RITFR:DELAY {A}"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_SetCycle"  			param="UINT32:A" send_str=":CANFD1:RITFR:CYCLE:FIXED {A}"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_SetRandCycle" 			param="UINT32:A,UINT32:B" send_str=":CANFD1:RITFR:CYCLE:RANDom  {A},{B}"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_SetAlways"  			param="" send_str=":CANFD1:RITFR:CYCLE:ALWAYS"      visible="false"  ch="ch0"/>
+	<cmd id="Passive_SetStandTime"  		param="UINT32:A" send_str=":CANFD1:RITFR:DURAtion  {A}"      visible="false"  ch="ch0"/>
+	
+</cmds>

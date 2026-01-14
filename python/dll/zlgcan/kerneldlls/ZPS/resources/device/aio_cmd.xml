@@ -1,0 +1,32 @@
+<cmds>
+	<!--AIO业务-->
+	<cmd id="SetAISwitch"        	 param="UINT32:chNum,RUN_STOP_BOOL_TYPE:value"     send_str=":AI:CHANnel{chNum}:{value}"  visible="false"  ch="ch0"/>
+	<cmd id="GetAISwitch"        	 param="UINT32:chNum,RUN_STOP_BOOL_TYPE&amp;:value"     send_str=":AI:CHANnel{chNum}:RUN?" recv_str="{value}"  visible="false"  ch="ch0"/>
+	
+	<cmd id="SetAIChannelRun"   	param="INT32:NUM" 		send_str=":AI:CHANnel{NUM}:RUN"  visible="false"  ch="ch0"/>
+	<cmd id="GetAIChannelRun"   	param="INT32:NUM,STRING&amp;:A" send_str=":AI:CHANnel{NUM}:RUN?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetAIChannelStop" 	    param="INT32:NUM" 		send_str=":AI:CHANnel{NUM}:STOP"  visible="false"  ch="ch0"/>
+	<cmd id="SetAIChannelScope"   	param="INT32:NUM,STRING:A" 		send_str=":AI:CHANnel{NUM}:SCOPe {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetAIChannelScope"   	param="INT32:NUM,STRING&amp;:A" send_str=":AI:CHANnel{NUM}:SCOPe?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetAIChannelData"   	param="INT32:NUM,FLOAT&amp;:A" send_str=":AI:CHANnel{NUM}:DATA?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetAISampleRate"   	param="FLOAT:A" send_str=":AI:SAMPrate {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetAISampleRate"   	param="FLOAT&amp;:A" send_str=":AI:SAMPrate?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetAOChannelBindData"   	param="INT32:NUM,IBASECTR:A" 		send_str=":AO:CHANnel{NUM}:BINData {b:A}"  visible="false"  ch="ch0" comment="{b:A}发的不带@"/>
+	<cmd id="SetAOChannelRawData"   	param="INT32:NUM,INT32:A" 		send_str=":AO:CHANnel{NUM}:RAWData  {A}"  visible="false"  ch="ch0"/>
+	<cmd id="SetAOConfig"  param="INT32:NUM,aoParaConfig:A" send_str=":AO:CHANnel{NUM}:STRUct:CONFig ${A}$"  visible="false"  ch="ch0"/>
+	<cmd id="GetAOConfig"  param="INT32:NUM,aoParaConfig&amp;:A" send_str=":AO:CHANnel{NUM}:STRUct:CONFig?" 	recv_str="{b:@A}"   visible="false"  ch="ch0" comment="{b:A}收的带@"/>
+	
+    <cmd id="SetAOEnable"   	param="INT32:NUM" 		send_str=":AO:CHANnel{NUM}:ENABle 1"  visible="false"  ch="ch0"/>
+    <cmd id="SetAODisable"   	param="INT32:NUM" 		send_str=":AO:CHANnel{NUM}:ENABle 0"  visible="false"  ch="ch0"/>
+	<cmd id="GetAOEnable"   	param="INT32:NUM,TRUE_FALSE_BOOL_FORMAT&amp;:A" send_str=":AI:CHANnel{NUM}:ENABle?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	
+	<cmd id="SetAOFreq"   	param="INT32:NUM,FLOAT:value" 		send_str=":AI:CHANnel{NUM}:FREQuency {value}"  visible="false"  ch="ch0"/>
+	<cmd id="GetAOFreq"   	param="INT32:NUM,FLOAT&amp;:value" send_str=":AI:CHANnel{NUM}:FREQuency?" 	    recv_str="{value}"   visible="false"  ch="ch0"/>
+	<cmd id="SetAOPhase"   	param="INT32:NUM,FLOAT:value" 		send_str=":AI:CHANnel{NUM}:PHASe {value}"  visible="false"  ch="ch0"/>
+	<cmd id="GetAOPhase"   	param="INT32:NUM,FLOAT&amp;:value" send_str=":AI:CHANnel{NUM}:PHASe?" 	    recv_str="{value}"   visible="false"  ch="ch0"/>
+	
+	<cmd id="GetAIMemoryLength"   		param="INT32:NUM,INT32&amp;:A" send_str=":AI:CHANnel{NUM}:MEMory:LENgth?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetAIMemorySampRate"   	param="INT32:NUM,FLOAT&amp;:A" send_str=":AI:CHANnel{NUM}:MEMory:SAMPrate?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetAIMemoryData"   		param="INT32:NUM,INT32:COUNT,UINT8_POINT&amp;:A" send_str=":AI:CHANnel{NUM}:MEMory:DATA? {COUNT}" 	    recv_str="{b:@A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetAIMemoryTimeStamp"   	param="INT32:NUM,UINT64&amp;:A" send_str=":AI:CHANnel{NUM}:MEMory:TIMEStamp?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+</cmds>

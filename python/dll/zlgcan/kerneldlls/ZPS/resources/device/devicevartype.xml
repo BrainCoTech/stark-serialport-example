@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <doc>
+ <localsource>
+ 	<type  type="z_comm:DeviceDataTypeCreator" id="diConfig_type" vtype="z_comm:DeviceVar" bindType="diParaConfig"  AutoAsync="1" connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetDIConfig" get_func="GetDIConfig" set_func_param="channelnum,_base_" get_func_param="channelnum,_base_"/>
+ 	<type  type="z_comm:DeviceDataTypeCreator" id="doConfig_type" vtype="z_comm:DeviceVar" bindType="doParaConfig"  AutoAsync="1" connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetDOConfig" get_func="GetDOConfig" set_func_param="channelnum,_base_" get_func_param="channelnum,_base_"/>
+	
+	<type  type="z_comm:DeviceDataTypeCreator" id="can_div_type" vtype="z_comm:DeviceVar" bindType="UINT32"  connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetWaveDiv" get_func="GetWaveDiv" set_func_param="_base_" get_func_param="_base_"/>
+	<type  type="z_comm:DeviceDataTypeCreator" id="can_switch_type" vtype="z_comm:DeviceVar" bindType="RUN_STOP_BOOL_TYPE"  connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetCANSwitch" get_func="GetCANSwitch" set_func_param="channelnum,_base_" get_func_param="channelnum,_base_"/>
+	<type  type="z_comm:DeviceDataTypeCreator" id="dio_switch_type" vtype="z_comm:DeviceVar" bindType="RUN_STOP_BOOL_TYPE"  connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetDIOSwitch" get_func="GetDIOSwitch" set_func_param="_base_" get_func_param="_base_"/>
+	<type  type="z_comm:DeviceDataTypeCreator" id="ai_switch_type" vtype="z_comm:DeviceVar" bindType="RUN_STOP_BOOL_TYPE"  connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetAISwitch" get_func="GetAISwitch" set_func_param="channelnum,_base_" get_func_param="channelnum,_base_"/>
+	<type  type="z_comm:DeviceDataTypeCreator" id="dso_soure_type" vtype="z_comm:DeviceVar" bindType="DSO_SOURCE_TYPE"  connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetDsoSource" get_func="GetDsoSource" set_func_param="channelnum,_base_" get_func_param="channelnum,_base_"/>
+	<type  type="z_comm:DeviceDataTypeCreator" id="phycard_type" vtype="z_comm:DeviceVar" bindType="PhyConfiguration"  connect="" res="Comm" childs="_all_" local_init="" var_type="config" merge_type="0"  set_func="SetPhyConfig" get_func="GetPhyConfig" set_func_param="_base_" get_func_param="_base_"/>
+
+ </localsource>
+</doc>

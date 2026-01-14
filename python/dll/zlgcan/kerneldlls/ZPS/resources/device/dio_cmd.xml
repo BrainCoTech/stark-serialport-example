@@ -1,0 +1,49 @@
+<cmds>
+	<!--DIO业务-->	
+	<cmd id="SetDIOSwitch"        	 param="RUN_STOP_BOOL_TYPE:value"     send_str=":DI:{value}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIOSwitch"        	 param="RUN_STOP_BOOL_TYPE&amp;:value"     send_str=":DI:RUN?" recv_str="{value}"  visible="false"  ch="ch0"/>
+	
+	<cmd id="SetDIRun"  param="" send_str=":DI:RUN"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIRun"  param="RUN_STOP_BOOL_TYPE&amp;:A" send_str=":DI:RUN?" recv_str="{A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIRunSelf"  param="STRING&amp;:A" send_str=":DI:RUN:SELF?" recv_str="{A}"  visible="false"  ch="ch0"/>
+	<cmd id="SetDIStop" param="" send_str=":CANFD1:STOP"  visible="false"  ch="ch0"/>
+	<cmd id="SetDIConfig"  param="INT32:NUM,diParaConfig:A" send_str=":DI:CHANnel{NUM}:STRUct:CONFig ${A}$"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIConfig"  param="INT32:NUM,diParaConfig&amp;:A" send_str=":DI:CHANnel{NUM}:STRUct:CONFig?" 	recv_str="{b:@A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDOConfig"  param="INT32:NUM,doParaConfig:A" send_str=":DO:CHANnel{NUM}:STRUct:CONFig ${A}$"  visible="false"  ch="ch0"/>
+	<cmd id="GetDOConfig"  param="INT32:NUM,doParaConfig&amp;:A" send_str=":DO:CHANnel{NUM}:STRUct:CONFig?" 	recv_str="{b:@A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDOChannelEnable"  param="INT32:NUM,ON_OFF_BOOL_TYPE:A" send_str=":DO:CHANnel{NUM}:ENABle {A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetDOChannelEnable"  param="INT32:NUM,ON_OFF_BOOL_TYPE&amp;:A" send_str=":DO:CHANnel{NUM}:ENABle?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDIRefvolt"  param="INT32:NUM,FLOAT:A" send_str=":DI:CHANn el{NUM}:REFVolt {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIRefvolt"  param="INT32:NUM,FLOAT&amp;:A" send_str=":DI:CHANnel{NUM}:REFVolt?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDIRequency"  param="INT32:A" 		send_str=":DI:FREQuency {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIRequency"  param="INT32&amp;:A" send_str=":DI:FREQuency?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetDIMEMoryLENgth"  param="INT32&amp;:A" send_str=":DI:MEMory:LENgth?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetDIMEMorySAMPrate"  param="FLOAT&amp;:A" send_str=":DI:MEMory:SAMPrate?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetDIMEMoryDATA"  param="INT32&amp;:A" send_str=":DI:MEMory:DATA?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetDIMEMoryTIMEStamp"  param="UINT64&amp;:A" send_str=":DI:MEMory:TIMEStamp?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetDIChannelData"  param="INT32:NUM,ON_OFF_BOOL_TYPE&amp;:A" send_str=":DI:CHANnel{NUM}:DATA?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDIMEASureEnable"  param="INT32:NUM,ON_OFF_BOOL_TYPE:A" send_str=":DI:CHANnel{NUM}:MEASure:Enable {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIMEASureEnable"  param="INT32:NUM,ON_OFF_BOOL_TYPE&amp;:A" send_str=":DI:CHANnel{NUM}:MEASure:Enable?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDIMEASureWindow"  param="INT32:NUM,FLOAT:A" send_str=":DI:CHANnel{NUM}:MEASure:WINDow {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIMEASureWindow"  param="INT32:NUM,FLOAT&amp;:A" send_str=":DI:CHANnel{NUM}:MEASure:WINDow?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDIMEASureTimeout"  param="INT32:NUM,FLOAT:A" send_str=":DI:CHANnel{NUM}:MEASure:TIMEout {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDIMEASureTimeout"  param="INT32:NUM,FLOAT&amp;:A" send_str=":DI:CHANnel{NUM}:MEASure:TIMEout?" 	recv_str="{A}"   visible="false"  ch="ch0"/>	
+	<cmd id="GetDIMEASureValue"  param="INT32:NUM,FLOAT&amp;:A,FLOAT&amp;:B,INT32&amp;:C" send_str=":DI:CHANnel{NUM}:MEASure:VALUE?" 	recv_str="{A},{B},{C}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDOChannelMode"  param="INT32:NUM,NORMAL_PWM_BOOL_TYPE:A" send_str=":DO:CHANnel{NUM}:Mode {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDOChannelMode"  param="INT32:NUM,NORMAL_PWM_BOOL_TYPE&amp;:A" send_str=":DO:CHANnel{NUM}:Mode?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDOChannelType"  param="INT32:NUM,HIGH_PUSH_BOOL_TYPE:A" send_str=":DO:CHANnel{NUM}:Type {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDOChannelType"  param="INT32:NUM,HIGH_PUSH_BOOL_TYPE&amp;:A" send_str=":DO:CHANnel{NUM}:Type?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDOChannelType"  param="INT32:NUM,LOW_HIGH_BOOL_TYPE:A" send_str=":DO:CHANnel{NUM}:VALUe {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDOChannelType"  param="INT32:NUM,LOW_HIGH_BOOL_TYPE&amp;:A" send_str=":DO:CHANnel{NUM}:VALUe?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+
+	<cmd id="SetDOChannelPWMPOLArity"  param="INT32:NUM,LOW_HIGH_BOOL_TYPE:A" send_str=":DO:CHANnel{NUM}:PWM:POLArity {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDOChannelPWMPOLArity"  param="INT32:NUM,LOW_HIGH_BOOL_TYPE&amp;:A" send_str=":DO:CHANnel{NUM}:PWM:POLArity?" 	recv_str="{A}"   visible="false"  ch="ch0"/>	
+	<cmd id="SetDOChannelPWMWIDTh"  param="INT32:NUM,FLOAT:A" send_str=":DO:CHANnel{NUM}:PWM:WIDTh {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDOChannelPWMWIDTh"  param="INT32:NUM,LOW_HIGH_BOOL_TYPE&amp;:A" send_str=":DO:CHANnel{NUM}:PWM:WIDTh?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDOChannelPWMPERIod"  param="INT32:NUM,FLOAT:A" send_str=":DO:CHANnel{NUM}:PWM:PERIod {A}"  visible="false"  ch="ch0" comment="Float = [8ns,34359738360ns] 单位为S" />
+	<cmd id="GetDOChannelPWMPERIod"  param="INT32:NUM,LOW_HIGH_BOOL_TYPE&amp;:A" send_str=":DO:CHANnel{NUM}:PWM:PERIod?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDOChannelPWMTIMEs"  param="INT32:NUM,INT32:A" send_str=":DO:CHANnel{NUM}:PWM:TIMEs {A}"  visible="false"  ch="ch0" />
+	<cmd id="GetDOChannelPWMTIMEs"  param="INT32:NUM,INT32&amp;:A" send_str=":DO:CHANnel{NUM}:PWM:TIMEs?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDOChannelPWMCOUNt"  param="INT32:NUM,INT32:A" send_str=":DO:CHANnel{NUM}:PWM:COUNt {A}"  visible="false"  ch="ch0" />
+	<cmd id="GetDOChannelPWMCOUNt"  param="INT32:NUM,INT32&amp;:A" send_str=":DO:CHANnel{NUM}:PWM:COUNt?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+</cmds>

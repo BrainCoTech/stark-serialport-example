@@ -1,0 +1,148 @@
+<base_func_config>
+  <child_func_params_group>
+  </child_func_params_group>
+
+
+  <conditon_edit >
+    <item id="left"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING" autoUpdateOption="true" caption="左值" value="0" option="ENV($parent.LocalVar:INT32,DOUBLE,STRING)" descibe="左值【IN】：比较符号左边的参数&#x000A;支持INT32、DOUBLE、STRING变量或者常量"/>
+    <item id="op"    type="combobox" caption="比较符号"  data_type="STRING" item_type="STRING" option="=;≠;&lt;;&gt;;≤;≥" value="=" descibe="比较符号【IN】：条件比较的符号，枚举类型&#x000A;=、≠、&lt;、&gt;、≤、≥"/>
+    <item id="right" type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING" autoUpdateOption="true" caption="右值" value="0"  option="ENV($parent.LocalVar:INT32,DOUBLE,STRING)" descibe="右值【IN】：比较符号右边的参数&#x000A;支持INT32、DOUBLE、STRING变量或者常量"/>
+  </conditon_edit>
+  <in_range_conditon_edit>
+    <item id="min_value"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="下限值" value="0" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="下限值【IN】：比较符号左边的参数&#x000A;支持INT32、DOUBLE变量或者常量"/>
+    <item id="op_1"    type="combobox" caption="包含下限值"  data_type="STRING" item_type="STRING" option="是;否"  value="是" mapping="否=&lt;;是=&lt;=" descibe="是否包含下限值【IN】：条件比较的符号，枚举类型&#x000A;是和否"/>
+    <item id="value" type="combobox"  data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="比较值" value="{null}"  option="ENV($parent.LocalVar:INT32,DOUBLE,STRING)" descibe="比较值【IN】：比较值，大于最小值而且小于最大值则条件成立&#x000A;支持INT32、DOUBLE变量或者常量"/>
+    <item id="max_value" type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="上限值" value="0"  option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="上限值【IN】：比较符号右边的参数&#x000A;支持INT32、DOUBLE变量或者常量"/>
+    <item id="op_2"    type="combobox" caption="包含上限值"  data_type="STRING" item_type="STRING" option="是;否" value="是" mapping="否=&lt;;是=&lt;=" descibe="是否包含上限值【IN】：条件比较的符号，枚举类型&#x000A; 是和否"/>
+  </in_range_conditon_edit>
+  <out_range_conditon_edit>
+    <item id="min_value"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="较小值" value="0" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="较小值【IN】：比较符号左边的参数&#x000A;支持INT32、DOUBLE变量或者常量"/>
+    <item id="op_1"    type="combobox" caption="包含较小值"  data_type="STRING" item_type="STRING" option="是;否"  value="是" mapping="否=&lt;;是=&lt;=" descibe="是否包含较小值【IN】：条件比较的符号，枚举类型&#x000A;是和否"/>
+    <item id="value" type="combobox"  data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="比较值" value="{null}"  option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="比较值【IN】：需要比较的值，比较值比最小值小，比最大值大则条件成立&#x000A;支持INT32、DOUBLE变量或者常量"/>
+    <item id="max_value" type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="较大值" value="0"  option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="较大值【IN】：比较符号右边的参数&#x000A;支持INT32、DOUBLE变量或者常量"/>
+    <item id="op_2"    type="combobox" caption="包含较大值"  data_type="STRING" item_type="STRING" option="是;否" value="是" mapping="否=&gt;;是=&gt;=" descibe="是否包含较大值【IN】：条件比较的符号，枚举类型&#x000A; 是和否"/>
+  </out_range_conditon_edit>
+  <repeat_step_param>
+    <item id="var"  type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="判定变量" setup="{i}" option="ENV($parent.LocalVar:INT32)" descibe="判定变量【IN】：判定变量对象&#x000A;支持INT32变量"/>
+    <item id="init"    type="combobox" editable="true" data_type="STRING" item_type="INT32"  caption="初始值" setup="0"  autoUpdateOption="true"  option="AUTO($parent.LocalVar:INT32)" descibe="初始值【IN】：判定对象的初始值&#x000A;支持INT32类型的变量"/>
+    <item id="end"    type="combobox" editable="true" data_type="STRING" item_type="INT32"  caption="结束值" setup="10"   autoUpdateOption="true"  option="AUTO($parent.LocalVar:INT32)" descibe="结束值【IN】：判定条件的结束值&#x000A;支持INT32类型的变量"/>
+    <item id="step"    type="combobox" editable="true" data_type="STRING" item_type="INT32"  caption="步进" setup="1"  autoUpdateOption="true"  option="AUTO($parent.LocalVar:INT32)" descibe="步进【IN】：单次循环的下标&#x000A;支持INT32类型的变量"/>
+  </repeat_step_param>
+  <repeat_array_param>
+    <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要遍历的数组对象&#x000A;支持Array类型的变量"/>
+    <item id="pos"    type="combobox" editable="true" data_type="STRING" item_type="INT32"  caption="当前位置" setup="i"  autoUpdateOption="true"  option="AUTO($parent.LocalVar:INT32)" descibe="当前位置【OUT】：返回数组当前的下标&#x000A;支持INT32类型的变量"/>
+    <item id="data"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING" autoUpdateOption="true" caption="当前值" setup="value" option="ENV($parent.LocalVar:INT32,DOUBLE,STRING)" descibe="当前值【OUT】：返回数组当前的值，如果当前值非数字值，而传入INT32或者DOUBLE变量，则变量输出变0&#x000A;支持INT32，DOUBLE，STRING变量"/>
+  </repeat_array_param>
+  <single_param_edit>
+    <item id="param"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="数值" value="0" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="数值【IN】：需要执行运算的数值&#x000A;支持INT32、DOUBLE变量或者常量" />
+    <item id="result" type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="计算结果" value="null"  option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="计算结果【OUT】：对输入值计算后的结果&#x000A;支持INT32、DOUBLE变量"/>
+  </single_param_edit>
+  <double_param_edit>
+    <item id="left"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE"  autoUpdateOption="true" caption="左值" value="0" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="左值【IN】：运算符左边的参数&#x000A;支持INT32、DOUBLE变量或者常量"/>
+    <item id="op" type="combobox" data_type="STRING"  caption="运算符" value="+"  option="+;-;*;/" descibe="运算符【IN】：运算符号，枚举类型&#x000A;+、-、*、/"/>
+    <item id="right" type="combobox" editable="true"  data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="右值" value="0"  option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="右值【IN】：运算符右边的参数&#x000A;支持INT32、DOUBLE变量或者常量"/>
+    <item id="result" type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="计算结果" value="null"  option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="计算结果【OUT】：对输入值计算后的结果&#x000A;支持INT32、DOUBLE变量"/>
+  </double_param_edit>
+  <devcmd_conditon>
+    <!--<item id="dev_ptr" type="combobox" caption="设备"     value="" option="DYNAMIC(ENV($parent.parent.LocalVar:Device)#;#AUTO(@ATETestDevEnv.device:ID+ ))" autoUpdateOption="true" descibe="设备【IN】：需要使用的设备对象，支持Device类型" />-->
+    <item id="dev_ptr" type="combobox" caption="设备"     value="" option="ENV($parent.parent.LocalVar:DEV_POINT+ )" autoUpdateOption="true" descibe="设备【IN】：需要使用的设备对象，支持Device类型" />
+    <item id="delay_time" type="combobox" caption="阻塞时间(ms)"  editable="true"  data_type="STRING" item_type="INT32" autoUpdateOption="true" value="0" option="ENV($parent.parent.LocalVar:INT32)" descibe="阻塞时间【IN】：执行完设备命令之后堵塞的时间，&#x000A;支持INT32变量或者常量类型" />
+    <item id="cmd_ptr" type="combobox" caption="命令列表" value="" visible="UINT8(dev:value!=``&amp;&amp;dev:value!=` `)" autoUpdateOption="true" editable="true" completer="true" />
+    <item id="arg_ptr" type="category" caption="参数列表" visible="UINT8(cmd:value!=``)" />
+  </devcmd_conditon>
+
+  <compile_error>
+    <item id="invalid_return"    caption="返回值无效"/>
+    <item id="time_error"        caption="时间不是数字类型"/>
+    <item id="empty_param"       caption="参数不能为空"/>
+    <item id="not_digit"         caption="不是数据类型"/>
+    <item id="express_error"     caption="表达式解析错误"/>
+    <item id="format_error"      caption="格式化解析错误"/>
+    <item id="params_error"      caption="参数错误"/>
+    <item id="unknown_var"       caption="变量不存在"/>
+    <item id="not_variable"      caption="不是变量类型"/>
+    <item id="must_var_type"     caption="需是变量类型"/>
+    <item id="format_error"      caption="格式非法"/>
+    <item id="type_error"        caption="类型不匹配"/>
+    <item id="div_zero"          caption="除0非法操作"/>
+    <item id="file_not_exist"    caption="文件不存在"/>
+    <item id="get_type_error"    caption="获取类型错误"/>
+    <item id="unknown_type"      caption="未定义类型"/>
+    <item id="type_diff_error"   caption="所有类型不完全一致"/>
+    <item id="compare_error"     caption="最小值比最大值"/>
+    <item id="undefine"          caption="未知错误"/>
+    <item id="string_over"       caption="字符串越界错误" />
+    <item id="array_over"        caption="数组访问越界错误" />
+    <item id="string_deal_error" caption="字符串处理错误" />
+    <item id="sub_item_absent"  caption="子测试项不存在" />
+    <item id="save_image_error"  caption="保存图片失败" />
+
+    <!-- xxx -->
+    <item id="compile_success"   caption="编译成功"/>
+    <item id="compile_error"     caption="编译失败" />
+
+    <!-- 设备命令相关错误 -->
+    <item id="dev_connect_error" caption="设备连接错误，请检查设备连接状态"/>
+    <item id="dev_is_empty"      caption="未关联设备变量，请下拉选择关联设备变量"/>
+    <item id="cmd_is_empty"      caption="未关联设备函数，请下拉选择关联设备函数"/>
+
+    <item id="dev_not_find"      caption="关联设备不存在，请检测设备是否存在测试环境"/>
+    <item id="cmd_not_find"      caption="关联函数不存在，请检测设备驱动是否存在此函数"/>
+
+    <item id="output_not_bind"   caption="输出参数未绑定变量"/>
+    <item id="cond_parse_fail"   caption="参数语法解析失败"/>
+    <item id="var_not_exist"     caption="关联变量不存在"/>
+    <item id="var_type_error"    caption="关联变量类型不正确" />
+    <item id="input_not_int"     caption="输入内容与类型(INT)不匹配" />
+    <item id="input_not_double"  caption="输入内容与类型(DOUBLE)不匹配" />   
+    <item id="power_calculate_error"  caption="求次方运行错误，底数和指数不能同时是带小数点的负数" />
+
+  </compile_error>
+
+  <groups>
+    <group path="base"       caption="基础命令"/>
+    <group path="process"    caption="流程控制"/>
+    <group path="math"       caption="数学运算"/>
+    <group path="string"     caption="文本处理"/>
+    <group path="data"       caption="数据处理"/>
+  </groups>
+  <funcs>
+    
+    <logui    caption="Log Output"       path="base" tips="" descibe="打印日志：输出一条文字信息到日志窗口">
+      <item id="level" vtype="STRING" type="combobox" caption="级别" option="调试;提示;警告;错误" def="调试" value="调试" autoUpdateOption="true" item_type="STRING" mapping="调试=Debug;提示=Info;警告=Warn;错误=Error"  descibe="级别【IN】：日志文本的级别，枚举类型&#x000A;Debug：开发人员需要查看的程序调试信息&#x000A;Info：用于向用户展示主要的测试进展&#x000A;Warn：不影响整体测试运行的告警信息&#x000A;Error：严重的故障信息，出现时通常会终止测试"/>
+      <item id="text" vtype="STRING"  type="combobox" editable="true" caption="内容" value="text"  def="text" item_type="INT32:DOUBLE:STRING:Time"  autoUpdateOption="true" option="ENV($LocalVar:INT32,DOUBLE,STRING,Time)" descibe="内容【IN】：要输出的日志内容&#x000A;支持INT32、DOUBLE、STRING变量或者常量,Time变量,还支持输入文本表达式，比如：AA{var}BB，输出是AA0BB" />
+    </logui>
+   
+    <app  caption="Run Program"       path="base" tips="" descibe="程序调用：运行第三方程序。">
+      <item id="app" vtype="STRING" type="filepathedit" fileFilter="*.exe;*.py" caption="程序路径" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/" descibe="程序路径【IN】：待执行程序的完整路径"/>
+      <item id="param" vtype="STRING" type="edit" editable="true"  caption="参数"  option="" item_type="STRING" descibe="参数【IN】：程序的运行参数"/>
+    </app>
+    
+    <comment  caption="Comment"       path="base" tips="" descibe="注释文本：一般用于说明代码段功能，也可用作空行分割代码段。">
+      <item id="text" vtype="STRING" type="edit"  caption="文本内容" item_type="STRING"     def="注释文本" value="注释文本"   descibe="静态文本内容，不支持使用变量与表达式"/>
+      <!--<item id="color" vtype="STRING" type="combobox" editable="true"  caption="文字颜色"   item_type="STRING" descibe="文本内容的显示颜色"/>-->
+    </comment>
+
+
+   
+    <ifelseedit        caption="If-Else"       path="process" tips="" descibe="条件判断：当满足判定条件时，执行then节点下的子流程，否则执行else节点下的子流程。">
+      <item id="type"  vtype="STRING" type="combobox" caption="类型" option="简单条件;InRange;OutRange" def="简单条件" value="简单条件" descibe="SWITCH(__line__.setup{简单条件=`简单条件判断`;InRange=`范围内条件判断`;OutRange=`范围外条件判断`})"/>
+      <item id="condition_list" type="category" vtype="POINT" caption="条件列表" descibe="条件列表"/>
+    </ifelseedit>
+   
+
+
+    <!--<if        caption="If"       path="process" tips="" descibe="条件判断：当满足判定条件时，执行子流程，否则直接执行后续步骤。"/>-->
+    <!--<ifelse    caption="If-Else"   path="process" tips="" descibe="条件判断：当满足判定条件时，执行then节点下的子流程，否则执行else节点下的子流程。"/>-->
+    <!--<repeat    caption="Repeat"    path="process"  tips="" descibe="循环语句：满足判定条件时，循环执行子流程。"/>-->
+    <break    caption="Break"    path="process" tips="" descibe="中断循环：在当前位置，跳出循环语句。"/>
+    <continue caption="Continue" path="process" tips="" descibe="继续循环：在当前位置，直接进入下一次循环。"/>
+    <return   caption="Return"   path="process" tips="" descibe="结束测试项：结束当前测试项的工作流程，不再执行后续操作。"/>
+
+
+    
+
+
+   
+  </funcs>
+</base_func_config>

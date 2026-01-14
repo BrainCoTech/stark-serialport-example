@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<unit name="Eye" caption="眼图模块" version="1.0">
+  <!-- <vars> -->
+  <resources>
+		<service id="EYE_Service" />
+  </resources>
+  <init_item>
+    <property id="property">
+    </property>
+    <axis id="m_EyeTimeAxis" vtype="AXIS" basetype="UINT64"
+          init="ratio=ZPSUnit.WaveRec.m_RecordtimeRatio;offset=ZPSUnit.WaveRec.m_RecordtimeOffset;scale=ZPSUnit.WaveRec.m_RecordtimeScale;probe=1;minoffset=-40;maxoffset=40;maxscaling=0;minscaling=0;baseunit=s"
+          comment="X轴" />
+    <axis id="m_EyeHDataAxis" vtype="AXIS" basetype="DOUBLE"
+          init="ratio=ZPSUnit.WaveRec.m_RecordHDataScale;offset=ZPSUnit.WaveRec.m_RecordHDataOffset;count=8;scale=1;baseunit=V"
+          comment="Y轴" />
+    <axis id="m_EyeLDataAxis" vtype="AXIS" basetype="DOUBLE"
+          init="ratio=ZPSUnit.WaveRec.m_RecordLDataScale;offset=ZPSUnit.WaveRec.m_RecordLDataOffset;count=8;scale=1;baseunit=V"
+          comment="Y轴" />
+    <axis id="m_EyeDataAxis" vtype="AXIS" basetype="DOUBLE"
+          init="ratio=ZPSUnit.WaveRec.m_DiffScale;offset=ZPSUnit.WaveRec.m_DiffOffset;count=8;scale=1;baseunit=V" />
+    <dataset id="WaveEyeH" vtype="WAVEDATASET[FLOAT]" caption="DYNAMIC(#@parent.caption#_WaveEyeH)" enabled="1"
+             title="CANH" color="#9d8f31"
+             config="filePath=#@TEMP_PATH#/#@caption#/;sizeAxis=m_EyeTimeAxis;dataAxis=m_EyeHDataAxis;WaveCache=FIFO(ZPSUnit.CAN1.WaveRecordHCH,WaveRecordHCH.bin);AreaCache=FILE(area.bin);IndexCache=FILE(Index.bin);*"
+             connect="sizeAxis=m_EyeTimeAxis;dataAxis=m_EyeHDataAxis;Filler=ORG_Filler;" />
+    <dataset id="WaveEyeL" vtype="WAVEDATASET[FLOAT]" caption="DYNAMIC(#@parent.caption#_WaveEyeL)" enabled="1"
+             title="CANL" color="green"
+             config="filePath=#@TEMP_PATH#/#@caption#/;sizeAxis=m_EyeTimeAxis;dataAxis=m_EyeLDataAxis;WaveCache=FIFO(ZPSUnit.CAN1.WaveRecordLCH,WaveRecordLCH.bin);AreaCache=FILE(area.bin);IndexCache=FILE(Index.bin);*"
+             connect="sizeAxis=m_EyeTimeAxis;dataAxis=m_EyeLDataAxis;Filler=ORG_Filler;" />
+    <dataset id="WaveEyeDiff" vtype="MATH[FLOAT,-]" caption="DYNAMIC(#@parent.caption#_AssessDiff)" enabled="1"
+             title="Diff" color="#FFFF0000"
+             config="filePath=#@TEMP_PATH#/#@caption#/;sizeAxis=m_EyeTimeAxis;dataAxis=m_EyeDataAxis;left=WaveEyeH,right=WaveEyeL;WaveCache=FILE(diffwave.wave);AreaCache=FILE(area.bin);IndexCache=FILE(diffindex.bin);math=-"
+             connect="sizeAxis=m_EyeTimeAxis;dataAxis=m_EyeDataAxis;left=WaveEyeH,right=WaveEyeL" />
+    <var id="EyeUnit" alias="" vtype="CEyeUnit" connect="WaveCollect=ZPSUnit.WaveCollect"  comment="眼图对象" service="EYE_Service"/>
+	<var id="NeedCalDiff" 		 		vtype="INT64" def="1" comment="是否需要运算差分"/>
+	
+    <vargroup id="EyeProcess">
+      <members>
+        <var id="EyeH" vtype="POINT" value="parent.WaveEyeH" comment="信号质量分析数据源指针" />
+        <var id="EyeL" vtype="POINT" value="parent.WaveEyeL" comment="信号质量分析数据源指针" />
+        <!-- <var id="EyeDiff" vtype="POINT" value="parent.WaveEyeDiff" comment="信号质量分析数据源指针" /> -->
+        <ext name="parent.WaveEyeDiff" id="EyeDiff" />
+        <ext name="parent.EyeUnit" id="UintPoint" />
+        <var id="IsRunning" vtype="UINT8" def="0" iterable="false" />
+        <var id="LastBeginTime" vtype="DOUBLE" def="0" iterable="false" />
+        <var id="LastEndTime" vtype="DOUBLE" def="-1" iterable="false" />
+        <var id="LastBeginTimeTmp" vtype="DOUBLE" def="0" iterable="false" />
+        <var id="LastEndTimeTmp" vtype="DOUBLE" def="0" iterable="false" />
+        <var id="BindStatus" vtype="UINT32" def="0" iterable="false" />
+        <var id="BindDataSet" vtype="UINT32" def="0" iterable="false" comment="在历史数据的时候用于防止点击报文列表时，数据集update导致来执行眼图流程" />
+        <ext name="parent.m_EyeTimeAxis" id="timeAxis" iterable="false" />
+      </members>
+      <events>
+        <ops id="InitDecode">
+          <log text="EyeProcess InitDecode!!!  m_lfABTBusBaudRate1=${ZPSUnit.CAN1.m_lfABTBusBaudRate}  m_lfABTBusBaudRate2=${ZPSUnit.CAN1.m_lfDATABusBaudRate}" level="error" />
+          <code statement="UintPoint.DecodeParame.m_dFclk=80000000" />
+          <code statement="UintPoint.DecodeParame.m_dBRP=1" />
+          <code statement="UintPoint.DecodeParame.NormalData.m_dBaudRate=ZPSUnit.CAN1.m_lfABTBusBaudRate" />
+          <code statement="UintPoint.DecodeParame.NormalData.m_dSamplePoint=ZPSUnit.CAN1.m_lfBusSamplABTPos" />
+          <code statement="UintPoint.DecodeParame.NormalData.m_dSJW=0.2" />
+          <code statement="UintPoint.DecodeParame.UnusualData.m_dBaudRate=ZPSUnit.CAN1.m_lfDATABusBaudRate" />
+          <code statement="UintPoint.DecodeParame.UnusualData.m_dSamplePoint=ZPSUnit.CAN1.m_lfBusSamplDATAPos" />
+          <code statement="UintPoint.DecodeParame.UnusualData.m_dSJW=0.2" />
+          <log text="InitDecode: ${UintPoint.s_u32BaudRate}" level="error" />
+		  <log text="EYE m_RecordtimeRatio=${ZPSUnit.WaveRec.m_RecordtimeRatio}   m_RecordtimeScale=${ZPSUnit.WaveRec.m_RecordtimeScale}........................"/>
+		  <ctr id="ZPSUnit.EYE.m_EyeTimeAxis" ctr="Reset" comment="每次都要重设一下数轴"/>
+        </ops>
+        <ops id="Start" comment="解锁数据集数轴">
+		  <func name="UintPoint.Init" args="" />
+		  <if condition="ZPSUnit.EYE.EyeUnit.m_uMsgType==3">
+			<zui ctr="setItem"  name="zui.msg_box"   property="button_type"  value="ok"/>
+            <zui ctr="setItem"  name="zui.msg_box"   property="type" value="question"/>
+            <zui ctr="setItem"  name="zui.msg_box"   property="text"   value="初始化失败，请再次生成"/>
+            <show name="zui.msg_box" args="modal=app;exec=true"/>
+            <return />
+          </if>
+		  <setter condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1" data="UintPoint.WaveCalc.m_uOnlineData.value=0"/>
+		  <setter condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==0" data="UintPoint.WaveCalc.m_uOnlineData.value=1"/>
+		  <func name="UintPoint.Start" args="" />
+          <!-- <func name="UintPoint.Start" param="LastBeginTime,LastEndTime" /> -->
+        </ops>
+        <!-- <ops auto="EyeH.EC_Update&gt;0&amp;&amp;EyeL.EC_Update&gt;0&amp;&amp;BindStatus==1&amp;&amp;BindDataSet==1"
+             id="WaveMathCalc" comment="数据集运算赋值">
+          <log text="Start Calc EyeUnit Diff And Common!!!!!!!! ${EyeDiff:enabled} " level="info" />
+          <if condition="EyeDiff:enabled==1">
+            <log text="setCalcRange EyeUnit Diff And Common!!!!!!!!" level="info" />
+			<if condition="parent.NeedCalDiff==1">
+				<dataset id="EyeDiff" ctr="setParent" value="left=EyeH:right=EyeL" />
+			</if>
+			<if condition="parent.NeedCalDiff==2">
+				<dataset id="EyeDiff" ctr="setParent" value="left=EyeL:right=EyeH" />
+			</if>
+            <dataset id="EyeDiff" ctr="setCalcRange" value="min=LastBeginTime:max=LastEndTime" comment="设置运算范围，并且运算" />
+          </if>
+          <log text="End Calc EyeUnit Diff And Common!!!!!!!!" level="info" />
+          <func name="UintPoint.ProduceEye" param="LastBeginTime,LastEndTime" args="" />
+          <code statement="EyeH.EC_Update=0" />
+          <code statement="EyeL.EC_Update=0" />
+        </ops> -->
+      </events>
+    </vargroup>
+	
+	<var id="EyeGroupPoint" vtype="POINT" value="EyeProcess" save_type="ignore" comment="眼图组指针" />
+
+	<fun name="SwitchChannel" comment="通道切换函数">
+		<!-- <return/> -->
+		<log text="EYE SwitchChannel ................................."/>
+		<code statement="EyeGroupPoint.BindStatus=0" comment="对当前绑定的通道禁能"/>
+		<!-- 调用一个组内的函数进行数轴设置 -->
+		<if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate!=1" comment="在线数据">			
+			<if condition="(ZPSUnit.CH1Source==`CAN1_H`&amp;&amp;ZPSUnit.CH2Source==`CAN1_H`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_H`&amp;&amp;ZPSUnit.CH2Source==`CAN1_L`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_H`&amp;&amp;ZPSUnit.CH2Source==`CAN1_差分`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeL" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_H`&amp;&amp;ZPSUnit.CH2Source==`DSO_2`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			
+			<if condition="(ZPSUnit.CH1Source==`CAN1_L`&amp;&amp;ZPSUnit.CH2Source==`CAN1_H`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=2" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_L`&amp;&amp;ZPSUnit.CH2Source==`CAN1_L`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_L`&amp;&amp;ZPSUnit.CH2Source==`CAN1_差分`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeL" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_L`&amp;&amp;ZPSUnit.CH2Source==`DSO_2`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			
+			<if condition="(ZPSUnit.CH1Source==`CAN1_差分`&amp;&amp;ZPSUnit.CH2Source==`CAN1_H`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeH" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_差分`&amp;&amp;ZPSUnit.CH2Source==`CAN1_L`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeH" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_差分`&amp;&amp;ZPSUnit.CH2Source==`CAN1_差分`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeH" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_差分`&amp;&amp;ZPSUnit.CH2Source==`DSO_2`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeH" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			
+			<if condition="(ZPSUnit.CH1Source==`DSO_1`&amp;&amp;ZPSUnit.CH2Source==`CAN1_H`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=2" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`DSO_1`&amp;&amp;ZPSUnit.CH2Source==`CAN1_L`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`DSO_1`&amp;&amp;ZPSUnit.CH2Source==`CAN1_差分`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeL" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`DSO_1`&amp;&amp;ZPSUnit.CH2Source==`DSO_2`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData WaveEyeH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData WaveEyeL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+		</if>
+		
+		<if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1" comment="历史数据">			
+			<if condition="(ZPSUnit.CH1Source==`CAN1_H`&amp;&amp;ZPSUnit.CH2Source==`CAN1_H`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_H`&amp;&amp;ZPSUnit.CH2Source==`CAN1_L`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_H`&amp;&amp;ZPSUnit.CH2Source==`CAN1_差分`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_H`&amp;&amp;ZPSUnit.CH2Source==`DSO_2`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			
+			<if condition="(ZPSUnit.CH1Source==`CAN1_L`&amp;&amp;ZPSUnit.CH2Source==`CAN1_H`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=2" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_L`&amp;&amp;ZPSUnit.CH2Source==`CAN1_L`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_L`&amp;&amp;ZPSUnit.CH2Source==`CAN1_差分`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_L`&amp;&amp;ZPSUnit.CH2Source==`DSO_2`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			
+			<if condition="(ZPSUnit.CH1Source==`CAN1_差分`&amp;&amp;ZPSUnit.CH2Source==`CAN1_H`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_差分`&amp;&amp;ZPSUnit.CH2Source==`CAN1_L`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_差分`&amp;&amp;ZPSUnit.CH2Source==`CAN1_差分`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`CAN1_差分`&amp;&amp;ZPSUnit.CH2Source==`DSO_2`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			
+			<if condition="(ZPSUnit.CH1Source==`DSO_1`&amp;&amp;ZPSUnit.CH2Source==`CAN1_H`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=2" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`DSO_1`&amp;&amp;ZPSUnit.CH2Source==`CAN1_L`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`DSO_1`&amp;&amp;ZPSUnit.CH2Source==`CAN1_差分`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<code statement="NeedCalDiff=0" />
+			</if>
+			<if condition="(ZPSUnit.CH1Source==`DSO_1`&amp;&amp;ZPSUnit.CH2Source==`DSO_2`)">
+				<ctr id="EyeUnit.CanHDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+				<ctr id="EyeUnit.CanLDataSet.__local" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+				<ctr id="EyeUnit.DiffDataSet.__local" ctr="BindData WaveEyeDiff" />
+				<code statement="NeedCalDiff=1" />
+			</if>
+		</if>
+		<code statement="EyeUnit.WaveCalc.m_uNeedCalcDiff=NeedCalDiff" />
+		<!--<ctr id="CANWaveDecode.WaveDataSet" ctr="BindData WaveChannelCAND.dataset"/>-->
+		
+		<!-- 调用一个组内的函数进行数轴设置 -->
+		<code statement="EyeGroupPoint.BindStatus=1" comment="对当前绑定的通道使能"/>
+	</fun>
+		
+	
+  </init_item>
+  <!-- </vars> -->
+  <!-- <varEventSubcribe> -->
+  <!-- </varEventSubcribe> -->
+</unit>

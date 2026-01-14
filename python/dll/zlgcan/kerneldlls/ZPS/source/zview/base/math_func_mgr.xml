@@ -1,0 +1,200 @@
+<MathFuncMgr id="CAN" decode="">
+    <group id="BaseMath" caption="数学运算">
+		<math type="op2" id="BaseMath2"  caption="二元数学运算">
+			<info result="NUM" export="[{1}]{OP}[{2}]">
+			    <param id="left" />
+			    <param id="right"/>
+			</info>
+			<op id="+" caption="加"/>
+			<op id="-" caption="减"/>
+			<op id="*" caption="乘"/>
+			<op id="/" caption="除"/>
+		</math>
+		<!--
+		<math type="op1" id="" caption="一元数学运算">
+			<info result="NUM" export="{OP}({1})">
+			    <param  id="param"/>
+			</info>
+			<op id="-" caption="取反"/>
+		</math>
+		-->
+	</group>	
+    <group id="BitMath" caption="整形运算">
+		<math type="op2" id="BitMath2" caption="二元整形操作">
+			<info result="NUM" export="[{1}]{OP}[{2}]" >
+			    <param id="left" />
+			    <param id="right"/>
+			</info>
+			<op id="%" caption="取模"/>
+			<op id="&" caption="与操作"/>
+			<op id="|" caption="或操作"/>
+			<op id="^" caption="异或操作"/>
+		</math>
+		<math type="op1" id="BitMath1" caption="一元整形运算">
+			<info result="NUM" export="{OP}[{Param}]">
+			    <param  id="param"/>
+			</info>
+			<op id="~" caption="Bit取反"/>
+		</math>
+	</group>
+	<group id="LogicOP" caption="逻辑运算">
+		<math type="op2" id="CompareMath" caption="比较运算">
+			<info result="NUM" export="[{1}]{OP}[{2}]" >
+			    <param id="left" />
+			    <param id="right"/>
+			</info>
+			<op id="&lt;" caption="小于"/>
+			<op id="&gt;" caption="大于"/>
+			<op id="&lt;=" caption="小于等于"/>
+			<op id="&gt;=" caption="大于等于"/>
+			<op id="==" caption="相等"/>
+			<op id="!=" caption="不等"/>
+		</math>
+		<math type="op2" id="LogicMath2" caption="二元逻辑运算">
+			<info result="NUM" export="[{1}]{OP}[{2}]" >
+			    <param id="left" />
+			    <param id="right"/>
+			</info>
+			<op2 id="&&" caption="与运算"/>
+			<op2 id="||" caption="或操作"/>
+		</math>
+		<math type="op1" id="LogicMath1" caption="一元逻辑运算">
+			<info result="NUM" export="{OP}[{1}]">
+			    <param  id="param"/>
+			</info>
+			<op id="!" caption="否运算"/>
+		</math>
+		<math type="func" id="RangeMath" caption="范围比较">
+			<info result="BOOL" export="{OP}({1},{2},{3})" >
+			    <param id="value"/>
+			    <param id="min"  />
+			    <param id="max"  />
+			</info>
+			<op id="IN"  caption="与运算"/>
+			<op id="OUT" caption="或操作"/>
+		</math>
+		<!--
+		<math type="func" id="" caption="数据查找">
+			<info result="BOOL" export="{OP}({1},{2})" >
+			    <param id="value" arry="1"/>
+			    <param id="arry"  arry="1"/>
+			</info>
+			<op id="HaveData" caption="存在数据"/>
+			<op id="HaveArry" caption="或操作"/>
+		</math>
+		-->
+	</group>
+	<group id="FloatMath" caption="常用函数运算">
+		<math type="func" id="FloatMath1" caption="数学函数">
+			<info result="FNUM" export="{OP}({1})" >
+			    <left  id="param"  type="FNUM"/>
+			</info>
+			<op id="sin" caption="正弦"/>
+			<op id="cos" caption="余弦"/>
+			<op id="tan" caption="正切"/>
+			<op id="ln"  caption="自然对数"/>
+			<op id="lg"  caption="十对数"/>
+			
+			<op id="asin" caption="反正弦"/>
+			<op id="acos" caption="反余弦"/>
+			<op id="atan" caption="反正切"/>
+			
+			<op id="ceil" caption="向上取整"/>
+			<op id="floor" caption="向下取整"/>
+			<op id="fix" caption="向0取整"/>
+			<op id="round" caption="四舍五入取整"/>
+			<op id="sqrt" caption="开发平方"/>
+		</math>
+		<math type="func" id="FloatMath2" caption="指数函数">
+			<info result="FNUM" export="{OP}({1},{2})" >
+			    <param id="left"  type="FNUM"/>
+			    <param id="right" type="FNUM"/>
+			</info>
+			<op id="pow" caption="幂函数"/>
+			<!-- <op id="log" caption="自然对数"/> -->
+		</math>	
+	</group>	
+	<group id="MinMaxMath" caption="统计函数">
+		<math  type="func" id="MinMaxMath" caption="最大最小值">
+			<info export="{OP}({args})" >
+			    <args  id="param" />
+			</info>
+			<op id="min"  caption="求最小值"/>
+			<op id="max"  caption="求最大值"/>
+		</math>
+		<math  type="func" id="MinMaxMathEx" caption="最大最小值">
+			<info  export="{OP}({1})" >
+			    <param  id="param" arry="1"/>
+			</info>
+			<op id="minex" caption="求最小值"/>
+			<op id="maxex" caption="求最大值"/>
+		</math>
+	</group>
+	<group id="StatisticalMath" caption="统计函数">
+		<math  type="func" id="StatisticalMath" caption="数组统计">
+			<info result="DOUBLE" export="{OP}({args})" >
+			    <args  id="param" />
+			</info>
+			<op id="sum" caption="求和"/>
+			<op id="avg" caption="求平均"/>
+		</math>
+		<math  type="func" id="StatisticalMathEx" caption="参数统计">
+			<info result="DOUBLE"   export="{OP}({1})" >
+			    <param  id="param" arry="1"/>
+			</info>
+			<op id="sumex" caption="求和"/>
+			<op id="avgex" caption="求平均"/>
+		</math>
+	</group>
+	
+	<group id="ArryMath" caption="统计函数">
+		<math type="func" id="TestArryMath2" caption="测试数组函数">
+			<info result="FNUM" arry="1" export="{OP}({1},{2})" >
+			    <param id="left"  type="FNUM" arry="1"/>
+			    <param id="right" type="FNUM" arry="1"/>
+			</info>
+		</math>	
+	</group>
+
+  <group id="ZUS8000ExtendMath" caption="8000扩展数学">
+    <math type="func" id="FilterMathSimpleFrequency" caption="测试数组函数">
+      <info result="FNUM" arry="1" export="{OP}({1},{2})" >
+        <param id="left"  type="FNUM" arry="1"/>
+        <param id="right" type="DOUBLE" />
+      </info>
+      <op id="FIRLowPassFILT"  caption="FIR低通滤波"/>
+      <op id="IIRLowPassFILT"  caption="IIR低通滤波"/>
+      <op id="FIRHighPassFILT" caption="FIR高通滤波"/>
+      <op id="IIRHighPassFILT" caption="IIR高通滤波"/>
+    </math>
+    <math type="func" id="FilterMathDoubleFrequency" caption="测试数组函数">
+      <info result="FNUM" arry="1" export="{OP}({1},{2},{3})" >
+        <param id="left"  type="FNUM" arry="1"/>
+        <param id="freq1" type="DOUBLE" />
+        <param id="freq2" type="DOUBLE" />
+      </info>
+      <op id="FIRBandPassFILT"  caption="FIR带通滤波"/>
+      <op id="IIRBandPassFILT"  caption="IIR带通滤波"/>
+      <op id="FIRBandStopFILT"  caption="FIR带阻滤波"/>
+      <op id="IIRBandStopFILT"  caption="IIR带阻滤波"/>
+    </math>
+    <math type="func" id="CustomArrayMath" caption="自定义数组函数">
+      <info result="FNUM" arry="1" export="{OP}({1})" >
+        <param id="left"  type="FNUM" arry="1"/>
+      </info>
+      <op id="DIFF"  caption="微分函数"/>
+      <op id="INTG"  caption="积分函数"/>
+    </math>
+  </group>
+  
+    <!--	
+	<group id="LogicOP" caption="随机函数">
+		<math result="NUM"  type="func"  caption="数组统计">
+			<info export="{OP}({1})" >
+			    <param  id="param" type="NUM"/>
+			</info>
+			<op id="abs"  caption="取绝对值"/>
+		</math>
+	</group>
+	-->
+</MathFuncMgr>

@@ -1,0 +1,185 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<propertys>
+	<base>
+		<x/>
+		<y/>
+		<width/>
+		<height/>
+		<fixWidth/>
+		<fixHeight/>
+		<minWidth/>
+		<maxWidth/>
+		<minHeight/>
+		<maxHeight/>
+		<visible/>
+		<enabled/>
+		<caption/>
+		<toolTip/>
+		<cursorStyle/>
+		<focusPolicy/>
+		<bPenetration/>
+		<checked/>
+		<captionWidth/>
+		<captionAlignment/>
+		<space/>
+		<objectName/>
+		<autoRefresh/>
+		<focus/>
+	</base>
+	<button parent="base">
+		<text/>
+		<icon/>
+		<checked/>
+	</button>
+	<combobox parent="base">
+		<option/>
+		<value/>
+		<optionData/>
+		<unit/>
+		<maxVisibleItems/>
+		<comboxType/>
+		<editable/>
+		<regexp/>
+		<regexpMode/>
+		<unitWidth/>
+		<iconList/>
+		<customEvent/>
+		<autoSelect/>
+		<autoUpdateOption/>
+		<completer/>
+		<caseSensitivity/>
+		<filterMode/>
+		<min/>
+		<max/>
+		<complexVisibleItems/>
+	</combobox>
+	<edit parent="base">
+		<text/>
+		<readOnly/>
+		<regexp/>
+		<unit/>
+		<isHex/>
+		<min/>
+		<max/>
+		<regexpMode/>
+		<maxLength/>
+		<bNumber/>
+		<echoMode/>
+		<keyboard/>
+		<completerOption/>
+		<completer/>
+		<caseSensitivity/>
+		<filterMode/>
+		<complexVisibleItems/>
+		<dataType/>
+	</edit>
+	<text parent="base">
+		<text/>
+		<elideMode/>
+		<alignment/>
+		<isLinks/>
+		<wordWrap/>
+		<fontToSize/>
+		<fontFollowStr/>
+		<sizeToContents/>
+	</text>
+	<toolbutton parent="base">
+		<text/>
+		<toolTip/>
+		<icon/>
+		<checked/>
+	</toolbutton>
+	<textbrower parent="base">
+		<text/>
+		<filePath/>
+	</textbrower>
+	<radiobutton parent="base">
+		<value/>
+		<checkValue/>
+		<text/>
+	</radiobutton>
+	<image parent="base">
+		<image/>
+		<reload/>
+		<sizeToImage/>
+	</image>
+	<color parent="base">
+		<color/>
+		<editable/>
+		<colorFile/>
+	</color>
+	<checkbox parent="base">
+		<value/>
+		<text/>
+	</checkbox>
+	<progressbar parent="base">
+		<min/>
+		<max/>
+		<value/>
+		<valueWidth/>
+		<customText/>
+		<precision/>
+		<type/>
+		<countDown/>
+	</progressbar>
+	<slider parent="base">
+		<min/>
+		<max/>
+		<value/>
+		<singleStep/>
+		<pageStep/>
+		<tickInterval/>
+		<orientation/>
+		<tickPosition/>
+	</slider>
+	<ipedit parent="base">
+		<value/>
+		<regexp/>
+	</ipedit>
+	<buttonbox parent="base">
+		<buttonText/>
+		<visibleMask/>
+		<enabledMask/>
+		<checkedMask/>
+		<editabled/>
+		<exclusive/>
+		<buttonCount/>
+		<alignment/>
+		<autoMask/>
+		<optionData/>
+		<type/>
+	</buttonbox>
+	<propertyview parent="base">
+		<allowDock/>
+		<title/>
+		<objectName/>
+	</propertyview>
+	<propertytree parent="base">
+		<title/>
+		<headerVisible/>
+		<columnsWidth/>
+	</propertytree>
+	<activatebtn parent="base">
+		<text/>
+		<isActivate/>
+		<activateColor/>
+		<normalColor/>
+	</activatebtn>
+	<view parent="base">
+	</view>
+	<dialog parent="base">
+		<size/>
+		<autoHide/>
+		<alignment/>
+		<allMovable/>
+		<transparency/>
+		<isFixSize/>
+		<btnVisible/>
+	</dialog>
+	<dockpanel>
+		<allowSideDock/>
+		<titleVisible/>
+		<movable/>
+		<closable/>
+	</dockpanel>
+</propertys>

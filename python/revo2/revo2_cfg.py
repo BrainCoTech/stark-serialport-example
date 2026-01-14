@@ -164,15 +164,15 @@ async def main():
     # Choose one of the following configuration operations as needed:
 
     # 1. Modify slave ID (uncomment to use)
-    logger.debug("set_slave_id")
-    await set_slave_id(client, slave_id, new_slave_id=0x7e)  # Modify slave_id to 0x7e
-    sys.exit(0) # Will exit program after modification
+    # logger.debug("set_slave_id")
+    # await set_slave_id(client, slave_id, new_slave_id=0x7e)  # Modify slave_id to 0x7e
+    # sys.exit(0) # Will exit program after modification
 
     # 2. Modify baud rate (uncomment to use)
     # logger.debug("set_baudrate")
-    # Supported baud rates: Baud5Mbps, Baud2Mbps, Baud1Mbps, Baud460800, etc.
-    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud460800)
-    # return  # Will exit program after modification
+    # # Supported baud rates: Baud5Mbps, Baud2Mbps, Baud1Mbps, Baud460800, etc.
+    # await set_baudrate(client, slave_id, new_baudrate=libstark.Baudrate.Baud2Mbps)
+    sys.exit(0)  # Will exit program after modification
 
     # 3. Configure device feature settings
     await configure_device_features(client, slave_id)

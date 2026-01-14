@@ -1,0 +1,138 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+ <types  version="20230722">
+ <system>
+		<alias    id="ON_OFF_BOOL_FORMAT"  key="UINT8">
+			<item name="OFF"   	    value="0"/>
+			<item name="ON"  		value="1"/>
+		</alias>
+		<alias    id="TRUE_FALSE_BOOL_FORMAT"  key="UINT8">
+			<item name="FALSE"   	value="0"/>
+			<item name="TRUE"  		value="1"/>
+		</alias>
+		<alias    id="RUN_STOP_BOOL_FORMAT"  key="UINT8">
+			<item name="STOP"   	value="0"/>
+			<item name="RUN"  		value="1"/>
+		</alias>
+		<alias    id="RXD_TXD_FORMAT"  key="UINT8">
+			<item name="RXD"   		value="0"/>
+			<item name="TXD"  		value="1"/>
+		</alias>
+		<alias    id="NORMAL_PWM_BOOL_FORMAT"  key="UINT8">
+			<item name="NORMAL"   	value="0"/>
+			<item name="PWM"  		value="1"/>
+		</alias>
+		<alias    id="HIGH_PUSH_BOOL_FORMAT"  key="UINT8">
+			<item name="HIGHSide"   	value="0"/>
+			<item name="PUSHPull"  		value="1"/>
+		</alias>
+		<alias    id="LOW_HIGH_BOOL_FORMAT"  key="UINT8">
+			<item name="LOW"   	value="0"/>
+			<item name="HIGH"  		value="1"/>
+		</alias>
+		<alias    id="IP_TYPE_FORMAT"  key="UINT8">
+			<item name="STATiC"   	value="0"/>
+			<item name="DHCP"  		value="1"/>
+		</alias>
+		<alias    id="LABGUAGE_TYPE_FORMAT"  key="UINT8">
+			<item name="zh_CN"   	value="0"/>
+			<item name="en"  		value="1"/>
+		</alias>
+		<alias    id="AI_SCOPE_FORMAT"  key="UINT32">
+			<item name="12V"   		value="12"/>
+			<item name="60V"  		value="60"/>
+		</alias>
+		<alias    id="DSO_SOURCE_FORMAT"  key="UINT32">
+			<item name="EXT"   		value="0"/>
+			<item name="CAN_DIFF"  		value="1"/>
+			<item name="CAN_H"  		value="2"/>
+			<item name="CAN_L"  		value="3"/>
+		</alias>
+		<alias    id="DSO_COUPLING_FORMAT"  key="UINT32">
+			<item name="DC"   		value="0"/>
+			<item name="AC"  		value="1"/>
+			<item name="GND"  		value="2"/>
+		</alias>
+		<alias    id="DSO_UNITS_FORMAT"  key="UINT32">
+			<item name="VOLTage"   		value="0"/>
+			<item name="AMPere"  		value="1"/>
+		</alias>
+		<alias    id="DSO_FILTER_FORMAT"  key="UINT32">
+			<item name="FIL_OFF"  		value="0"/>
+			<item name="FIL_20M"   		value="1"/>
+		</alias>
+		<alias    id="DSO_RUNOPERATOR_FORMAT"  key="UINT32">
+			<item name="DIFF"  			value="0"/>
+			<item name="AVERage"   		value="1"/>
+		</alias>
+		<alias    id="DSO_TIMEBASEMODE_FORMAT"  key="UINT32">
+			<item name="NORMal"  			value="0"/>
+			<item name="ROLL"   			value="1"/>
+		</alias>
+		<alias    id="DSO_TB_DIVTYPE_FORMAT"  key="UINT32">
+			<item name="ACQTime"  				value="0"/>
+			<item name="SAMPrate"   			value="1"/>
+		</alias>
+		<alias    id="DSO_ACQ_TYPE_FORMAT"  key="UINT32">
+			<item name="NORMal"  				value="0"/>
+			<item name="PEAK"   				value="1"/>
+			<item name="HRESolution"   			value="2"/>
+		</alias>
+		<alias    id="DSO_TRG_SWEEP_FORMAT"  key="UINT32">
+			<item name="AUTO"  					value="0"/>
+			<item name="NORMal"   				value="1"/>
+		</alias>
+		<alias    id="DSO_TRG_MODE_FORMAT"  key="UINT32">
+			<item name="EDGE"  					value="0"/>
+			<item name="PULSe"   				value="1"/>
+		</alias>
+		<alias    id="DSO_TRG_SOURCE_FORMAT"  key="UINT32">
+			<item name="CHANnel1"  					value="0"/>
+			<item name="CHANnel2"   				value="1"/>
+			<item name="RUNOperator"   				value="2"/>
+		</alias>
+		<alias    id="DSO_WAVE_SOURCE_FORMAT"  key="UINT32">
+			<item name="CHANnel1"  					value="0"/>
+			<item name="CHANnel2"   				value="1"/>
+			<item name="MATH"   				value="2"/>
+		</alias>
+		<alias    id="DSO_TRG_SLOPE_FORMAT"  key="UINT32">
+			<item name="POSitive"  					value="0"/>
+			<item name="NEGative"   				value="1"/>
+			<item name="EITHer"   				    value="2"/>
+		</alias>
+		<alias    id="ASYNC_MODULE_FORMAT"  key="UINT32">
+			<item name="CAN"  					value="0"/>
+			<item name="AIO"   				    value="1"/>
+			<item name="DIO"   				    value="2"/>
+			<item name="RECord"   				value="3"/>
+		</alias>
+    <type    type="num"            id="ON_OFF_BOOL_TYPE"      		vtype="UINT8"     translate="ON_OFF_BOOL_FORMAT"/>
+    <type    type="num"            id="TRUE_FALSE_BOOL_TYPE"      	vtype="UINT8"     translate="TRUE_FALSE_BOOL_FORMAT"/>
+    <type    type="num"            id="RXD_TXD_TYPE"      		    vtype="UINT8"     translate="RXD_TXD_FORMAT"/>
+    <type    type="num"            id="RUN_STOP_BOOL_TYPE"      	vtype="UINT8"     translate="RUN_STOP_BOOL_FORMAT"/>
+    <type    type="num"            id="NORMAL_PWM_BOOL_TYPE"      	vtype="UINT8"     translate="NORMAL_PWM_BOOL_FORMAT"/>
+    <type    type="num"            id="HIGH_PUSH_BOOL_TYPE"      	vtype="UINT8"     translate="HIGH_PUSH_BOOL_FORMAT"/>
+    <type    type="num"            id="LOW_HIGH_BOOL_TYPE"      	vtype="UINT8"     translate="LOW_HIGH_BOOL_FORMAT"/>
+    <type    type="num"            id="IP_TYPE"      				vtype="UINT8"     translate="IP_TYPE_FORMAT"/>
+    <type    type="num"            id="LABGUAGE_TYPE"      			vtype="UINT8"     translate="LABGUAGE_TYPE_FORMAT"/>
+    <type    type="num"            id="AI_SCOPE_TYPE"      			vtype="UINT32"    translate="AI_SCOPE_FORMAT"/>
+    <type    type="num"            id="DSO_SOURCE_TYPE"      		vtype="UINT32"    translate="DSO_SOURCE_FORMAT"/>
+    <type    type="num"            id="DSO_COUPLING_TYPE"      		vtype="UINT32"    translate="DSO_COUPLING_FORMAT"/>
+    <type    type="num"            id="DSO_UNITS_TYPE"      		vtype="UINT32"    translate="DSO_UNITS_FORMAT"/>
+    <type    type="num"            id="DSO_FILTER_TYPE"      		vtype="UINT32"    translate="DSO_FILTER_FORMAT"/>
+    <type    type="num"            id="DSO_RUNOPERATOR_TYPE"      	vtype="UINT32"    translate="DSO_RUNOPERATOR_FORMAT"/>
+    <type    type="num"            id="DSO_RUNOPERATOR_TYPE"      	vtype="UINT32"    translate="DSO_RUNOPERATOR_FORMAT"/>
+    <type    type="num"            id="DSO_TIMEBASEMODE_TYPE"      	vtype="UINT32"    translate="DSO_TIMEBASEMODE_FORMAT"/>
+    <type    type="num"            id="DSO_TB_DIVTYPE_TYPE"      	vtype="UINT32"    translate="DSO_TB_DIVTYPE_FORMAT"/>
+    <type    type="num"            id="DSO_ACQ_TYPE_TYPE"      	    vtype="UINT32"    translate="DSO_ACQ_TYPE_FORMAT"/>
+    <type    type="num"            id="DSO_TRIG_SWEEP_TYPE"      	vtype="UINT32"    translate="DSO_TRG_SWEEP_FORMAT"/>
+    <type    type="num"            id="DSO_TRG_MODE_TYPE"      	vtype="UINT32"    translate="DSO_TRG_MODE_FORMAT"/>
+    <type    type="num"            id="DSO_TRG_SOURCE_TYPE"      	vtype="UINT32"    translate="DSO_TRG_SOURCE_FORMAT"/>
+    <type    type="num"            id="DSO_TRG_SLOPE_TYPE"      	vtype="UINT32"    translate="DSO_TRG_SLOPE_FORMAT"/>
+    <type    type="num"            id="DSO_WAVE_SOURCE_TYPE"      	vtype="UINT32"    translate="DSO_WAVE_SOURCE_FORMAT"/>
+    <type    type="num"            id="ASYNC_MODULE_TYPE"      	vtype="UINT32"    translate="ASYNC_MODULE_FORMAT"/>
+	
+	<var id="_GlobalResource_" vtype="STRING" def="Comm"/>
+	</system>
+</types>
+

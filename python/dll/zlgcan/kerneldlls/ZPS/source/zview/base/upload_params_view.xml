@@ -1,0 +1,69 @@
+<dialog id="TestArgsConfigDlg" size="330,480" title="参数配置" titlebar="min;max;close;title" bind="NULL:source"  form="appmodal" allMovable="true">
+  <_View id="showview" objectName="SideView"  >
+    <vars>
+      <var id="OpEnable" vtype="UINT8" />
+    </vars>
+    <vlayout sizeConstraint="default" contentsMargins="10,0,10,10" spacing="5">
+      <view  objectName="tint" >
+        <hlayout sizeConstraint="default">
+          <_IconBtn toolTip="增加"  text="" icon="zr:share:/resource/res/td_res/add to_20_n.png" hover_icon="zr:share:/resource/res/td_res/add to_20_o.png" disabled_icon="zr:share:/resource/res/td_res/add to_20_d.png">
+            <event id="clicked">
+              <code statement="source.AddItem(`NewItem`)" />
+            </event>
+          </_IconBtn>
+
+          <_IconBtn toolTip="复制" text="" icon="zr:share:/resource/res/td_res/copy_20_n.png" hover_icon="zr:share:/resource/res/td_res/copy_20_o.png" disabled_icon="zr:share:/resource/res/td_res/copy_20_d.png">
+            <event id="clicked">
+              <ui id="ArgsUploadList" ctr="sendUIEvent" event="copy"/>
+            </event>
+          </_IconBtn>
+          <_IconBtn toolTip="粘贴" text=""  icon="zr:share:/resource/res/td_res/paste_20_n.png" hover_icon="zr:share:/resource/res/td_res/paste_20_o.png" disabled_icon="zr:share:/resource/res/td_res/paste_20_d.png">
+            <event id="clicked">
+              <ui id="ArgsUploadList" ctr="sendUIEvent" event="paste"/>
+            </event>
+          </_IconBtn>
+          <button objectName="DeleteIconBtn" toolTip="删除"  text="" fixWidth="20" fixHeight="20"  >
+            <event id="clicked">
+              <ui id="ArgsUploadList" ctr="sendUIEvent" event="delete"/>
+            </event>
+          </button>
+          <stretch stretch="1" />
+        </hlayout>
+      </view>
+
+      <listview  id="ArgsUploadList" dragType="Drag" bind="source"  copyPaste="true" multiSelect="true" >
+        <extend root_data="ParamsList">
+          <columns>
+            <column name="number"    title="序号"   width="60"   toolTip="参数"   alignment="AlignCenter" titleExConnect="(;)" />
+            <column name="nameId"      title="变量名称"     width="120"  toolTip="名称"     alignment="AlignCenter" />
+            <column name="var"   title="关联变量"  width="120"  toolTip="含义"  alignment="AlignCenter" />        
+          </columns>
+          <lineinfos mainKey="vartype" BackColor="">
+            <listline key="__def__" init="extend" dragOut="true"   style="data;visible"  editable="true">
+              <linetext   name="number"      text="__INDEX__"   alignment="AlignCenter" />
+              <linetext   name="nameId"      bind="__line__{text=name}" alignment="AlignCenter"   color="black" editable="true" delegateType="edit"/>
+              <!--<linetext   name="var"      bind="__line__{text=var}" alignment="AlignCenter"  color="black" editable="true" delegateType="edit"/>-->
+              <_LineComboBox   name="var" bind="__line__{option=var_option;value=var}" def="{var}" value="{var}" editable="true"  alignment="AlignCenter" autoUpdateOption="true" />
+            </listline>
+          </lineinfos>
+        </extend>
+        <events>
+          <event id="show">
+            <ui ctr="sendUIEvent" id="ArgsUploadList" event="AttrChange"/>
+          </event>
+        </events>
+      </listview>
+    </vlayout>
+  </_View>
+  <event id="accepted">
+    
+  </event>
+  <event id="rejected">
+
+  </event>
+
+  <event id="show">
+    <ui ctr="sendUIEvent" id="ArgsUploadList" event="AttrChange"/>
+  </event>
+  
+</dialog>

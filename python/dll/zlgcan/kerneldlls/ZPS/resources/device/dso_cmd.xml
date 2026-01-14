@@ -1,0 +1,94 @@
+<cmds>
+	<!--DSO业务-->
+	<cmd id="SetDsoSource"   	param="INT32:NUM,DSO_SOURCE_TYPE:A" 		send_str=":DSO:CHANnel{NUM}:SOURce {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDsoSource"   	param="INT32:NUM,DSO_SOURCE_TYPE&amp;:A" send_str=":DSO:CHANnel{NUM}:SOURce?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+    <cmd id="SetDsoScale"   	param="INT32:NUM,FLOAT:A" 		send_str=":DSO:CHANnel{NUM}:SCALe {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDsoScale"   	param="INT32:NUM,FLOAT&amp;:A" 	send_str=":DSO:CHANnel{NUM}:SCALe?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+    <cmd id="SetDsoOffset"   	param="INT32:NUM,FLOAT:A" 		send_str=":DSO:CHANnel{NUM}:OFFSet {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDsoOffset"   	param="INT32:NUM,FLOAT&amp;:A" 	send_str=":DSO:CHANnel{NUM}:OFFSet?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+    <cmd id="SetDsoCoupling"   	param="INT32:NUM,DSO_COUPLING_TYPE:A" 		send_str=":DSO:CHANnel{NUM}:COUPling  {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDsoCoupling"   	param="INT32:NUM,DSO_COUPLING_TYPE&amp;:A" send_str=":DSO:CHANnel{NUM}:COUPling ?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+    <cmd id="SetDsoUnits"   	param="INT32:NUM,DSO_UNITS_TYPE:A" 		send_str=":DSO:CHANnel{NUM}:UNITs {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDsoUnits"   	param="INT32:NUM,DSO_UNITS_TYPE&amp;:A" send_str=":DSO:CHANnel{NUM}:UNITs?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+    <cmd id="SetDsoProbe"   	param="INT32:NUM,FLOAT:A" 		send_str=":DSO:CHANnel{NUM}:PROBe  {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDsoProbe"   	param="INT32:NUM,FLOAT&amp;:A" 	send_str=":DSO:CHANnel{NUM}:PROBe ?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+    <cmd id="SetDsoFilter"   	param="INT32:NUM,DSO_FILTER_TYPE:A" 		send_str=":DSO:CHANnel{NUM}:Filter {A}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDsoFilter"   	param="INT32:NUM,DSO_FILTER_TYPE&amp;:A" send_str=":DSO:CHANnel{NUM}:Filter?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetDsoOffsetScope" param="INT32:NUM,FLOAT&amp;:A,FLOAT&amp;:B" send_str=":DSO:CHANnel{NUM}:OFFSet:SCOPe?" 	    recv_str="{A},{B}"   visible="false"  ch="ch0"/>
+
+	<cmd id="SetDsoRunType"   	param="DSO_RUNOPERATOR_TYPE:A" 		send_str=":DSO:RUNOperator:TYPE {A}"     visible="false"  ch="ch0"/>
+	<cmd id="GetDsoRunType"   	param="DSO_RUNOPERATOR_TYPE&amp;:A" send_str=":DSO:RUNOperator:TYPE?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoRunScale"   	param="FLOAT:A" 		send_str=":DSO:RUNOperator:SCALe {A}"     visible="false"  ch="ch0"/>
+	<cmd id="GetDsoRunScale"   	param="FLOAT&amp;:A" 	send_str=":DSO:RUNOperator:SCALe?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoRunOffset"   param="FLOAT:A" 		send_str=":DSO:RUNOperator:OFFSet {A}"     visible="false"  ch="ch0"/>
+	<cmd id="GetDsoRunOffset"   param="FLOAT&amp;:A" 	send_str=":DSO:RUNOperator:OFFSet?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoRunProbe"   	param="FLOAT:A" 		send_str=":DSO:RUNOperator:PROBe {A}"     visible="false"  ch="ch0"/>
+	<cmd id="GetDsoRunProbe"   	param="FLOAT&amp;:A" 	send_str=":DSO:RUNOperator:PROBe?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoMathType"   	param="DSO_RUNOPERATOR_TYPE:A" 		send_str=":DSO:MATH:TYPE {A}"     visible="false"  ch="ch0"/>
+	<cmd id="GetDsoMathType"   	param="DSO_RUNOPERATOR_TYPE&amp;:A" send_str=":DSO:MATH:TYPE?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoMathScale"   param="FLOAT:A" 		send_str=":DSO:MATH:SCALe {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoMathScale"   param="FLOAT&amp;:A" 	send_str=":DSO:MATH:SCALe?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoMathOffset"  param="FLOAT:A" 		send_str=":DSO:MATH:OFFSet {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoMathOffset"  param="FLOAT&amp;:A" 	send_str=":DSO:MATH:OFFSet?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoMathProbe"   param="FLOAT:A" 		send_str=":DSO:MATH:PROBe {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoMathProbe"   param="FLOAT&amp;:A" 	send_str=":DSO:MATH:PROBe?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+
+	<cmd id="SetDsoTBMode"    param="DSO_TIMEBASEMODE_TYPE:A" 		send_str=":DSO:TIMebase:MODE {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTBMode"    param="DSO_TIMEBASEMODE_TYPE&amp;:A" 	send_str=":DSO:TIMebase:MODE?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoTBACQ"     param="FLOAT:A" 		send_str=":DSO:TIMebase:ACQTime {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTBACQ"     param="FLOAT&amp;:A" 	send_str=":DSO:TIMebase:ACQTime?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>	
+	<cmd id="SetDsoTBScale"   param="FLOAT:A" 		send_str=":DSO:TIMebase:SCALe {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTBScale"   param="FLOAT&amp;:A" 	send_str=":DSO:TIMebase:SCALe?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>		
+	<cmd id="SetDsoTBOffset"  param="FLOAT:A" 		send_str=":DSO:TIMebase:OFFSet {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTBOffset"  param="FLOAT&amp;:A" 	send_str=":DSO:TIMebase:OFFSet?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>	
+	
+	<cmd id="GetDsoTBOffScope"  param="FLOAT&amp;:A,FLOAT&amp;:B" 	send_str=":DSO:TIMebase:OFFSet:SCOPe?" 	    recv_str="{A},{B}"   visible="false"  ch="ch0"/>	
+
+	<cmd id="SetDsoTBDivType"   param="DSO_TB_DIVTYPE_TYPE:A" 		send_str=":DSO:TIMebase:DIVType {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTBDivType"   param="DSO_TB_DIVTYPE_TYPE&amp;:A" 	send_str=":DSO:TIMebase:DIVType?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>	
+	<cmd id="SetDsoTBSamprate"  param="FLOAT:A" 		send_str=":DSO:TIMebase:SAMPrate {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTBSamprate"  param="FLOAT&amp;:A" 	send_str=":DSO:TIMebase:SAMPrate?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>		
+	
+	<cmd id="SetDsoAcqMdePth"  param="INT32:A" 			send_str=":DSO:ACQuire:MDEPth {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoAcqMdePth"  param="INT32&amp;:A" 	send_str=":DSO:ACQuire:MDEPth?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoAcqType"    param="DSO_ACQ_TYPE_TYPE:A" 			send_str=":DSO:ACQuire:TYPE {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoAcqType"    param="DSO_ACQ_TYPE_TYPE&amp;:A" 	send_str=":DSO:ACQuire:TYPE?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+
+	<cmd id="SetDsoTrigSweep"    param="DSO_TRIG_SWEEP_TYPE:A" 			send_str=":DSO:TRIGger:SWEep {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigSweep"    param="DSO_TRIG_SWEEP_TYPE&amp;:A" 	send_str=":DSO:TRIGger:SWEep?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>	
+	<cmd id="SetDsoTrigHold"  	 param="FLOAT:A" 		send_str=":DSO:TRIGger:HOLDoff {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigHold"  	 param="FLOAT&amp;:A" 	send_str=":DSO:TRIGger:HOLDoff?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>		
+	<cmd id="SetDsoTrigAtse"  	 param="UINT8:A" 		send_str=":DSO:TRIGger:ATSEnsitivity {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigAtse"  	 param="UINT8&amp;:A" 	send_str=":DSO:TRIGger:ATSEnsitivity?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>	
+	<cmd id="SetDsoTrigSens"  	 param="FLOAT:A" 		send_str=":DSO:TRIGger:SENSitivity {A}"    	 visible="false"  ch="ch0" comment="最小设到0V，最大不要超过当前垂直档位*2"/>
+	<cmd id="GetDsoTrigSens"  	 param="FLOAT&amp;:A" 	send_str=":DSO:TRIGger:SENSitivity?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>	
+	<cmd id="SetDsoTrigMode"  	 param="DSO_TRG_MODE_TYPE:A" 		send_str=":DSO:TRIGger:MODE {A}"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigMode"  	 param="DSO_TRG_MODE_TYPE&amp;:A" 	send_str=":DSO:TRIGger:MODE?" 	    recv_str="{A}"   visible="false"  ch="ch0"/>		
+	
+	<cmd id="SetDsoTrigEdge_source"  	 param="DSO_TRG_SOURCE_TYPE:A" 		send_str=":DSO:TRIGger:EDGE &quot;source={A}&quot;"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigEdge_source"  	 param="DSO_TRG_SOURCE_TYPE&amp;:A" 	send_str=":DSO:TRIGger:EDGE? source" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoTrigEdge_slope"  	 param="DSO_TRG_SLOPE_TYPE:A" 		send_str=":DSO:TRIGger:EDGE &quot;slope={A}&quot;"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigEdge_slope"  	 param="DSO_TRG_SLOPE_TYPE&amp;:A" 	send_str=":DSO:TRIGger:EDGE? slope" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoTrigEdge_level"  	 param="FLOAT:A" 		send_str=":DSO:TRIGger:EDGE &quot;level={A}&quot;"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigEdge_level"  	 param="FLOAT&amp;:A" 	send_str=":DSO:TRIGger:EDGE? level" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+
+	<cmd id="SetDsoTrigPulse_source"  	 param="DSO_TRG_SOURCE_TYPE:A" 		send_str=":DSO:TRIGger:EDGE &quot;source={A}&quot;"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigPulse_source"  	 param="DSO_TRG_SOURCE_TYPE&amp;:A" 	send_str=":DSO:TRIGger:EDGE? source" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoTrigPulse_when"  	 param="DSO_TRG_SLOPE_TYPE:A" 		send_str=":DSO:TRIGger:EDGE &quot;slope={A}&quot;"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigPulse_when"  	 param="DSO_TRG_SLOPE_TYPE&amp;:A" 	send_str=":DSO:TRIGger:EDGE? slope" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoTrigPulse_uwidth"  	 param="FLOAT:A" 		send_str=":DSO:TRIGger:EDGE &quot;level={A}&quot;"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigPulse_uwidth"  	 param="FLOAT&amp;:A" 	send_str=":DSO:TRIGger:EDGE? level" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDsoTrigPulse_lwidth"  	 param="FLOAT:A" 		send_str=":DSO:TRIGger:EDGE &quot;level={A}&quot;"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigPulse_lwidth"  	 param="FLOAT&amp;:A" 	send_str=":DSO:TRIGger:EDGE? level" 	    recv_str="{A}"   visible="false"  ch="ch0"/>	
+	<cmd id="SetDsoTrigPulse_level"  	 param="FLOAT:A" 		send_str=":DSO:TRIGger:EDGE &quot;level={A}&quot;"    	 visible="false"  ch="ch0"/>
+	<cmd id="GetDsoTrigPulse_level"  	 param="FLOAT&amp;:A" 	send_str=":DSO:TRIGger:EDGE? level" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	
+	
+	<cmd id="DSOAutoSetup"  	 		 param="UINT8&amp;:A" 	send_str=":DSO:AUTO" 	    recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="DSODefault"  		 		 param="" 		        send_str=":DSO:DEFault" 	       visible="false"  ch="ch0"/>
+	
+	<cmd id="SetDsoSwitch"        	 	 param="RUN_STOP_BOOL_TYPE:value"          send_str=":DSO:{value}"  visible="false"  ch="ch0"/>
+	<cmd id="GetDsoSwitch"        	 	 param="RUN_STOP_BOOL_TYPE&amp;:value"     send_str=":DSO:RUN?" recv_str="{value}"  visible="false"  ch="ch0"/>
+	
+	
+</cmds>

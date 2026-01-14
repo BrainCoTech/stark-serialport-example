@@ -1,0 +1,45 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<uint name="CanFilter" version="1.0"> 
+    <CanTypeFilter type="struct" id="CanTypeFilter" comment="属性信息">
+      <member>	    
+        <var  id="SOF"          vtype="INT8"    def="1" />
+        <var  id="ARB"          vtype="INT8"    def="1" />
+		<var  id="CTR"          vtype="INT8"    def="1" />
+        <var  id="DATA"         vtype="INT8"    def="1" /> 
+        <var  id="CRC"          vtype="INT8"    def="1" />
+        <var  id="ACK"          vtype="INT8"    def="1" />
+		<var  id="EOF"          vtype="INT8"    def="1" />
+        <!-- <var  id="CRC_A"        vtype="INT8"    def="1" />  -->
+        <!-- <var  id="ACK"          vtype="INT8"    def="1" /> -->
+        <!-- <var  id="ACK_A"        vtype="INT8"    def="1" /> -->
+		<!-- <var  id="EOF"          vtype="INT8"    def="1" /> -->
+        <!-- <var  id="STUFF_CNT"    vtype="INT8"    def="1" />  -->
+		<!-- <var  id="STUFF_CNT_PARITY"  vtype="INT8"    def="1" />  -->
+		<!-- <var  id="FREE"         vtype="INT8"    def="1" />   -->
+      </member>
+      <localsource>
+        <publicproperty>
+          <childgroup>
+            <item id="SOF"          type="check_box"  caption="SOF"          height="20" 	option=""  toolTip="SOF"/>
+            <item id="ARB"          type="check_box"  caption="仲裁场"          height="20"	option=""  toolTip="仲裁场"/>
+			<item id="CTR"          type="check_box"  caption="控制场"          height="20" 	option=""  toolTip="控制场"/>
+			<item id="DATA"         type="check_box"  caption="数据场"         height="20" 	option=""  toolTip="数据场"/>
+            <item id="CRC"          type="check_box"  caption="CRC场"          height="20" 	option=""  toolTip="CRC场"/>  
+			<item id="ACK"          type="check_box"  caption="ACK场"          height="20"	option=""  toolTip="ACK场"/>
+            <item id="EOF"          type="check_box"  caption="EOF"          height="20"	option=""  toolTip="EOF"/>
+			      <!--<item id="CRC"          type="check_box"  caption="CRC"          height="20" 	option=""  tooltip="CRC"/>
+            <item id="CRC_A"        type="check_box"  caption="CRC_A"        height="20" 	option=""  tooltip="CRC_A"/>
+			      <item id="ACK"          type="check_box"  caption="ACK"          height="20"	option=""  tooltip="ACK"/>
+            <item id="ACK_A"        type="check_box"  caption="ACK_A"        height="20"	option=""  tooltip="ACK_A"/>
+			      <item id="EOF"          type="check_box"  caption="EOF"          height="20" 	option=""  tooltip="EOF"/>-->
+            <!-- <item id="STUFF_CNT"    type="check_box"  caption="STUFF_CNT"    height="20" 	option=""  tooltip="STUFF_CNT"/>	 -->
+			<!-- <item id="STUFF_CNT_PARITY"  type="check_box"  caption="STUFF_CNT_PARITY"  height="20" 	option=""  tooltip="STUFF_CNT_PARITY"/> -->
+			<!--<item id="FREE"         type="check_box"  caption="FREE"         height="20" 	option=""  tooltip="FREE"/>-->	 
+          </childgroup>
+        </publicproperty>
+        <memberfunc id="constructor">
+          <code statement="BRS=CRC_A=1"/>		  
+        </memberfunc> 
+      </localsource>
+    </CanTypeFilter> 
+</uint>

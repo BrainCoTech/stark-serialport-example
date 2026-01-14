@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<senddata version="20200219">
+  <ZPS_CANFDSTRUCT_SEND type="struct" id="ZPS_CANFDSTRUCT_SEND" caption="普通数据">
+    <member>
+    </member>
+    <localsource>
+      <publicproperty Info="DYNAMIC(ID自增:#$IDIncreace#,DATA自增:#$DataIncrease#,#@SendData.Info#)" >
+        <childgroup childs="SendData.Delay;SendData.Times;SendData.FrameFormat;SendData.FrameType;SendData.CANFD;SendData.CANFDSpeed;SendData.DLC;SendData.ID;IDIncreace;DataIncrease;SendData.DATA"  >
+          <item id="IDIncreace" type="check_box"  caption="ID自增" placeholderW="79" height="22" width="22"  transvalue="1" layoutDirection="RightToLeft" captionBorder="LEFT;TOP;RIGHT;BOTTOM" captionBorderColor="#1d2024"  tooltip="" />
+        </childgroup>
+      </publicproperty>
+      <memberfunc id="constructor">
+        <func name="SendData.constructor" />
+      </memberfunc>
+    </localsource>
+  </ZPS_CANFDSTRUCT_SEND>
+  <ZPS_DISTUR_SEND type="struct" id="ZPS_DISTUR_SEND" caption="干扰数据">
+    <member>
+
+    </member>
+    <localsource>
+      <publicproperty Info="DYNAMIC(干扰位置:#$ErrorType#,干扰类型:#$DisturType#,#@SendData.Info#)" >
+        <childgroup childs="ErrorType;DisturType;CHILD(SendData)"  >
+          <item id="ErrorType"  type="enum_s"  caption="干扰位置"     option="AUTO(DATA_ERRORTYPE_FORMAT)" visible="1"/>
+          <item id="DisturType" type="enum_s_button"  caption="干扰类型"   option="AUTO(DATA_DISTURTYPE_FORMAT)" enable="" visible="INT8(IF @parent.ErrorType==15 THEN 1 ELSE 0)" btn_width="40" btn_text="设置" btn_visible="1"/>
+        </childgroup>
+        <triggers>
+          <trigger id="ErrorType">
+            <ctr id="parent" ctr="PublishEvent Update" />
+          </trigger>
+          <trigger id="DisturType">
+            <ctr id="parent" ctr="PublishEvent Update" />
+          </trigger>
+        </triggers>
+      </publicproperty>
+      <memberfunc id="constructor">
+        <func name="SendData.constructor" />
+      </memberfunc>
+    </localsource>
+  </ZPS_DISTUR_SEND>
+  <ZPSCANFDSendStruct type="struct" id="ZPSCANFDSendStruct">
+    <member>
+      <var id="DataHead" caption="数据头" vtype="UINT32" comment="每个数据固定的头部"/>
+      <var id="Delay" caption="延时时间" vtype="FLOAT" />
+      <var id="Times" caption="重复次数" vtype="UINT32" />
+      <var id="Channel" caption="通道" vtype="UINT8"  />
+      <var id="Reserve0" caption="保留位0" vtype="UINT8[3]"  />
+      <var id="Reserve1" caption="保留位3" vtype="UINT8[4]"  />
+      <var id="Index" caption="索引" vtype="UINT32"  />
+      <bit id="Reserve1" caption="保留位1" vtype="UINT64" bit="0;19" bitBegin="UINT64" comment="保留，固定为0，硬件流开始位置"/>
+      <bit id="Reserve2" caption="保留位2" vtype="UINT64" bit="19;8"  comment="保留，固定为1"/>
+      <bit id="FrameFormat" caption="帧格式" vtype="TYPE_FORMAT_TYPE" bit="27;1"  />
+      <bit id="FrameType" caption="帧类型" vtype="TYPE_SEND_TYPE" bit="28;1"  />
+      <bit id="CANFD" caption="CANFD" vtype="CANFD_YESORNOT_TYPE" bit="29;1"  />
+      <bit id="CANFDSpeed" caption="CANFD加速" vtype="CANFD_YESORNOT_TYPE" bit="30;1"  />
+      <bit id="DLC" caption="DLC" vtype="UINT8" bit="31;4" />
+      <bit id="ID" caption="帧ID" vtype="TYPE_CAN_SEND_ID" bit="35;29" />
+      <var id="DATA" caption="帧数据" vtype="TYPE_CAN_SEND_DATA[64]" length="IF @FrameFormat&amp;1 THEN 0 ELSE  if @CANFD==0 then (if DLC &lt;= 8 then DLC else 8) else if DLC &lt;= 8 then DLC else if DLC &lt;= 12 then (DLC-6)*4 else if DLC &lt;= 13 then 32 else (DLC-11)*16"/>
+    </member>
+    <localsource>
+      <publicproperty type="category"  Info="DYNAMIC(延时时间:#$Delay#us,ID:#$ID#,帧类型:#$FrameType#,帧格式:#$FrameFormat#,CANFD:#$CANFD#,CANFD变速:#$CANFDSpeed#,DLC:#$DLC#,DATA:#$DATA#)">
+        <childgroup childs="Delay;Times;FrameType;FrameFormat;CANFD;CANFDSpeed;DLC;ID;DATA">
+          <item id="Delay" type="edit"  caption="延时时间"  regexp="\d+(\.\d{0,3})?$" visible="0" />
+          <item id="Times" type="edit" caption="重复次数"  regexp="" visible="0" />
+          <item id="Channel" type="enum_s"  caption="通道" option="AUTO(SEND_FRAME_CHANNEL_TYPE_Format)" enabled="1"/>
+          <item id="FrameType" type="enum_s"  caption="帧类型" option="AUTO(SEND_FRAME_TYPE_Format)" enabled="1"/>
+          <item id="FrameFormat" type="enum_s"  caption="帧格式" option="AUTO(SEND_FRAME_FORMAT_Format)" enabled="1"/>
+          <item id="CANFD" type="check_box"  caption="CANFD"  placeholderW="79" height="22" width="22" transvalue="1" layoutDirection="RightToLeft" captionBorder="LEFT;TOP;RIGHT;BOTTOM" captionBorderColor="#1d2024" />
+          <item id="CANFDSpeed" type="check_box"  caption="CANFD加速"   placeholderW="20" height="22" width="40" transvalue="1" layoutDirection="RightToLeft" captionBorder="LEFT;TOP;RIGHT;BOTTOM" captionBorderColor="#1d2024" />
+          <item id="DLC" type="enum_s" caption="DLC" option="AUTO(CAN_SEND_DLC_ALIAS)" enabled="1"/>
+          <item id="ID" type="edit"  caption="帧ID" regexp="([0-9a-fA-F]{0,9})" enabled="1"/>
+          <item id="DATA" type="format_edit"  caption="帧数据" hexregexp="([0-9a-fA-F]{2})" decregexp="(25[0-5]|2[0-4][0-9]|[0-1][0-9]{2})" charreg="(([0-9]|[a-f]|[A-F]){1})" textreg="(([0-9]|[a-f]|[A-F]){2})" column="8" row="8" length="UINT8(IF @parent.FrameFormat&amp;1 THEN 0 ELSE  if @parent.CANFD==0 then (if parent.DLC &lt;= 8 then parent.DLC else 8) else if parent.DLC &lt;= 8 then parent.DLC else if parent.DLC &lt;= 12 then (parent.DLC-6)*4 else if parent.DLC &lt;= 13 then 32 else (parent.DLC-11)*16)" enabled="INT8(IF @parent.FrameFormat&amp;1==0 THEN 1 ELSE 0)"/>
+        </childgroup>
+        <triggers>
+          <trigger id="ID">
+            <ctr id="ID" ctr="PublishEvent Update" />
+          </trigger>
+          <trigger id="FrameType">
+            <if condition="@FrameType&amp;1==0">
+              <log text="FrameType&amp;2==0" level="error"/>
+              <setter condition="@ID&gt;0x7FF" data="ID.value=0x7FF" />
+            </if>
+            <if condition="@FrameType&amp;1==1">
+              <log text="FrameType&amp;2==0" level="error"/>
+            </if>
+            <ctr id="DLC" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DATA" ctr="PublishEvent PropertyChanged" />
+          </trigger>
+          <trigger id="FrameFormat">
+            <if condition="@FrameFormat&amp;1==1">
+              <setter data="CANFD.enabled=0,,CANFDSpeed.enabled=0" />
+              <setter data="CANFD.value=0,,CANFDSpeed.value=0" />
+            </if>
+            <if condition="@FrameFormat&amp;1==0">
+              <setter data="CANFD.enabled=1,,CANFDSpeed.enabled=0" />
+            </if>
+            <ctr id="CANFD" ctr="PublishEvent PropertyChanged" />
+            <ctr id="CANFDSpeed" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DLC" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DATA" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DLC" ctr="PublishEvent Update" />
+            <ctr id="DATA" ctr="PublishEvent Update" />
+          </trigger>
+          <trigger id="CANFD">
+            <if condition="@CANFD==0">
+              <setter condition="@CANFDSpeed==1" data="CANFDSpeed.value=0" />
+              <setter data="CANFDSpeed.enabled=0" />
+            </if>
+            <if condition="@CANFD==1">
+              <setter data="CANFDSpeed.enabled=1" />
+            </if>
+            <ctr id="CANFD" ctr="PublishEvent PropertyChanged" />
+            <ctr id="CANFDSpeed" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DLC" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DATA" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DLC" ctr="PublishEvent Update"/>
+            <ctr id="DATA" ctr="PublishEvent Update"/>
+          </trigger>
+          <trigger id="CANFDSpeed">
+          </trigger>
+          <trigger id="DLC">
+            <if condition="@FrameFormat&amp;1==0">
+              <ctr id="DATA" ctr="PublishEvent PropertyChanged"/>
+              <ctr id="DATA" ctr="PublishEvent Update"/>
+              <ctr id="parent" ctr="PublishEvent Update"/>
+            </if>
+          </trigger>
+          <trigger id="DATA">
+            <ctr id="DATA" ctr="PublishEvent PropertyChanged"/>
+            <ctr id="DATA" ctr="PublishEvent Update"/>
+            <ctr id="parent" ctr="PublishEvent Update"/>
+          </trigger>
+        </triggers>
+      </publicproperty>
+      <memberfunc id="constructor">
+        <setter data="CANFD.visible=INT8(@parent.FrameFormat==0),,CANFD.enabled=INT8(@parent.FrameFormat==0),,CANFDSpeed.visible=INT8(@parent.FrameFormat==0 &amp;&amp;@parent.CANFD),,CANFDSpeed.enabled=INT8(@parent.FrameFormat==0 &amp;&amp;@parent.CANFD)"/>
+        <setter data="ID.validation=checker(IF @parent.FrameType==0 THEN value&lt;=0x7ff ELSE value&lt;=0x1fffffff);fixer(value = IF @parent.FrameType==0 THEN 0x7ff ELSE 0x1fffffff)" />
+      </memberfunc>
+    </localsource>
+  </ZPSCANFDSendStruct>
+
+  <ZPSCANFDSendStructNoFormat type="struct" id="ZPSCANFDSendStructNoFormat">
+    <member>
+      <var id="DataHead" caption="数据头" vtype="UINT32" comment="每个数据固定的头部"/>
+      <var id="Delay" caption="延时时间" vtype="FLOAT" />
+      <var id="Times" caption="重复次数" vtype="UINT32" />
+      <var id="Channel" caption="通道" vtype="UINT8"  />
+      <var id="Reserve0" caption="保留位0" vtype="UINT8[3]"  />
+      <var id="Reserve1" caption="保留位3" vtype="UINT8[4]"  />
+      <var id="Index" caption="索引" vtype="UINT32"  />
+      <bit id="Reserve1" caption="保留位1" vtype="UINT64" bit="0;19" bitBegin="UINT64" comment="保留，固定为0，硬件流开始位置"/>
+      <bit id="Reserve2" caption="保留位2" vtype="UINT64" bit="19;8"  comment="保留，固定为1"/>
+      <bit id="FrameFormat" caption="帧格式" vtype="TYPE_FORMAT_TYPE" bit="27;1"  />
+      <bit id="FrameType" caption="帧类型" vtype="TYPE_SEND_TYPE" bit="28;1"  />
+      <bit id="CANFD" caption="CANFD" vtype="CANFD_YESORNOT_TYPE" bit="29;1"  />
+      <bit id="CANFDSpeed" caption="CANFD加速" vtype="CANFD_YESORNOT_TYPE" bit="30;1"  />
+      <bit id="DLC" caption="DLC" vtype="UINT8" bit="31;4" />
+      <bit id="ID" caption="帧ID" vtype="TYPE_CAN_SEND_ID_NO_FORMAT_SWITCH" bit="35;29" />
+      <var id="DATA" caption="帧数据" vtype="TYPE_CAN_SEND_DATA_NO_FORMAT_SWITCH[64]" length="IF @FrameFormat&amp;1 THEN 0 ELSE  if @CANFD==0 then (if DLC &lt;= 8 then DLC else 8) else if DLC &lt;= 8 then DLC else if DLC &lt;= 12 then (DLC-6)*4 else if DLC &lt;= 13 then 32 else (DLC-11)*16"/>
+    </member>
+    <localsource>
+      <publicproperty type="category"  Info="DYNAMIC(延时时间:#$Delay#us,ID:#$ID#,帧类型:#$FrameType#,帧格式:#$FrameFormat#,CANFD:#$CANFD#,CANFD变速:#$CANFDSpeed#,DLC:#$DLC#,DATA:#$DATA#)">
+        <childgroup childs="Delay;Times;FrameType;FrameFormat;CANFD;CANFDSpeed;DLC;ID;DATA">
+          <item id="Delay" type="edit"  caption="延时时间"  regexp="\d+(\.\d{0,3})?$" visible="0" />
+          <item id="Times" type="edit"  caption="重复次数"  regexp="" visible="0" />
+          <item id="Channel" type="enum_s"  caption="通道" option="AUTO(SEND_FRAME_CHANNEL_TYPE_Format)" enabled="1"/>
+          <item id="FrameType" type="enum_s"  caption="帧类型" option="AUTO(SEND_FRAME_TYPE_Format)" enabled="1"/>
+          <item id="FrameFormat" type="enum_s"  caption="帧格式" option="AUTO(SEND_FRAME_FORMAT_Format)" enabled="1"/>
+          <item id="CANFD" type="check_box"  caption="CANFD"  placeholderW="79" height="22" width="22" transvalue="1" layoutDirection="RightToLeft" captionBorder="LEFT;TOP;RIGHT;BOTTOM" captionBorderColor="#1d2024" />
+          <item id="CANFDSpeed" type="check_box"  caption="CANFD加速"   placeholderW="20" height="22" width="40" transvalue="1" layoutDirection="RightToLeft" captionBorder="LEFT;TOP;RIGHT;BOTTOM" captionBorderColor="#1d2024" />
+          <item id="DLC" type="enum_s"  caption="DLC" option="AUTO(CAN_SEND_DLC_ALIAS)" enabled="1"/>
+          <item id="ID" type="edit"  caption="帧ID" regexp="([0-9a-fA-F]{0,8})" enabled="1"/>
+          <item id="DATA" type="format_edit"  caption="帧数据" hexregexp="([0-9a-fA-F]{2})" decregexp="(25[0-5]|2[0-4][0-9]|[0-1][0-9]{2})" charreg="(([0-9]|[a-f]|[A-F]){1})" textreg="(([0-9]|[a-f]|[A-F]){2})" column="8" row="8" length="UINT8(IF @parent.FrameFormat&amp;1 THEN 0 ELSE  if @parent.CANFD==0 then (if parent.DLC &lt;= 8 then parent.DLC else 8) else if parent.DLC &lt;= 8 then parent.DLC else if parent.DLC &lt;= 12 then (parent.DLC-6)*4 else if parent.DLC &lt;= 13 then 32 else (parent.DLC-11)*16)" enabled="INT8(IF @parent.FrameFormat&amp;1==0 THEN 1 ELSE 0)"/>
+        </childgroup>
+        <triggers>
+          <trigger id="ID">
+            <ctr id="ID" ctr="PublishEvent Update" />
+          </trigger>
+          <trigger id="FrameType">
+            <if condition="@FrameType&amp;1==0">
+              <log text="FrameType&amp;2==0" level="error"/>
+              <setter condition="@ID&gt;0x7FF" data="ID.value=0x7FF" />
+            </if>
+            <if condition="@FrameType&amp;1==1">
+              <log text="FrameType&amp;2==0" level="error"/>
+            </if>
+            <ctr id="DLC" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DATA" ctr="PublishEvent PropertyChanged" />
+            <ctr id="ID" ctr="PublishEvent Update" />
+          </trigger>
+          <trigger id="FrameFormat">
+            <if condition="@FrameFormat&amp;1==1">
+              <setter data="CANFD.enabled=0,,CANFDSpeed.enabled=0" />
+              <setter data="CANFD.value=0,,CANFDSpeed.value=0" />
+            </if>
+            <if condition="@FrameFormat&amp;1==0">
+              <setter data="CANFD.enabled=1,,CANFDSpeed.enabled=0" />
+            </if>
+            <ctr id="CANFD" ctr="PublishEvent PropertyChanged" />
+            <ctr id="CANFDSpeed" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DLC" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DATA" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DLC" ctr="PublishEvent Update" />
+            <ctr id="DATA" ctr="PublishEvent Update" />
+          </trigger>
+          <trigger id="CANFD">
+            <if condition="@CANFD==0">
+              <setter condition="@CANFDSpeed==1" data="CANFDSpeed.value=0" />
+              <setter data="CANFDSpeed.enabled=0" />
+            </if>
+            <if condition="@CANFD==1">
+              <setter data="CANFDSpeed.enabled=1" />
+            </if>
+            <ctr id="CANFD" ctr="PublishEvent PropertyChanged" />
+            <ctr id="CANFDSpeed" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DLC" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DATA" ctr="PublishEvent PropertyChanged" />
+            <ctr id="DLC" ctr="PublishEvent Update"/>
+            <ctr id="DATA" ctr="PublishEvent Update"/>
+          </trigger>
+          <trigger id="CANFDSpeed">
+          </trigger>
+          <trigger id="DLC">
+            <if condition="@FrameFormat&amp;1==0">
+              <ctr id="DATA" ctr="PublishEvent PropertyChanged"/>
+              <ctr id="DATA" ctr="PublishEvent Update"/>
+              <ctr id="parent" ctr="PublishEvent Update"/>
+            </if>
+          </trigger>
+          <trigger id="DATA">
+            <ctr id="DATA" ctr="PublishEvent PropertyChanged"/>
+            <ctr id="DATA" ctr="PublishEvent Update"/>
+            <ctr id="parent" ctr="PublishEvent Update"/>
+          </trigger>
+        </triggers>
+      </publicproperty>
+      <memberfunc id="constructor">
+        <setter data="CANFD.visible=INT8(@parent.FrameFormat==0),,CANFD.enabled=INT8(@parent.FrameFormat==0),,CANFDSpeed.visible=INT8(@parent.FrameFormat==0 &amp;&amp;@parent.CANFD),,CANFDSpeed.enabled=INT8(@parent.FrameFormat==0 &amp;&amp;@parent.CANFD)"/>
+        <setter data="ID.validation=checker(IF @parent.FrameType==0 THEN value&lt;=0x7ff ELSE value&lt;=0x1fffffff);fixer(value = IF @parent.FrameType==0 THEN 0x7ff ELSE 0x1fffffff)" />
+      </memberfunc>
+    </localsource>
+  </ZPSCANFDSendStructNoFormat>
+  <RandomFrameStruct type="struct" id="RandomFrameStruct">
+    <member>
+      <var id="CycleRandomEnable" caption="周期随机使能" vtype="BOOL" />
+      <var id="CycleLow" caption="周期左值" vtype="INT32" />
+      <var id="CycleHigh" caption="周期右值" vtype="INT32" />
+      <var id="BurstRandomEnable" caption="释放量随机使能" vtype="BOOL"  />
+      <var id="BurstLow" caption="释放量左值" vtype="INT32"  />
+      <var id="BurstHigh" caption="释放量右值" vtype="INT32"  />
+      <var id="CountRandomEnable" caption="次数随机使能" vtype="BOOL"  />
+      <bit id="CountLow" caption="次数左值" vtype="INT32" bit="0;19" bitBegin="UINT64" comment="保留，固定为0，硬件流开始位置"/>
+      <bit id="CountHigh" caption="次数右值" vtype="INT32" bit="19;8"  comment="保留，固定为1"/>
+      <bit id="IDRandomEnable" caption="ID随机使能" vtype="UINT8" bit="0;4"  />
+      <bit id="IDScanEnable" caption="ID扫描使能" vtype="UINT8" bit="4;4"  />
+      <var id="IDLow" caption="ID左值" vtype="INT32"   />
+      <var id="IDHigh" caption="ID右值" vtype="INT32"   />
+      <var id="TypeRandomEnable" caption="类型随机使能" vtype="BOOL" />
+      <bit id="reserved" caption="保留位" vtype="UINT8" bit="0;5" />
+	  <bit id="EXTRandom" caption="扩展随机" vtype="UINT8"  bit="5;1"/>
+      <bit id="FDFRandom" caption="FD随机" vtype="UINT8"  bit="6;1"/>
+	  <bit id="BRSRandom" caption="BRS随机" vtype="UINT8"  bit="7;1"/>
+      <var id="DataRandomEnable" caption="数据随机使能" vtype="BOOL"  />
+      <var id="DLCRandomEnable" caption="DLC随机使能" vtype="BOOL" />
+	  <var id="DLCMax" caption="DLC范围" vtype="INT32"  />
+	  <var id="RandomContent" caption="帧ID" vtype="BOOL"  />
+    </member>
+  </RandomFrameStruct>
+  <S_DISTURB type="struct" id="S_DISTURB">
+    <member>
+      <var id="ABTBaudRate" caption="仲裁波特率" vtype="FLOAT" />
+      <var id="DataBaudRate" caption="数据波特率" vtype="FLOAT" />
+      <bit id="Delay" caption="延时时间" vtype="UINT64" bit="0;24" bitBegin="UINT64" comment="目前无作用"/>
+      <bit id="Times" caption="次数" vtype="UINT64" bit="24;8"  comment="目前无作用"/>
+      <bit id="BitCount" caption="位数" vtype="UINT64" bit="32;10"  />
+      <bit id="res" caption="保留位" vtype="UINT64" bit="42;22" />
+      <bit id="ArbitrationEnd" caption="仲裁结束位" vtype="UINT64" bit="0;10" bitBegin="UINT64"/>
+      <bit id="AckStart" caption="ACK位" vtype="UINT64" bit="10;10" />
+      <bit id="SpeedStart" caption="加速起始位" vtype="UINT64" bit="20;10" />
+      <bit id="SpeedEnd" caption="加速结束位" vtype="UINT64" bit="30;10" />
+      <bit id="res1" caption="保留位1" vtype="UINT64" bit="40;24" />
+      <bit id="Disturb0Start" caption="干扰位1起始时间单位" vtype="UINT64" bit="0;16" bitBegin="UINT64" comment="6.25ns一个单位时间"/>
+      <bit id="Disturb0End" caption="干扰位1结束时间单位" vtype="UINT64" bit="16;16" comment="6.25ns一个单位时间"/>
+      <bit id="Disturb1Start" caption="干扰位2起始时间单位" vtype="UINT64" bit="32;16" />
+      <bit id="Disturb1End" caption="干扰位2起始时间单位" vtype="UINT64" bit="48;16" />
+      <var id="Data" caption="帧数据" vtype="UINT64[11]"  />
+      <var id="BitMask" caption="帧数据" vtype="UINT64[11]"  />
+      <var id="Disturb0Mask" caption="帧数据" vtype="UINT64[11]"  />
+      <var id="Disturb1Mask" caption="帧数据" vtype="UINT64[11]"  />
+    </member>
+    <localsource>
+
+    </localsource>
+  </S_DISTURB>
+
+  <BaudToolStruct type="struct" id="BaudToolStruct">
+    <member>
+      <bit id="uBRP" 			caption="预分频系数" 	vtype="UINT64" bit="0;8"  />
+      <bit id="Tesg1_abt" 	caption="仲裁域Tesg1" 	vtype="UINT64" bit="8;12"  />
+      <bit id="Tesg2_abt" 	caption="仲裁域Tesg2" 	vtype="UINT64" bit="22;14" />
+      <bit id="Tesg1_data" 	caption="数据域Tesg1" 	vtype="UINT64" bit="36;14" />
+      <bit id="Tesg2_data" 	caption="数据域Tesg2" 	vtype="UINT64" bit="50;14" />
+      <!--<bit id="uNum" 	      caption="数据域Tesg2" 	vtype="UINT64" bit="56;32" />-->
+    </member>
+  </BaudToolStruct>
+
+
+  <RECEIVEDISTURB_MASK_INFO type="struct" id="RECEIVEDISTURB_MASK_INFO">
+    <member>
+      <var id="BitCount" caption="掩码位数" vtype="UINT64" />
+      <var id="Mask" caption="掩码数据" vtype="UINT64_HEX" />
+    </member>
+    <localsource>
+      <publicproperty  >
+        <childgroup childs="BitCount;Mask">
+          <item id="BitCount"  type="edit"  caption="掩码位数"      />
+          <item id="Mask" type="edit"  caption="掩码数据"     />
+        </childgroup>
+        <triggers>
+
+        </triggers>
+      </publicproperty>
+      <memberfunc id="constructor">
+
+      </memberfunc>
+    </localsource>
+  </RECEIVEDISTURB_MASK_INFO>
+
+  <MASK_INFO type="struct" id="MASK_INFO">
+    <member>
+      <var id="BitCount" caption="掩码位数" vtype="UINT64" />
+      <var id="Mask" caption="掩码数据" vtype="UINT64_HEX[11]" />
+    </member>
+    <localsource>
+      <publicproperty  >
+        <childgroup childs="BitCount;Mask">
+          <item id="BitCount"  type="edit"  caption="掩码位数"    />
+          <item id="Mask" type="edit"  caption="掩码数据"      />
+        </childgroup>
+        <triggers>
+
+        </triggers>
+      </publicproperty>
+      <memberfunc id="constructor">
+
+      </memberfunc>
+    </localsource>
+  </MASK_INFO>
+
+
+
+
+  <REVEICEDISTURB type="struct" id="REVEICEDISTURB">
+    <member>
+    </member>
+    <localsource>
+      <publicproperty  >
+        <childgroup childs="ReceiveDisturbType;ReceiveDisturbBitType"  >
+          <item id="ReceiveDisturbType"  type="enum_s"  caption="干扰类型"    option="AUTO(REVEICEDISTURB_TYPE_Format)" visible="1"/>
+          <item id="ReceiveDisturbBitType" type="enum_s"  caption="干扰位置"    option="AUTO(REVEICEDISTURBBIT_TYPE_Format)"  />
+          <item id="DisturbCycType"  type="enum_s"  caption="干扰时机"    option="AUTO(REVEICEDISTURBCYC_TYPE_Format)" visible="1"/>
+        </childgroup>
+        <triggers>
+          <trigger id="ReceiveDisturbBitType">
+            <setter condition="@ReceiveDisturbBitType==0"  data="ReceiveDisturbType.visible=1"/>
+            <setter condition="@ReceiveDisturbBitType==1"   data="ReceiveDisturbType.visible=0"/>
+            <ctr id="ReceiveDisturbType" ctr="PublishEvent Update"/>
+          </trigger>
+        </triggers>
+      </publicproperty>
+      <memberfunc id="constructor">
+
+      </memberfunc>
+    </localsource>
+  </REVEICEDISTURB>
+
+  <CSENDDATA id="CSENDDATA">
+    <localsource>
+      <publicproperty type="category" confirmbtn="1" canclebtn="1" caption="发送数据" Info="DYNAMIC(数据类型:#$SendDataType#,#@SendData.Info#)">
+        <childgroup childs="SendDataType;CHILD(SendData)" >
+          <item  id="Description"  	type="edit"    caption="名称描述"    visible="0"  tooltip="选择数据类型"/>
+          <item  id="SendDataType"  type="enum_s"    caption="数据类型"      tooltip="选择数据类型"/>
+        </childgroup>
+      </publicproperty>
+      <memberfunc id="ChannelChange">
+        <!-- <sys command="dbg_break"/> -->
+        <setter data="SendDataType.option=AUTO(SEND_FRAME_DATATYPE_Format)"/>
+      </memberfunc>
+    </localsource>
+  </CSENDDATA>
+  <ZPS_SEND_DATA id="ZPS_SEND_DATA">
+    <localsource>
+      <publicproperty type="category" caption="发送数据" Info="DYNAMIC(ID:#$SendData.ID#,帧类型:#$SendData.FrameType#,DLC:#@SendData.DLC#,DATA:#$SendData.DATA#)">
+        <childgroup childs="CHILD(SendData)" />
+      </publicproperty>
+    </localsource>
+  </ZPS_SEND_DATA>
+  <CYCLETRIGGER id="CYCLETRIGGER">
+    <localsource>
+      <publicproperty type="category" caption="普通发送" Info="DYNAMIC(发送延迟:#$CycleDelayTime#s,周期次数:#$CycleTimes#次,周期时间:#$Cycle#s)">
+        <childgroup childs="CycleDelayTime;CycleTimes;Cycle;" >
+          <item  id="CycleDelayTime"     type="edit"     caption="延时时间"      value_unit="s"   regexp="\d+(\.\d+)?$" />
+          <item  id="CycleTimes"         type="edit"     caption="周期次数"      value_unit="次"  regexp="^[0-9]*$" tooltip="" />
+          <item  id="Cycle"         type="edit"     caption="周期时间"      value_unit="ms"   regexp="\d+(\.\d+)?$" />
+        </childgroup>
+        <triggers>
+          <trigger id="Cycle">
+            <log text="CycleCycleCycle"/>
+          </trigger>
+          <trigger id="CycleDelayTime">
+            <log text="CycleDelayCycleDelayCycleDelay"/>
+          </trigger>
+          <trigger id="CycleTimes">
+            <log text="CycleTimesCycleTimes"/>
+          </trigger>
+        </triggers>
+      </publicproperty>
+    </localsource>
+  </CYCLETRIGGER>
+  <TRIGGERTRIGGER id="TRIGGERTRIGGER">
+
+    <localsource>
+      <publicproperty type="category" caption="触发发送"
+                      Info="DYNAMIC(发送延迟:#$CycleDelayTime#s,周期次数:#$CycleTimes#次,周期时间:#$Cycle#s)">
+        <childgroup childs="CycleDelayTime;CycleTimes;Cycle;SetData.FrameFormat;SetData.FrameType;SetData.CANFD;SetData.CANFDSpeed;SetData.DLC;SetData.ID;SetData.DATA" >
+          <item  id="CycleDelayTime"     	type="edit"     caption="延时时间"      value_unit="s"   regexp="\d+(\.\d+)?$" />
+          <item  id="CycleTimes"        	type="edit"     caption="周期次数"      value_unit="次"  regexp="^[0-9]*$" tooltip="" />
+          <item  id="Cycle"         		type="edit"     caption="周期时间"      value_unit="s"   regexp="\d+(\.\d+)?$"  />
+          <item  id="TriggerChannel"         type="enum_s"     caption="触发通道"   option="AUTO(SEND_FRAME_CHANNEL_TYPE_Format)"    />
+          <item  id="TriggerEnbale"         type="text"     caption="使能触发"        />
+        </childgroup>
+        <triggers>
+
+        </triggers>
+      </publicproperty>
+      <memberfunc id="constructor">
+        <setter data="CycleTimes.validation=checker(value&gt;=-1&amp;&amp; value&lt;=10000000&amp;&amp;value!=0);fixer(value = IF value&lt;1 THEN 1 ELSE 10000000)" />
+      </memberfunc>
+    </localsource>
+  </TRIGGERTRIGGER>
+</senddata>

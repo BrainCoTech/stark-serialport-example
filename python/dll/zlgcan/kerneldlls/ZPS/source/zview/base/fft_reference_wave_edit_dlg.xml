@@ -1,0 +1,53 @@
+<_Dialog id="fft_edit_dialog" title="参考波形编辑" titlebar="title;close;icon" bind="NULL:source" form="appmodal" fixWidth="360" fixHeight="480">
+  <children>
+    <messagedialog id="messagedlg"  form="appmodal"  type="Error" button="Ok" title="警告" text="频率值没有排序" />
+  </children>
+  <_View id="showview">
+    <vlayout sizeConstraint="default" contentsMargins="0,0,0,0" spacing="10">
+      <view  objectName="edit_menu" >
+        <hlayout sizeConstraint="default">
+          <_IconBtn toolTip="增加"  text="" icon="zr:share:/resource/res/td_res/add to_20_n.png" hover_icon="zr:share:/resource/res/td_res/add to_20_o.png" disabled_icon="zr:share:/resource/res/td_res/add to_20_d.png">
+            <event id="clicked">
+              <code statement="source.AddPoint(point_view.selectline)" />
+            </event>
+          </_IconBtn>
+          <_IconBtn toolTip="删除" text="" icon="zr:share:/resource/res/td_res/delete_20_n.png" hover_icon="zr:share:/resource/res/td_res/delete_20_o.png" disabled_icon="zr:share:/resource/res/td_res/delete_20_d.png">
+            <event id="clicked">
+              <code statement="source.RemovePoint(point_view.selectline)" />
+            </event>
+          </_IconBtn>
+          <stretch stretch="1" />
+        </hlayout>
+      </view>
+      <listview  id="point_view" dragType="Drag"  bind="source.pointList"  copyPaste="true" multiSelect="true" >
+        <extend >
+          <columns>
+            <column name="number"    title="序号"   width="40"   toolTip="参数"   alignment="AlignCenter" titleExConnect="(;)" />
+            <column name="fre"      title="频率Hz"     width="100"  toolTip="频率Hz"     alignment="AlignCenter" />
+            <column name="db"      title="畸变幅值dB"     width="100"  toolTip="畸变幅值dB"     alignment="AlignCenter" />
+          </columns>
+          <lineinfos mainKey="type" BackColor="">
+            <listline key="__def__" init="extend" dragOut="true"   style="data;visible"  editable="true">
+              <linetext   name="number"      text="__INDEX__"   alignment="AlignCenter" />
+              <linetext   name="fre"      bind="__line__{text=fre}"  alignment="AlignCenter"  color="black" delegateType="edit"/>
+              <linetext   name="db"      bind="__line__{text=db}"  alignment="AlignCenter"  color="black" delegateType="edit"/>
+            </listline>
+          </lineinfos>
+        </extend>
+        <events>
+        </events>
+      </listview>
+    </vlayout>
+  </_View>
+  <events>
+    <event id="close">
+      <var id="state" vtype="UINT8" def="0" />
+      <code statement="state=source.CheckSort()" />
+      <if condition="state==0">
+        <logui text="state=0"/>
+        <show id="messagedlg"  type="messagedialog" status="exec" />
+        <return />
+      </if>
+    </event>
+  </events>
+</_Dialog>

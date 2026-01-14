@@ -1,0 +1,34 @@
+<cmds>
+	<cmd id="StartSend"   		param="UINT32:VirCH" 					send_str=":CANFD:SEND{VirCH}:RUN"  visible="false"  ch="ch0"  comment="开始发送报文"/>
+	<cmd id="StopSend"   		param="UINT32:VirCH" 					send_str=":CANFD:SEND{VirCH}:STOP"  visible="false"  ch="ch0"  comment="停止发送报文"/>
+	<cmd id="AddData"   		param="STRING:Name,UINT8_POINT:Buff" 	send_str=":CANFD:DATA:ADD {Name},{b:Buff}"  visible="false"  ch="ch0" comment="添加数据"/>
+	<cmd id="CheckData"   		param="STRING:Name,UINT32&amp;:Status" 	send_str=":CANFD:DATA:CHECk? {Name}" 	    recv_str="{Status}"   visible="false"  ch="ch0"/>
+	<cmd id="DeleteData"   		param="STRING:Name" 					send_str=":CANFD:DATA:REMOve {Name}"  visible="false"  ch="ch0"  comment="移除数据命令"/>
+	<cmd id="SetSendCycle"   	param="UINT32:VirCH,UINT32:Cycle" 		send_str=":CANFD:SEND{VirCH}:SET:CYCLE {Cycle}ms"  visible="false"  ch="ch0"  comment="设置发送周期"/>
+	<cmd id="SetSendTimes"   	param="UINT32:VirCH,UINT32:Times" 		send_str=":CANFD:SEND{VirCH}:SET:TIMES {Times}"  visible="false"  ch="ch0"  comment="设置周期发送次数"/>
+	<cmd id="SetSendDelay"   	param="UINT32:VirCH,DOUBLE:Delay" 		send_str=":CANFD:SEND{VirCH}:SET:Delay {Delay}"  visible="false"  ch="ch0"  comment="设置发送延时"/>
+	<cmd id="CheckStatus"   	param="UINT32:VirCH,UINT32&amp;:Status" send_str=":CANFD:SEND{VirCH}:RUN?" 	    recv_str="{Status}"   visible="false"  ch="ch0"/>
+	
+	<cmd id="SendAll"   		param="" 		send_str=":CANFD:SEND:RUNALL"  visible="false"  ch="ch0"  comment="发送全部"/>
+	<cmd id="StopAll"   		param="" 		send_str=":CANFD:SEND:STOPALL"  visible="false"  ch="ch0"  comment="停止全部发送"/>
+	<cmd id="BindVirCHData"   	param="UINT32:VirCH,STRING:Name" 		send_str=":CANFD:SEND{VirCH}:SET:DATA {Name}"  visible="false"  ch="ch0"  comment="设置通道数据"/>
+	<cmd id="UnBindVirCHData"   param="UINT32:VirCH" 					send_str=":CANFD:SEND{VirCH}:RESET"  visible="false"  ch="ch0"  comment="解绑通道中的发送数据,和发送全部相关"/>
+	<cmd id="GetVirCHCount"   	param="UINT32&amp;:Count" send_str=":CANFD:SEND:NUMBer?" 	    recv_str="{Count}"   visible="false"  ch="ch0"	comment="获取可使用通道资源个数,暂时没在使用"/>
+	
+	<cmd id="AddLuaScript"   	param="STRING:Name,UINT8_POINT:Buff" 	send_str=":LUA:SCRIpt:APPEND {Name}_Receive,{b:Buff}"  visible="false"  ch="ch0" comment="添加lua脚本，用于触发的脚本"/>
+	<cmd id="DeleteLuaScript"   param="STRING:Name" 	send_str=":LUA:SCRIpt:REMOVE {Name}_Receive"  visible="false"  ch="ch0" comment="删除lua脚本，用于触发的脚本"/>
+	
+	<cmd id="BindScript"   		param="UINT32:VirCH,STRING:Name" 	send_str=":CANFD:SEND{VirCH}:LUA:BIND QEnd,{Name},test.MainFunc"  visible="false"  ch="ch0" comment="绑定脚本，目前暂时没有使用"/>
+	<cmd id="UnBindScript"   	param="UINT32:VirCH" 					send_str=":CANFD:SEND{VirCH}:LUA:UNBIND QEnd"  visible="false"  ch="ch0" comment="解绑脚本"/>
+	
+	<cmd id="BindTriggerScript"   		param="UINT32:TriggerCH,STRING:Name" 	send_str=":CANFD{TriggerCH}:RECV:LUA:BIND {Name}_Name,{Name}_Receive,adv,TriggerLua{Name}"  visible="false"  ch="ch0" comment="触发脚本的绑定"/>
+	<cmd id="UnBindTriggerScript"   	param="UINT32:TriggerCH,STRING:Name" 	send_str=":CANFD{TriggerCH}:RECV:LUA:UNBIND {Name}_Name"  visible="false"  ch="ch0" comment="触发脚本的解绑"/>
+	<cmd id="TriggerADVBind"   			param="UINT32:TriggerCH,STRING:Name,UINT8_POINT:Buff" 	send_str=":CANFD{TriggerCH}:RECV:LUA:SET:FILTer:ADV {Name}_Name,{b:Buff}"  visible="false"  ch="ch0" comment="触发的高级过滤器绑定"/>
+	  <!-- <scpi name="Connect" cmd=":CANFD:SEND#@CHNumber#:Connect #@SendChannel#" tips="已经没有在使用" /> -->
+      <!-- <scpi name="DisConnect" cmd=":CANFD:SEND:DISConnect" tips="已经没有在使用" /> -->
+      <!-- <scpi name="GetFreeCH" cmd=":CANFD:SEND:free?" tips="已经没有使用" /> -->
+      <!-- <scpi name="ChildLuaBindAFTER"  cmd=":CANFD:DATA:BIND:LUA:EXP AFTER,#@Name#,#@Index#,"       tips="高级过滤器绑定，目前已经没有再使用"/> -->
+      <!-- <scpi name="ChildLuaBindBEFORE" cmd=":CANFD:DATA:BIND:LUA:EXP BEFORE,#@Name#,#@Index#,"       tips="高级过滤器绑定，目前已经没有再使用"/> -->
+      <!-- <scpi name="SendClear" 			cmd=":CANFD:SEND:CLEAR"       				tips="清除所有在底层发送队列中的数据"/> -->
+</cmds>
+   

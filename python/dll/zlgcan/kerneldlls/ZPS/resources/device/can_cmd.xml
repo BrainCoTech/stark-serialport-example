@@ -1,0 +1,53 @@
+<cmds>
+	<!--报文业务-->
+	<cmd id="SetCANSwitch"        	 param="UINT32:chNum,RUN_STOP_BOOL_TYPE:value"     send_str=":CANFD{chNum}:{value}"  visible="false"  ch="ch0"/>
+	<cmd id="GetCANSwitch"        	 param="UINT32:chNum,RUN_STOP_BOOL_TYPE&amp;:value"     send_str=":CANFD{chNum}:RUN?" recv_str="{value}"  visible="false"  ch="ch0"/>
+	
+	<cmd id="GetRunStatus" 		 param="RUN_STOP_BOOL_TYPE&amp;:A" send_str=":RUN?" recv_str="{A}"  visible="false"  ch="ch0"/>
+	
+	<cmd id="SetCANABTBaudrate"  param="UINT32:NUM,DOUBLE:A" send_str=":CANFD{NUM}:ABTBaud {A}" 				 visible="false"  ch="ch0"/>
+	<cmd id="GetCANABTBaudrate"  param="UINT32:NUM,DOUBLE&amp;:A" send_str=":CANFD{NUM}:ABTBaud?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetEnableResistor"  param="UINT32:NUM,BOOL:A" send_str=":CANFD{NUM}:END {A}" 				 visible="false"  ch="ch0"/>
+	<cmd id="GetEnableResistor"  param="UINT32:NUM,BOOL&amp;:A" send_str=":CANFD{NUM}:END?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+
+    <cmd id="SetSendStrategyCount"  param="UINT32:NUM,UINT32:A" send_str=":CANFD{NUM}:RETRan {A}" 				 visible="false"  ch="ch0"/>
+	<cmd id="GetSendStrategyCount"  param="UINT32:NUM,UINT32&amp;:A" send_str=":CANFD{NUM}:RETRan?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	
+	<cmd id="SetWorkMode"  param="UINT32:NUM,UINT32:A" send_str=":CANFD{NUM}:SENDMODE {A}" 				 visible="false"  ch="ch0"/>
+	<cmd id="GetWorkMode"  param="UINT32:NUM,UINT32&amp;:A" send_str=":CANFD{NUM}:SENDMODE?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+		
+	<cmd id="GetBaudRateConfig"  param="UINT32:NUM,CanfdBaudRateConfig&amp;:A" send_str=":CANFD{NUM}:BAUD:STRUct:CONFig?" 	recv_str="{b:@A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetBaudRateConfig"  param="UINT32:NUM,CanfdBaudRateConfig:A" send_str=":CANFD{NUM}:BAUD:STRUct:CONFig ${A}$"  visible="false"  ch="ch0"/>
+	
+    <cmd id="GetAbtBaud"    param="UINT32:NUM,DOUBLE&amp;:A"  send_str=":CANFD{NUM}:ABTBaud?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetAbtBaud"    param="UINT32:NUM,DOUBLE:A" 		 send_str=":CANFD{NUM}:ABTBaud  {A}"  visible="false"  ch="ch0"/>	
+    <cmd id="GetAbtSPos"    param="UINT32:NUM,DOUBLE&amp;:A" send_str=":CANFD{NUM}:ABTSPos?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetAbtSPos"    param="UINT32:NUM,DOUBLE:A" 	 send_str=":CANFD{NUM}:ABTSPos  {A}"  visible="false"  ch="ch0"/>	
+    <cmd id="GetDataBaud"   param="UINT32:NUM,DOUBLE&amp;:A"  send_str=":CANFD{NUM}:DATABaud?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDataBaud"   param="UINT32:NUM,DOUBLE:A" 		 send_str=":CANFD{NUM}:DATABaud  {A}"  visible="false"  ch="ch0"/>	
+    <cmd id="GetDataSPos"   param="UINT32:NUM,DOUBLE&amp;:A"  send_str=":CANFD{NUM}:DATASPos?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetDataSPos"   param="UINT32:NUM,DOUBLE:A" 	 send_str=":CANFD{NUM}:DATASPos  {A}"  visible="false"  ch="ch0"/>
+	
+    <cmd id="GetMiscConfig" param="UINT32:NUM,CanfdMiscConfig&amp;:A" send_str=":CANFD{NUM}:MISC:STRUct:CONFig?" recv_str="{b:@A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetMiscConfig" param="UINT32:NUM,CanfdMiscConfig:A" send_str=":CANFD{NUM}:MISC:STRUct:CONFig ${A}$"  visible="false"  ch="ch0"/>
+	<!--phy-->
+	<cmd id="GetPhyConfig"  param="PhyConfiguration&amp;:A" send_str=":PHY:CONFIG:STRUCT?" 	recv_str="{b:@A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetPhyConfig"  param="PhyConfiguration:A" send_str=":PHY:CONFIG:STRUCT ${A}$"  visible="false"  ch="ch0"/>	
+	
+	<cmd id="GetSTATisticsData"  param="UINT32:NUM,CanfdStatisticsData&amp;:A" send_str=":CANFD{NUM}:STATistics:DATA?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSortLength"  param="UINT64&amp;:A" send_str=":CANFD:SORT:ARECV:length?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="GetSortData"    param="UINT32:COUNT,IBASECTR:A" send_str=":CANFD:SORT:ARECV? bin,{COUNT}" 	recv_str="{b:@A}"   visible="false"  ch="ch0"/>
+	<cmd id="DisableSort"    param="" send_str=":CANFD:SORT:ARECV:ENABLE 0"  visible="false"  ch="ch0" comment="异步默认启动"/>
+	<cmd id="EnableSort"     param="" send_str=":CANFD:SORT:ARECV:ENABLE 1"  visible="false"  ch="ch0" comment="异步默认启动"/>
+	<cmd id="ClearFifo"      param="" send_str=":CANFD:SORT:ARECV:CLEar"  visible="false"  ch="ch0"/>
+	
+	
+	<!--rxtx-->
+	<cmd id="SetRxTxEnable"        	 param="UINT32:chNum,RXD_TXD_TYPE:type,UINT8:value"     	  send_str=":CANFD{chNum}:LI:{type}:ENABle {value}"  visible="false"  ch="ch0"/>
+	<cmd id="GetRxTxEnable"        	 param="UINT32:chNum,RXD_TXD_TYPE:type,UINT8&amp;:value"      send_str=":CANFD{chNum}:LI:{type}:ENABle?"     recv_str="{value}"  visible="false"  ch="ch0"/>
+	<cmd id="GetRxTxTimeStamp"       param="UINT32:chNum,RXD_TXD_TYPE:type,UINT64&amp;:value"     send_str=":CANFD{chNum}:LI:{type}:TIMEStamp?"  recv_str="{value}"  visible="false"  ch="ch0"/>
+	<cmd id="GeRtxTxLength"        	 param="UINT32:chNum,RXD_TXD_TYPE:type,UINT32&amp;:value"     send_str=":CANFD{chNum}:LI:{type}:LENgth?"     recv_str="{value}"  visible="false"  ch="ch0"/>
+
+	<cmd id="GetWaveDiv"  param="UINT32&amp;:A" send_str=":RECord:WAVE:DIV?" 	recv_str="{A}"   visible="false"  ch="ch0"/>
+	<cmd id="SetWaveDiv"  param="UINT32:A" send_str=":RECord:WAVE:DIV {A}"  visible="false"  ch="ch0"/>	
+</cmds>

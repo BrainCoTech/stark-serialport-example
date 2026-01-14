@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<device ztdev_version="1.0">
+	<baseinfo author="致远仪器" comment="" company="致远仪器" create_time="2024-05-22 15:09:38" device_name="ZPS" device_type_value="CANFD总线分析仪" modify_time="2024-05-22 15:33:20" version="1.0" />
+	<connect>
+		<links LinkPiror="" DefaultPort="5025" />
+	</connect>
+	<cmds protocal_type="SCPI" Eof="\r\n" />
+</device>

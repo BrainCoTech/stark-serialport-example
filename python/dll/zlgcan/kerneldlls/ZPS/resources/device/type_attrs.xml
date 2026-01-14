@@ -1,0 +1,9 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+<zps_types>
+  <diParaConfig caption="diConfig结构体配置">
+    <children>
+      <!--dac_ref_volt 	type="edit" caption="电压" def="1.0"/-->
+      <measure_time_out type="edit" caption="超时" def="3000"/>
+    </children>
+  </diParaConfig>
+</zps_types>

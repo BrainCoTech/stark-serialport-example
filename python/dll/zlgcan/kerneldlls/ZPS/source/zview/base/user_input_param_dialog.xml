@@ -1,0 +1,56 @@
+<dialog id="UserInputDialog" bind="NULL:source{title=title;width=width;height=height}" result="0"  form="appmodal" titlebar="close;title">
+  <view id="showview" >
+    <vars>
+      <var id="WarnLabelVisible" vtype="UINT8" value="0"/>
+    </vars>
+    
+    <vlayout sizeConstraint="default" alignment="AlignCenter"  contentsMargins="10,10,10,10">
+      <customlist id="PropertyView" bind="source.ParamsList{_other=try}" bindvar="BIND#source" fixWidth="UINT8#bindvar:width" fixHeight="UINT8#bindvar:height" init="extend"  sizePolicy="Expanding,Expanding"/>
+      <hlayout sizeConstraint="default" alignment="AlignCenter" contentsMargins="10,10,10,10">
+        <stretch stretch="1"/>
+        <text  text="操作指引：" objectName="ScanGuideText" />       
+        <text  bind="source{text=foucsCaption}" objectName="ScanTipText"/>>
+        <stretch stretch="1"/>
+      </hlayout>
+      <text text="必填项不能为空，请填完" objectName="WarnLabel" visible="BIND#WarnLabelVisible"/>
+      <stretch stretch="1"/>
+      <hlayout sizeConstraint="default"  contentsMargins="10,10,10,30">
+        <stretch stretch="1"/>
+        <button id="ok" text="确定" objectName="UserInputButton"  fixWidth="80"  fixHeight="30" >
+          <event id="clicked">		 
+            <if condition="source.IsAllNeedEditFinished()==0">
+               <setter data="WarnLabelVisible.value=1"/>
+              <return/> 
+            </if>         
+            <setter data="UserInputDialog.result=1"/>
+            <show id="UserInputDialog" status="hide"/>
+          </event>
+        </button>
+        <button id="cancel"  text="取消" objectName="UserInputButton" fixWidth="80" fixHeight="30">
+          <event id="clicked">
+            <setter data="UserInputDialog.result=0"/>
+            <show id="UserInputDialog" status="hide"/>
+          </event>
+        </button>
+        <stretch stretch="1"/>
+      </hlayout>
+    </vlayout>
+    <event id="enterevent" key="Enter">
+      <setter data="WarnLabelVisible.value=0"/>
+      <if condition="source.IsFinisedInput()==`1`">
+        <ui ctr="sendModelEvent" id="showview.ok" event="clicked"/>
+        <return />
+      </if>
+      <ui ctr="sendModelEvent" id="showview.cancel" event="clicked"/>
+    </event>
+
+    <event id="enterevent" key="Return">
+      <setter data="WarnLabelVisible.value=0"/>
+      <if condition="source.IsFinisedInput()==`1`">   
+        <ui ctr="sendModelEvent" id="showview.ok" event="clicked"/>
+        <return />
+      </if>     
+      <code statement="FocusNext()" />
+    </event>   
+  </view>
+</dialog>

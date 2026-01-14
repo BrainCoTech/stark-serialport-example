@@ -1,0 +1,646 @@
+<base_func_config>
+  <groups>
+    <!--<group path="base"            caption="基础命令"/>-->
+    <group path="base"       caption="基础命令"/>
+    <group path="process"    caption="流程控制"/>
+    <group path="math"       caption="数学运算"/>
+    <group path="string"     caption="文本处理"/>
+    <group path="data"       caption="数据处理"/>
+  </groups>
+  <funcs>  
+    <userinput    caption="User Input"     path="base" tips=""   descibe="用户参数输入窗口">      
+      <item id="title"   vtype="STRING" type="combobox" editable="true" caption="标题" item_type="INT32:DOUBLE:STRING"  value="标题"  def="标题" autoUpdateOption="true" option="ENV($LocalVar:INT32,DOUBLE,STRING)" descibe="标题【IN】：对话框标题，文本类型&#x000A;支持INT32、DOUBLE、STRING变量或者常量"/>
+      <item id="argss" type="TestDataEditorType" editable="true" data_type="STRING" item_type="STRING" comment="选择"  caption="内容" descibe="错误反馈【IN】：错误反馈，数值类型&#x000A;支持STRING变量或者常量"/>
+      <item id="width" vtype="INT32"  type="combobox" editable="true" caption="窗口宽度" value="400"  def="400" item_type="INT32" autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="窗口宽度【IN】：窗口的默认宽度，单位：像素&#x000A;如果使用的图片宽度大于设置值，窗口宽度自动跟随图片宽度调整，支持INT32变量或者常量"/>
+      <item id="height" vtype="INT32"  type="combobox" editable="true" caption="窗口高度" value="300"  def="300" item_type="INT32" autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="窗口高度【IN】：窗口的默认高度，单位：像素&#x000A;如果使用的图片高度大于设置值，窗口高度自动跟随图片高度调整，支持INT32变量或者常量"/>
+      <item id="timeout" vtype="INT32"  type="combobox" editable="true" caption="超时时间" value="0"  def="0"  item_type="INT32"   autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="超时时间【IN】：等待用户操作的超时时间，单位：毫秒&#x000A;超时未输入窗口将自动关闭，输入值≤0表示持续等待，程序不会自动关闭窗口，支持INT32常量或者变量"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" value=""  def=""  item_type="INT32"  autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="执行结果【OUT】：返回对话框的关闭方式，数值类型&#x000A;1：用户点击“确定”按钮&#x000A;0：用户点击“取消”按钮&#x000A;-1：用户长时间未操作，对话框超时退出&#x000A;支持INT32变量"/>
+    </userinput>
+    <mptservercomm    caption="MPTServerComm"       path="data" tips="" descibe="服务器通信命令">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="UpLoadTestResult;SetTestStatus"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{UpLoadTestResult=`上传测试结果到服务器`;SetTestStatus=`设置上传状态`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </mptservercomm>
+    <fileprocess    caption="FileProcess"       path="data" tips="" descibe="文件操作">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="CreateDirectory;IsDirEmpty;GetDirChildren;CreateFile;OpenFile;CloseFile;GetFileName;GetFileDir;GetFileExtName;GetFileSize;WriteData;ReadData;Delete;Rename;Copy;IsExist;GetPathFileType"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{CreateDirectory=`创建目录`;IsDirEmpty=`目录是否为空,判断依据是目录存在且存在子目录或着文件`;GetDirChildren=`获取目录下所有子目录和文件并保存到数组`;CreateFile=`创建一个文件`;OpenFile=`打开一个文件并关联到指定的文件变量`;CloseFile=`关闭文件`;GetFileName=`获取文件名`;GetFileDir=`获取文件路径`;GetFileExtName=`获取文件的后缀名`;GetFileSize=`获取文件的大小`;WriteData=`往已打开文件变量中写数据`;ReadData=`往已打开文件变量中读数据`;Delete=`删除文件或者目录`;Rename=`文件或者目录重命名`;Copy=`拷贝或者移动文件或者目录`;IsExist=`判断文件或者目录是否存在`;GetPathFileType=`获取路径的类型是文件或者目录或者其它`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </fileprocess>
+
+    <waveprocess  caption="WaveProcess" path="data" tips="" descibe="波形操作">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="GetName;SetName;GetDataType;SetDataType;SetRate;GetRate;SetBeginTime;GetBeginTime;AppendData;AppendArray;GetDataCount;ClearData"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{GetName=`获取名称`;SetName=`设置名称`;GetDataType=`获取数据类型`;SetDataType=`设置数据类型`;SetRate=`设置采样率`;GetRate=`获取采样率`;SetBeginTime=`设置起始时间`;GetBeginTime=`获取起始时间`;AppendData=`追加数据`;AppendArray=`追加数据区域`;GetDataCount=`获取数据个数`;ClearData=`清空数据`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </waveprocess>
+
+    <waveviewprocess  caption="WaveViewProcess" path="data" tips="" descibe="波形图操作">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="SetWaveShowState;SetCursorStatus;SetCursorPosition;GetCursorPosition;GetCursorDelta"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{SetWaveShowState=`设置波形显示状态`;SetCursorStatus=`设置光标状态`;GetCursorPosition=`获取光标位置`;GetCursorDelta=`获取光标差值`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </waveviewprocess>
+    
+    <vrtprocess  caption="VRTProcess" path="data" tips="" descibe="穿越电压测试分析命令">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="VRTCalculate;VRTAnalysis;VRTConfigure;VRTAutoParam;AutoExport;GetPointTime;UpdateWaveRange"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{VRTConfigure=`设置VRT前置参数`;VRTCalculate=`将原始波形运算得到计算波形`;VRTAnalysis=`进行VRT分析处理`;VRTAutoParam=`VRT自动配置参数`;AutoExport=`导出波形数据`;GetPointTime=`获取区域时间`;UpdateWaveRange=`调整波形范围显示时间`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </vrtprocess>
+
+    <flickerprocess  caption="FlickerProcess" path="data" tips="" descibe="闪变测试分析命令">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="FlickerAnalysis;FlickerConfigure;FlickerFluAnalysis"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{FlickerConfigure=`设置闪变前置参数`;FlickerAnalysis=`进行闪变分析处理`;FlickerFluAnalysis=`分析闪变波动数据`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </flickerprocess>
+
+    <uicommand  caption="UICommand" path="data" tips="" descibe="UI处理命令">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="Bind;ScreenShot"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{Bind=`绑定Ui参数`;ScreenShot=`Ui截图处理`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </uicommand>
+    
+    <aborttest    caption="Abort Test"       path="process" tips="" descibe="终止测试流程" >
+      <item id="pos"  vtype="STRING" type="combobox" caption="级别" option="整个流程;当前测试项" def="整个流程" value="整个流程" descibe="级别【IN】：停止的级别，枚举值&#x000A;整个流程：整个测试流程"/>
+      <item id="abnormal_code"  vtype="STRING" type="edit" caption="异常码"  item_type="STRING"  def="code" value="code"    descibe="异常码【IN】：异常的类型，与异常处理流程的子函数绑定&#x000A;异常码：支持STRING变量或者常量"/>
+    </aborttest>
+
+
+    <fftcheck    caption="FFT Check"       path="data" tips="" descibe="fft波形判定函数" >
+      <item id="fft" vtype="INT32"  type="combobox" editable="true" caption="FFT变量" value="{fft}"  def="{fft}" item_type="FFTWave" autoUpdateOption="true" option="ENV($LocalVar:FFTWave)" descibe="FFT变量【IN】：需要判定的变量&#x000A;和参考波形数据进行判断，支持FFTWave变量"/>
+      <item id="error" vtype="STRING"  type="combobox" editable="true" caption="错误原因" value=""  def="" item_type="STRING" autoUpdateOption="true" option="ENV($LocalVar:STRING)" descibe="错误原因【IN】：如果出现错误，返回错误的具体原因&#x000A;如果，支持STRING变量"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="判定结果" value=""  def=""  item_type="INT32"  autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="判定结果【OUT】：反馈判定结构，数值类型&#x000A;1：成功&#x000A;0：失败&#x000A;支持INT32变量"/>
+    </fftcheck>
+
+    <ifdef        caption="If Define"       path="process" tips="" descibe="条件编译，如果条件成立，则该语句有效并且编译，否则该语句无效并不会编译该语句">
+      <item id="condi" vtype="STRING" type="edit" caption="条件" item_type="STRING"  descibe="条件【IN】：条件表达式"/>    
+    </ifdef>
+
+    <arrayprocess    caption="ArrayProcess"       path="data" tips="" descibe="数组操作">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="GetSize;SetSize;GetValue;SetValue;Clear;AppendValue;InsertAtPos;RemoveAtPos;CopyTo" autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{GetSize=`返回数组的大小`;SetSize=`初始化设置数组的大小，原来数据会并清空`;GetValue=`获取数组索引的值`;SetValue=`更新数组索引的值`;Clear=`清空数组的内容`;AppendValue=`在数组末尾添加新数据`;InsertAtPos=`在数组指定位置插入一个新的数据`;RemoveAtPos=`删除数组指定位置的内容`;CopyTo=`删除数组指定位置的内容`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </arrayprocess>
+
+    <delay    caption="Delay"     path="base" tips=""   descibe="延时/等待：阻塞测试流程，等待用户指定时长。">
+      <item id="time" vtype="STRING" type="combobox" editable="true" data_type="INT32" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="时间" value="1000"  def="1000" option="ENV($LocalVar:INT32,DOUBLE)" descibe="时间【IN】：休眠时长，数值类型&#x000A;支持INT32,DOUBLE变量或者常量"/>
+      <item id="unit"  vtype="STRING" type="combobox" caption="单位" option="s;ms" def="ms" value="ms" descibe="单位【IN】：休眠时长的单位，枚举值&#x000A;s：秒，ms：毫秒"/>
+    </delay>
+    <dialog   caption="Dialog"     path="base" tips="" descibe="对话框：弹出消息窗口，并接收用户反馈。">
+      <item id="title"   vtype="STRING" type="combobox" editable="true" caption="标题" item_type="INT32:DOUBLE:STRING"  value="标题"  def="标题" autoUpdateOption="true" option="ENV($LocalVar:INT32,DOUBLE,STRING)" descibe="标题【IN】：对话框标题，文本类型&#x000A;支持INT32、DOUBLE、STRING变量或者常量"/>
+      <item id="message" vtype="STRING" type="combobox" editable="true" caption="内容" item_type="INT32:DOUBLE:STRING" value="消息内容"  def="消息内容" autoUpdateOption="true" option="ENV($LocalVar:INT32,DOUBLE,STRING)" descibe="内容【IN】：对话框中显示的消息内容&#x000A;支持INT32、DOUBLE、STRING变量或者常量"/>
+      <item id="image" vtype="STRING"   caption="图片" type="filepathedit" fileFilter="*.png" buttonText=" "  item_type="STRING" fileMode="AnyFile" path="D:/" descibe="图片【IN】：对话框中显示的图片&#x000A;当前只支持PNG格式，参数为图片的路径"/>
+      <item id="button" vtype="STRING"  type="combobox" editable="true" caption="按钮类型" value="是/否"  def="是/否"  item_type="STRING"  option="是/否;确定/取消" descibe="按钮类型【IN】：对话框功能按钮的类型"/>
+      <item id="width" vtype="INT32"  type="combobox" editable="true" caption="窗口宽度" value="400"  def="400" item_type="INT32" autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="窗口宽度【IN】：窗口的默认宽度，单位：像素&#x000A;如果使用的图片宽度大于设置值，窗口宽度自动跟随图片宽度调整，支持INT32变量或者常量"/>
+      <item id="height" vtype="INT32"  type="combobox" editable="true" caption="窗口高度" value="300"  def="300" item_type="INT32" autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="窗口高度【IN】：窗口的默认高度，单位：像素&#x000A;如果使用的图片高度大于设置值，窗口高度自动跟随图片高度调整，支持INT32变量或者常量"/>
+      <item id="timeout" vtype="INT32"  type="combobox" editable="true" caption="超时时间" value="0"  def="0"  item_type="INT32"   autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="超时时间【IN】：等待用户操作的超时时间，单位：毫秒&#x000A;超时未输入窗口将自动关闭，输入值≤0表示持续等待，程序不会自动关闭窗口，支持INT32常量或者变量"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" value=""  def=""  item_type="INT32"  autoUpdateOption="true" option="ENV($LocalVar:INT32)" descibe="执行结果【OUT】：返回对话框的关闭方式，数值类型&#x000A;1：用户点击“确定”或“是”按钮&#x000A;0：用户点击“取消”或“否”按钮&#x000A;-1：用户长时间未操作，对话框超时退出&#x000A;支持INT32变量"/>
+    </dialog>
+
+    <calculate  caption="+-*/"         path="math"  tips="" descibe="四则运算，支持加减乘除"/>
+    <mathformula    caption="MathFormula"       path="math" tips="" descibe="数学表达式运算命令">
+      <item id="expression" vtype="STRING" type="combobox" caption="表达式" item_type="INT32:DOUBLE" editable="true" def="0" value="0" autoUpdateOption="true"  option="AUTO($LocalVar:INT32,DOUBLE)" descibe="表达式【IN】：数学表达式&#x000A;比如{var}+{var_1}-10+Lg(10)，也支持输入INT32、DOUBLE变量或者常量"/>
+      <item id="var" vtype="STRING"  type="combobox" editable="true" caption="计算结果" value="null" item_type="INT32:DOUBLE"  def="null"  autoUpdateOption="true" option="AUTO($LocalVar:INT32,DOUBLE)" descibe="计算结果【OUT】：上述表达式的计算结果&#x000A;支持INT32、DOUBLE变量" />
+    </mathformula>
+    <arithmetic    caption="Arithmetic"       path="math" tips="" descibe="常见数学函数命令">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="Abs;Sqrt;Power;Lg;Avg;Sum;Max;MaxEx;Min;MinEx" autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{Abs=`求绝对值`;Sqrt=`求平方根`;Power=`求次方`;Lg=`求log10`;Avg=`求数组的平均值`;Sum=`求数组的总和`;Max=`求数组的最大值`;MaxEx=`求数组的最大值拓展`;Min=`求最小值`;MinEx=`求最小值拓展`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </arithmetic>
+
+    <assign    caption="Set Value"       path="base" tips="" descibe="赋值函数">
+      <item id="var" vtype="STRING"  type="combobox" editable="true" caption="参数名称" value="null"  def="null"  item_type="INT32:DOUBLE:STRING" autoUpdateOption="true" option="ENV($LocalVar:INT32,DOUBLE,STRING)" descibe="参数名称【OUT】：需要被赋值的变量&#x000A;支持INT32、DOUBLE、STRING变量，变量类型需和值的类型一致" />
+      <item id="expression" vtype="STRING" type="combobox" caption="值" editable="true" def="0" value="0" item_type="STRING" autoUpdateOption="true" option="ENV($LocalVar:INT32,DOUBLE,STRING)" descibe="值【IN】：赋值给变量的值&#x000A;支持INT32、DOUBLE、STRING变量或者常量，比如{var}={var}"/>
+    </assign>
+    <devicecontrol    caption="ControlDevice"       path="base" tips="" descibe="设备连接控制">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="GetConnectParamEx;SetConnectParamEx;SetConnectParam;Connect;DisConnect;IsOnline;RequestDevCtrlPerm;ReleaseDevCtrlPerm"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{GetConnectParamEx=`获取设备连接参数到数组`;SetConnectParamEx=`设置数组的连接参数到设备`;SetConnectParam=`设置连接参数到设备`;RequestDevCtrlPerm=`获取远程设备的控制权`;ReleaseDevCtrlPerm=`释放远程设备的控制权`;Connect=`连接设备`;DisConnect=`断开设备连接`;IsOnline=`设备是否连接`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </devicecontrol>
+    <devcmd caption="Device Command" path="base" tips="" descibe="设备命令：执行用户指定的设备命令。"/>
+
+    <ifedit        caption="If"       path="process" tips="" descibe="条件判断：当满足判定条件时，执行子流程，否则直接执行后续步骤。">
+      <item id="type"  vtype="STRING" type="combobox" caption="类型" option="简单条件;InRange;OutRange" def="简单条件" value="简单条件" descibe="SWITCH(__line__.setup{简单条件=`简单条件判断`;InRange=`范围内条件判断`;OutRange=`范围外条件判断`})"/>
+      <item id="condition_list" type="category" vtype="POINT" caption="条件列表" descibe="条件列表"/>
+    </ifedit>
+
+    <repeat        caption="Repeat"       path="process" tips="" descibe="循环语句：满足判定条件时，循环执行子流程">
+      <item id="cmd_list"  vtype="STRING" type="combobox" caption="类型" option="Simple;Step;Array"  descibe="SWITCH(__line__.setup{Simple=`二元参数循环条件判断`;Step=`步进或者次数循环`;Array=`数组循环`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="条件列表" descibe="条件列表"/>
+    </repeat>
+    
+    
+    <split  caption="Split" path="string" tips="" descibe="字符串分割：基于“分隔符”将字符串分割为多个文本或数值。">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="Format;Array"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{Format=`字符串分割到指定格式的变量中`;Array=`字符串分割到数组中`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </split>
+    <merge  caption="Merge" path="string" tips="" descibe="按照指定的格式合并字符串">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="Format;Array"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{Format=`从指定的变量格式中合并成新的字符串`;Array=`从数组中合并成新的字符串`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </merge>
+    <stringformat    caption="ToString"       path="string" tips="" descibe="自定义字符串命令">
+      <item id="expression" vtype="STRING" type="combobox" caption="原始文本" editable="true" def="0" value="0" item_type="INT32:DOUBLE:STRING" autoUpdateOption="true"  option="AUTO($LocalVar:INT32,DOUBLE,STRING)" descibe="原始文本【IN】：字符串表达式&#x000A;自定义格式，大括号包裹的文本将解析为变量，支持INT32、DOUBLE、STRING类型"/>
+      <item id="var" vtype="STRING"  type="combobox" editable="true" caption="格式化结果" value="null"  def="null" item_type="STRING"  autoUpdateOption="true" option="AUTO($LocalVar:STRING)" descibe="格式化结果【OUT】：字符串表达式的转义结果&#x000A;支持STRING变量类型" />
+    </stringformat>
+    <stringto    caption="StringTo"       path="string" tips="" descibe="把字符串类型转为数据命令">
+      <item id="origin" vtype="STRING" type="combobox" caption="原始文本" editable="true" def="0" value="0" item_type="STRING" autoUpdateOption="true"  option="AUTO($LocalVar:STRING)" descibe="原始文本【IN】：字符串表达式&#x000A;自定义格式，大括号包裹的文本将解析为变量，支持STRING类型"/>
+      <item id="var" vtype="STRING"  type="combobox" editable="true" caption="转换结果" value="null"  def="null" item_type="INT32:DOUBLE"  autoUpdateOption="true" option="AUTO($LocalVar:INT32,DOUBLE)" descibe="转换结果【OUT】：字符串表达式的转义结果&#x000A;支持INT,DOUBLE变量类型" />
+    </stringto>
+    <stringlength    caption="StringLen"       path="string" tips="" descibe="求字符串长度命令">
+      <item id="var" vtype="STRING"  type="combobox" editable="true" caption="字符串变量"  def="var" value="var"  item_type="STRING"  autoUpdateOption="true" option="AUTO($LocalVar:STRING)" descibe="字符串变量【IN】：需要计算字符串长度的变量&#x000A;支持STRING变量类型" />
+      <item id="length" vtype="STRING" type="combobox" caption="长度" editable="true" def="null" value="null" item_type="INT32" autoUpdateOption="true"  option="AUTO($LocalVar:INT32)" descibe="长度【OUT】：字符串计算后的长度返回值&#x000A;支持INT32变量类型"/>
+    </stringlength>
+    <stringprocess    caption="StringProcess"       path="string" tips=""   descibe="常规的字符串运算">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="Left;Right;Mid;Find;Lower;Upper;Clear"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{Left=`获取字符串左边的内容`;Right=`获取字符串右边的内容`;Mid=`截取指定长度的字符并返回`;Find=`查找字符串，并返回子字符串的位置`;Lower=`使字符串全部变成小写`;Upper=`使字符串全部变成大写`;Clear=`清空字符串`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </stringprocess>
+
+    <imageprocess    caption="ImageProcess"       path="data" tips="" descibe="图片处理">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="LoadImage;StoreImage;ImageSize"  autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{LoadImage=`加载图片到图片变量`;StoreImage=`存储图片变量的内容到指定的位置`;ImageSize=`获取图片内容的大小`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </imageprocess>
+
+    <datetimeprocess    caption="DateTimeProcess"       path="data" tips="" descibe="数组操作">
+      <item id="cmd_list" vtype="STRING" type="combobox" caption="参数命令" option="GetCurDataTime;DateTimeToString;StringToDataTime;GetTimeDiffrenceS;GetTimeDiffrenceMS" autoUpdateOption="true" item_type="STRING" descibe="SWITCH(__line__.setup{GetCurDataTime=`获取当前时间到时间变量`;DateTimeToString=`把时间变量转为字符串内容`;StringToDataTime=`把时间字符串安装某种格式转时间变量`;GetTimeDiffrenceS=`计算两个时间差`})"/>
+      <item id="param_list" type="category" vtype="POINT" caption="参数列表" descibe="参数列表"/>
+    </datetimeprocess>
+
+
+    
+
+
+  </funcs>
+  
+  
+  <child_func_params_group>
+    <UICommand_Bind>
+      <item id="UIInput" vtype="STRING" type="combobox" editable="true" data_type="UIParam" item_type="UIParam" autoUpdateOption="true"  caption="UI输出参数" option="ENV($parent.LocalVar:UIParam)" descibe="UIParam输出参数【IN】：用于绑定的UIParam输出参数"/>
+      <item id="ObjInput" vtype="STRING" type="combobox" editable="true" optional_types="Object" data_type="" item_type="" autoUpdateOption="true"  caption="输出参数" option="ENV($parent.LocalVar:Object)" descibe="输出参数【IN】：用于绑定view的输出参数"/>
+    </UICommand_Bind>
+    <UICommand_ScreenShot>
+      <item id="ObjInput" vtype="STRING" type="combobox" editable="true" optional_types="Object" data_type="" item_type="" autoUpdateOption="true"  caption="UI输出参数" option="ENV($parent.LocalVar:Object)" descibe="截图输出参数【IN】：用于截图的输出参数"/>
+      <item id="PathInput" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true"  caption="截图保存参数" option="ENV($parent.LocalVar:STRING)" descibe="截图保存参数【IN】：用于保存截图输出路径的参数"/>
+    </UICommand_ScreenShot>
+    
+    <FlickerProcess_FlickerConfigure>
+      <item id="FlickerInput" vtype="STRING" type="combobox" editable="true" data_type="FlickerParam" item_type="FlickerParam" autoUpdateOption="true"  caption="Flicker输出参数" option="ENV($parent.LocalVar:FlickerParam)" descibe="Flicker输出参数【IN】：用于计算的Flicker输出参数"/>
+
+      <item id="ShortFlTime" vtype="STRING" type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="短闪变时长(s)" setup="2"  option="ENV($parent.LocalVar:INT32)" descibe="短闪变时长【IN】：用于计算的参考短闪变时长"/>
+      <!--<item id="ExamTotal" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="闪变次数" setup="10"  option="ENV($parent.LocalVar:STRING)" descibe="闪变次数【IN】：用于计算的参考闪变次数"/>-->
+      <item id="LightSys" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" caption="照明系统" setup="230V/50Hz"  option="230V/50Hz;230V/60Hz;120V/50Hz;120V/60Hz" descibe="照明系统【IN】：照明系统，用于闪变计算使用的电压和频率"/>
+      <!--<item id="Fsamp" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="采样率(S/s)" setup="20000"  option="ENV($parent.LocalVar:STRING)" descibe="采样率【IN】：用于计算的参考采样率"/>-->
+      <item id="Un" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="线电压(U)" setup="35"  option="ENV($parent.LocalVar:STRING)" descibe="线电压【IN】：用于计算的参考线电压"/>
+      <item id="Sn" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="额定容量(VA)" setup="50"  option="ENV($parent.LocalVar:STRING)" descibe="额定容量【IN】：用于计算的参考额定容量"/>
+      <item id="Sk" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="短路容量(VA)" setup="50"  option="ENV($parent.LocalVar:STRING)" descibe="短路容量【IN】：用于计算的参考短路容量"/>
+    </FlickerProcess_FlickerConfigure>
+
+    <FlickerProcess_FlickerAnalysis>
+      <item id="FlickerInput" vtype="STRING" type="combobox" editable="true" data_type="FlickerParam" item_type="FlickerParam" autoUpdateOption="true" caption="Flicker输出参数" option="ENV($parent.LocalVar:FlickerParam)" descibe="Flicker输出参数【IN】：用于分析的Flicker输出参数"/>
+    </FlickerProcess_FlickerAnalysis>
+    <FlickerProcess_FlickerFluAnalysis>
+      <item id="FlickerInput" vtype="STRING" type="combobox" editable="true" data_type="FlickerParam" item_type="FlickerParam" autoUpdateOption="true" caption="Flicker输出参数" option="ENV($parent.LocalVar:FlickerParam)" descibe="Flicker输出参数【IN】：用于分析的Flicker输出参数"/>
+    </FlickerProcess_FlickerFluAnalysis>
+
+
+    <VRTProcess_GetPointTime>
+      <item id="VRTInput" vtype="STRING" type="combobox" editable="true" data_type="VRTParam" item_type="VRTParam" autoUpdateOption="true" caption="VRT输出参数" option="ENV($parent.LocalVar:VRTParam)" descibe="VRT输出参数【IN】：用于计算的VRT输出参数"/>
+      <item id="type" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" caption="区域类型" setup="1" optionData="1;5;14;16" option="穿越前;穿越后;功率恢复后;电流恢复后" comboxType="Enum_Custom" descibe="区域类型【IN】：区域类型，用于获取区域时间"/>
+      <item id="time" vtype="DOUBLE" type="combobox" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true" caption="返回区域时间" option="ENV($parent.LocalVar:DOUBLE)" descibe="返回区域时间【OUT】：返回相对0点偏移时间,单位为s,获取区域时间&#x000A;支持DOUBLE变量"/>
+      <item id="valid" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="值有效性" option="ENV($parent.LocalVar:STRING)" descibe="返回值有效性【OUT】：返回值有效性，获取区域时间值是否有效&#x000A;支持STRING变量"/>
+    </VRTProcess_GetPointTime>
+    <VRTProcess_UpdateWaveRange>
+      <item id="VRTInput" vtype="STRING" type="combobox" editable="true" data_type="VRTParam" item_type="VRTParam" autoUpdateOption="true" caption="VRT输出参数" option="ENV($parent.LocalVar:VRTParam)" descibe="VRT输出参数【IN】：用于计算的VRT输出参数"/>
+      <item id="src" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" caption="波形通道" setup="Urms_a" option="Urms_a"  descibe="区域类型【IN】：区域类型，用于获取区域时间"/>
+      <item id="begin" vtype="DOUBLE" type="combobox" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true" caption="起始时间" editable="true" option="ENV($parent.LocalVar:DOUBLE)" descibe="起始时间【OUT】：设置波形视图显示起始时间&#x000A;支持STRING变量"/>
+      <item id="end" vtype="DOUBLE" type="combobox" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true" caption="结束时间" editable="true" option="ENV($parent.LocalVar:DOUBLE)" descibe="结束时间【OUT】：设置波形视图显示结束时间&#x000A;支持STRING变量"/>
+    </VRTProcess_UpdateWaveRange>
+    
+    <VRTProcess_VRTConfigure>
+      <item id="VRTInput" vtype="STRING" type="combobox" editable="true" data_type="VRTParam" item_type="VRTParam" autoUpdateOption="true" caption="VRT输出参数" option="ENV($parent.LocalVar:VRTParam)" descibe="VRT输出参数【IN】：用于计算的VRT输出参数"/>
+      <item id="TestType" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" caption="测试类型" setup="1P2W"  option="1P2W;3V3A;3P4W" descibe="测试类型【IN】：测试类型，用于穿越测试计算的使用的接线类型"/>
+      <item id="rateref" vtype="STRING" type="combobox" editable="true" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true" caption="参考频率(Hz)" setup="50"  option="ENV($parent.LocalVar:STRING)" descibe="参考频率【IN】：用于计算的参考频率"/>
+      <item id="CalcUnit" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" caption="计算单元" setup="CHA"  option="CHA;CHB;CHC" descibe="计算单元【IN】：计算单元，用于穿越测试搜索参数的计算单元"/>
+    </VRTProcess_VRTConfigure>
+
+    <VRTProcess_VRTAutoParam>
+      <item id="VRTInput" vtype="STRING" type="combobox" editable="true" data_type="VRTParam" item_type="VRTParam" caption="VRT输出参数" option="ENV($parent.LocalVar:VRTParam)" descibe="VRT输出参数【IN】：用于计算的VRT输出参数"/>
+    </VRTProcess_VRTAutoParam>
+
+    <VRTProcess_VRTCalculate>
+      <item id="VRTInput" vtype="STRING" type="combobox" editable="true" data_type="VRTParam" item_type="VRTParam" caption="VRT输出参数" option="ENV($parent.LocalVar:VRTParam)" descibe="VRT输出参数【IN】：用于计算的VRT输出参数"/>
+    </VRTProcess_VRTCalculate>
+
+    <VRTProcess_AutoExport>
+      <item id="VRTInput" vtype="STRING" type="combobox" editable="true" data_type="VRTParam" item_type="VRTParam" caption="VRT输出参数" option="ENV($parent.LocalVar:VRTParam)" descibe="VRT输出参数【IN】：用于导出的VRT输出参数"/>
+    </VRTProcess_AutoExport>
+    
+    <VRTProcess_VRTAnalysis>
+      <item id="VRTInput" vtype="STRING" type="combobox" editable="true" data_type="VRTParam" item_type="VRTParam" caption="VRT输出参数" option="ENV($parent.LocalVar:VRTParam)" descibe="VRT输出参数【IN】：用于分析的VRT输出参数"/>
+
+      <item id="standard" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" caption="测试标准" setup="NB/T 32005-2013"  option="NB/T 32005-2013;NB/T 31051-2014;NB/T 31111-2017;EN_50549 低穿;EN_50549 高穿" descibe="测试标准【IN】：测试标准，用于穿越测试计算的参考标准"/>
+      <item id="idle" vtype="STRING" type="combobox" editable="true" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true" caption="无功电流注入值(A)" setup="50"  option="ENV($parent.LocalVar:STRING)" descibe="无功电流注入值【IN】：无功电流注入值，用于穿越测试计算的参考无功电流注入值"/>
+    </VRTProcess_VRTAnalysis>
+
+    <WaveProcess_GetName>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="name" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="返回名称" option="ENV($parent.LocalVar:STRING)" descibe="返回名称【OUT】：返回名称，获取波形名称&#x000A;支持STRING变量"/>
+    </WaveProcess_GetName>
+
+    <WaveProcess_SetName>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="name" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="设置名称" option="ENV($parent.LocalVar:STRING)" descibe="设置名称【IN】：设置名称，设置波形名称&#x000A;支持STRING变量"/>
+    </WaveProcess_SetName>
+
+    <WaveProcess_GetDataType>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="data_type" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="返回类型" option="ENV($parent.LocalVar:STRING)" descibe="返回类型【OUT】：返回波形数据类型，获取波形名称&#x000A;支持STRING变量"/>
+    </WaveProcess_GetDataType>
+
+    <WaveProcess_SetDataType>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="data_type" vtype="STRING" type="combobox" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="设置类型" option="INT32;DOUBLE" descibe="设置类型【IN】：设置类型，设置波形数据类型&#x000A;支持INT32;DOUBLE变量"/>
+    </WaveProcess_SetDataType>
+
+    <WaveProcess_GetRate>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="rate" vtype="DOUBLE" type="combobox" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true" caption="返回采样率(pt/s)" option="ENV($parent.LocalVar:DOUBLE)" descibe="返回采样率【OUT】：返回采样率，获取波形数据采样率&#x000A;支持DOUBLE变量"/>
+    </WaveProcess_GetRate>
+
+    <WaveProcess_SetRate>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="rate" vtype="DOUBLE" type="combobox" editable="true" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true" caption="设置采样率(pt/s)" option="ENV($parent.LocalVar:DOUBLE)" descibe="设置采样率【IN】：设置采样率，设置波形数据采样率&#x000A;支持DOUBLE变量"/>
+    </WaveProcess_SetRate>
+
+    <WaveProcess_GetBeginTime>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="begin_time" vtype="DOUBLE" type="combobox" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true" editable="true" caption="返回起始时间(s)" option="ENV($parent.LocalVar:DOUBLE)" descibe="返回起始时间【OUT】：返回起始时间，获取波形数据起始时间&#x000A;支持DOUBLE变量"/>
+    </WaveProcess_GetBeginTime>
+
+    <WaveProcess_SetBeginTime>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="begin_time" vtype="DOUBLE" type="combobox" editable="true" data_type="DOUBLE" item_type="DOUBLE" autoUpdateOption="true"  caption="设置起始时间(s)" option="ENV($parent.LocalVar:DOUBLE)" descibe="设置起始时间【OUT】：设置起始时间，设置波形数据起始时间&#x000A;支持DOUBLE变量"/>
+    </WaveProcess_SetBeginTime>
+
+    <WaveProcess_AppendData>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="data" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="数值" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="数值【OUT】：数值，获取波形数值数据&#x000A;支持INT32:DOUBLE变量"/>
+    </WaveProcess_AppendData>
+
+    <WaveProcess_AppendArray>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="data" vtype="Array" type="combobox" data_type="Array" item_type="Array" autoUpdateOption="true" caption="数组" option="ENV($parent.LocalVar:Array)" descibe="数组【IN】：数组，追加波形数组数据&#x000A;支持Array变量"/>
+    </WaveProcess_AppendArray>
+
+    <WaveProcess_GetDataCount>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"   option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+      <item id="data_count" vtype="INT32" type="combobox" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="返回数据大小" option="ENV($parent.LocalVar:INT32)" descibe="返回数据大小【OUT】：返回数据大小，获取波形数据大小&#x000A;支持INT32变量"/>
+    </WaveProcess_GetDataCount>
+
+    <WaveProcess_ClearData>
+      <item id="wave" vtype="STRING" type="combobox" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true"  option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：波形操作的波形变量"/>
+    </WaveProcess_ClearData>
+
+    <!--<WaveViewProcess_AddWave>
+      <item id="wave_view" vtype="STRING" type="combobox" editable="true" data_type="WaveGraph" item_type="WaveGraph" caption="波形图参数" autoUpdateOption="true" option="ENV($parent.LocalVar:WaveGraph)" descibe="波形图输入参数【IN】：需要添加波形操作的波形图变量"/>
+      <item id="wave" vtype="STRING" type="combobox" editable="true" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true" option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】：要添加到波形图配置列表中的波形变量"/>
+    </WaveViewProcess_AddWave>
+
+    <WaveViewProcess_DeleteWave>
+      <item id="wave_view" vtype="STRING" type="combobox" editable="true" data_type="WaveGraph" item_type="WaveGraph" caption="波形图参数" autoUpdateOption="true" option="ENV($parent.LocalVar:WaveGraph)" descibe="波形图输入参数【IN】：需要删除波形操作的波形图变量"/>
+      <item id="wave" vtype="STRING" type="combobox" editable="true" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true" option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】要从波形图配置列表中删除的波形变量"/>
+    </WaveViewProcess_DeleteWave>-->
+
+    <WaveViewProcess_SetWaveShowState>
+      <item id="wave_view" vtype="STRING" type="combobox" editable="true" data_type="WaveGraph" item_type="WaveGraph" caption="波形图参数" autoUpdateOption="true" option="ENV($parent.LocalVar:WaveGraph)" descibe="波形图输入参数【IN】：需要设置光标状态的波形图变量"/>
+      <item id="wave" vtype="STRING" type="combobox" editable="true" data_type="Wave" item_type="Wave" caption="波形参数" autoUpdateOption="true" option="ENV($parent.LocalVar:Wave)" descibe="波形输入参数【IN】需要更改在波形图中显示状态的波形变量"/>
+      <item id="status" vtype="STRING" type="combobox"  data_type="INT32" item_type="INT32" caption="显示状态" autoUpdateOption="true" option="0;1" descibe="显示状态【IN】：波形显示状态&#x000A;0:ON; 1:OFF"/>
+    </WaveViewProcess_SetWaveShowState>
+    
+    <WaveViewProcess_SetCursorStatus>
+      <item id="wave_view" vtype="STRING" type="combobox" editable="true" data_type="WaveGraph" item_type="WaveGraph" caption="波形图参数" autoUpdateOption="true" option="ENV($parent.LocalVar:WaveGraph)" descibe="波形图输入参数【IN】：需要设置光标状态的波形图变量"/>
+      <item id="status" vtype="STRING" type="combobox"  data_type="INT32" item_type="INT32" caption="光标状态" autoUpdateOption="true" option="0;1" descibe="光标状态【IN】：波形光标状态&#x000A;0:ON; 1:OFF"/>
+    </WaveViewProcess_SetCursorStatus>
+
+    <WaveViewProcess_SetCursorPosition>
+      <item id="wave_view" vtype="STRING" type="combobox" editable="true" data_type="WaveGraph" item_type="WaveGraph" caption="波形图参数" autoUpdateOption="true" option="ENV($parent.LocalVar:WaveGraph)" descibe="波形图输入参数【IN】：需要设置光标位置的波形图变量"/>
+      <item id="cursor_name" vtype="STRING" type="combobox"  data_type="STRING" item_type="STRING" caption="光标序号" autoUpdateOption="true" option="T1;T2" optionData="APos;BPos" comboxType="Enum_Custom" descibe="光标序号【IN】：光标序号&#x000A;T1/T2"/>
+      <item id="position" vtype="STRING" type="combobox" editable="true" data_type="DOUBLE" item_type="DOUBLE" caption="光标位置" autoUpdateOption="true" option="ENV($parent.LocalVar:DOUBLE)" descibe="光标位置【IN】：光标位置变量"/>
+    </WaveViewProcess_SetCursorPosition>
+
+    <WaveViewProcess_GetCursorPosition>
+      <item id="wave_view" vtype="STRING" type="combobox" editable="true" data_type="WaveGraph" item_type="WaveGraph" caption="波形图参数" autoUpdateOption="true" option="ENV($parent.LocalVar:WaveGraph)" descibe="波形图输入参数【IN】：需要获取光标位置的波形图变量"/>
+      <item id="cursor_name" vtype="STRING" type="combobox"  data_type="STRING" item_type="STRING" caption="光标序号" autoUpdateOption="true" option="T1;T2" optionData="APos;BPos" comboxType="Enum_Custom" descibe="光标序号【IN】：光标序号&#x000A;T1/T2"/>
+      <item id="position" vtype="STRING" type="combobox" editable="true" data_type="DOUBLE" item_type="DOUBLE" caption="光标位置" autoUpdateOption="true" option="ENV($parent.LocalVar:DOUBLE)" descibe="光标位置【IN】：光标位置变量"/>
+    </WaveViewProcess_GetCursorPosition>
+
+    <WaveViewProcess_GetCursorDelta>
+      <item id="wave_view" vtype="STRING" type="combobox" editable="true" data_type="WaveGraph" item_type="WaveGraph" caption="波形图参数" autoUpdateOption="true" option="ENV($parent.LocalVar:WaveGraph)" descibe="波形图输入参数【IN】：需要获取光标差值的波形图变量"/>
+      <item id="delta" vtype="STRING" type="combobox" editable="true" data_type="DOUBLE" item_type="DOUBLE" caption="光标差值" autoUpdateOption="true" option="ENV($parent.LocalVar:DOUBLE)" descibe="光标差值【IN】：光标差值变量"/>
+    </WaveViewProcess_GetCursorDelta>
+
+
+    <MPTServerComm_UpLoadTestResult>
+      <item id="sn" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="SN" setup="10086112233"  option="ENV($parent.LocalVar:STRING)" descibe="SN【IN】：SN编号&#x000A;支持STRING变量或者常量"/>
+      <item id="argss" vtype="STRING" type="TestDataEditorType" editable="true" data_type="STRING" item_type="STRING" comment="选择"  caption="选择参数" descibe="选择参数【IN】：选择需要上传的参数编辑&#x000A;"/>
+      <item id="test_result" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="测试结果" setup="Pass"  option="ENV($parent.LocalVar:STRING)" descibe="测试结果【IN】：测试结果，上传测试结果&#x000A;支持STRING变量或者常量"/>
+      <item id="upload_result" vtype="STRING" type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="上传结果" setup="null"   option="ENV($parent.LocalVar:INT32)" descibe="上传结果【OUT】：上传结果，上传成功则返回1，否则返回小于1&#x000A;支持INT32变量"/>
+      <item id="error" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="错误反馈" setup="result"   option="ENV($parent.LocalVar:STRING)" descibe="错误反馈【OUT】：错误反馈，如果出现错误，则把错误原因返回&#x000A;支持STRING变量"/>
+    </MPTServerComm_UpLoadTestResult>
+    <MPTServerComm_SetTestStatus>
+      <item id="sn" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="SN" setup="10086112233"  option="ENV($parent.LocalVar:STRING)" descibe="SN【IN】：SN编号，数值类型&#x000A;支持STRING变量或者常量"/>
+      <item id="status_param" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="状态" setup="Pass"  option="ENV($parent.LocalVar:STRING)" descibe="状态【IN】：状态，数值类型&#x000A;支持STRING变量或者常量"/>
+      <item id="upload_result" vtype="STRING" type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="上传结果" setup="null"   option="ENV($parent.LocalVar:INT32)" descibe="结果【IN】：上传结果，数值类型&#x000A;支持INT32变量或者常量"/>
+      <item id="error" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="错误反馈" setup="result"   option="ENV($parent.LocalVar:STRING)" descibe="错误反馈【IN】：错误反馈，数值类型&#x000A;支持STRING变量或者常量"/>
+    </MPTServerComm_SetTestStatus>
+    <FileProcess_CreateDirectory>
+      <item id="path" vtype="STRING"  type="combobox" editable="true" caption="名称" setup="D:/New"  item_type="STRING" autoUpdateOption="true" option="ENV($parent.LocalVar:STRING)" descibe="名称【IN】：文件夹的全路径名&#x000A;支持STRING变量或者常量"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" setup="{ret}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：如果创建成功返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_CreateDirectory>
+    <FileProcess_IsDirEmpty>
+      <item id="path" vtype="STRING"  type="combobox" editable="true" caption="文件夹地址" setup="D:/New" item_type="STRING" autoUpdateOption="true" option="ENV($parent.LocalVar:STRING)" descibe="文件夹地址【IN】：文件夹的全路径名&#x000A;支持STRING变量或者常量"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" setup="{ret}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：如果该文件存在并存在子文件或者子文件夹则返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_IsDirEmpty>
+    <FileProcess_GetDirChildren>
+      <item id="path" vtype="STRING" type="filepathedit"  caption="文件夹地址" item_type="STRING" buttonText=" " fileMode="DirectoryOnly" path="D:/" descibe="文件夹地址【IN】：带获取该文件夹下面所有文件或者子文件夹的名称的输入定制&#x000A;支持STRING变量或者常量"/>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="返回数组" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="返回数组【OUT】：获取到该目录的子文件和子文件夹路径存在数组&#x000A;支持Array类型的变量"/>
+    </FileProcess_GetDirChildren>
+
+    <FileProcess_CreateFile> 
+      <item id="path" vtype="STRING" type="filepathedit"  caption="名称" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/" descibe="路径【IN】：待创建的文件或者目录完整路径&#x000A;支持STRING类型的变量或者常量"/>
+      <item id="overwrite"  vtype="STRING" type="combobox" caption="是否覆盖" option="是;否" setup="是" descibe="是否覆盖【IN】：新创建的文件是否覆盖旧的同名文件，枚举值&#x000A;是：覆盖;否：不覆盖"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" setup="{ret}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：如果删除成功返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_CreateFile>
+    <FileProcess_OpenFile>
+      <item id="fp" vtype="STRING"  type="combobox" editable="true" caption="文件对象" setup="{fp}"   item_type="FileHandle" autoUpdateOption="true" option="ENV($parent.LocalVar:FileHandle)" descibe="文件对象【IN】：操作文件的文件对象&#x000A;支持文件对象变量"/>
+      <item id="path" vtype="STRING" type="filepathedit"  caption="名称" item_type="STRING" buttonText=" "    fileMode="AnyFile" path="D:/" descibe="名称【IN】：待打开的文件或者目录完整路径"/>
+      <item id="mode"  vtype="STRING" type="combobox" caption="打开模式" item_type="STRING" option="只读;只写;读写;追加;重写" setup="读写" descibe="打开方式【IN】：打开文件的方式，枚举值&#x000A;"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" setup="{ret}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：如果打开成功返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_OpenFile>
+    <FileProcess_CloseFile>
+      <item id="fp" vtype="STRING"  type="combobox" editable="true" caption="文件对象" setup="{fp}"   item_type="FileHandle" autoUpdateOption="true" option="ENV($parent.LocalVar:FileHandle)" descibe="文件对象【IN】：操作文件的文件对象&#x000A;支持文件对象变量"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" setup="{ret}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【IN】：如果关闭成功返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_CloseFile>
+    <FileProcess_GetFileName>
+      <item id="fp" vtype="STRING"  type="combobox" editable="true" caption="文件对象" setup="{fp}"   item_type="FileHandle" autoUpdateOption="true" option="ENV($parent.LocalVar:FileHandle)" descibe="文件对象【IN】：操作文件的文件对象&#x000A;支持文件对象变量"/>
+      <item id="type"  vtype="STRING" type="combobox" caption="返回类型" item_type="STRING" option="文件名;文件名无后缀;全名" setup="文件名" descibe="返回类型【IN】：文件名返回类似a.txt，文件无后缀返回是a，全名返回root：/a.txt 枚举值&#x000A;文件名，文件基本名，全名"/>
+      <item id="name" vtype="STRING"  type="combobox" editable="true" caption="返回名" setup="{fileName}"   item_type="STRING" autoUpdateOption="true" option="ENV($parent.LocalVar:STRING)" descibe="返回名【OUT】：返回对应类型的文件名&#x000A;支持STRING变量"/>
+    </FileProcess_GetFileName>
+    <FileProcess_GetFileDir>
+      <item id="fp" vtype="STRING"  type="combobox" editable="true" caption="文件对象" setup="{fp}"   item_type="FileHandle" autoUpdateOption="true" option="ENV($parent.LocalVar:FileHandle)" descibe="文件对象【IN】：操作文件的文件对象&#x000A;支持文件对象变量"/>
+      <item id="dir" vtype="STRING"  type="combobox" editable="true" caption="返回路径" setup="{dir}"   item_type="STRING" autoUpdateOption="true" option="ENV($parent.LocalVar:STRING)" descibe="返回路径【OUT】：只有文件的路径名，不包含文件名&#x000A;支持STRING变量"/>
+    </FileProcess_GetFileDir>
+    <FileProcess_GetFileExtName>
+      <item id="fp" vtype="STRING"  type="combobox" editable="true" caption="文件对象" setup="{fp}"   item_type="FileHandle" autoUpdateOption="true" option="ENV($parent.LocalVar:FileHandle)" descibe="文件对象【IN】：操作文件的文件对象&#x000A;支持文件对象变量"/>
+      <item id="exname" vtype="STRING"  type="combobox" editable="true" caption="拓展名" setup="{name}"   item_type="STRING" autoUpdateOption="true" option="ENV($parent.LocalVar:STRING)" descibe="拓展名【OUT】：返回文件的后缀名&#x000A;支持STRING变量"/>
+    </FileProcess_GetFileExtName>
+    <FileProcess_GetFileSize>
+      <item id="fp" vtype="STRING"  type="combobox" editable="true" caption="文件对象" setup="{fp}"   item_type="FileHandle" autoUpdateOption="true" option="ENV($parent.LocalVar:FileHandle)" descibe="文件对象【IN】：操作文件的文件对象&#x000A;支持文件对象变量"/>
+      <item id="size" vtype="STRING"  type="combobox" editable="true" caption="返回大小" setup="{size}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="返回大小【OUT】：返回文件的大小&#x000A;支持INT32变量"/>
+    </FileProcess_GetFileSize>
+    <FileProcess_WriteData>
+      <item id="fp" vtype="STRING"  type="combobox" editable="true" caption="文件对象" setup="{fp}"   item_type="FileHandle" autoUpdateOption="true" option="ENV($parent.LocalVar:FileHandle)" descibe="文件对象【IN】：操作文件的文件对象&#x000A;支持文件对象变量"/>
+      <item id="data" vtype="STRING"  type="combobox" editable="true" caption="数据" setup="{buffer}"   item_type="STRING" autoUpdateOption="true" option="ENV($parent.LocalVar:STRING)" descibe="数据【IN】：发送到文件的数据&#x000A;支持STRING变量或者常量"/>
+      <item id="ret" vtype="STRING"  type="combobox" editable="true" caption="返回值" setup="{ret}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="返回值【OUT】：如果写入成功返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_WriteData>
+    <FileProcess_ReadData>
+      <item id="fp" vtype="STRING"  type="combobox" editable="true" caption="文件对象" setup="{fp}"   item_type="FileHandle" autoUpdateOption="true" option="ENV($parent.LocalVar:FileHandle)" descibe="文件对象【IN】：操作文件的文件对象&#x000A;支持文件对象变量"/>
+      <item id="data" vtype="STRING"  type="combobox" editable="true" caption="数据" setup="{buffer}"   item_type="STRING" autoUpdateOption="true" option="ENV($parent.LocalVar:STRING)" descibe="数据【OUT】：读取的数据保存到缓存变量&#x000A;支持STRINB变量"/>
+      <item id="size" vtype="STRING"  type="combobox" editable="true" caption="大小" setup="{size}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="大小【IN】：待读取文件的长度&#x000A;支持INT32变量"/>
+      <item id="ret" vtype="STRING"  type="combobox" editable="true" caption="返回值" setup="{ret}"   item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="返回值【OUT】：如果读取成功返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_ReadData>
+
+   
+    
+    <FileProcess_Delete>
+      <item id="filename" vtype="STRING" type="filepathedit"  caption="路径" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/" descibe="路径【IN】：待删除的文件或者目录完整路径"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" setup="{ret}" item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：如果删除成功返回1，否则返回0&#x000A;支持INT32变量"/>     
+    </FileProcess_Delete>
+    <FileProcess_Rename>
+      <item id="src" vtype="STRING" type="filepathedit"  caption="原名称" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/" descibe="原名称【IN】：待重命名的文件或者目录完整路径，字符类型&#x000A;支持STRING变量或者常量"/>
+      <item id="des" vtype="STRING" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="新名称" setup="D:/NewName.txt"  option="ENV($parent.LocalVar:STRING)" descibe="新名称【IN】：需修改后新名字全路径，字符类型&#x000A;支持STRING变量或者常量"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果"  setup="{ret}" item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="返回值【OUT】：如果重新命名成功返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_Rename>
+    <FileProcess_Copy>
+      <item id="type" vtype="STRING" type="combobox"  data_type="STRING" item_type="STRING"  caption="类型" setup="复制"  option="复制;移动" descibe="类型【IN】：类型，移动或者拷贝&#x000A;支持STRING变量或者常量"/>
+      <item id="src" vtype="STRING" type="filepathedit"  caption="原地址" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/" descibe="原地址【IN】：待拷贝或移动的原文件或者目录完整路径"/>
+      <item id="des" vtype="STRING" type="filepathedit"  caption="新地址" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/" descibe="新地址【IN】：待拷贝或移动的目标文件或者目录完整路径"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" setup="{ret}"  item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：如果拷贝成功返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_Copy>
+    <FileProcess_IsExist>    
+      <item id="path" vtype="STRING" type="filepathedit"  caption="名称" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/" descibe="源路径【IN】：待判定是否存在的文件或者目录完整性"/>  
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="执行结果" setup="{ret}"  item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：如果文件或目录存在返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_IsExist>
+    <FileProcess_GetPathFileType>
+      <item id="path" vtype="STRING" type="filepathedit"  caption="名称" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/"  descibe="名称【IN】：待判断文件或者目录完整路径"/>
+      <item id="ret" vtype="INT32"  type="combobox" editable="true" caption="类型" setup="{ret}"  item_type="INT32" autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="类型【OUT】：如果类型是目录则返回2，如果是文件类型则返回1，否则返回0&#x000A;支持INT32变量"/>
+    </FileProcess_GetPathFileType>
+
+    <ArrayProcess_GetValue>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="pos"  type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="索引位置" setup="0" option="ENV($parent.LocalVar:INT32)" descibe="索引位置【IN】：数组的索引位置参数&#x000A;支持INT32变量或者常量"/>
+      <item id="data"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING:Time" autoUpdateOption="true" caption="值" setup="0" option="ENV($parent.LocalVar:INT32,DOUBLE,STRING,Time)" descibe="值【Out】：对数组操作的设置值或者返回值，如果当前值非数字值，传入INT32，DOUBLE变量，变量返回0&#x000A;支持INT32、DOUBLE、STRING变量"/>
+    </ArrayProcess_GetValue>
+    <ArrayProcess_SetValue>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="pos"  type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="索引位置" setup="0" option="ENV($parent.LocalVar:INT32)" descibe="索引位置【IN】：数组的索引位置参数&#x000A;支持INT32变量或者常量"/>
+      <item id="data"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING:Time" autoUpdateOption="true" caption="值" setup="0" option="ENV($parent.LocalVar:INT32,DOUBLE,STRING,Time)" descibe="值【IN】：对数组操作的设置值或者返回值&#x000A;支持INT32、DOUBLE、STRING变量"/>
+    </ArrayProcess_SetValue>
+    <ArrayProcess_InsertAtPos>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="pos"  type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="索引位置" setup="0" option="ENV($parent.LocalVar:INT32)" descibe="索引位置【IN】：数组的索引位置参数&#x000A;支持INT32变量或者常量"/>
+      <item id="data"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING:Time" autoUpdateOption="true" caption="值" setup="0" option="ENV($parent.LocalVar:INT32,DOUBLE,STRING,Time)" descibe="值【IN】：对数组操作的设置值或者返回值&#x000A;支持INT32、DOUBLE、STRING变量"/>
+    </ArrayProcess_InsertAtPos>
+    <ArrayProcess_GetSize>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作的数组名称&#x000A;支持Array类型的变量"/>
+      <item id="size"  type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="数组大小" setup="0" option="ENV($parent.LocalVar:INT32)" descibe="数组大小【OUT】：数组中的元素个数&#x000A;支持INT32变量"/>
+    </ArrayProcess_GetSize>
+    <ArrayProcess_SetSize>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作的数组名称&#x000A;支持Array类型的变量"/>
+      <item id="size"  type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="数组大小" setup="1" option="ENV($parent.LocalVar:INT32)" descibe="数组大小【IN】：数组中的元素个数&#x000A;支持INT32变量或者常量"/>
+      <item id="data"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING:Time" autoUpdateOption="true" caption="默认值" setup="0" option="ENV($parent.LocalVar:INT32,DOUBLE,STRING,Time)" descibe="默认值【IN】：数组中元素的默认值&#x000A;支持INT32、DOUBLE、STRING变量或者常量"/>
+    </ArrayProcess_SetSize>
+    <ArrayProcess_Clear>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作的数组名称&#x000A;支持Array类型的变量"/>
+    </ArrayProcess_Clear>
+    <ArrayProcess_AppendValue>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作的数组名称&#x000A;支持Array类型的变量"/>
+      <item id="data"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING:Time" autoUpdateOption="true" caption="值" setup="0" option="ENV($parent.LocalVar:INT32,DOUBLE,STRING,Time)" descibe="值【IN】：追加到数组末尾的元素值&#x000A;支持INT32、DOUBLE、STRING变量或者常量"/>
+    </ArrayProcess_AppendValue>
+    <ArrayProcess_RemoveAtPos>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作的数组名称&#x000A;支持Array类型的变量"/>
+      <item id="pos"  type="combobox" editable="true" data_type="INT32" item_type="INT32" autoUpdateOption="true" caption="位置" setup="1" option="ENV($parent.LocalVar:INT32)" descibe="位置【IN】：数组中待删除元素的所在位置&#x000A;支持INT32变量或者常量"/>
+    </ArrayProcess_RemoveAtPos>
+    <ArrayProcess_CopyTo>
+      <item id="src"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="源数组" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="源数组【IN】：需要复制的源数组名称&#x000A;支持Array类型的变量"/>
+      <item id="des"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="目的数组" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="目的数组【IN】：需要复制到的目标数组名称&#x000A;支持Array类型的变量"/>
+    </ArrayProcess_CopyTo>
+    <ModuleFunc_Desceibe>
+      <item id="module_ptr" type="combobox" caption="变量"     value="" option="ENV($parent.parent.LocalVar:FFTWave)" autoUpdateOption="true" descibe="变量【IN】：支持特殊变量类型" />
+      <item id="interface_ptr" type="combobox" caption="接口列表" value=""  autoUpdateOption="true"  completer="true" />
+      <item id="arg_ptr" type="category" caption="参数列表"  descibe="根据变量不同，关联对应接口的变量"/>
+    </ModuleFunc_Desceibe>
+
+    <StringProcess_Left>
+      <item id="origin"  type="combobox" editable="true" data_type="STRING" item_type="STRING"  autoUpdateOption="true" caption="输入文本" setup="String" option="ENV($parent.LocalVar:STRING)" descibe="输入文本【IN】：需要操作的字符串变量对象&#x000A;支持STRING变量或者常量"/>
+      <item id="offset" type="combobox" editable="true"  data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="偏移值" setup="0"  option="ENV($parent.LocalVar:INT32)" descibe="偏移值【IN】：截取字符串开始的偏移位置&#x000A;支持INT32变量或者常量"/>
+      <item id="result" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="返回结果" setup="null"  option="ENV($parent.LocalVar:STRING)" descibe="返回结果【OUT】：截取字符串的返回值&#x000A;支持STRING变量"/>
+    </StringProcess_Left>
+    <StringProcess_Right>
+      <item id="origin"  type="combobox" editable="true" data_type="STRING" item_type="STRING"  autoUpdateOption="true" caption="输入文本" setup="String" option="ENV($parent.LocalVar:STRING)" descibe="输入文本【IN】：需要操作的字符串变量对象&#x000A;支持STRING变量或者常量"/>
+      <item id="offset" type="combobox" editable="true"  data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="偏移值" setup="0"  option="ENV($parent.LocalVar:INT32)" descibe="偏移值【IN】：截取字符串开始的偏移位置&#x000A;支持INT32变量或者常量"/>
+      <item id="result" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="返回结果" setup="null"  option="ENV($parent.LocalVar:STRING)" descibe="返回结果【OUT】：截取字符串的返回值&#x000A;支持STRING变量"/>
+    </StringProcess_Right>
+    <StringProcess_Lower>
+      <item id="origin"  type="combobox" editable="true" data_type="STRING" item_type="STRING"  autoUpdateOption="true" caption="输入文本" setup="String" option="ENV($parent.LocalVar:STRING)" descibe="输入文本【IN】：需要操作的字符串变量对象&#x000A;支持STRING变量或者常量"/>
+      <item id="result" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="返回结果" setup="null"  option="ENV($parent.LocalVar:STRING)" descibe="返回结果【OUT】：对字符串变大写或者小写后的返回结果&#x000A;支持STRING变量"/>
+    </StringProcess_Lower>
+    <StringProcess_Upper>
+      <item id="origin"  type="combobox" editable="true" data_type="STRING" item_type="STRING"  autoUpdateOption="true" caption="输入文本" setup="String" option="ENV($parent.LocalVar:STRING)" descibe="输入文本【IN】：需要操作的字符串变量对象&#x000A;支持STRING变量或者常量"/>
+      <item id="result" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="返回结果" setup="null"  option="ENV($parent.LocalVar:STRING)" descibe="返回结果【OUT】：对字符串变大写或者小写后的返回结果&#x000A;支持STRING变量"/>
+    </StringProcess_Upper>
+    <StringProcess_Mid>
+      <item id="origin"  type="combobox" editable="true" data_type="STRING" item_type="STRING"  autoUpdateOption="true" caption="输入文本" setup="String" option="ENV($parent.LocalVar:STRING)" descibe="输入文本【IN】：需要操作的字符串变量对象&#x000A;支持STRING变量或者常量"/>
+      <item id="pos" type="combobox" editable="true"  data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="开始位置" setup="0"  option="ENV($parent.LocalVar:INT32)" descibe="开始位置【IN】：截取字符串的开始位置&#x000A;支持INT32变量或者常量"/>
+      <item id="length" type="combobox" editable="true"  data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="长度" setup="-1"  option="ENV($parent.LocalVar:INT32)" descibe="长度【IN】：截取字符串的长度&#x000A;支持INT32变量或者常量"/>
+      <item id="result" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="返回结果" setup="null"  option="ENV($parent.LocalVar:STRING)" descibe="返回结果【OUT】：截取字符串的返回结果&#x000A;支持STRING变量"/>
+    </StringProcess_Mid>
+    <StringProcess_Find>
+      <item id="origin"  type="combobox" editable="true" data_type="STRING" item_type="STRING"  autoUpdateOption="true" caption="输入文本" setup="String" option="ENV($parent.LocalVar:STRING)" descibe="输入文本【IN】：需要操作的字符串变量对象&#x000A;支持STRING变量或者常量"/>
+      <item id="subString" type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="子字符串" setup="sub"  option="ENV($parent.LocalVar:STRING)" descibe="子字符串【IN】：输入需要查找的字符串&#x000A;支持STRING变量或者常量"/>
+      <item id="dir"    type="combobox" caption="查找方向"  data_type="STRING" item_type="STRING" option="Left;Right" setup="Left" descibe="查找方向【IN】：字符串查找的开始方向，枚举类型&#x000A; Left或者Right"/>
+      <item id="pos" type="combobox" editable="true"  data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="返回位置" setup="null"  option="ENV($parent.LocalVar:INT32)" descibe="返回位置【OUT】：找到子字符返回的位置,如果查找失败返回-1&#x000A;支持INT32变量"/>
+    </StringProcess_Find>
+    <StringProcess_Clear>
+      <item id="origin"  type="combobox" editable="true" data_type="STRING" item_type="STRING"  autoUpdateOption="true" caption="输入变量" setup="String" option="ENV($parent.LocalVar:STRING)" descibe="输入变量【IN】：需要操作的字符串变量对象&#x000A;支持STRING变量"/>
+    </StringProcess_Clear>
+    <Split_Format>
+      <item id="input"  type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="原始文本" setup="Text" option="ENV($parent.LocalVar:STRING)" descibe="原始文本【IN】：需要分割的字符串&#x000A;支持STRING类型的变量和常量"/>
+      <item id="seq"    type="combobox" editable="true" data_type="STRING" item_type="STRING"  caption="分隔符" setup=":"   autoUpdateOption="true"  option="AUTO($parent.LocalVar:STRING)" descibe="分隔符【IN】：分割符号，从原始字符中用该分隔符分割出若干个变量"/>
+      <item id="format" type="edit" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING" autoUpdateOption="true" caption="分割结果" setup="{var},{var_1}" descibe="分割结果【OUT】：分割之后保存的数据格式参数，该分割结果必须保存到变量中，而且按照指定的格式化格式&#x000A;参数支持INT32、DOUBLE、STRING变量，多个变量之间需要大括号括起来和英文逗号隔开"/>
+    </Split_Format>
+    <Split_Array>
+      <item id="input"  type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="原始文本" setup="Text" option="ENV($parent.LocalVar:STRING)" descibe="原始文本【IN】：需要分割的字符串&#x000A;支持STRING类型的变量和常量"/>
+      <item id="seq"    type="combobox" editable="true" data_type="STRING" item_type="STRING"  caption="分隔符" setup=":"   autoUpdateOption="true"  option="AUTO($parent.LocalVar:STRING)" descibe="分隔符【IN】：分割符号，从原始字符中用该分隔符分割出若干个变量"/>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【OUT】：分割字符串之后保存到数组对象&#x000A;支持Array类型的变量"/>
+    </Split_Array>
+    <Merge_Format>
+      <item id="format" type="edit" editable="true" data_type="STRING" item_type="INT32:DOUBLE:STRING" autoUpdateOption="true" caption="原始文本" setup="{var},{var_1}" descibe="原始文本【IN】：需要合并格式化成该字符串，格式化格式需要正确&#x000A;参数支持INT32、DOUBLE、STRING变量，多个变量之间需要大括号括起来和英文逗号隔开"/>
+      <item id="seq"    type="combobox" editable="true" data_type="STRING" item_type="STRING" caption="分隔符" setup=":"  autoUpdateOption="true"  option="AUTO($parent.LocalVar:STRING)" descibe="分隔符【IN】：分割符号&#x000A;支持STRING变量或者常量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="合并结果" setup="output" option="ENV($parent.LocalVar:STRING)" descibe="合并结果【OUT】：合并之后的保存结果&#x000A;支持STRING变量"/>
+    </Merge_Format>
+    <Merge_Array>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：分割字符串之后保存到数组对象&#x000A;支持Array类型的变量"/>
+      <item id="seq"    type="combobox" editable="true" data_type="STRING" item_type="STRING"  caption="分隔符" setup=":"  autoUpdateOption="true"  option="AUTO($parent.LocalVar:STRING)" descibe="分隔符【IN】：分割符号，从原始字符中用该分隔符分割出若干个变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="合并结果" setup="output" option="ENV($parent.LocalVar:STRING)" descibe="合并结果【OUT】：合并之后的保存结果&#x000A;支持STRING变量"/>
+    </Merge_Array>
+    <Arithmetic_Abs>
+      <item id="param"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="参数" setup="0" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="参数【IN】：需要计算的输入参数&#x000A;支持INT32、DOUBLE类型的变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="返回值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="返回值【OUT】：待返回结果变量&#x000A;支持INT32、DOUBLE变量"/>
+    </Arithmetic_Abs>
+    <Arithmetic_Sqrt>
+      <item id="param"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="参数" setup="0" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="参数【IN】：需要计算的输入参数&#x000A;支持DOUBLE,INT32类型的变量或者常量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="返回值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="返回值【OUT】：待返回结果变量&#x000A;支持INT32、DOUBLE变量"/>
+    </Arithmetic_Sqrt>
+    <Arithmetic_Power>
+      <item id="base_number"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="底数" setup="1" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="底数【IN】：需要计算的底数&#x000A;支持INT，DOUBLE类型的常量或者变量"/>
+      <item id="exponent"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="指数" setup="1" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="指数【IN】：需要计算的指数或者幂&#x000A;持INT，DOUBLE类型的常量或者变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="返回值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="返回值【OUT】：计算结果变量&#x000A;支持INT32、DOUBLE变量"/>
+    </Arithmetic_Power>
+    <Arithmetic_Lg>
+      <item id="param"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="参数" setup="0" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="参数【IN】：需要计算的输入参数&#x000A;支持DOUBLE,INT32类型的变量或者常量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="返回值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="返回值【OUT】：待返回结果变量&#x000A;支持INT32、DOUBLE变量"/>
+    </Arithmetic_Lg>
+    <Arithmetic_Avg>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="返回值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="返回值【OUT】：待返回结果变量&#x000A;支持INT32、DOUBLE变量"/>
+    </Arithmetic_Avg>
+    <Arithmetic_Sum>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="返回值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="返回值【OUT】：待返回结果变量&#x000A;支持INT32、DOUBLE变量"/>
+    </Arithmetic_Sum>
+    <Arithmetic_Max>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="返回值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="返回值【OUT】：待返回结果变量&#x000A;支持INT32、DOUBLE变量"/>
+    </Arithmetic_Max>
+    <Arithmetic_Min>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="返回值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="返回值【OUT】：待返回结果变量&#x000A;支持INT32、DOUBLE变量"/>
+    </Arithmetic_Min>
+    <Arithmetic_MaxEx>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="abs"    type="combobox" caption="取绝对值"  data_type="STRING" item_type="STRING" option="是;否"  setup="否" mapping="否=0;是=1" descibe="取绝对值【IN】：取最大值时是否取绝对值，枚举类型&#x000A;是和否"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="最大值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="最大值【OUT】：待返回最大值的变量&#x000A;支持INT32、DOUBLE变量"/>
+      <item id="pos" type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="位置" setup="0"  option="ENV($parent.LocalVar:INT32)" descibe="位置【OUT】：返回数组中最大值的位置&#x000A;支持INT32变量"/>
+    </Arithmetic_MaxEx>
+    <Arithmetic_MinEx>
+      <item id="array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="数组对象" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="数组对象【IN】：需要操作数组变量&#x000A;支持Array类型的变量"/>
+      <item id="abs"    type="combobox" caption="取绝对值"  data_type="STRING" item_type="STRING" option="是;否"  setup="是" mapping="否=0;是=1" descibe="取绝对值【IN】：取最大值时是否取绝对值，枚举类型&#x000A;是和否"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32:DOUBLE" autoUpdateOption="true" caption="最小值" setup="null" option="ENV($parent.LocalVar:INT32,DOUBLE)" descibe="最小值【OUT】：待返回最小值的变量&#x000A;支持INT32、DOUBLE变量"/>
+      <item id="pos" type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="位置" setup="0"  option="ENV($parent.LocalVar:INT32)" descibe="位置【OUT】：返回数组中最小值的位置&#x000A;支持INT32变量"/>
+    </Arithmetic_MinEx>
+    <DateTimeProcess_GetCurDataTime>
+      <item id="time"  type="combobox" editable="true" data_type="STRING" item_type="Time" autoUpdateOption="true" caption="时间" setup="Time" option="ENV($parent.LocalVar:Time)" descibe="时间【OUT】：需要获取当前系统日期时间保存到该变量&#x000A;支持Time类型的变量"/>
+    </DateTimeProcess_GetCurDataTime>
+    <DateTimeProcess_DateTimeToString>
+      <item id="time"  type="combobox" editable="true" data_type="STRING" item_type="Time" autoUpdateOption="true" caption="时间" setup="Time" option="ENV($parent.LocalVar:Time)" descibe="时间【IN】：需要转换的时间变量&#x000A;支持Time类型的变量"/>
+      <item id="timeFormat"  type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="输出结果" setup="null" option="ENV($parent.LocalVar:STRING)" descibe="输出结果【OUT】：格式化后输出的时间&#x000A;支持STRING变量"/>
+    </DateTimeProcess_DateTimeToString>
+    <DateTimeProcess_StringToDataTime>
+      <item id="time_string"  type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="时间字符串" setup="Time" option="ENV($parent.LocalVar:STRING)" descibe="时间字符串【IN】：需要转换的时间字符串变量&#x000A;支持STRING类型的变量或者常量"/>
+      <item id="timeFormat"  type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="时间格式" setup="null" option="ENV($parent.LocalVar:STRING)" descibe="时间格式【OUT】：输入时间字符串的格式，比如%Y-%m-%d %H:%M:%S，其位置需和时间字符串一直才能转化成功&#x000A;%Y：表示年&#x000A;%m：表示月&#x000A;%d：表示天&#x000A;%H：表示时 &#x000A;%M：表示分&#x000A;%S：表示秒&#x000A;支持STRING变量或者常量"/>
+      <item id="time"  type="combobox" editable="true" data_type="STRING" item_type="Time" autoUpdateOption="true" caption="时间变量" setup="Time" option="ENV($parent.LocalVar:Time)" descibe="时间【OUT】：转化后&#x000A;支持Time类型的变量"/>
+    </DateTimeProcess_StringToDataTime>
+    <DateTimeProcess_GetTimeDiffrenceS>
+      <item id="startTime"  type="combobox" editable="true" data_type="STRING" item_type="Time" autoUpdateOption="true" caption="开始时间" setup="StartTime" option="ENV($parent.LocalVar:Time)" descibe="开始时间【IN】：需要计算的开始时间&#x000A;支持Time类型的变量"/>
+      <item id="stopTime"  type="combobox" editable="true" data_type="STRING" item_type="Time" autoUpdateOption="true" caption="结束时间" setup="StopTime" option="ENV($parent.LocalVar:Time)" descibe="结束时间【IN】：需要计算的结束时间&#x000A;支持Time类型的变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="结果" setup="null" option="ENV($parent.LocalVar:INT32)" descibe="结果【OUT】：开始与结束时间之间的时间差，单位：S&#x000A;支持INT32类型的变量"/>
+    </DateTimeProcess_GetTimeDiffrenceS>
+    <DateTimeProcess_GetTimeDiffrenceMS>
+      <item id="startTime"  type="combobox" editable="true" data_type="STRING" item_type="Time" autoUpdateOption="true" caption="开始时间" setup="StartTime" option="ENV($parent.LocalVar:Time)" descibe="开始时间【IN】：需要计算的开始时间&#x000A;支持Time类型的变量"/>
+      <item id="stopTime"  type="combobox" editable="true" data_type="STRING" item_type="Time" autoUpdateOption="true" caption="结束时间" setup="StopTime" option="ENV($parent.LocalVar:Time)" descibe="结束时间【IN】：需要计算的结束时间&#x000A;支持Time类型的变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="结果" setup="null" option="ENV($parent.LocalVar:INT32)" descibe="结果【OUT】：开始与结束时间之间的时间差，单位：S&#x000A;支持INT32类型的变量"/>
+    </DateTimeProcess_GetTimeDiffrenceMS>
+    <ImageProcess_LoadImage>
+      <item id="image"  type="combobox" editable="true" data_type="STRING" item_type="Image" autoUpdateOption="true" caption="图片变量" setup="Image" option="ENV($parent.LocalVar:Image)" descibe="图片变量【IN】：需要保存的图片变量&#x000A;支持Image类型的变量"/>
+      <item id="path" vtype="STRING" type="filepathedit" acceptMode="AcceptOpen" fileFilter="*.png" caption="图片路径" item_type="STRING" buttonText=" " fileMode="AnyFile" path="D:/" descibe="图片路径【IN】：待要导入的图片完整路径"/>
+    </ImageProcess_LoadImage>
+    <ImageProcess_StoreImage>
+      <item id="image"  type="combobox" editable="true" data_type="STRING" item_type="Image" autoUpdateOption="true" caption="图片变量" setup="Image" option="ENV($parent.LocalVar:Image)" descibe="图片变量【IN】：需要保存的图片变量&#x000A;支持Image类型的变量"/>
+      <item id="path" type="combobox" editable="true" data_type="STRING" item_type="STRING"  caption="图片路径" setup=""   autoUpdateOption="true"  option="AUTO($parent.LocalVar:STRING)" descibe="图片路径【IN】：待要导入的图片完整路径的变量"/>
+    </ImageProcess_StoreImage>
+    <ImageProcess_ImageSize>
+      <item id="image"  type="combobox" editable="true" data_type="STRING" item_type="Image" autoUpdateOption="true" caption="图片变量" def="Image" option="ENV($parent.LocalVar:Image)" descibe="图片变量【IN】：需要保存的图片变量&#x000A;支持Image类型的变量"/>
+      <item id="size" type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="大小" value="0"  option="ENV($parent.LocalVar:INT32)" descibe="大小【OUT】：返回图片大小&#x000A;支持INT32变量"/>
+    </ImageProcess_ImageSize>
+
+    <ControlDevice_SetConnectParam>
+      <item id="dev_ptr" type="combobox" caption="设备"  editable="true" item_type="DEV_POINT"  value="Device" option="ENV($parent.LocalVar:DEV_POINT)" setup="Device" autoUpdateOption="true" descibe="设备【IN】：需要设置的设备对象，支持Device类型" />
+      <item id="comtype_ptr"  type="combobox" editable="true" data_type="STRING" item_type="STRING" caption="连接类型"  option="COM;TCP;UDP;USB"  setup="COM" descibe="连接类型【IN】:支持的连接类型"/>
+      <item id="arg_ptr" type="category" caption="连接参数" visible="true" descibe="设备命令参数，不同的连接类型对应不同的连接方式，不支持变量"/>
+    </ControlDevice_SetConnectParam>
+    <ControlDevice_GetConnectParamEx>
+      <item id="dev_ptr" type="combobox" caption="设备"  editable="true" item_type="DEV_POINT"  value="Device" option="ENV($parent.LocalVar:DEV_POINT)" setup="Device" autoUpdateOption="true" descibe="设备【IN】：需要使用的设备对象，支持Device类型" />
+      <item id="comtype_ptr"  type="combobox" editable="true" data_type="STRING" item_type="STRING" autoUpdateOption="true" caption="连接类型" setup="null" option="ENV($parent.LocalVar:STRING)" descibe="连接类型【OUT】：待返回连接类型&#x000A;支持STRING变量"/>
+      <item id="params_array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="连接参数" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="连接参数【IN】：返回连接参数的数组&#x000A;支持Array类型的变量"/>
+    </ControlDevice_GetConnectParamEx>
+    <ControlDevice_SetConnectParamEx>
+      <item id="dev_ptr" type="combobox" caption="设备"  editable="true" item_type="DEV_POINT"  value="Device" option="ENV($parent.LocalVar:DEV_POINT)" setup="Device" autoUpdateOption="true" descibe="设备【IN】：需要设置的设备对象，支持Device类型" />
+      <item id="comtype_ptr"  type="combobox" editable="true" data_type="STRING" item_type="STRING" caption="连接类型"  option="COM;TCP;UDP;USB"  setup="COM" descibe="连接类型【IN】:支持的连接类型"/>
+      <item id="params_array"  type="combobox" editable="true" data_type="STRING" item_type="Array" autoUpdateOption="true" caption="连接参数" setup="Array" option="ENV($parent.LocalVar:Array)" descibe="连接参数【IN】：待设置的连接参数数组，格式如下：&#x000A;COM类型：COM口,波特率，校验位，停止位，数据位，流控制&#x000A;TCP类型：IP地址，端口&#x000A;UDP类型：IP地址，端口&#x000A;USB类型：暂无用&#x000A;支持Array类型的变量"/>
+    </ControlDevice_SetConnectParamEx>
+
+    <ControlDevice_Connect>
+      <item id="dev_ptr" type="combobox" caption="设备"  editable="true" item_type="DEV_POINT"  value="Device" option="ENV($parent.LocalVar:DEV_POINT)" setup="Device" autoUpdateOption="true" descibe="设备【IN】：需要使用的设备对象，支持Device类型" />
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="执行结果" setup="null" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：设备关闭的执行结果。0：失败；1：成功&#x000A;支持INT32变量"/>
+    </ControlDevice_Connect>
+    <ControlDevice_DisConnect>
+      <item id="dev_ptr" type="combobox" caption="设备"   editable="true" item_type="DEV_POINT" setup="Device" option="ENV($parent.LocalVar:DEV_POINT)" autoUpdateOption="true" descibe="设备【IN】：需要使用的设备对象，支持Device类型" />
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="执行结果" setup="null" option="ENV($parent.LocalVar:INT32)" descibe="执行结果【OUT】：设备关闭的执行结果。0：失败；1：成功&#x000A;支持INT32变量"/>
+    </ControlDevice_DisConnect>
+    <ControlDevice_IsOnline>
+      <item id="dev_ptr" type="combobox" caption="设备"   editable="true" item_type="DEV_POINT" setup="Device" option="ENV($parent.LocalVar:DEV_POINT)" autoUpdateOption="true" descibe="设备【IN】：需要使用的设备对象，支持Device类型" />
+      <item id="status"  type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="连接状态" setup="null" option="ENV($parent.LocalVar:INT32)" descibe="连接状态【OUT】：设备的连接状态。0：不在线；1：在线&#x000A;支持INT32变量"/>
+    </ControlDevice_IsOnline>
+    <ControlDevice_RequestDevCtrlPerm>
+      <item id="dev_ptr" type="combobox" caption="设备"   editable="true" item_type="DEV_POINT" setup="Device" option="ENV($parent.LocalVar:DEV_POINT)" autoUpdateOption="true" descibe="设备【IN】：需要请求控制的设备对象，支持Device类型" />
+      <item id="type"  type="combobox" editable="true" data_type="STRING" item_type="STRING"  caption="类型" setup="只读" option="只读;独占;共享" descibe="类型【IN】：需获取设备的权限&#x000A;只读：允许app多个控制，但是只有读取的权限&#x000A;独占：独占控制设备，其它app不能控制该设备&#x000A;共享：多个app可以共享控制该设备"/>
+      <item id="timeout" vtype="INT32"  type="combobox" editable="true" caption="超时时间" setup="3000"  item_type="INT32"   autoUpdateOption="true" option="ENV($parent.LocalVar:INT32)" descibe="超时时间【IN】：等待时间，单位：毫秒&#x000A;等待设备控制的超时时间，支持INT32常量或者变量"/>
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="结果" setup="null" option="ENV($parent.LocalVar:INT32)" descibe="结果【OUT】：获取设备控制的结果。0：失败；1：成功&#x000A;支持INT32变量"/>
+    </ControlDevice_RequestDevCtrlPerm>
+    <ControlDevice_ReleaseDevCtrlPerm>
+      <item id="dev_ptr" type="combobox" caption="设备"   editable="true" item_type="DEV_POINT" setup="Device" option="ENV($parent.LocalVar:DEV_POINT)" autoUpdateOption="true" descibe="设备【IN】：需要释放控制的设备对象，支持Device类型" />
+      <item id="result"  type="combobox" editable="true" data_type="STRING" item_type="INT32" autoUpdateOption="true" caption="结果" setup="null" option="ENV($parent.LocalVar:INT32)" descibe="结果【OUT】：设备释放的结果。0：失败；1：成功&#x000A;支持INT32变量"/>
+    </ControlDevice_ReleaseDevCtrlPerm>
+
+
+
+  </child_func_params_group>
+  
+</base_func_config>

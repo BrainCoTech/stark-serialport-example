@@ -1,0 +1,1634 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<doc version="20190709" UnitName="project">
+  <!--数据类型、变量、属性定义区-->
+  <imports>
+    <import name="ui" as="UI"/>
+  </imports>
+  <localsource>
+    <type type="xmlitem" id="ScanUnitType" path="\source\unit\scan\scanmodel.xml" InitType="after" />
+
+    <var id="ID" caption="CANID" vtype="UINT32" uint=""/>
+    <type type="struct" id="UnitInfoStruct" caption="Unit信息">
+      <var id="Name" 	 	  vtype="STRING" caption="数据标识名称"    tooltip=""/>
+      <var id="Caption"     vtype="STRING" caption="触发数据"  	    tooltip=""/>
+      <ptr id="property"	  tooltip="数据设置属性"/>
+    </type>
+    <!-- <type     type="unit"  id="ZPSUnitType"   select="1"    		unitInit="\source\zps\device_zps.xml" unitType="\source\zps\type_zps.xml"/> -->
+    <type     type="xmlitem"  id="ZPSUnitType"   select="1"    		path="\source\zps\device_zps.xml" />
+    <var id="project_file" vtype="STRING" def="" />
+    <var id="layout_file" vtype="STRING" def="" />
+    <var id="msg_info" vtype="STRING" content="不允许对打开的工程执行保存操作！" />
+    <var id="export_path_zview" vtype="STRING" def="" />
+    <var id="export_path_xml" vtype="STRING" def="" />
+    <var id="export_path_csv" vtype="STRING" def="" />
+    <var id="export_path_asc" vtype="STRING" def="" />
+    <var id="export_path_bmp" vtype="STRING" def="" />
+    <var id="export_path_layout" vtype="STRING" def="" />
+    <var id="connect_state" vtype="UINT32" def="0" />
+    <var id="uSampointExport" vtype="UINT32" def="0"  comment="采样点是否在导出"/>
+    <var id="ProjectInfoControl" vtype="GenericProgressInfo" />
+    <var id="SysBtnState" vtype="UINT8"	def="0" comment="软件左上角系统开始按钮绑定的变量"/>
+    <!-- 这些变量用于点击报文去读取报文波形时的同步及防止重复刷新 -->
+    <timer id="FrameListClickChecker" comment="检查报文列表是否有历史未处理的点击事件" />
+    <timer id="ClassifyParseTimer" comment="定时启动ID分类解析模块" />
+    <timer id="StatusStatisticParseTimer" comment="定时启动状态信息统计模块" />
+    <timer id="SearchUnitTimer" comment="定时执行过滤线程" />
+    <var id="isRunning" vtype="UINT8" comment="判断当前点击报文获取报文波形是否在运行的状态"/>
+    <var id="RunningSem" vtype="Semaphore" comment="用于报文波形的信号量"/>
+    <var id="SampleSem" vtype="Semaphore" comment="用于区分开显隐性电平和其他采集波形的信号量"/>
+    <var id="uLastSampleMoudle" vtype="UINT32" def="0" comment="记录最后一个使用通道采集的模块 1：点击报文波形 2、眼图 3、信号质量分析 4、边沿统计 5、显隐性电平 6、位时间精度 7、收发器时序特性,8、采样点测试数据"/>
+    <var id="SerializeSem" vtype="Semaphore" comment="用于报文波形的信号量"/>
+    <var id="ViewlfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+    <var id="ViewlfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+    <var id="canBegin" vtype="DOUBLE" comment="最小起始时间（double）"/>
+    <var id="canEnd" vtype="DOUBLE" comment="最大结束时间（double）"/>
+    <var id="curBegin" vtype="DOUBLE" comment="当前开始时间（double）"/>
+    <var id="curBeginFlag" vtype="DOUBLE" comment="当前开始时间（三角形的位置）"/>
+    <var id="curEnd" vtype="DOUBLE" comment="当前结束时间（double）"/>
+    <var id="m_lastBeginTime" vtype="DOUBLE" def="0" comment="报文点击的时间"/>
+    <var id="m_lastEndTime"   vtype="DOUBLE" def="-1" comment="报文点击的时间"/>
+    <var id="report_signal" vtype="STRING" comment="波形信号"/>
+    <var id="dso_wave_ptr" vtype="POINT" tips="示波器数据指针"/>
+    <var id="aidi_wave_ptr" vtype="POINT" tips="AIDI数据指针"/>
+    <var id="aidi_key_axis" vtype="POINT" tips="AIDI关键轴指针"/>
+    <var id="canAioScroll" vtype="UINT8" def="0" tips="aio开始滚动标志"/>
+    <var id="oldClickIndex" vtype="UINT64" def="0" tips="标记上一次点击是哪一帧"/>
+
+    <var id="LabelList" type="enum" caption="跳转标签" vtype="INT32" def="-1" option="更多标签..."/>
+    <var id="testvar1" vtype="STRING" value="10" unit="v" tips="测试数据"/>
+    <!-- 这些变量用于点击报文去读取报文波形时的同步及防止重复刷新 -->
+    <!-- 测试数据开始 -->
+    <type    type="num"            id="Test_TYPE_1"  vtype="UINT8" caption="测试类型1"   translate="CAN_FRAME_TYPE_Format"/>
+    <type    type="num"            id="Test_TYPE_2"  vtype="UINT8" caption="TestType_2"   translate="SEND_CANFD_FRAME_TYPE_Format"/>
+    <type    type="num"            id="Test_TYPE_3"  vtype="UINT8" caption="TestType_3"   translate="CAN_FRAME_DIR_Format"/>
+    <type    type="num"            id="Test_TYPE_4"  vtype="UINT8" caption="测试类型4"   translate="CANFD_FRAME_DIR_Format"/>
+    <type    type="num"            id="Test_TYPE_5"  vtype="UINT8" caption="TestType_5"   translate="CAN_DLC_ALIAS"/>
+    <type    type="num"            id="Test_TYPE_6"  vtype="UINT8" caption="TestType_6"   translate="CANFD_CHANNEL_FORMAT"/>
+    <var id="SelectType" vtype="TypeList" value="Test_TYPE_1;Test_TYPE_2;Test_TYPE_3;Test_TYPE_4;Test_TYPE_5;Test_TYPE_6" comment="定义可选择类型列表"/>
+    <var id="EmptyPoint" vtype="POINT" comment="定义一个空指针类型" />
+    <type    type="xmlprocess"     id="TestStatistics"  caption="统计测试"  logo=""  path="/source/unit/xml_process/statistics.xml"/>
+    <!-- 测试数据结束 -->
+  </localsource>
+  <vars>
+    <var id="rootUnit" vtype="LIST_CTR" caption="设备列表"/>
+    <!--<var id="TestStatisticsItem" vtype="TestStatistics" caption="统计测试"  config="WaveDataSet=ZPSUnit.WaveRec.WaveRecordL"/>-->
+    <var id="CanIndex" vtype="UINT64" def="0"/>
+    <var id="ChannelNumber" vtype="UINT64" def="0"/>
+    <var id="ClassifyGroup" vtype="LIST_CTR" value="ZPSUnit.CAN1.CANClassifyItem;ZPSUnit.CAN2.CANClassifyItem;ZPSUnit.CAN3.CANClassifyItem"/>
+    <var id="CanList"       vtype="LIST_CTR" value="ZPSUnit.CAN1;ZPSUnit.CAN2;ZPSUnit.CAN3"/>
+    <var id="SelectListItem" vtype="SelectList" connect="source=CanList"  caption=""  />
+
+    <var id="AIDIChannel" vtype="LIST_CTR" value="ZPSUnit.LAIO.LAIO1;ZPSUnit.DIGLOGIC"/>
+    <var id="Auto_MuiltLine_Info" vtype="CAutoMuiltLineInfo" connect="" infotype="CMultiStructReader" caption="" auto="0" commnet="auto为1时表示使用conncet的数据自适应类型产生资源，auto为0的时候表示使用以下的静态资源">
+      <!--operators="==;!=;&gt;;&gt;=;&lt;;&lt;=;between;not between;is null;not null;is any;none;contanins;no coneanins"-->
+      <!-- <var id="Data"       type="edit" vtype="UINT8[64]"             caption="Data"              operators="==;!=;&gt;;&gt;=;&lt;;&lt;=;between;not between;is null;not null;is any;none;contanins;no coneanins"/> -->
+      <var id="DLC"            key="frameDLC"   type="enum" vtype="TYPE_CAN_DLC"          caption="Data Length"   comparefmt="base" defcondition="IF @this.messageType==(0) THEN @this.errorPoint==(0) ELSE	@this.esi!=(1)"    operators="==;!=;&gt;;&gt;=;&lt;;&lt;=" option="AUTO(CAN_SEARCH_DLC_ALIAS)" />
+      <var id="方向"           key="Dir"        type="enum" vtype="TYPE_CANFD_DIR"        caption="Direction"     comparefmt="base"                                               operators="==;!="      option="AUTO(CANFD_FRAME_DIR_Format)"/>
+      <var id="帧ID"      	   key="frameID"    type="edit" vtype="UINT32"                caption="Frame Id"      comparefmt="base" defcondition="IF @this.messageType==(0) THEN @this.errorPoint==(0) ELSE	@this.esi!=(1)"    operators="==;!=;&gt;;&gt;=;&lt;;&lt;="  option="0x00"  regexp="\b(0x[0-9a-fA-F]+|0X[0-9a-fA-F]+|[0-9]{1,9})\b"  min="0" max="536870911" />
+      <var id="帧索引"         key="frameIndex" type="edit" vtype="UINT32"                caption="Frame Index"   comparefmt="base"                                               operators="==;!=;&gt;;&gt;=;&lt;;&lt;="    	regexp="\b(0x[0-9a-fA-F]+|0X[0-9a-fA-F]+|[0-9]{1,9})\b" />
+      <var id="帧类型"         key="frameType"  type="enum" vtype="TYPE_CANFD_FRAME"      caption="Frame Type"    comparefmt="base" defcondition="IF @this.messageType==(0) THEN @this.errorPoint==(0) ELSE	@this.esi!=(1)"    operators="==;!="      option="标准数据帧;标准远程帧;扩展数据帧;扩展远程帧;标准CANFD帧;扩展CANFD帧;变速标准CANFD帧;变速扩展CANFD帧;LIN主机请求帧;LIN主机应答帧;LIN从机应答帧;LIN未知帧" />
+      <var id="通道号"         key="channel"    type="enum" vtype="TYPE_CANFD_CHANNEL"    caption="channel"       comparefmt="base" defcondition=""    operators="==;!=" option="AUTO(CANFD_CHANNEL_FORMAT)" />
+      <!-- <var id="错误位置"       key="errorPoint" type="enum" vtype="TYPE_SEARCH_ERRORNUM"  caption="ErrorPoint"         comparefmt="base"                                               operators="==;!=" option="AUTO(SAERCH_ERRORNUM_FORMAT)" /> -->
+      <var id="错误位置"       key="ErrorPointCombine" type="enum" vtype="TYPE_SEARCH_ERRORNUM"  caption="ErrorPoint"         comparefmt="base"    operators="==;!=" option="AUTO(SAERCH_ERRORNUM_FORMAT)" />
+      <!-- <var id="错误类型"       key="errorType" type="enum" vtype="TYPE_SEARCH_ERRORTYPE"  caption="ErrorType"         comparefmt="base"                                               operators="==;!=" option="AUTO(SEARCH_FRAME_ERRORTYPE_FORMAT)" /> -->
+      <var id="系统时间"       key="System"     type="time" vtype="STRING"                caption="SystemTime"    comparefmt="fmt"  defcondition=""    operators="==;!=;&gt;;&gt;=;&lt;;&lt;=" regexp="^[0-9]|[0-1][0-9]|2[0-3]$" />
+      <!-- <var id="相对时间"   key="time"       type="time" vtype="DOUBLE"                caption="RelativTime"   comparefmt="trans"  defcondition="@this.frameTypeFormat!=(15)"  operators="==;!=;&gt;;&gt;=;&lt;;&lt;="/> -->
+      <var id="相对时间"       key="time"       type="time" vtype="STRING"                caption="RelativTime"   comparefmt="fmt"  defcondition=""  operators="==;!=;&gt;;&gt;=;&lt;;&lt;=" regexp="^[0-9]{0,4}|1[0]{4}$" />
+    </var>
+    <var id="Global_Group_Info" vtype="CStaticLineInfo" infotype="Group" caption="">
+      <var id="Operator"            type="enum_s"       vtype="CANFD_CONDITIONGROUP_FORMAT"      	caption="Operator"              option="AUTO(CANFD_CONDITIONGROUP_FORMAT)" />
+    </var>
+    <!--<var id="ClassifyGroup" caption="Classify" vtype="list">
+          <ptr id="CAN1ClassifyItem" event_bypass="StopUpdate;UpdateDataValue;refreshModel" value="ZPSUnit.CAN1.CANClassifyItem"/>
+          <ptr id="CAN2ClassifyItem" event_bypass="StopUpdate;UpdateDataValue;refreshModel" value="ZPSUnit.CAN2.CANClassifyItem"/>
+          <ptr id="CAN3ClassifyItem" event_bypass="StopUpdate;UpdateDataValue;refreshModel" value="ZPSUnit.CAN3.CANClassifyItem"/>
+        </var>-->
+    <!--<var id="WaveMeasure" vtype="MeasureItem" >
+      <group id="BaseEdgeCheck_CANL" 		caption="边沿测量(CANL)" 		type="WaveEdge"         config="WaveDataSet=ZPSUnit.WaveRec.WaveRecordL" 	select="RaiseEdgeInfo;FallEdgeInfo;RaiseSlopeInfo;FallSlopeInfo"/>
+      <group id="BaseEdgeCheck_CANH" 		caption="边沿测量(CANH)" 		type="WaveEdge"         config="WaveDataSet=ZPSUnit.WaveRec.WaveRecordH" 	select="RaiseEdgeInfo;FallEdgeInfo;RaiseSlopeInfo;FallSlopeInfo"/>
+      <group id="BaseWaveLevel_CANH"	 	caption="电平测量(CANH)" 		type="WaveLevel"        config="WaveDataSet=ZPSUnit.WaveRec.WaveRecordH"   select="PkPkInfo;AvgInfo;TopInfo;BaseInfo;MinInfo;MaxInfo"/>
+      <group id="BaseWaveLevel_CANL" 		caption="电平测量(CANL)" 		type="WaveLevel"        config="WaveDataSet=ZPSUnit.WaveRec.WaveRecordL" 	select="PkPkInfo;AvgInfo;TopInfo;BaseInfo;MinInfo;MaxInfo"/>
+      <group id="BaseWaveLevel_CANDiff" 	caption="电平测量(CANDiff)" 	type="WaveLevel"        config="WaveDataSet=ZPSUnit.WaveRec.WaveDiff" 	    select="PkPkInfo;AvgInfo;TopInfo;BaseInfo;MinInfo;MaxInfo"/>
+      <group id="BaseEdgeCheck_CANDiff" 	caption="边沿测量(CANDiff)" 	type="WaveEdge"         config="WaveDataSet=ZPSUnit.WaveRec.WaveDiff" 		select="RaiseEdgeInfo;FallEdgeInfo;RaiseSlopeInfo;FallSlopeInfo"/>
+      <group id="BaseWaveLevel_CANCommon" caption="电平测量(CANCommon)"	type="WaveLevel"        config="WaveDataSet=ZPSUnit.WaveRec.WaveCommon"    select="PkPkInfo;AvgInfo;TopInfo;BaseInfo;MinInfo;MaxInfo"/>
+    </var>-->
+    <vargroup id="Decode">
+      <members>
+        <var id="dummy" alias="Flag" vtype="INT32" def="0"/>
+      </members>
+    </vargroup>
+    <var id="LabelManage" vtype="CLabelManage" tips="标签管理类"/>
+    <var id="TestString" vtype="STRING" def="Hello World!" type="edit" caption="1234" drop_enable="true" />
+    <var id="AreaExportFlag_Begin" vtype="UINT64" def="0x0" tips="用于区域保存的范围，范围内的有波形，范围外的没有报文波形"/>
+    <var id="AreaExportFlag_End" vtype="UINT64" def="0xFFFFFFFFFFFFFF" tips="用于区域保存的范围，范围内的有波形，范围外的没有报文波形"/>
+
+  </vars>
+  <vars_no_save>
+    <property id="SystemProperty" type="category">
+      <ptr  id="g_model_control" caption="启动模块控制" bind="parent.ZPSUnit.property.modelcontrol" bfold="0"/>
+      <ptr  id="g_ZPSUnit_property" caption="LAN设置" bind="parent.ZPSUnit.comm.Property" event_enabled="0" bfold="0"/>
+      <ptr  id="g_settings" caption="临时文件存储设置" bind="settings" event_enabled="0" bfold="0"/>
+      <ptr  id="g_device_time" caption="设备时钟设置" bind="parent.ZPSUnit.property.timesyncgroup" event_enabled="0" bfold="0"/>
+      <ptr  id="g_device_power_setting" caption="开关机设置" bind="parent.ZPSUnit.property.powersetgroup" event_enabled="0" bfold="0"/>
+    </property>
+    <var id="cacheLowLimit" vtype="UINT64" def="104857600"  comment="最低磁盘容量 100M"/>
+    <var id="cacheWarnLimit" vtype="UINT64" def="2147483648" comment="警告磁盘容量 2G"/>
+    <var id="IsCacheLow" vtype="UINT8" def="0" comment="是否到达了最低磁盘容量"/>
+  </vars_no_save>
+  <!--<property id="DUTSetup" caption="DUT内部参数" type="category">
+    <item id="g_ALIASTEST"       type="enum_s"     vtype="TEST_ALIAS_TYPE" caption="别名测试"  	    value="发送" 		option="AUTO(TEST_ALIAS)"  	tooltip="请选择DUT是否为隔离供电"/>
+    <item id="g_TypeList"        type="enum_s"     vtype="TypeItem" caption="类型变量"  	value="Test_TYPE_4"  option="AUTO(SelectType:typecaption)"  	tooltip="测试动态类型变量，变量为一个动态类型存储变量"/>
+    <item id="g_DataMngTest"     type="enum_s"     vtype="POINT" caption="类型数据"  	    option="AUTO(DataMng.{CanfdDataSet}:caption)"  	tooltip="测试动态类型变量，变量为一个动态类型存储变量"/>
+    <ptr  id="g_IDFormat"        type="enum"       caption="CAN ID格式化"    tooltip="CAN ID格式化方法" bind="CAN_ID_FORMAT.property"/>
+    <ptr  id="g_DATAFormat"      type="enum"       caption="CAN DATA格式化"  tooltip="CAN DATA格式化方法" bind="CAN_DATA_FORMAT.property"/>
+    <item id="g_IsolationPower"  type="enum"       vtype="UINT32" caption="供电类型"  	    value="1" 		option=""  	tooltip="请选择DUT是否为隔离供电"/>
+    <item id="g_DUTVolt" 	 	 type="edit"       vtype="DOUBLE" caption="供电电压"  		value="12" 		value_unit="V"/>
+    <item id="g_DUTCurrent" 	 type="edit"       vtype="DOUBLE" caption="供电电流"  		value="1"  		value_unit="A"/>
+    <item id="g_CANBtr"  	 	 type="edit"       vtype="DOUBLE" caption="波特率"  		value="500" 	value_unit="Kbps" 				tooltip="单位为Kbps"/>
+    <item id="g_FrameCycleTime"  type="edit"       vtype="DOUBLE" caption="报文时间周期"  value="1000"  	comboItem="ms" 				tooltip="单位为ms"/>
+    <item id="g_nDUTFrameType"   type="enum"       vtype="UINT32" caption="DUT报文类型"   value="1"    	option="标准帧;扩展帧"  		tooltip="请选择DUT报文类型"/>
+    <property id="DUTSetup1" caption="关于我们" type="category">
+      <item id="g_nDUTFrameType6"  type="spin"       vtype="UINT32" caption="Spin框"   value="5"    max_value="50"    min_value="0" step_size="1"   tooltip="请选择DUT报文类型"/>
+      <item id="g_DUTTypeR1" 	 	    type="enum"       vtype="UINT32" caption="内部终端电阻"  value="2" visible="0"		option="无;60Ω;120Ω" 	value_unit="k"		tooltip="请选择DUT内部存在终端电阻类型"/>
+      <item id="g_MinMax"  type="edit"       vtype="UINT32" caption="MinMax"  value="10"  min="5" max="100"/>
+    </property>
+    <triggers>
+      <trigger id="g_DUTVolt">
+        <var id="oldStatus" vtype="UINT32"/>
+        <var id="curStatus" vtype="UINT32"/>
+        <case>
+          <code case="__oldvalue&lt;=10"      statement="oldStatus=0"/>
+          <code case="10&lt;__oldvalue&lt;50" statement="oldStatus=1"/>
+          <code case="__oldvalue&gt;=50"      statement="oldStatus=2"/>
+        </case>
+        <case>
+          <code case="g_DUTVolt&lt;=10"      statement="curStatus=0"/>
+          <code case="10&lt;g_DUTVolt&lt;50" statement="curStatus=1"/>
+          <code case="g_DUTVolt&gt;=50"      statement="curStatus=2"/>
+        </case>
+        <if condition="oldStatus!=curStatus">
+          <switch target="curStatus">
+            <setter case="0"   data="g_CANBtr.enabled=0,,g_CANBtr.visible=1,,g_nDUTFrameType.option=A;B;C;D;E;F"/>
+            <setter case="1"   data="g_CANBtr.visible=0,,g_nDUTFrameType.option=G;H;I;J;K;L"/>
+            <setter case="2"   data="g_CANBtr.enabled=1,,g_CANBtr.visible=1,,g_nDUTFrameType.option=M;N;O;P;Q;R"/>
+          </switch>
+        </if>
+      </trigger>
+    </triggers>
+  </property>-->
+  <!--定义Unit-->
+  <units>
+    <var id="ZPSUnit"  vtype="ZPSUnitType"      caption="ZPS"    public="group"    service="" status="STRING(IF @this.comm.CurState==0 THEN `离线` ELSE `在线`)" setpicflag="1" title="设备配置"/>
+    <!-- <unit id="dataLoad" vtype="DataLoad" caption="数据加载"     service=""/> -->
+    <var id="upgrade" vtype="Upgrade" caption="软件更新"   service=""/>
+    <var id="msgExport" vtype="MsgExport" caption="报文导出"  service=""/>
+    <var id="DataExportUnit" vtype="DataExport" caption="报文导出"  service=""/>
+    <!-- <var id="ScanUnit" vtype="ScanUnitType"  caption="节点扫描"  /> -->
+  </units>
+  <eventPublish tips="模块输出事件">
+    <event event="OPEN_FILE"     param="STRING:strPath" caption="设备掉线"/>
+    <event event="START_DECODE"  caption="启动解码"/>
+    <event event="DSO_START"     caption="调用示波器模块启动一次新的采集"/>
+    <event event="AI_START" caption="AI开始采集" />
+    <event event="AI_STOP" caption="AI停止采集" />
+  </eventPublish>
+  <eventSubscribe>
+    <event event="START" caption="启动记录" tips="系统点击启动按钮">
+      <if condition="ZPSUnit.comm.CurState==0">
+        <!-- <ctr id="ZPSUnit.RunningState" ctr="PublishEvent ValueChanged" comment="貌似runningstae没有响应valuechange事件" /> -->
+        <return />
+      </if>
+      <!-- 	  <func name="ZPSUnit.CAN1.ChannelClear" />
+	  <func name="ZPSUnit.CAN2.ChannelClear" />
+	  <func name="ZPSUnit.CAN3.ChannelClear" /> -->
+      <!-- <func name="ZPSUnit.CLEAR" /> -->
+      <!--调用ZPSUnit.START函数时已经调用了CLEAR函数-->
+      <setter data="project_file.value="/>
+      <ctr id="project" ctr="Start" />
+      <func name="project.WaveCheckInit" />
+      <func name="ZPSUnit.SysRun" />
+    </event>
+    <event event="SysBtnSTOP" caption="停止记录" tips="系统点击结束按钮">
+      <func name="ZPSUnit.SysStop"/>
+    </event>
+    <!--<event event="WaveCheck" caption="启动记录" tips="系统点击启动按钮">
+      <ctr  id="WaveMeasure" ctr="SendEvent Init"/>
+      <ctr  id="WaveMeasure" ctr="SendEvent Clear"/>
+      <ctr  id="WaveMeasure" ctr="SendEvent Start" args="DOUBLE(0),DOUBLE(0)"/>
+    </event>-->
+    <!--<event event="WaveCheckInit" caption="停止记录" tips="系统点击结束按钮">
+    </event>-->
+    <event event="DomRecSetSource" caption="" tips="显隐性电平设置资源">
+      <log text="[DomRecSetSource] click!!!!!"/>
+      <dataset id="ZPSUnit.DomRec.DatasetH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+      <dataset id="ZPSUnit.DomRec.DatasetL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+      <ctr id="ZPSUnit.DomRec.DomRecGroupPoint.DomRecH" ctr="BindData ZPSUnit.DomRec.DatasetH" />
+      <ctr id="ZPSUnit.DomRec.DomRecGroupPoint.DomRecL" ctr="BindData ZPSUnit.DomRec.DatasetL" />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <log text="[EdgeSetSource] Now is History Data!!!!!!!!"  />
+        <ctr id="ZPSUnit.DomRec.DomRecGroupPoint.DatasetL" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+        <ctr id="ZPSUnit.DomRec.DomRecGroupPoint.DatasetH" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+      </if>
+    </event>
+    <event event="EdgeSetSource" caption="" tips="边沿统计">
+      <log text="[EdgeSetSource] click!!!!!"/>
+      <!--<dataset id="ZPSUnit.EDGE.WaveEdgeL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+      <dataset id="ZPSUnit.EDGE.WaveEdgeH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>-->
+      <ctr id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeL" ctr="BindData ZPSUnit.EDGE.WaveEdgeL" />
+      <ctr id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeH" ctr="BindData ZPSUnit.EDGE.WaveEdgeH" />
+      <code  statement="ZPSUnit.EDGE.EdgeGroupPoint.BindDataSet=1"/>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <log text="[EdgeSetSource] Now is History Data!!!!!!!!"  />
+        <ctr id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeL" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+        <ctr id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeH" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+        <code  statement="ZPSUnit.EDGE.EdgeGroupPoint.BindDataSet=0"/>
+      </if>
+    </event>
+    <event event="Assess1" caption="" tips="信号质量分析">
+      <log text="[Assess1] click!!!!!" level="error"/>
+      <dataset id="ZPSUnit.ASSESS.WaveAssessL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+      <dataset id="ZPSUnit.ASSESS.WaveAssessH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+      <ctr id="ZPSUnit.ASSESS.AssessGroupPoint.AssessL" ctr="BindData ZPSUnit.ASSESS.WaveAssessL" />
+      <ctr id="ZPSUnit.ASSESS.AssessGroupPoint.AssessH" ctr="BindData ZPSUnit.ASSESS.WaveAssessH" />
+      <code  statement="ZPSUnit.ASSESS.AssessGroupPoint.BindDataSet=1"/>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <log text="[Assess1] Now is History Data!!!!!!!!"  />
+        <ctr id="ZPSUnit.ASSESS.AssessGroupPoint.AssessL" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+        <ctr id="ZPSUnit.ASSESS.AssessGroupPoint.AssessH" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+        <code  statement="ZPSUnit.ASSESS.AssessGroupPoint.BindDataSet=0"/>
+        <func name="ZPSUnit.ASSESS.SwitchChannel"/>
+      </if>
+      <func name="ZPSUnit.CANStop" comment="系统停止运行" />
+      <!--<ctr id="ZPSUnit.ASSESS.AssessGroupPoint" ctr="InitDecode" comment="初始化解码"/>-->
+      <ctr id="ZPSUnit.ASSESS.AssessGroupPoint" ctr="Start" comment="开始进行信号质量分析"/>
+    </event>
+    <event event="EyeCreat"    caption=""    tips="眼图">
+      <log text="[EyeCreat] click!!!!!" level="error"/>
+      <dataset id="ZPSUnit.EYE.WaveEyeL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+      <dataset id="ZPSUnit.EYE.WaveEyeH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+      <ctr id="ZPSUnit.EYE.EyeGroupPoint.EyeL" ctr="BindData ZPSUnit.EYE.WaveEyeL" />
+      <ctr id="ZPSUnit.EYE.EyeGroupPoint.EyeH" ctr="BindData ZPSUnit.EYE.WaveEyeH" />
+      <code  statement="ZPSUnit.EYE.EyeGroupPoint.BindDataSet=1"/>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <log text="[EyeCreat] Now is History Data!!!!!!!!"  />
+        <ctr id="ZPSUnit.EYE.EyeGroupPoint.EyeL" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+        <ctr id="ZPSUnit.EYE.EyeGroupPoint.EyeH" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+        <code  statement="ZPSUnit.EYE.EyeGroupPoint.BindDataSet=0"/>
+        <func name="ZPSUnit.EYE.SwitchChannel"/>
+      </if>
+      <func name="ZPSUnit.CANStop" comment="系统停止运行" />
+      <!--<ctr id="ZPSUnit.EYE.EyeGroupPoint" ctr="InitDecode" comment="初始化解码"/>-->
+      <ctr id="ZPSUnit.EYE.EyeGroupPoint" ctr="Start" comment="开始进行眼图分析"/>
+    </event>
+    <event event="decode"    caption="停止记录"    tips="系统点击结束按钮">
+      <var  id="lfBegin" vtype="DOUBLE"/>
+      <var  id="lfEnd"   vtype="DOUBLE"/>
+      <code statement="lfBegin=0"/>
+      <code statement="lfEnd=0.01"/>
+      <process id="Decode.TestDecode" ctr="Init"           args=""/>
+      <process id="Decode.TestDecode" ctr="Start"          args="lfBegin=0,lfEnd=3,pResult=Decode.TestDecode.result"/>
+    </event>
+    <event event="IniDataSetEstSize" comment="打开工程">
+      <dataset id="ZPSUnit.CAN1.CAN" ctr="SetEstDataSize" value="0" />
+      <dataset id="ZPSUnit.CAN2.CAN" ctr="SetEstDataSize" value="0" />
+      <dataset id="ZPSUnit.CAN3.CAN" ctr="SetEstDataSize" value="0" />
+      <dataset id="ZPSUnit.DSO.CH1_I" ctr="SetEstDataSize" value="16000" />
+      <dataset id="ZPSUnit.DSO.CH2_I" ctr="SetEstDataSize" value="16000" />
+      <dataset id="ZPSUnit.DSO.CH1" ctr="SetEstDataSize" value="128000000" />
+      <dataset id="ZPSUnit.DSO.CH2" ctr="SetEstDataSize" value="128000000" />
+      <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="SetEstDataSize" value="0" />
+      <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="SetEstDataSize" value="0" />
+    </event>
+    <event event="OpenProject" comment="打开工程">
+      <log text="open OpenProject ${project_file}"/>
+	  <func name="ZPSUnit.DataSetPauseReflesh"/>
+      <func name="ZPSUnit.DeviceStop"/>
+      <func name="ZPSUnit.AnalyseStop"/>
+      <var id="result" vtype="INT8" />
+      <func name="ZPSUnit.EDGE.EdgeUnit.HideWindow"/>
+      <ctr id="ZPSUnit.CAN1.CAN" ctr="Clear" comment=""/>
+      <ctr id="ZPSUnit.CAN2.CAN" ctr="Clear" comment=""/>
+      <ctr id="ZPSUnit.CAN3.CAN" ctr="Clear" comment=""/>
+      <func name="ZPSUnit.WaveRec.RxTxClear" 			comment="清空RxTx模块" />
+      <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" ctr="Clear" comment="清空数据集" />
+      <setter  data="canBegin.value=-1"/>
+      <setter  data="canEnd.value=0"/>
+      <setter data="curBegin.value=-1"/>
+      <setter data="curEnd.value=0"/>
+
+      <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	ctr="PublishEvent waveCtrlReGroup" comment="清除当前屏幕波形"/>
+      <ctr id="project" ctr="LoadProject"/>
+      <return condition="result!=0" />
+      <!-- 重设系统时间 -->
+      <func name="ZPSUnit.ResetSystemTime" />
+      <func name="ZPSUnit.DeviceParamInput"/>
+
+      <func name="ZPSUnit.WaveRec.SwitchChannel"/>
+      <func name="ZPSUnit.EDGE.SwitchChannel"/>
+      <func name="ZPSUnit.ASSESS.SwitchChannel"/>
+      <func name="ZPSUnit.EYE.SwitchChannel"/>
+      <func name="ZPSUnit.EDGE.SwitchChannel"/>
+      <func name="ZPSUnit.BitTime.SwitchChannel"/>
+      <code statement="ZPSUnit.WaveRec.m_lastSelectChannel=-1"/>
+      <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	ctr="InitDecode"   comment="初始化解码"/>
+      <ctr id="ZPSUnit.EDGE.EdgeGroupPoint" ctr="InitDecode" comment="初始化解码"/>
+      <ctr id="ZPSUnit.ASSESS.AssessGroupPoint" ctr="InitDecode" comment="初始化解码"/>
+      <ctr id="ZPSUnit.BitTime.BitTimeGroupPoint" ctr="InitDecode" comment="初始化解码"/>
+      <ctr id="ZPSUnit.BusDelay.BusDelayGroupPoint" ctr="InitDecode" comment="初始化解码"/>
+      <ctr id="ZPSUnit.EYE.EyeGroupPoint" ctr="InitDecode" comment="初始化解码"/>
+      <ctr id="ZPSUnit.DomRec.DomRecGroupPoint" ctr="InitDecode" comment="初始化解码"/>
+      <func name="ZPSUnit.TransreceiverXML.TransreceiverGroupPoint.InitDecode"  comment="初始化"/>
+      <func name="ZPSUnit.PropagationDelay.InitDecodeParame"  comment="初始化解码"/>
+      <code statement="ZPSUnit.HadInitDecode=1"/>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordH"	 ctr="ResetSizeAxisRange"/>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordL"	 ctr="ResetSizeAxisRange"/>
+      <dataset id="ZPSUnit.WaveRec.WaveDiff"	 ctr="ResetSizeAxisRange"/>
+      <dataset id="ZPSUnit.WaveRec.WaveCommon"	 ctr="ResetSizeAxisRange"/>
+      <func name="ShowOriginal"/>
+      <ui   ctr="sendViewEvent"   view="FrameListView"    event="ImportFinished"  args="" comment="新列表视图框架替换后可以删除"/>
+      <ctr id="ZPSUnit.CAN1.CAN" ctr="PublishEvent Update" comment=""/>
+      <ctr id="ZPSUnit.CAN2.CAN" ctr="PublishEvent Update" comment=""/>
+      <ctr id="ZPSUnit.CAN3.CAN" ctr="PublishEvent Update" comment=""/>
+      <ctr id="ZPSUnit.CAN1.ReceiveDisturb" ctr="PublishEvent RefreshBitFlow" comment=""/>
+      <ctr id="UI.dynamics" ctr="PublishEvent Reset" comment="加载工程要给zui发个reset事件"/>
+      <func name="UI.ReportWindow.ReportListWindow.includesplitter.splitter_row.result_win.ListframeStatistics.OpenProjectHandle"  comment="后续窗口的destory支持了可以去掉"/>
+      <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	ctr="PublishEvent waveCtrlReGroup" comment="清除当前屏幕波形"/>
+      <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	ctr="PublishEvent BindChanged" comment="清除当前屏幕波形"/>
+	  <func name="ZPSUnit.AfterOpenProject"  comment="导入后的一些初始化"/>
+	  <!--  -->
+	  <!-- <func name="UI.BusLoadRateWindow.Start"/> -->
+      <!-- <zui  ctr="setItem" name="zui.send_list_win.send_list_widget.send_row.send_tree"   property="timer_start"  value="true" /> -->
+	  <func name="UI.BusLoadRateWindow.Start"/>
+    </event>
+    <event event="NewProject" comment="">
+      <log text="new project"  />
+    </event>
+    <event event="UpdateDataSets" comment="">
+      <log text="Update Files"  />
+      <dataset id="ZPSUnit.CAN1.CAN" ctr="UpdateDataSetCache" comment="这里的id是随便写的一个，因为不写id这个命令不生效，实现的问题"/>
+    </event>
+    <event event="SaveProject" comment="保存工程">
+      <sync sem="SerializeSem" ctr="Reset" />
+      <if condition="ZPSUnit.DSO.m_TimeAxis_OFF.axisstate==1&amp;&amp;ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1&amp;&amp;ZPSUnit.LAIO.LAIO1.m_TimeAIAxis1.axisstate==1">
+        <log text="不允许对打开的工程执行保存操作"  />
+        <return/>
+      </if>
+      <if condition="ZPSUnit.DSO.m_TimeAxis_OFF.axisstate==0&amp;&amp;ZPSUnit.comm.CurState==1">
+        <log text="save project111"  />
+        <func name="ZPSUnit.DeviceStop"/>
+        <!-- <ctr id="ZPSUnit.DSO.m_TimeAxis_OFF" 	    ctr="Reset" comment="重设数轴"/> -->
+        <ctr id="ZPSUnit.DSO.CHS_OFF"  	 ctr="Clear"/>
+        <if condition="ZPSUnit.DSO.ExportFlag==1">
+          <ctr id="ZPSUnit.DSO.CHS_OFF"    ctr="CHReset" comment="必要时切换回原来的数据集" />
+          <ctr id="ZPSUnit.DSO.CHS_OFF"  	 ctr="SetDataStateFalse"/>
+          <ctr id="ZPSUnit.DSO.CHS_OFF" 	 ctr="OriginalSample" comment="ok"/>
+          <ctr id="ZPSUnit.DSO.CHS_OFF"  	 ctr="SetDataStateTrue"/>
+        </if>
+      </if>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==0">
+        <log text="save project222"  />
+        <dataset id="ZPSUnit.CAN1.CAN" ctr="GetExportParam" value="ZPSUnit.WaveRec.dataExportParam" comment="计算报文时间跨度和获取两个波形块ID" />
+        <code statement="ZPSUnit.WaveRec.dataExportParam[0]=(ZPSUnit.WaveRec.dataExportParam[0]-ZPSUnit.CAN1.m_lBeforeExtendTime*1e9)"  comment="加上前触发参数"/>
+        <code statement="ZPSUnit.WaveRec.dataExportParam[1]=(ZPSUnit.WaveRec.dataExportParam[1]+ZPSUnit.CAN1.m_lAfterExtendTime*1e9)" comment="加上后触发参数"/>
+
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="SetChannelDataset"  value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集" />
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="SetChannelDataset"  value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集" />
+        <func name="BindRecordSource"/>
+      </if>
+      <sync condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1" sem="SerializeSem" ctr="Post" />
+      <sync sem="SerializeSem" ctr="Wait" />
+      <ctr id="project" ctr="SaveProject"/>
+      <!-- 添加离线无法采集示波器波形的提示 -->
+      <if condition="ZPSUnit.comm.CurState==0">
+        <zui ctr="setItem"  name="UI.msg_box_saveproject"   property="button_type"  value="ok"/>
+        <zui ctr="setItem"  name="UI.msg_box_saveproject"   property="text"  value="工程保存完成！停止获取硬件数据！&#x0a;目前设备处于离线状态，示波器数据和报文波形数据无法正常获取。"/>
+        <show  name="UI.msg_box_saveproject"  args="exec=false" />
+      </if>
+    </event>
+    <event event="SaveSampointProject"  param="UINT8:uChannelNum" comment="保存采样点的工程">
+      <log text="SaveSampointProject  uChannelNum=${uChannelNum}"  />
+      <sync sem="SerializeSem" ctr="Reset" />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <log text="不允许对打开的工程执行保存操作"  />
+        <return/>
+      </if>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==0">
+        <log text="sampoint save project222"  />
+        <dataset id="ZPSUnit.CAN1.CAN" ctr="GetExportParam" value="ZPSUnit.WaveRec.dataExportParam" comment="计算报文时间跨度和获取两个波形块ID" />
+
+        <log text="SerializeSem project   wait success uSampointExport=${uSampointExport}"/>
+        <if condition="uSampointExport==1">
+          <code statement="uSampointExport=0"/>
+          <ctr id="project" ctr="SaveProject"/>
+        </if>
+        <func name="BindSampointSource" param="uChannelNum"/>
+      </if>
+      <!-- 添加离线无法采集波形的提示 -->
+      <if condition="ZPSUnit.comm.CurState==0">
+        <zui ctr="setItem"  name="UI.msg_box_saveproject"   property="button_type"  value="ok"/>
+        <zui ctr="setItem"  name="UI.msg_box_saveproject"   property="text"  value="工程保存完成！&#x0a;目前设备处于离线状态，报文波形数据无法正常保存。"/>
+        <show  name="UI.msg_box_saveproject"  args="exec=false" />
+      </if>
+      <sync sem="SerializeSem" ctr="Wait" />
+      <func name="ZPSUnit.sampointTest.UnLockMutex"/>
+      <func name="ZPSUnit.sampointTestRx.UnLockMutex"/>
+    </event>
+	<event event="SaveSampointRxProject"  param="UINT8:uChannelNum" comment="保存采样点的工程">
+      <log text="SaveSampointProject  uChannelNum=${uChannelNum}"  />
+      <sync sem="SerializeSem" ctr="Reset" />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <log text="不允许对打开的工程执行保存操作"  />
+        <return/>
+      </if>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==0">
+        <log text="sampoint save project222"  />
+        <dataset id="ZPSUnit.CAN1.CAN" ctr="GetExportParam" value="ZPSUnit.WaveRec.dataExportParam" comment="计算报文时间跨度和获取两个波形块ID" />
+
+        <log text="SerializeSem project   wait success uSampointExport=${uSampointExport}"/>
+        <if condition="uSampointExport==1">
+          <code statement="uSampointExport=0"/>
+          <ctr id="project" ctr="SaveProject"/>
+        </if>
+        <func name="BindSampointSource" param="uChannelNum"/>
+      </if>
+      <!-- 添加离线无法采集波形的提示 -->
+      <if condition="ZPSUnit.comm.CurState==0">
+        <zui ctr="setItem"  name="UI.msg_box_saveproject"   property="button_type"  value="ok"/>
+        <zui ctr="setItem"  name="UI.msg_box_saveproject"   property="text"  value="工程保存完成！&#x0a;目前设备处于离线状态，报文波形数据无法正常保存。"/>
+        <show  name="UI.msg_box_saveproject"  args="exec=false" />
+      </if>
+      <sync sem="SerializeSem" ctr="Wait" />
+      <func name="ZPSUnit.sampointTest.UnLockMutex"/>
+    </event>
+    <event event="BindSampointSource" param="UINT8:uChannelNum" caption="订阅更新事件">
+      <log  text="ZPSUnit Event BindRecordSource uChannelNum=${uChannelNum}" level="error"/>
+
+      <if condition="uChannelNum==0">
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="SetChannelDataset"  value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集" />
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH"  	 ctr="setParent"      value="source=ZPSUnit.CAN1.CAN"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH"  	 ctr="SetDataState"    value="0"/>
+        <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="ResetSaveTime" comment=""/>
+        <log  text="ZPSUnit Event BindRecordSource222" level="error"/>
+        <ctr id="ZPSUnit.WaveRec.WaveRecordH" 	ctr="StartReflesh" comment="启动数据集采集"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="Export" value="" />
+        <ctr id="ZPSUnit.WaveRec.WaveRecordH" 	ctr="PauseReflesh" comment="停止数据集采集"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="ResetState" value="" />
+      </if>
+      <if condition="uChannelNum==1">
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="SetChannelDataset"  value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集" />
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL"  	 ctr="setParent"      value="source=ZPSUnit.CAN1.CAN"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL"  	 ctr="SetDataState"    value="0"/>
+        <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="ResetSaveTime" comment=""/>
+        <ctr id="ZPSUnit.WaveRec.WaveRecordL" 	ctr="StartReflesh" comment="启动数据集采集"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="Export" value="" />
+        <ctr id="ZPSUnit.WaveRec.WaveRecordL" 	ctr="PauseReflesh" comment="停止数据集采集"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="ResetState" value="" />
+      </if>
+    </event>
+    <event event="ShowDSO" caption="订阅更新事件">
+      <log  text="ZPSUnit Event ShowDSO" level="info"/>
+      <if condition="ZPSUnit.comm.CurState==0">
+        <return />
+      </if>
+      <log text="Unlocking Axises ..." level="info"/>
+      <ctr id="ZPSUnit.DSO.CHS" ctr="UnlockAxis" comment="解锁数轴" />
+      <ctr id="ZPSUnit.DSO.CHS_OFF" ctr="UnlockAxis" comment="解锁数轴" />
+      <view ctr="bindData" view="WaveView" args="ZPSUnit.DSO.CHS" />
+      <!-- <ctr id="ZDSUnit.zds_data_ptr" ctr="BindData ZPSUnit.DSO.CHS"/> -->
+      <ctr id="dso_wave_ptr" ctr="BindData ZPSUnit.DSO.CHS"/>
+      <zui args="dso_wave_ptr.TimeAxis" ctr="bindData" value="key_axis" name="UI.oscill_win.oscill_wave_widget.col1.row1.wave_ctrl" />
+      <view ctr="bindData" view="OscillCaseProertyView" args="ui.WaveView.ChannelProperties" />
+      <view ctr="bindData" view="ComAxisProertyView" name="ACQuire" args="ZPSUnit.DSO" />
+      <view ctr="bindData" view="ComAxisProertyView" name="Axis" args="ui.WaveView.Axis" />
+      <log  text="ZPSUnit Event ShowDSO END" level="info"/>
+    </event>
+	<event event="ClearEnd" caption="清除数据完毕后">
+		<func name="UI.BusLoadRateWindow.Start"  comment=""/>
+	</event>
+    <event event="Exit" caption="">
+      <!-- 列表数据统计的退出 -->
+      <func name="UI.ReportWindow.ReportListWindow.includesplitter.splitter_row.result_win.ListframeStatistics.StopQuery"  comment="后续窗口的destory支持了可以去掉"/>
+      <zui  ctr="setItem" name="UI.bus_profile_win.bus_profile_widget.bus_profile_row.bus_profile_list"   property="timer_start"  value="false" />
+      <log  text="ExitExitExitExitExitExit" level="info"/>
+      <func name="ZPSUnit.comm.StopCheck" />
+      <!-- <func name="ZPSUnit.Close"/> -->
+      <func name="ZPSUnit.Exit"/>
+      <dataset id="ZPSUnit.CAN1.CAN"  	 ctr="PauseReflesh"/>
+      <dataset id="ZPSUnit.CAN2.CAN"  	 ctr="PauseReflesh"/>
+      <dataset id="ZPSUnit.CAN3.CAN"  	 ctr="PauseReflesh"/>
+      <dataset id="ZPSUnit.CAN1.CAN"  	 ctr="RefleshBreak"/>
+      <dataset id="ZPSUnit.CAN2.CAN"  	 ctr="RefleshBreak"/>
+      <dataset id="ZPSUnit.CAN3.CAN"  	 ctr="RefleshBreak"/>
+      <dataset id="ZPSUnit.CAN1.CAN"  	 ctr="Clear"/>
+      <dataset id="ZPSUnit.CAN2.CAN"  	 ctr="Clear"/>
+      <dataset id="ZPSUnit.CAN3.CAN"  	 ctr="Clear"/>
+      <!--<ui   ctr="sendViewEvent"   view="TitleBarView"    event="Exit"  args=""/>-->
+    </event>
+    <event event="ShowOriginal" caption="订阅更新事件">
+      <log  text="ZPSUnit Event ShowOriginal111" level="error"/>
+      <view ctr="bindData" view="WaveView" args="ZPSUnit.DSO.CHS_OFF" />
+      <!-- <ctr id="ZDSUnit.zds_data_ptr" ctr="BindData ZPSUnit.DSO.CHS_OFF"/> -->
+      <ctr id="dso_wave_ptr" ctr="BindData ZPSUnit.DSO.CHS_OFF"/>
+      <zui args="dso_wave_ptr.TimeAxis" ctr="bindData" value="key_axis" name="UI.oscill_win.oscill_wave_widget.col1.row1.wave_ctrl" />
+      <view ctr="bindData" view="OscillCaseProertyView" args="ui.WaveView.ChannelProperties" />
+      <view ctr="bindData" view="ComAxisProertyView" name="ACQuire" args="ZPSUnit.DSO" />
+      <view ctr="bindData" view="ComAxisProertyView" name="Axis" args="ui.WaveView.Axis" />
+      <code  statement="m_TimeAxis_OFF.hasdata=1" />
+      <ctr id="ZPSUnit.DSO.m_TimeAxis_OFF" 	ctr="PublishEvent Update" comment="启动数据集采集"/>
+      <ctr id="ZPSUnit.DSO.m_TimeAxis_OFF" 	ctr="PublishEvent Update" comment="启动数据集采集"/>
+      <log  text="ZPSUnit Event ShowOriginal222" level="error"/>
+    </event>
+    <event event="BindRecordSource" caption="订阅更新事件">
+      <log  text="ZPSUnit Event BindRecordSource" level="error"/>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordH"  	 ctr="setParent"      value="source=ZPSUnit.CAN1.CAN"/>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordL"  	 ctr="setParent"      value="source=ZPSUnit.CAN1.CAN"/>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordH"  	 ctr="SetDataState"    value="0"/>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordL"  	 ctr="SetDataState"    value="0"/>
+
+      <coroutine catch="&amp;ZPSUnit">
+        <log  text="ZPSUnit Event BindRecordSource222" level="error"/>
+        <ctr id="ZPSUnit.WaveRec.WaveRecordH" 	ctr="StartReflesh" comment="启动数据集采集"/>
+        <ctr id="ZPSUnit.WaveRec.WaveRecordL" 	ctr="StartReflesh" comment="启动数据集采集"/>
+        <log  text="ZPSUnit Event BindRecordSource333" level="error"/>
+        <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" ctr="Clear" comment="保存前清除还原通道参数" />
+        <log  text="ZPSUnit Event BindRecordSource33333" level="error"/>
+        <!--<ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	     ctr="CHClear" comment="保存前清除还原通道参数"/>-->
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="Export" value="" />
+        <log  text="ZPSUnit Event BindRecordSource444" level="error"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH"  	 ctr="SetDataState"    value="1"/>
+        <log  text="ZPSUnit Event BindRecordSource555" level="error"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="Export" value="" />
+        <log  text="ZPSUnit Event BindRecordSource666" level="error"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL"  	 ctr="SetDataState"    value="1"/>
+        <log  text="ZPSUnit Event BindRecordSource777" level="error"/>
+        <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	     ctr="CHClear" comment="保存后清除还原通道参数"/>
+        <ctr id="ZPSUnit.WaveRec.WaveRecordH" 	ctr="PauseReflesh" comment="启动数据集采集"/>
+        <ctr id="ZPSUnit.WaveRec.WaveRecordL" 	ctr="PauseReflesh" comment="启动数据集采集"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="ResetState" value="" />
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="ResetState" value="" />
+      </coroutine>
+    </event>
+    <!--独立的事件 -->
+    <event event="FrameList" param="" caption="报文点击事件" comment="计算参数分发事件">
+      <var id="u64HIndex" 	vtype="UINT64"   comment="起始时间（double）"/>
+      <var id="u64LIndex" 	vtype="UINT64"   comment="结束时间（double）"/>
+      <code  statement="u64HIndex=ZPSUnit.CAN1.property.DataEnable.StartID" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="u64LIndex=ZPSUnit.CAN1.property.DataEnable.EndID" comment="计算结束时间（DOUBLE）"/>
+      <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListCtl" args="u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+      <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListCtl" args="u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+    </event>
+    <event event="WaveHeadListClick"   param="UINT64:WaveID,UINT64:WaveStartTime,UINT32:DataLengthInPage" caption="报文点击事件"    comment="计算参数分发事件">
+      <log text="WaveID;${WaveID},WaveStartTime:${WaveStartTime},DataLengthInPage:${DataLengthInPage}" level="error"/>
+      <dataset id="ZPSUnit.DSO.WaveLeadRecordH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveHeadLCH" comment="切换通道对应的数据集"/>
+      <dataset id="ZPSUnit.WaveRec.WaveHeadRecordH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveHeadHCH" comment="切换通道对应的数据集"/>
+      <!--计算起始时间和结束时间 -->
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	    vtype="DOUBLE"   comment="给底层获取数据的时间"/>
+      <var id="lfOffset" 	    vtype="DOUBLE"   comment="给底层获取数据的时间"/>
+      <code  statement="lfStartTime=WaveStartTime*8e-9"  comment="计算开始时间（DOUBLE）"/>
+      <code  statement="lfEndTime=lfStartTime+DataLengthInPage*2/3*1.0/ZPSUnit.WaveRec.m_RecordtimeScale" comment="计算结束时间（DOUBLE）"/>
+      <var id="u64StartTime" 	    vtype="UINT64"   comment="开始时间"/>
+      <var id="u64EndTime" 	    vtype="UINT64"   comment="结束时间"/>
+      <code  statement="u64StartTime=lfStartTime*1e9" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="u64EndTime=lfEndTime*1e9" comment="计算开始时间（DOUBLE）"/>
+      <log text="FrameListClick111 starttime:${u64StartTime},endTime:${u64EndTime}"  />
+      <var id="ViewlfRatio" 	    vtype="DOUBLE"   comment="给视图的时间"/>
+      <var id="ViewlfOffset" 	    vtype="DOUBLE"   comment="给视图的时间"/>
+      <code  statement="ViewlfOffset=lfStartTime" comment="0.00002确保波形显示完全"/>
+      <code  statement="ViewlfRatio=lfEndTime-ViewlfOffset"/>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <!-- 得对时间为负值做判断 -->
+      <if condition="lfStartTime&lt;0.0000">
+        <code  statement="lfStartTime=0.0"/>
+      </if>
+      <code  statement="ZPSUnit.WaveRec.WaveRecordGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.WaveRec.WaveRecordGroupPoint.LastBeginTime=lfStartTime"/>
+      <!-- 给视图的事件 -->
+      <ui   ctr="sendViewEvent"   view="CanWaveView"    event="CurFrameTime"  args="CurStart=DOUBLE(Var$lfStartTime),CurEnd=DOUBLE(Var$lfEndTime)"/>
+      <setter  data="canBegin.value={lfStartTime.value}"/>
+      <setter  data="canEnd.value={lfEndTime.value}"/>
+      <setter data="curBegin.value={lfStartTime.value}"/>
+      <setter data="curEnd.value={lfEndTime.value}"/>
+      <log text="canBegin:${canBegin},canEnd:${canEnd},lfCurStartTime:${lfStartTime},lfCurEndTime:${lfEndTime}" level="error"/>
+      <ui   ctr="sendViewEvent"   view="CanWaveView"    event="AxisUpdate"    args="Ratio=DOUBLE(Var$ViewlfRatio),Offset=DOUBLE(Var$ViewlfOffset),Viewmin=DOUBLE(Var$lfStartTime),Viewmax=DOUBLE(Var$lfEndTime)"/>
+      <!--  底层获取数据-->
+      <ctr id="ZPSUnit.CAN1.WaveHeadHCH" ctr="WaveHeadListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$WaveID),u64LIndex=UINT64(Var$WaveID)" comment="启动数据集采集"/>
+      <ctr id="ZPSUnit.CAN1.WaveHeadLCH" ctr="WaveHeadListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$WaveID),u64LIndex=UINT64(Var$WaveID)" comment="启动数据集采集"/>
+      <log text="WaveHeadListClickEnd " level="error" />
+    </event>
+
+    <event event="FrameListClick"   param="UINT64:lfTime,UINT64:occupancyTime,UINT64:commzpsu64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset,UINT64:frameIndex,UINT16:WaveFlag" caption="报文点击事件"    comment="计算参数分发事件">
+      <log text="FrameListClick lftime;${lfTime},CANHOffset:${CANHOffset},CANLOffset:${CANLOffset},occupancyTime:${occupancyTime},commzpsu64HIndex:${commzpsu64HIndex},u64LIndex:${u64LIndex},u64Channel:${u64Channel} frameIndex=${frameIndex} WaveFlag=${WaveFlag}" level="info"/>
+      <if condition="occupancyTime==0">
+        <return/>
+      </if>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate!=1">
+        <func name="ZPSUnit.WaveRec.WaveRecordGroupPoint.Clear"/>
+      </if>
+
+      <func name="ZPSUnit.WaveRec.ClickChannelChange" param="u64Channel" comment="通知报文波形视图切换通道了"/>
+      <!-- <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/> -->
+      <!-- <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/> -->
+      <varex id="_lfTime" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_occupancyTime" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_u64HIndex" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_u64LIndex" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_u64Channel" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_CANHOffset" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_CANLOffset" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_WaveFlag" vtype="UINT16" local="FrameListClickChecker" />
+      <log text="Click isRunning ${isRunning}" />
+      <!-- 偏移是采样点 -->
+      <sync sem="RunningSem" ctr="Wait" />
+      <if condition="isRunning==1">
+        <!-- 更新参数，对上诉变量赋值，标记有未处理的点击请求 -->
+        <code statement="_lfTime=lfTime" />
+        <code statement="_occupancyTime=occupancyTime" />
+        <code statement="_u64HIndex=u64HIndex" />
+        <code statement="_u64LIndex=u64LIndex" />
+        <code statement="_u64Channel=u64Channel" />
+        <code statement="_CANHOffset=CANHOffset" />
+        <code statement="_CANLOffset=CANLOffset" />
+        <code statement="_WaveFlag=WaveFlag" />
+        <code statement="isRunning.ST_Count=1" />
+        <log text="Record Click: ${_lfTime} ${_occupancyTime} ${_u64HIndex} ${_u64LIndex} ${_u64Channel}" />
+        <sync sem="RunningSem" ctr="Post" />
+        <func name="FrameListClickChecker.Start" param="100,1" />
+        <return/>
+      </if>
+      <log text="Get Click: ${lfTime} ${occupancyTime} ${u64HIndex} ${u64LIndex} ${u64Channel}" />
+      <code statement="isRunning=1" />
+      <sync sem="RunningSem" ctr="Post" />
+
+      <if condition="oldClickIndex!=frameIndex">
+        <ctr id="oldClickIndex" ctr="PublishEvent PropertyChanged" comment="点击的帧改变了，通知报文波形视图"/>
+      </if>
+      <code statement="oldClickIndex=frameIndex"/>
+
+      <coroutine catch="lfTime;occupancyTime;u64HIndex;u64LIndex;u64Channel;CANHOffset;CANLOffset;WaveFlag;&amp;ZPSUnit;&amp;RunningSem;&amp;isRunning;&amp;canBegin;&amp;canEnd;&amp;curBegin;&amp;curEnd;&amp;report_signal">
+        <!--计算起始时间和结束时间 -->
+        <log text="FrameListClick111 lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANLID:${u64LIndex}"  />
+        <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+        <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+        <var id="lfRatio" 	    vtype="DOUBLE"   comment="给底层获取数据的时间"/>
+        <var id="lfOffset" 	    vtype="DOUBLE"   comment="给底层获取数据的时间"/>
+        <var id="lfCurStartTime" 	vtype="DOUBLE"   comment="当前帧起始时间（double）"/>
+        <var id="lfCurEndTime" 	    vtype="DOUBLE"   comment="当前帧结束时间（double）"/>
+        <var id="uCurEndTime" 	    vtype="UINT64"   comment="当前帧结束时间（double）"/>
+        <code statement="ZPSUnit.WaveRec.CANWaveDecode.m_decodeType=ZPSUnit.decodeType" comment="设置解码的类型"  />
+        <code statement="ZPSUnit.WaveRec.CANWaveDecodeRx.m_decodeType=ZPSUnit.decodeType" comment="设置解码的类型"  />
+        <code statement="ZPSUnit.WaveRec.CANWaveDecodeTx.m_decodeType=ZPSUnit.decodeType" comment="设置解码的类型"  />
+        <!-- <code  statement="lfEndTime=CANHOffset*1/ZPSUnit.WaveRec.m_RecordtimeScale+(lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/> -->
+        <code  statement="lfEndTime=(lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/>
+        <code  statement="uCurEndTime=(lfTime*8)" comment="计算结束时间（DOUBLE）"/>
+        <log text="FrameListClick111 uCurEndTime:${uCurEndTime}"  />
+        <!-- <code statement="lfCurEndTime=lfTime*8e-9" comment="计算结束时间（DOUBLE）"/> -->
+        <code statement="lfCurEndTime=lfEndTime" comment="计算结束时间（DOUBLE）"/>
+        <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9"  comment="计算开始时间（DOUBLE）"/>
+        <code statement="lfCurStartTime=lfEndTime-occupancyTime*1e-9" comment="计算开始时间（DOUBLE）"/>
+        <var id="u64StartTime" 	vtype="UINT64"   comment="为了日志使用，后续可以去除"/>
+        <var id="u64EndTime" 	vtype="UINT64"   comment="为了日志使用，后续可以去除"/>
+        <code  statement="u64StartTime=lfStartTime*1e9" comment="计算结束时间（DOUBLE）"/>
+        <code  statement="u64EndTime=lfEndTime*1e9" comment="计算开始时间（DOUBLE）"/>
+        <log text="FrameListClick111 starttime:${u64StartTime},endTime:${u64EndTime}"  />
+        <var id="ViewlfRatio" 	    vtype="DOUBLE"   comment="给视图的时间"/>
+        <var id="ViewlfOffset" 	    vtype="DOUBLE"   comment="给视图的时间"/>
+        <code  statement="ViewlfOffset=lfStartTime-0.00002" comment="0.00002确保波形显示完全"/>
+        <code  statement="ViewlfRatio=lfEndTime-ViewlfOffset"/>
+        <!-- 得对时间为负值做判断 -->
+        <!-- 扩展时间为0.0001s 0.00002为修正时间-->
+        <code  statement="lfStartTime=lfStartTime-ZPSUnit.CAN1.m_lBeforeExtendTime"/>
+        <code  statement="lfEndTime=lfEndTime+ZPSUnit.CAN1.m_lAfterExtendTime"/>
+        <code  statement="u64StartTime=lfStartTime*1e9" comment="计算结束时间（DOUBLE）"/>
+        <code  statement="u64EndTime=lfEndTime*1e9" comment="计算开始时间（DOUBLE）"/>
+        <log text="FrameListClick9999 starttime:${u64StartTime},endTime:${u64EndTime}"  />
+        <if condition="lfStartTime&lt;0.0000">
+          <code  statement="lfStartTime=0.0"/>
+        </if>
+        <code  statement="ZPSUnit.WaveRec.WaveRecordGroupPoint.LastEndTime=lfEndTime"/>
+        <code  statement="ZPSUnit.WaveRec.WaveRecordGroupPoint.LastBeginTime=lfStartTime"/>
+        <code  statement="m_lastBeginTime=lfStartTime"/>
+        <code  statement="m_lastEndTime=lfEndTime"/>
+        <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+        <code  statement="lfOffset=lfStartTime"/>
+        <log text="FrameListClick222 lfRatio:${lfRatio},lfOffset:${lfOffset},starttime:${u64StartTime},endTime:${u64EndTime},,ratio:${ViewlfRatio},offset:${ViewlfOffset}"  />
+        <!-- 给视图的事件 -->
+        <!-- <ui   ctr="sendViewEvent"   view="CanWaveView"    event="CurFrameTime"  args="CurStart=DOUBLE(Var$lfCurStartTime),CurEnd=DOUBLE(Var$lfCurEndTime)"/> -->
+        <var id="lfTempExtTime" 	vtype="DOUBLE"   comment="报文波形起始位置不准确，暂时先往前预留15个位"/>
+        <var id="lfTempEndTime" 	vtype="DOUBLE"   comment="往后多预留15个位"/>
+        <var id="lfCurbeginFlagTime" 	vtype="DOUBLE"   comment="往前多预留13个位"/>
+        <!-- <sys command="dbg_break"/> -->
+        <code  statement="lfTempExtTime=lfCurStartTime-15.0/ZPSUnit.CAN1.m_lfDATABusBaudRate"/>
+        <code  statement="lfCurbeginFlagTime=lfCurStartTime-13.0/ZPSUnit.CAN1.m_lfDATABusBaudRate"/>
+        <code  statement="lfTempEndTime=lfCurEndTime-3.0/ZPSUnit.CAN1.m_lfDATABusBaudRate"/>
+        <setter  data="canBegin.value={lfStartTime.value}"/>
+        <setter  data="canEnd.value={lfEndTime.value}"/>
+        <setter data="curBegin.value={lfTempExtTime.value}"/>
+        <setter data="curBeginFlag.value={lfCurbeginFlagTime.value}"/>
+        <setter data="curEnd.value={lfTempEndTime.value}"/>
+        <log text="canBegin:${canBegin},canEnd:${canEnd},curBegin:${curBegin},curEnd:${curEnd} curBeginFlag=${curBeginFlag}" level="error"/>
+        <ui   ctr="sendViewEvent"   view="CanWaveView"    event="AxisUpdate"    args="Ratio=DOUBLE(Var$ViewlfRatio),Offset=DOUBLE(Var$ViewlfOffset),Viewmin=DOUBLE(Var$lfStartTime),Viewmax=DOUBLE(Var$lfEndTime)"/>
+        <!--  底层获取数据-->
+        <log text="u64Channel == ZPSUnit.CAN1.CurrentReadChannel??? ${u64Channel},CurrentReadChannel ${ZPSUnit.CAN1.CurrentReadChannel},nChannel ${ZPSUnit.CAN1.nChannel}"  />
+        <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	ctr="ClickFrame" comment="启动数据集采集"/>
+        <code statement="ZPSUnit.CAN1.CurrentReadChannel=u64Channel" comment="记录当前点击报文的通道,偏移时通道不为CAN1.nChannel，不响应"/>
+        <if condition="u64Channel!=ZPSUnit.CAN1.nChannel || WaveFlag==0">
+          <log text="u64Channel!=ZPSUnit.CAN1.nChannel"/>
+          <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	ctr="PublishEvent waveCtrlReGroup" comment="清除当前屏幕波形"/>
+          <if condition="ZPSUnit.WaveRec.ChannelInfoDecodeRx.display==1">
+            <func name="ZPSUnit.WaveRec.CANWaveDecodeRx.Start" param="lfStartTime,lfEndTime"/>
+          </if>
+          <if condition="ZPSUnit.WaveRec.ChannelInfoDecodeTx.display==1">
+            <func name="ZPSUnit.WaveRec.CANWaveDecodeTx.Start" param="lfStartTime,lfEndTime"/>
+          </if>
+          <ctr id="ZPSUnit.WaveRec.m_RecordTimeAxis" 	ctr="SendEvent PaintEnd" comment="清除当前屏幕波形"/>
+          <code statement="isRunning=0" />
+          <return/>
+        </if>
+
+
+        <!-- 判断加载历史 -->
+        <log text="Loading historyBefore!!! axisstate:${ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate}  " level="info" />
+        <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+          <log text="Loading history!!! axisstate:${ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate}  "  />
+          <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="Update"  comment="启动数据集采集"/>
+          <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="Update"  comment="启动数据集采集"/>
+
+          <log text="system2 curBegin=${curBegin}  curEnd=${curEnd} Henabled=${ZPSUnit.WaveRec.WaveChannelCANH.dataset:enabled} Lenabled=${ZPSUnit.WaveRec.WaveChannelCANL.dataset:enabled} HEC_Update=${ZPSUnit.WaveRec.WaveChannelCANH.dataset.EC_Update} LEC_Update=${ZPSUnit.WaveRec.WaveChannelCANL.dataset.EC_Update} BindStatus=${ZPSUnit.WaveRec.WaveRecordGroupPoint.BindStatus}.............................................."/>
+          <ctr id="ZPSUnit.WaveRec.m_RecordTimeAxis" 	ctr="SendEvent PaintEnd" comment="清除当前屏幕波形"/>
+          <code statement="isRunning=0" />
+		  <return/>
+        </if>
+
+        <if condition="WaveFlag==1">
+          <sync sem="SampleSem" ctr="Wait" />
+          <if condition="uLastSampleMoudle!=1">
+            <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+            <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+            <code statement="uLastSampleMoudle=1"/>
+          </if>
+
+          <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+          <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+          <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+          <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+          <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+          <sync sem="SampleSem" ctr="Post" />
+          <log text="FrameListClickEnd ${u64Channel}" level="error" />
+          <!-- <func name="ZPSUnit.WaveRec.ClickChannelChange" param="u64Channel"/>	   -->
+		  <code statement="isRunning=0" />
+          <log text="system3 curBegin=${curBegin}  curEnd=${curEnd} .............................................."/>
+        </if>
+      </coroutine>
+    </event>
+    <event event="ProjectSaveEndCallback">
+      <code statement="AreaExportFlag_Begin=0x0"/>
+      <code statement="AreaExportFlag_End=0xFFFFFFFFFFFFFF"/>
+    </event>
+  </eventSubscribe>
+  <varEventSubcribe>
+    <!-- 测试数据开始 测试动态类型创建 -->
+    <event var="g_TypeList" event="ValueChanged">
+      <ctr id="EmptyPoint" ctr="BindData NEW(g_TypeList)"/>
+    </event>
+    <event var="project_file" event="ValueChanged">
+	  <log text="project_file ValueChanged project_file=${project_file} TiileName=${TiileName}"/>
+      <var vtype="STRING" id="TiileName" config="=ZView"/>
+      <if condition="project_file!=``">
+        <code statement="TiileName=project_file+` - `+TiileName"/>
+      </if>
+	  <log text="project_file ValueChanged After project_file=${project_file} TiileName=${TiileName}"/>
+      <zui  ctr="setItem" name="UI.MainTitleBar"   property="title"  value="{TiileName}" />
+    </event>
+    <!-- 测试数据结束 -->
+    <event var="comm" event="OffLine">
+    </event>
+    <event var="comm" event="ReLink">
+    </event>
+    <replace var="ZPSUnit.DSO.m_TimeAxis"  	event="GroupUpdate"  caption="订阅更新事件">
+      <ui   ctr="sendViewEvent"   view="WaveView"    event="Update"  args=""/>
+    </replace>
+    <replace var="ZPSUnit.DSO.m_TimeAxis_OFF"  	event="GroupUpdate"  caption="订阅更新事件">
+      <ui   ctr="sendViewEvent"   view="WaveView"    event="Update"  args=""/>
+    </replace>
+    <replace var="ZPSUnit.WaveRec.m_RecordTimeAxis"  	event="GroupUpdate"  caption="订阅更新事件">
+      <sync sem="RunningSem" ctr="Wait" />
+      <code statement="isRunning=0" />
+      <sync sem="RunningSem" ctr="Post" />
+      <ui   ctr="sendViewEvent"   view="CanWaveView"    event="Update"  args=""/>
+    </replace>
+    <replace var="ZPSUnit.WaveRec.m_RecordTimeAxis"  	event="AxisSerialized"  caption="订阅更新事件">
+      <sync sem="SerializeSem" ctr="Post" />
+    </replace>
+    
+	<replace var="ZPSUnit.EDGE.EdgeUnit"  	event="GetWaveData" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset,UINT16:WaveFlag" caption="订阅更新事件">
+      <log text="EDGE ReadData begin 11 ZPSUnit.EDGE.EdgeUnit  GetWaveData  lfTime=${lfTime}、occupancyTime=${occupancyTime}、u64HIndex=${u64HIndex}、u64LIndex=${u64LIndex}、CANHOffset=${CANHOffset}、WaveFlag=${WaveFlag}"/>
+      <code  statement="ZPSUnit.EDGE.EdgeGroupPoint.BindStatus=1"/>
+      <code  statement="ZPSUnit.EYE.EyeGroupPoint.BindStatus=0"/>
+      <log text="EdgeUnit StartGetdata"  />
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" 	vtype="DOUBLE"   comment="一个位的时间" />
+      <code  statement="lfBitLen=1.0/ZPSUnit.CAN1.m_lfABTBusBaudRate" comment="用于多存储帧的空闲位" />
+      <code  statement="lfEndTime=CANHOffset*1/ZPSUnit.WaveRec.m_RecordtimeScale+(@lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfCurEndTime=lfEndTime" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9"  comment="计算开始时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfStartTime-20*lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+15*lfBitLen"/>
+
+      <if condition="lfStartTime&lt;0.0000">
+        <code  statement="lfStartTime=0.0"/>
+      </if>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.EDGE.EdgeGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.EDGE.EdgeGroupPoint.LastBeginTime=lfStartTime"/>
+      <log text="EDGE Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime},lfBitLen:${lfBitLen}"  />
+      <dataset id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <log text="EDGE ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate:${ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate}"  />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <func name="ZPSUnit.EDGE.EdgeGroupPoint.WaveMathCalc"/>
+        <return/>
+      </if>
+      <if condition="WaveFlag==1">
+        <sync sem="SampleSem" ctr="Wait" />
+        <if condition="uLastSampleMoudle!=4">
+          <code statement="uLastSampleMoudle=4"/>
+          <dataset id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+          <dataset id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+        </if>
+
+        <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+        <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <sync sem="SampleSem" ctr="Post" />
+      </if>
+      <dataset id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeH" 	 ctr="Update" 	 comment="启动数据集采集"/>
+      <dataset id="ZPSUnit.EDGE.EdgeGroupPoint.EdgeL" 	 ctr="Update" 	 comment="启动数据集采集"/>
+      <log text="Edge已经发出upadate事件"/>
+    </replace>
+
+    <replace var="ZPSUnit.ASSESS.AssessUnit"  	event="StartAssess" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset,UINT16:WaveFlag" caption="订阅更新事件">
+      <code  statement="ZPSUnit.ASSESS.AssessGroupPoint.BindStatus=1"/>
+      <code  statement="ZPSUnit.EYE.EyeGroupPoint.BindStatus=0"/>
+      <func name="ZPSUnit.ASSESS.AssessUnit.LogCurTime" param="1"/>
+      <!--<log text="AssessUnit Test 1 Start Samplate  lfTime=${lfTime}、occupancyTime=${occupancyTime}、u64HIndex=${u64HIndex}、u64LIndex=${u64LIndex}、CANHOffset=${CANHOffset}、WaveFlag=${WaveFlag}" level="error"/>-->
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" 	vtype="DOUBLE"   comment="一个位的时间" />
+      <code  statement="lfBitLen=1.0/ZPSUnit.CAN1.m_lfABTBusBaudRate" comment="用于多存储帧的空闲位" />
+      <code  statement="lfEndTime=CANHOffset*1/ZPSUnit.WaveRec.m_RecordtimeScale+(@lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfCurEndTime=lfEndTime" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9"  comment="计算开始时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfStartTime-15*lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+15*lfBitLen"/>
+
+      <if condition="lfStartTime&lt;0.0000">
+        <code  statement="lfStartTime=0.0"/>
+      </if>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.ASSESS.AssessGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.ASSESS.AssessGroupPoint.LastBeginTime=lfStartTime"/>
+      <log text="StartAssess Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime},lfBitLen:${lfBitLen}"  />
+      <dataset id="ZPSUnit.ASSESS.AssessGroupPoint.AssessH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.ASSESS.AssessGroupPoint.AssessL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <log text="StartAssess ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate:${ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate} WaveFlag=${WaveFlag}"  />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <func name="ZPSUnit.ASSESS.AssessGroupPoint.WaveMathCalc"/>
+        <return/>
+      </if>
+      <if condition="WaveFlag==1">
+        <sync sem="SampleSem" ctr="Wait" />
+        <if condition="uLastSampleMoudle!=3">
+          <code statement="uLastSampleMoudle=3"/>
+          <dataset id="ZPSUnit.ASSESS.AssessGroupPoint.AssessH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+          <dataset id="ZPSUnit.ASSESS.AssessGroupPoint.AssessL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+        </if>
+        <func name="ZPSUnit.ASSESS.AssessUnit.LogCurTime" param="2"/>
+        <!--<log text="AssessUnit Test 2 Start Samplate  FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}" level="info" />-->
+        <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <sync sem="SampleSem" ctr="Post" />
+      </if>
+      <dataset id="ZPSUnit.ASSESS.AssessGroupPoint.AssessH" 	 ctr="Update" 	 comment="启动数据集采集"/>
+      <dataset id="ZPSUnit.ASSESS.AssessGroupPoint.AssessL" 	 ctr="Update" 	 comment="启动数据集采集"/>
+    </replace>
+    <replace var="ZPSUnit.EYE.EyeUnit"  	event="StartEye" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset,UINT16:WaveFlag" caption="订阅更新事件">
+      <log   text="EyeUnit StartEye  lfTime=${lfTime.raw_value}  occupancyTime=${occupancyTime} WaveFlag=${WaveFlag}"  />
+      <code  statement="ZPSUnit.ASSESS.AssessGroupPoint.BindStatus=0"/>
+      <code  statement="ZPSUnit.EYE.EyeGroupPoint.BindStatus=1"/>
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" 	vtype="DOUBLE"   comment="一个位的时间" />
+      <code statement="lfBitLen=1.0/ZPSUnit.CAN1.m_lfABTBusBaudRate" comment="用于多存储帧的空闲位" />
+
+      <code  statement="lfEndTime=CANHOffset*1/ZPSUnit.WaveRec.m_RecordtimeScale+(@lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/>
+      <code statement="lfCurEndTime=lfEndTime" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9"  comment="计算开始时间（DOUBLE）"/>
+
+      <code  statement="lfStartTime=lfStartTime-15*lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+15*lfBitLen"/>
+
+      <if condition="lfStartTime&lt;0.0000">
+        <code  statement="lfStartTime=0.0"/>
+      </if>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.EYE.EyeGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.EYE.EyeGroupPoint.LastBeginTime=lfStartTime"/>
+      <log text="StartEye Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime}"  />
+      <dataset id="ZPSUnit.EYE.EyeGroupPoint.EyeH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.EYE.EyeGroupPoint.EyeL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <func name="ZPSUnit.EYE.EyeGroupPoint.WaveMathCalc"/>
+        <return/>
+      </if>
+      <if condition="WaveFlag==1">
+        <sync sem="SampleSem" ctr="Wait" />
+        <if condition="uLastSampleMoudle!=2">
+          <code statement="uLastSampleMoudle=2"/>
+          <dataset id="ZPSUnit.EYE.EyeGroupPoint.EyeL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+          <dataset id="ZPSUnit.EYE.EyeGroupPoint.EyeH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+        </if>
+        <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+        <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <log text="ZPSUnit.EYE.EyeGroupPoint.BindStatus:${ZPSUnit.EYE.EyeGroupPoint.BindStatus}"  level="error" />
+        <sync sem="SampleSem" ctr="Post" />
+      </if>
+      <dataset id="ZPSUnit.EYE.EyeGroupPoint.EyeL" 	 ctr="Update" 	 comment="启动数据集采集"/>
+      <dataset id="ZPSUnit.EYE.EyeGroupPoint.EyeH" 	 ctr="Update" 	 comment="启动数据集采集"/>
+    </replace>
+    <replace var="ZPSUnit.BitTime.BitTimeUnit"  	event="StartCollectWave" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset,UINT16:WaveFlag" caption="订阅更新事件">
+      <log   text="BitTimeUnit StartCollectWave  lfTime=${lfTime.raw_value}  occupancyTime=${occupancyTime} WaveFlag=${WaveFlag}"  />
+      <!-- <code  statement="ZPSUnit.ASSESS.AssessGroupPoint.BindStatus=0"/> -->
+      <code  statement="ZPSUnit.BitTime.BitTimeGroupPoint.BindStatus=1"/>
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" 	vtype="DOUBLE"   comment="一个位的时间" />
+      <code statement="lfBitLen=1.0/ZPSUnit.CAN1.m_lfABTBusBaudRate" comment="用于多存储帧的空闲位" />
+
+      <code  statement="lfEndTime=CANHOffset*1/ZPSUnit.WaveRec.m_RecordtimeScale+(@lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/>
+      <code statement="lfCurEndTime=lfEndTime" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9"  comment="计算开始时间（DOUBLE）"/>
+
+      <code  statement="lfStartTime=lfStartTime-25*lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+25*lfBitLen"/>
+
+      <if condition="lfStartTime&lt;0.0000">
+        <code  statement="lfStartTime=0.0"/>
+      </if>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.BitTime.BitTimeGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.BitTime.BitTimeGroupPoint.LastBeginTime=lfStartTime"/>
+      <log text="StartEye Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime}"  />
+      <dataset id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <ctr id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeL" ctr="BindData ZPSUnit.BitTime.WaveBitTimeL" />
+      <ctr id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeH" ctr="BindData ZPSUnit.BitTime.WaveBitTimeH" />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <ctr id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeL" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+        <ctr id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeH" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+        <func name="ZPSUnit.BitTime.BitTimeGroupPoint.WaveMathCalc"/>
+        <return/>
+      </if>
+      <if condition="WaveFlag==1">
+        <sync sem="SampleSem" ctr="Wait" />
+        <if condition="uLastSampleMoudle!=6">
+          <code statement="uLastSampleMoudle=6"/>
+          <dataset id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+          <dataset id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+        </if>
+        <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+        <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <log text="ZPSUnit.BitTime.BitTimeGroupPoint.BindStatus:${ZPSUnit..BitTime.BitTimeGroupPoint.BindStatus}"  level="error" />
+        <sync sem="SampleSem" ctr="Post" />
+      </if>
+      <dataset id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeL" 	 ctr="Update" 	 comment="启动数据集采集"/>
+      <dataset id="ZPSUnit.BitTime.BitTimeGroupPoint.BitTimeH" 	 ctr="Update" 	 comment="启动数据集采集"/>
+    </replace>
+
+
+    <replace var="ZPSUnit.BusDelay.BusDelayUnit"  	event="BusDelayCollectWave" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset,UINT16:WaveFlag" caption="订阅更新事件">
+      <log   text="BusDelayUnit StartCollectWave  lfTime=${lfTime.raw_value}  occupancyTime=${occupancyTime} WaveFlag=${WaveFlag}"  />
+      <!-- <code  statement="ZPSUnit.ASSESS.AssessGroupPoint.BindStatus=0"/> -->
+      <code  statement="ZPSUnit.BusDelay.BusDelayGroupPoint.BindStatus=1"/>
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" 	vtype="DOUBLE"   comment="一个位的时间" />
+      <code statement="lfBitLen=1.0/ZPSUnit.CAN1.m_lfABTBusBaudRate" comment="用于多存储帧的空闲位" />
+
+      <code  statement="lfEndTime=CANHOffset*1/ZPSUnit.WaveRec.m_RecordtimeScale+(@lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/>
+      <code statement="lfCurEndTime=lfEndTime" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9"  comment="计算开始时间（DOUBLE）"/>
+
+      <code  statement="lfStartTime=lfStartTime-15*lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+15*lfBitLen"/>
+
+      <if condition="lfStartTime&lt;0.0000">
+        <code  statement="lfStartTime=0.0"/>
+      </if>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.BusDelay.BusDelayGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.BusDelay.BusDelayGroupPoint.LastBeginTime=lfStartTime"/>
+      <log text="BusDelay Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime}"  />
+      <dataset id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <ctr id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayL" ctr="BindData ZPSUnit.BusDelay.WaveBusDelayL" />
+      <ctr id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayH" ctr="BindData ZPSUnit.BusDelay.WaveBusDelayH" />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <ctr id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayL" ctr="BindData ZPSUnit.WaveRec.WaveRecordL" />
+        <ctr id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayH" ctr="BindData ZPSUnit.WaveRec.WaveRecordH" />
+        <func name="ZPSUnit.BusDelay.BusDelayGroupPoint.WaveMathCalc"/>
+        <return/>
+      </if>
+      <if condition="WaveFlag==1">
+        <sync sem="SampleSem" ctr="Wait" />
+        <if condition="uLastSampleMoudle!=7">
+          <code statement="uLastSampleMoudle=7"/>
+          <dataset id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+          <dataset id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+        </if>
+        <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+        <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+        <log text="ZPSUnit.BusDelay.BusDelayGroupPoint.BindStatus:${ZPSUnit.BusDelay.BusDelayGroupPoint.BindStatus}"  level="error" />
+        <sync sem="SampleSem" ctr="Post" />
+      </if>
+      <dataset id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayL" 	 ctr="Update" 	 comment="启动数据集采集"/>
+      <dataset id="ZPSUnit.BusDelay.BusDelayGroupPoint.BusDelayH" 	 ctr="Update" 	 comment="启动数据集采集"/>
+    </replace>
+
+    <replace var="ZPSUnit.DomRec.DomRecMeasure"  	event="GetWaveData" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset" caption="订阅更新事件">
+      <log   text="DomRec Test 1  DomRecMeasure GetWaveData"  level="info"/>
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" vtype="DOUBLE" comment="结束时间（double）" />
+      <code statement="lfBitLen=1/ZPSUnit.CAN1.m_lfABTBusBaudRate*30" comment="用于多存储帧的空闲位" />
+      <code  statement="lfEndTime=@lfTime*8e-9" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9" comment="计算开始时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfStartTime-lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+lfBitLen"/>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.DomRec.DomRecGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.DomRec.DomRecGroupPoint.LastBeginTime=lfStartTime"/>
+      <dataset id="ZPSUnit.DomRec.DatasetH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.DomRec.DatasetL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <log text="DomRec Test 2  Start Samplate Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime}"  />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <func name="ZPSUnit.DomRec.DomRecGroupPoint.FinishRead"/>
+        <return/>
+      </if>
+      <sync sem="SampleSem" ctr="Wait" />
+      <if condition="uLastSampleMoudle!=5">
+        <code statement="uLastSampleMoudle=5"/>
+        <dataset id="ZPSUnit.DomRec.DatasetL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+        <dataset id="ZPSUnit.DomRec.DatasetH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+      </if>
+      <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+      <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+      <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+      <sync sem="SampleSem" ctr="Post" />
+      <dataset id="ZPSUnit.DomRec.DatasetH" 	 ctr="Update" 	 comment="启动数据集采集"/>
+      <dataset id="ZPSUnit.DomRec.DatasetL" 	 ctr="Update" 	 comment="启动数据集采集"/>
+    </replace>
+    <replace var="ZPSUnit.TransreceiverXML.TransreceiverUnit.Transreceiver"  	event="GetWaveData" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset" caption="订阅更新事件">
+      <log   text="TransreceiverUnit GetWaveData"  />
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" vtype="DOUBLE" comment="结束时间（double）" />
+      <code statement="lfBitLen=1/ZPSUnit.CAN1.m_lfABTBusBaudRate*30" comment="用于多存储帧的空闲位" />
+      <code  statement="lfEndTime=@lfTime*8e-9" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9" comment="计算开始时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfStartTime-lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+lfBitLen"/>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.TransreceiverXML.TransreceiverGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.TransreceiverXML.TransreceiverGroupPoint.LastBeginTime=lfStartTime"/>
+      <log text="StartEye Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime}"  />
+      <dataset id="ZPSUnit.TransreceiverXML.WaveTransreceiverH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.TransreceiverXML.WaveTransreceiverL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <func name="ZPSUnit.TransreceiverXML.TransreceiverGroupPoint.FinishRead"/>
+        <return/>
+      </if>
+      <sync sem="SampleSem" ctr="Wait" />
+      <if condition="uLastSampleMoudle!=7">
+        <code statement="uLastSampleMoudle=7"/>
+        <dataset id="ZPSUnit.TransreceiverXML.WaveTransreceiverL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+        <dataset id="ZPSUnit.TransreceiverXML.WaveTransreceiverH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+      </if>
+      <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+      <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+      <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+      <sync sem="SampleSem" ctr="Post" />
+      <dataset id="ZPSUnit.TransreceiverXML.WaveTransreceiverH" 	 ctr="Update" 	 comment="启动数据集采集"/>
+      <dataset id="ZPSUnit.TransreceiverXML.WaveTransreceiverL" 	 ctr="Update" 	 comment="启动数据集采集"/>
+    </replace>
+    <replace var="ZPSUnit.sampointTest"  	event="GetWaveData" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset" caption="订阅更新事件">
+      <log   text="ZPSUnit.sampointTest.m_pError GetWaveData"  />
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" vtype="DOUBLE" comment="结束时间（double）" />
+      <code statement="lfBitLen=1/ZPSUnit.CAN1.m_lfABTBusBaudRate*30" comment="用于多存储帧的空闲位" />
+      <code  statement="lfEndTime=@lfTime*8e-9" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9" comment="计算开始时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfStartTime-lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+lfBitLen"/>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.TransreceiverXML.TransreceiverGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.TransreceiverXML.TransreceiverGroupPoint.LastBeginTime=lfStartTime"/>
+      <log text="StartEye Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime}"  />
+      <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <sync sem="SampleSem" ctr="Wait" />
+      <if condition="uLastSampleMoudle!=8">
+        <code statement="uLastSampleMoudle=8"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+      </if>
+      <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+      <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+      <sync sem="SampleSem" ctr="Post" />
+      <func name="ZPSUnit.sampointTest.m_pError.FinishCollect"/>
+    </replace>
+	<replace var="ZPSUnit.sampointTestRx"  	event="GetWaveData" param="UINT64:lfTime,UINT64:occupancyTime,UINT64:u64HIndex,UINT64:u64LIndex,UINT64:u64Channel,UINT32:CANHOffset,UINT32:CANLOffset" caption="订阅更新事件">
+      <log   text="ZPSUnit.sampointTestRx.m_pError GetWaveData"  />
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfOffset" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfBitLen" vtype="DOUBLE" comment="结束时间（double）" />
+      <code statement="lfBitLen=1/ZPSUnit.CAN1.m_lfABTBusBaudRate*30" comment="用于多存储帧的空闲位" />
+      <code  statement="lfEndTime=@lfTime*8e-9" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9" comment="计算开始时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfStartTime-lfBitLen"/>
+      <code  statement="lfEndTime=lfEndTime+lfBitLen"/>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <code  statement="ZPSUnit.TransreceiverXML.TransreceiverGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.TransreceiverXML.TransreceiverGroupPoint.LastBeginTime=lfStartTime"/>
+      <log text="StartEye Time: lfStartTime:${lfStartTime},lfEndTime:${lfEndTime}"  />
+      <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <sync sem="SampleSem" ctr="Wait" />
+      <if condition="uLastSampleMoudle!=8">
+        <code statement="uLastSampleMoudle=8"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+      </if>
+      <log text="FrameListClickStartCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},CANHID:${u64HIndex},CANHID:${u64LIndex}"  />
+      <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+      <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex)" comment="启动数据集采集"/>
+      <sync sem="SampleSem" ctr="Post" />
+      <func name="ZPSUnit.sampointTestRx.m_pError.FinishCollect"/>
+    </replace>
+    <event var="FrameListClickChecker" event="Timeout">
+      <log text="TimeoutTimeoutTimeout"/>
+      <sync sem="RunningSem" ctr="Wait" />
+      <varex id="_lfTime" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_occupancyTime" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_u64HIndex" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_u64LIndex" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_u64Channel" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_CANHOffset" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_CANLOffset" vtype="UINT64" local="FrameListClickChecker" />
+      <varex id="_WaveFlag" vtype="UINT16" local="FrameListClickChecker" />
+      <var id="lfTime" vtype="UINT64" />
+      <var id="occupancyTime" vtype="UINT64" />
+      <var id="u64HIndex" vtype="UINT64" />
+      <var id="u64LIndex" vtype="UINT64" />
+      <var id="u64Channel" vtype="UINT64" />
+      <var id="CANHOffset" vtype="UINT64" />
+      <var id="CANLOffset" vtype="UINT64" />
+      <code statement="lfTime=_lfTime" />
+      <code statement="occupancyTime=_occupancyTime" />
+      <code statement="u64HIndex=_u64HIndex" />
+      <code statement="u64LIndex=_u64LIndex" />
+      <code statement="u64Channel=_u64Channel" />
+      <code statement="CANHOffset=_CANHOffset" />
+      <code statement="CANLOffset=_CANLOffset" />
+      <code statement="_WaveFlag=_WaveFlag" />
+      <if condition="isRunning==1">
+        <sync sem="RunningSem" ctr="Post" />
+        <return/>
+      </if>
+      <log text="Record Check: ${lfTime} ${occupancyTime} ${u64HIndex} ${u64LIndex} ${u64Channel}" />
+      <func name="FrameListClickChecker.Stop" />
+      <!-- 处理流程调用,情况标记,isRunning赋值 -->
+      <code statement="isRunning.ST_Count=0" />
+      <code statement="isRunning=1" />
+      <sync sem="RunningSem" ctr="Post" />
+      <!--计算起始时间和结束时间 -->
+      <log text="FrameListClick111 lfTime:${lfTime},occupancyTime:${occupancyTime},channel:${u64Channel},_canhid:${u64HIndex},_canlid:${u64LIndex}"  />
+      <var id="lfStartTime" 	vtype="DOUBLE"   comment="起始时间（double）"/>
+      <var id="lfEndTime" 	vtype="DOUBLE"   comment="结束时间（double）"/>
+      <var id="lfRatio" 	    vtype="DOUBLE"   comment="给底层获取数据的时间"/>
+      <var id="lfOffset" 	    vtype="DOUBLE"   comment="给底层获取数据的时间"/>
+      <var id="lfCurStartTime" 	vtype="DOUBLE"   comment="当前帧起始时间（double）"/>
+      <var id="lfCurEndTime" 	    vtype="DOUBLE"   comment="当前帧结束时间（double）"/>
+      <!-- <code  statement="lfEndTime=CANHOffset*1/ZPSUnit.WaveRec.m_RecordtimeScale+(lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/> -->
+      <code  statement="lfEndTime=(lfTime*8e-9)" comment="计算结束时间（DOUBLE）"/>
+      <!-- <code statement="lfCurEndTime=lfTime*8e-9" comment="计算结束时间（DOUBLE）"/> -->
+      <code statement="lfCurEndTime=lfEndTime" comment="计算结束时间（DOUBLE）"/>
+      <code statement="lfCurStartTime=lfEndTime-occupancyTime*1e-9" comment="计算开始时间（DOUBLE）"/>
+      <code  statement="lfStartTime=lfEndTime-occupancyTime*1e-9" comment="计算开始时间（DOUBLE）"/>
+      <log text="FrameListClick111 starttime:${lfStartTime},endTime:${lfEndTime}"  />
+      <var id="ViewlfRatio" 	    vtype="DOUBLE"   comment="给视图的时间"/>
+      <var id="ViewlfOffset" 	    vtype="DOUBLE"   comment="给视图的时间"/>
+      <code  statement="ViewlfOffset=lfStartTime-0.00002" comment="0.00002确保波形显示完全"/>
+      <code  statement="ViewlfRatio=lfEndTime-ViewlfOffset"/>
+      <!-- 得对时间为负值做判断 -->
+      <!-- 扩展时间为0.0001s 0.00002为修正时间-->
+      <code  statement="lfStartTime=lfStartTime-ZPSUnit.CAN1.m_lBeforeExtendTime"/>
+      <code  statement="lfEndTime=lfEndTime+ZPSUnit.CAN1.m_lAfterExtendTime"/>
+      <code  statement="u64StartTime=lfStartTime*1e9" comment="计算结束时间（DOUBLE）"/>
+      <code  statement="u64EndTime=lfEndTime*1e9" comment="计算开始时间（DOUBLE）"/>
+      <log text="FrameListClickChecker9999 starttime:${u64StartTime},endTime:${u64EndTime}"  />
+      <if condition="lfStartTime&lt;0.0000">
+        <code  statement="lfStartTime=0.0"/>
+      </if>
+      <code  statement="ZPSUnit.WaveRec.WaveRecordGroupPoint.LastEndTime=lfEndTime"/>
+      <code  statement="ZPSUnit.WaveRec.WaveRecordGroupPoint.LastBeginTime=lfStartTime"/>
+      <code  statement="m_lastEndTime=lfEndTime"/>
+      <code  statement="m_lastBeginTime=lfStartTime"/>
+      <code  statement="lfRatio=(lfEndTime-lfStartTime)"/>
+      <code  statement="lfOffset=lfStartTime"/>
+      <log text="FrameListClick222 lfRatio:${lfRatio},lfOffset:${lfOffset},starttime:${lfStartTime},endTime:${lfEndTime},channel:${u64Channel},ratio:${ViewlfRatio},offset:${ViewlfOffset}"  />
+      <!-- 给视图的事件 -->
+      <ui   ctr="sendViewEvent"   view="CanWaveView"    event="CurFrameTime"  args="CurStart=DOUBLE(Var$lfCurStartTime),CurEnd=DOUBLE(Var$lfCurEndTime)"/>
+      <var id="lfTempExtTime" 	vtype="DOUBLE"   comment="报文波形起始位置不准确，暂时先往前预留5个位"/>
+      <code  statement="lfTempExtTime=lfCurStartTime-10.0/ZPSUnit.CAN1.m_lfDATABusBaudRate"/>
+      <setter  data="canBegin.value={lfStartTime.value}"/>
+      <setter  data="canEnd.value={lfEndTime.value}"/>
+      <setter data="curBegin.value={lfTempExtTime.value}"/>
+      <setter data="curEnd.value={lfCurEndTime.value}"/>
+      <log text="canBegin:${canBegin},canEnd:${canEnd},lfCurStartTime:${lfCurStartTime},lfCurEndTime:${lfCurEndTime}" level="error"/>
+      <ui   ctr="sendViewEvent"   view="CanWaveView"    event="AxisUpdate"  args="Ratio=DOUBLE(Var$ViewlfRatio),Offset=DOUBLE(Var$ViewlfOffset),Viewmin=DOUBLE(Var$lfStartTime),Viewmax=DOUBLE(Var$lfEndTime)"/>
+      <!--  底层获取数据-->
+      <log text="FrameListClickerStart ${u64Channel},CurrentReadChannel ${CAN1.CurrentReadChannel},nChannel ${ZPSUnit.CAN1.nChannel}"  />
+      <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	ctr="ClickFrame" comment="启动数据集采集"/>
+      <code statement="ZPSUnit.CAN1.CurrentReadChannel=u64Channel" comment="记录当前点击报文的通道,偏移时通道不为CAN1.nChannel，不响应"/>
+      <code statement="ZPSUnit.WaveRec.m_RecordTimeAxis.hasdata=0" />
+      <if condition="u64Channel!=ZPSUnit.CAN1.nChannel || WaveFlag==0">
+        <log text="FrameListClickCheckerTimeoutCallback u64Channel != 1 ,channel:${u64Channel}" level="error"/>
+        <!-- <code statement="isRunning=0" /> -->
+        <ctr id="ZPSUnit.WaveRec.WaveRecordGroupPoint" 	ctr="PublishEvent waveCtrlReGroup" comment="清除当前屏幕波形"/>
+
+        <ctr id="ZPSUnit.WaveRec.m_RecordTimeAxis" 	ctr="SendEvent PaintEnd" comment="清除当前屏幕波形"/>
+
+        <!-- <func name="ZPSUnit.WaveRec.ClickChannelChange" param="u64Channel"/> -->
+        <return/>
+      </if>
+      <!-- 判断加载历史 -->
+
+      <log text="FrameListClickChecker Loading historyBefore!!! axisstate:${ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate}  " level="info" />
+      <if condition="ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1">
+        <log text="FrameListClickChecker Loading history!!! axisstate:${ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate}  "  />
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="Update"  comment="启动数据集采集"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="Update"  comment="启动数据集采集"/>
+        <!-- <func name="ZPSUnit.WaveRec.ClickChannelChange" param="u64Channel"/> -->
+        <return/>
+      </if>
+      <sync sem="SampleSem" ctr="Wait" />
+      <if condition="uLastSampleMoudle!=1">
+        <code statement="uLastSampleMoudle=1"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordLCH" comment="切换通道对应的数据集"/>
+        <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="SetChannelDataset" value="ZPSUnit.CAN1.WaveRecordHCH" comment="切换通道对应的数据集"/>
+      </if>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordH" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <dataset id="ZPSUnit.WaveRec.WaveRecordL" ctr="ResetSizeAxisRange" value="min=0:max=0" comment="重新设置数据的起始终止时间,如果带参数，则设置参数，否则设置自身最大最小值"/>
+      <log text="FrameListClickStarterCollectData lfTime:${lfTime},occupancyTime:${occupancyTime},channel:${u64Channel},_canhid:${u64HIndex},_canlid:${u64LIndex}"  />
+      <ctr id="ZPSUnit.CAN1.WaveRecordHCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex),WaveFlag=UINT16(Var$WaveFlag)" comment="启动数据集采集"/>
+      <ctr id="ZPSUnit.CAN1.WaveRecordLCH" ctr="FrameListClick" args="lfRatio=DOUBLE(Var$lfRatio),lfOffset=DOUBLE(Var$lfOffset),u64HIndex=UINT64(Var$u64HIndex),u64LIndex=UINT64(Var$u64LIndex),WaveFlag=UINT16(Var$WaveFlag)" comment="启动数据集采集"/>
+      <sync sem="SampleSem" ctr="Post" />
+      <!-- <func name="ZPSUnit.WaveRec.ClickChannelChange" param="u64Channel"/> -->
+      <log text="FrameListClickChecker FrameListClickEnd ${u64Channel}" level="error" />
+    </event>
+    <event var="ClassifyParseTimer" event="Timeout">
+      <log text="ClassifyParseTimer timerout Start" />
+      <ctr  id="ZPSUnit.CAN1.CANClassifyItem" ctr="PublishEvent InitData" args=""/>
+      <ctr  id="ZPSUnit.CAN2.CANClassifyItem" ctr="PublishEvent InitData" args=""/>
+      <ctr  id="ZPSUnit.CAN3.CANClassifyItem" ctr="PublishEvent InitData" args=""/>
+	  <!-- 缩小窗口会导致冻结窗口不刷新 -->
+      <!-- <if condition="ZPSUnit.RunningState==0||UI.ReportWindow.ReportListWindow.includesplitter.splitter_row.ReportListStackWindow.ReportListStackLayout.classify_list_win.visible==0"> -->
+	  <if condition="ZPSUnit.RunningState==0">
+        <log text="timer stop on timeout : ${ZPSUnit.RunningState} window visible : ${UI.ReportWindow.ReportListWindow.includesplitter.splitter_row.ReportListStackWindow.ReportListStackLayout.classify_list_win.visible}" level="info"/>
+        <return/>
+      </if>
+      <func name="ClassifyParseTimer.Start" param="100,0" />
+	  <log text="ClassifyParseTimer timerout End" />
+    </event>
+    <event var="StatusStatisticParseTimer" event="Timeout">
+      <!--<log text="StatusStatisticParseTimer timerout" />-->
+      <if condition="UI.scan_list_win.visible==0">
+        <log text="timer stop on timeout : ${ZPSUnit.RunningState} window visible : ${UI.scan_list_win.visible}"/>
+        <return/>
+      </if>
+      <!--<zui  ctr="setItem" name="UI.bus_profile_win.bus_profile_widget.bus_profile_row.bus_profile_list"   property="timer_start"  value="false" />
+      <zui  ctr="setItem" name="UI.node_profile_win.node_profile_widget.node_profile_row.node_profile_list"   property="timer_start"  value="false" />-->
+      <!-- <sys command="dbg_break"/> -->
+      <func name="project.ScanUnit.ScanStatusUnit.Reflesh" param=""/>
+      <!--<zui  ctr="setItem" name="UI.bus_profile_win.bus_profile_widget.bus_profile_row.bus_profile_list"   property="timer_start"  value="true" />
+      <zui  ctr="setItem" name="UI.node_profile_win.node_profile_widget.node_profile_row.node_profile_list"   property="timer_start"  value="true" />-->
+      <func name="StatusStatisticParseTimer.Start" param="1000,0" />
+    </event>
+    <event var="SearchUnitTimer" event="Timeout">
+      <if condition="ZPSUnit.RunningState==0">
+        <ctr  id="UI.ReportWindow.report_list_win.report_list_row.seach_reader.search" ctr="PublishEvent SingleStart" args=""/>
+        <func name="SearchUnitTimer.Stop" />
+        <return/>
+      </if>
+      <ctr  id="UI.ReportWindow.report_list_win.report_list_row.seach_reader.search" ctr="PublishEvent SingleStart" args=""/>
+      <func name="SearchUnitTimer.Start" param="10,0" />
+    </event>
+    <event var="ZPSUnit.WaveRec.WaveRecordGroupPoint" event="SwitchChannel" >
+      <!-- <sys command="dbg_break"/> -->
+      <unit id="ZPSUnit.DSO" ctr="SendEvent ISCLEARDATA" comment="设备搜索测试"/>
+    </event>
+    <replace var="ZPSUnit.WaveRec.m_RecordTimeAxis" event="PaintEnd">
+      <sync sem="RunningSem" ctr="Wait" />
+      <code statement="isRunning=0" />
+      <sync sem="RunningSem" ctr="Post" />
+      <ctr id="ZPSUnit.WaveRec.NeedJumpToTime" ctr="PublishEvent PropertyChanged"/>
+    </replace>
+    <event var="project.LabelManage.m_labelListOption" event="ValueChanged"  comment="加载工程时更新二级菜单的Option">
+      <log text="加载工程时更新二级菜单的Option"/>
+      <setter data="project.LabelList.option={project.LabelManage.m_labelListOption.value}" />
+    </event>
+    <!--<replace var="ui.FrameListView" event="ModelChanged">
+      <view ctr="bindData"  view="ReportWindowBar.scrollModel_btn"    name="scrollModel_btn" args="ui.FrameListView.scrollModel"/>
+      <view ctr="bindData"  view="ReportWindowBar.data_format_btn"    name="data_format_btn" args="ui.FrameListView.m_DATAFormat"/>
+      <view ctr="bindData"  view="ReportWindowBar.dlc_format_btn"    name="dlc_format_btn" args="ui.FrameListView.m_DLCFormat"/>
+      <view ctr="bindData"  view="ReportWindowBar.id_format_btn"    name="id_format_btn" args="ui.FrameListView.m_IDFormat"/>
+      <view ctr="bindData"  view="ReportWindowBar.add_filter_btn"    name="add_filter" args="ui.FrameListView.addFilter"/>
+      <view ctr="bindData"  view="ReportWindowBar.del_filter_btn"    name="del_filter" args="ui.FrameListView.delFilter"/>
+      <view ctr="bindData"  view="ReportWindowBar.enable_filter_btn"    name="enable_filter" args="ui.FrameListView.enableFilter"/>
+    </replace>-->
+    <event var="SystemStatistics.free_cache" event="LowFreeSpace" comment="已达到最低磁盘空间限制" >
+      <!-- <sys command="dbg_break" /> -->
+      <log text="已达到最低磁盘空间限制。。。。。。。。。。。。。。。" level="error"/>
+      <func name="ZPSUnit.DeviceStop" commen="停止采集"/>
+      <zui ctr="setItem"  name="UI.msg_box_disk"   property="button_type"  value="ok"/>
+      <zui ctr="setItem"  name="UI.msg_box_disk"   property="text"   value="磁盘空间不足，已自动关闭采集功能；请清理磁盘。"/>
+      <zui ctr="setItem"  name="UI.msg_box_disk"   property="type" value="warning"/>
+      <!-- <show name="UI.msg_box" args="exec"/> -->
+      <show name="UI.msg_box_disk" args="exec;modal=app" />
+    </event>
+    <event var="SystemStatistics.free_cache" event="WarnFreeSpace" comment="达到了警告的磁盘容量限制" >
+      <!-- <sys command="dbg_break" /> -->
+      <log text="已达到了警告的磁盘容量限制。。。。。。。。。。。。。。。" level="error"/>
+      <zui ctr="setItem"  name="UI.msg_box_disk"   property="button_type"  value="ok"/>
+      <zui ctr="setItem"  name="UI.msg_box_disk"   property="text"   value="磁盘空间低，请注意保持足够的磁盘空间"/>
+      <zui ctr="setItem"  name="UI.msg_box_disk"   property="type" value="warning"/>
+      <!-- <show name="UI.msg_box" args="exec"/> -->
+      <show name="UI.msg_box_disk" args="exec=false" />
+
+    </event>
+    <event var="ZPSUnit.EYE.EyeUnit" event="FinishAckExport"  comment="">
+      <zui ctr="setItem"  name="UI.msg_box"   property="button_type"  value="ok"/>
+      <zui ctr="setItem"  name="UI.msg_box"   property="text"   value="导出完成"/>
+      <zui ctr="setItem"  name="UI.msg_box"   property="type" value="warning"/>
+      <show name="UI.msg_box" args="modal=app"/>
+    </event>
+    <event var="ZPSUnit.EYE.EyeUnit" event="AckNoData"  comment="">
+      <zui ctr="setItem"  name="UI.msg_box"   property="button_type"  value="ok"/>
+      <zui ctr="setItem"  name="UI.msg_box"   property="text"   value="没有数据进行导出"/>
+      <zui ctr="setItem"  name="UI.msg_box"   property="type" value="warning"/>
+      <show name="UI.msg_box" args="modal=app"/>
+    </event>
+
+
+  </varEventSubcribe>
+  <funcs>
+
+    <Func name="CheckCache" comment="检查磁盘空间">
+      <code statement="IsCacheLow=0"/>
+      <if condition="SystemStatistics.free_cache&lt;=cacheLowLimit">
+        <code statement="IsCacheLow=1"/>
+        <zui ctr="setItem"  name="UI.msg_box_disk"   property="button_type"  value="ok"/>
+        <zui ctr="setItem"  name="UI.msg_box_disk"   property="text"   value="磁盘空间不足，请清理磁盘!"/>
+        <zui ctr="setItem"  name="UI.msg_box_disk"   property="type" value="warning"/>
+        <!-- <show name="UI.msg_box" args="exec"/> -->
+        <show name="UI.msg_box_disk" args="exec=false" />
+      </if>
+    </Func>
+
+    <Func name="Test1">
+      <log text="Test Timer Schedule 1 ${Dummy}" />
+    </Func>
+    <Func name="Test2">
+      <log  text="Test Timer Schedule 2"/>
+    </Func>
+    <Func name="ClassifyRefreshModel">
+      <ctr id="ClassifyGroup" ctr="PublishEvent refreshModel" />
+    </Func>
+    <Func name="ClassifyUpdateDataValue">
+      <ctr id="ClassifyGroup" ctr="PublishEvent UpdateDataValue" />
+    </Func>
+    <Func name="CanSaveProject" return="INT8" comment="打开工程">
+      <if condition="ZPSUnit.DSO.m_TimeAxis_OFF.axisstate==1&amp;&amp;ZPSUnit.WaveRec.m_RecordTimeAxis.axisstate==1&amp;&amp;ZPSUnit.LAIO.LAIO1.m_TimeAIAxis1.axisstate==1">
+        <log text="CanSaveProject False"  />
+        <return value="0"/>
+      </if>
+      <log text="CanSaveProject True"  />
+      <return value="1"/>
+    </Func>
+    <Func name="CheckNotice">
+      <!-- <sys command="dbg_break" /> -->
+      <if condition="Status.IsCachePathReseted">
+        <zui ctr="setItem" name="UI.msg_box" property="button_type" value="ok" />
+        <zui ctr="setItem" name="UI.msg_box" property="text" value="&lt;font color=&quot;red&quot;&gt;检测到配置的缓存路径不可用（无法写入），已经恢复默认配置。&lt;/font&gt;&#x0a;如需要更改，请前往系统设置进行更改。" />
+        <show name="UI.msg_box" args="modal=app" />
+      </if>
+    </Func>
+    <Func name="__destroy__">
+      <log text="Destroying Project Object!!" level="info"/>
+      <ctr id="dso_wave_ptr" ctr="BindData Null" />
+      <!--<zui args="dso_wave_ptr.TimeAxis" ctr="bindData" value="key_axis" name="UI.oscill_win.oscill_wave_widget.col1.row1.wave_ctrl" />-->
+      <ctr id="aidi_wave_ptr" ctr="BindData Null" />
+      <ctr id="aidi_key_axis" ctr="BindData Null" />
+    </Func>
+    <Func name="__init__" >
+      <!-- 磁盘监视配置 -->
+      <!-- <func name="SystemStatistics.SetLimitInfo" param="0,104857600,2147483648" comment="CACHE文件夹，100M，2G"/> -->
+      <code statement="SystemStatistics.SetLimitInfo(0,cacheLowLimit,cacheWarnLimit)" comment="CACHE文件夹，100M，2G"/>
+
+      <var id="ui_xml" vtype="STRING" config="=#@APP_PATH#/zui/zui.xml"/>
+      <func name="UI:InitMainWindow" param="ui_xml" />
+      <event_ctr ctr="link" src="UI.Initialized" dst="ZPSUnit.comm.StartCheck" type="async"/>
+      <func name="UI:ShowMainWindow" />
+      <!-- <ctr id="ZDSUnit.zds_data_ptr" ctr="BindData ZPSUnit.DSO.CHS"/> -->
+      <ctr id="dso_wave_ptr" ctr="BindData ZPSUnit.DSO.CHS"/>
+      <zui args="dso_wave_ptr.TimeAxis" ctr="bindData" value="key_axis" name="UI.oscill_win.oscill_wave_widget.col1.row1.wave_ctrl" />
+      <event_ctr ctr="link" src="ZPSUnit.CAN1.CANClassifyItem.refreshModel" dst="this.ClassifyRefreshModel" args="data=&amp;args"/>
+      <event_ctr ctr="link" src="ZPSUnit.CAN2.CANClassifyItem.refreshModel" dst="this.ClassifyRefreshModel" args="data=&amp;args"/>
+      <event_ctr ctr="link" src="ZPSUnit.CAN3.CANClassifyItem.refreshModel" dst="this.ClassifyRefreshModel" args="data=&amp;args"/>
+      <event_ctr ctr="link" src="ZPSUnit.CAN1.CANClassifyItem.UpdateDataValue" dst="this.ClassifyUpdateDataValue" args="data=&amp;args"/>
+      <event_ctr ctr="link" src="ZPSUnit.CAN2.CANClassifyItem.UpdateDataValue" dst="this.ClassifyUpdateDataValue" args="data=&amp;args"/>
+      <event_ctr ctr="link" src="ZPSUnit.CAN3.CANClassifyItem.UpdateDataValue" dst="this.ClassifyUpdateDataValue" args="data=&amp;args"/>
+      <!-- <event_ctr ctr="link" src="UI.READ_DEVICE_PARAM" dst="ZPSUnit.READ_DEVICE_PARAM" /> -->
+      <!-- <event_ctr ctr="link" src="UI.PAUSE" dst="ZPSUnit.PAUSE" /> -->
+      <event_ctr ctr="link" src="UI.START" dst="this.START" type="async(MainFlow)" />
+      <event_ctr ctr="link" src="UI.DECODE" dst="this.Assess1" type="async" />
+      <event_ctr ctr="link" src="UI.SysBtnSTOP" dst="this.SysBtnSTOP" type="async(MainFlow)" />
+      <event_ctr ctr="link" src="UI.CANSTOP" dst="ZPSUnit.CANStop" type="async(MainFlow)" />
+      <event_ctr ctr="link" src="UI.EXIT" dst="this.Exit" />
+      <event_ctr ctr="link" src="UI.CLEAR" dst="ZPSUnit.Clear" type="async(__GUI__)" />
+      <event_ctr ctr="link" src="UI.START_EYE" dst="this.EyeCreat" type="async" />
+      <!-- <event_ctr ctr="link" src="UI.MEASURE" dst="this.WaveCheck" type="async" /> -->
+      <event_ctr ctr="link" src="UI.ProgressDlgCancel" dst="msgExport.paruseDataCancel" type="async" />
+      <event_ctr ctr="link" src="UI.EXPORTMESSAGE" dst="msgExport.getPathCb" type="async" />
+      <event_ctr ctr="link" src="UI.EXPORTWAVE" dst="DataExportUnit.WaveContinueInterval" type="async" />
+      <event_ctr ctr="link" src="UI.CHECK_CUR_VERSION" dst="upgrade.CheckCurVersion" type="sync" />
+      <event_ctr ctr="link" src="UI.CHECK_REMOTE_VERSION" dst="upgrade.CheckRemoteVersion" type="async" />
+      <event_ctr ctr="link" src="UI.STARTSOFTUPGRADE" dst="upgrade.StartSoftUpgrade" type="async" />
+      <event_ctr ctr="link" src="UI.STARTFIRMUPGRADE" dst="upgrade.StartFirmUpgrade" type="async" />
+      <event_ctr ctr="link" src="UI.STOPSOFTUPGRADE" dst="upgrade.StopSoftUpgrade" type="async" />
+      <event_ctr ctr="link" src="UI.STOPFIRMUPGRADE" dst="upgrade.StopFirmUpgrade" type="async" />
+      <event_ctr ctr="link" src="UI.NEW_PROJECT"  dst="this.NewProject" type="async" />
+      <event_ctr ctr="link" src="UI.OPEN_PROJECT" dst="this.OpenProject" type="async" />
+      <event_ctr ctr="link" src="UI.SAVE_PROJECT" dst="this.SaveProject" type="async" />
+      <!-- 示波器按键事件 -->
+      <event_ctr ctr="link" src="UI.DSO_START" dst="ZPSUnit.DSO.START" type="async" />
+      <event_ctr ctr="link" src="UI.DSO_STOP" dst="ZPSUnit.DSO.STOP" type="async" />
+      <event_ctr ctr="link" src="UI.DSO_SIGNAL" dst="ZPSUnit.DSO.Single" type="post" />
+      <event_ctr ctr="link" src="UI.DSO_AUTOSETUP" dst="ZPSUnit.DSO.AutoSetup" type="post" />
+
+      <event_ctr ctr="link" src="UI.DSO_START"     dst="this.ShowDSO" type="sync" />
+      <event_ctr ctr="link" src="UI.DSO_SIGNAL"    dst="this.ShowDSO" type="sync" />
+      <event_ctr ctr="link" src="UI.DSO_AUTOSETUP" dst="this.ShowDSO" type="sync" />
+      <event_ctr ctr="link" src="UI.DSO_DEFAULT"   dst="this.ShowDSO" type="sync" />
+
+      <event_ctr ctr="link" src="UI.DSO_DEFAULT" dst="ZPSUnit.DSO.Default" type="post" />
+      <!-- <event_ctr ctr="link" src="ZPSUnit.DSO.DSOSTART" dst="this.ShowDSO" type="sync" /> -->
+      <event_ctr ctr="link" src="UI.AI_START" dst="ZPSUnit.LAIO.LAIO1.AIS.AIStart" type="async(__GUI__)" />
+      <event_ctr ctr="link" src="UI.AI_STOP" dst="ZPSUnit.LAIO.LAIO1.AIS.AIStop" type="async(__GUI__)" />
+      <!-- 测试事件 -->
+      <event_ctr ctr="link" src="UI.MEASURE" dst="this.FrameList" type="async" />
+      <!-- 示波器按键事件 -->
+      <event_ctr ctr="link" src="UI.WAVE_SYNC" dst="this.FrameListClick" trans="lfTime=lfTime,occupancyTime=occupancyTime,u64HIndex=u64HIndex,u64LIndex=u64LIndex,u64Channel=u64Channel,CANHOffset=CANHOffset,CANLOffset=CANLOffset,frameIndex=frameIndex,WaveFlag=WaveFlag" type="async"/>
+      <event_ctr ctr="link" src="UI.WAVEHEAD_SYNC" dst="this.WaveHeadListClick" trans="WaveID=WaveID,WaveStartTime=WaveStartTime,DataLengthInPage=DataLengthInPage" type="async"/>
+      <event_ctr ctr="link" src="this.EndLoadProject" dst="ZPSUnit.PropertyReflesh" type="async" />
+      <event_ctr ctr="link" src="this.EndSaveProject" dst="this.ProjectSaveEndCallback" type="sync" />
+      <event_ctr ctr="link" src="this.SwitchDirectoryFinished" dst="this.UpdateDataSets" type="sync" />
+		<event_ctr ctr="link" src="UI.CLEAREND"   dst="this.ClearEnd" type="sync" />
+
+      <!--<view ctr="bindData"  view="FrameListView"   			args="DataMng.{CanfdDataSet}"/>
+      <view ctr="bindData"  view="FrameListView"   	name="CanIndex"		args="CanIndex"/>
+      <view ctr="bindData"  view="FrameListView"   	name="ChannelNumber"		args="ChannelNumber"/>
+      <view ctr="bindData"  view="FrameListViewSettings"   name="v_list" args="ui.FrameListView.property"/>
+      <view ctr="bindData"  view="FrameListViewSettings" name="showColumnCtr"    args="ui.FrameListView.TestSetting"/>
+      <view ctr="bindData"  view="DeviceManagerViewTest" name="DeviceManager"    args="project.publicgroup"/>
+	    <view ctr="bindData"  view="DeviceManagerSetup" name="DeviceManagerSetup"    args="ZPSUnit.DeviceSetup"/>
+	    <view ctr="bindData"  view="ClassifyView" name="switchView"    args="ui.FrameListView.switchView"/>
+	    <view ctr="bindData"  view="ClassifyView" name="runningStates"    args="ZPSUnit.RunningState"/>
+	    <view ctr="bindData"  view="ClassifyView" name="Classify"    args="ClassifyGroup"/>
+	    <view ctr="bindData"  view="ClassifyView" name="Classify"    args="ClassifyGroup"/> -->
+      <!--<view ctr="bindData"  view="CanWaveView"    args="ZPSUnit.WaveRec.WaveRecordGroupPoint" />
+      <view ctr="bindData" view="WaveView" args="ZPSUnit.DSO.ACQuire" name="axisMsg" />
+      <view ctr="bindData"  view="WaveView" args="ZPSUnit.DSO.CHS" />
+      <view ctr="bindData"  view="OscillCaseProertyView" args="ui.WaveView.ChannelProperties" />
+      <view ctr="bindData"  view="RCVIEW" args="ZPSUnit.CAN1.RCAdjust" />
+      <view ctr="bindData"  view="ComAxisProertyView" name="ACQuire" args="ZPSUnit.DSO" />
+      <view ctr="bindData"  view="ComAxisProertyView" name="Axis" args="ui.WaveView.Axis" />
+      <view ctr="bindData"  view="TriggerCaseView" name="TriggerCaseProperty" args="ZPSUnit.DSO" />
+      <view ctr="bindData"  view="CrusorCaseView" name="X1" args="ui.WaveView.X1" />
+      <view ctr="bindData"  view="CrusorCaseView" name="X2" args="ui.WaveView.X2" />
+      <view ctr="bindData"  view="CrusorCaseView" name="DeltaX" args="ui.WaveView.DeltaX" />
+      <view ctr="bindData"  view="CrusorCaseView" name="ReDeltaX" args="ui.WaveView.ReDeltaX" />
+      <view ctr="bindData"  view="CrusorCaseView" name="verCursorVisible" args="ui.WaveView.vercursorMenu" />
+      <view ctr="bindData"  view="measure_list"  args="WaveMeasure.result"/>
+      <view ctr="bindData"  view="measure_setup_type"    args="WaveMeasure.typelist"/>
+      <view ctr="bindData"  view="measure_setup_item"    args="WaveMeasure.setupdata.SelectList"/>-->
+
+      <!--<view ctr="bindData"  view="CheckUpgrade"    args="upgrade"/>-->
+      <!--<view ctr="bindData"  view="SysStateView.connect_state"  name="aaa"  args="ZPSUnit.comm.LINState"/>
+      <view ctr="bindData"  view="SysStateView.connect_type"    name="bbb" args="ZPSUnit.comm.USBState"/>
+      <view ctr="bindData"  view="SysStateView.firm_ip"  name="firmIp"  args="ZPSUnit.property.deviceSetting.IPAddr"/>-->
+      <!--<view ctr="bindData"  view="SystemSetView"    name="ccc" args="SystemProperty"/>-->
+      <!--<view ctr="bindData"  view="OscillFuncView.run_stop_btn"  name="bbb" args="ZPSUnit.DSO.DSOState"/>
+      <view ctr="bindData"  view="OscillFuncView.single_btn"    name="bbb" args="ZPSUnit.DSO.DSOState"/>
+      <view ctr="bindData"  view="TitleBarView.soft_version"    name="softversion" args="upgrade.software_upgrade_info.localVersion"/>
+      <view ctr="bindData"  view="MainMenuView.system_start_btn"    name="system_start_btn" args="ZPSUnit.RunningState"/>-->
+
+      <!--<view ctr="bindData"  view="SelectChannelView"    name="ddd" args="DataMng.{CanfdDataSet}"/>-->
+      <!--<view ctr="bindData"  view="ReportWindowBar.scrollModel_btn"    name="scrollModel_btn" args="ui.FrameListView.scrollModel"/>
+      <view ctr="bindData"  view="ReportWindowBar.data_format_btn"    name="data_format_btn" args="ui.FrameListView.m_DATAFormat"/>
+      <view ctr="bindData"  view="ReportWindowBar.dlc_format_btn"    name="dlc_format_btn" args="ui.FrameListView.m_DLCFormat"/>
+      <view ctr="bindData"  view="ReportWindowBar.id_format_btn"    name="id_format_btn" args="ui.FrameListView.m_IDFormat"/>
+      <view ctr="bindData"  view="ReportWindowBar.add_filter_btn"    name="add_filter" args="ui.FrameListView.addFilter"/>
+      <view ctr="bindData"  view="ReportWindowBar.del_filter_btn"    name="del_filter" args="ui.FrameListView.delFilter"/>
+      <view ctr="bindData"  view="ReportWindowBar.enable_filter_btn"    name="enable_filter" args="ui.FrameListView.enableFilter"/>
+      <view ctr="bindData"  view="ReportWindowBar.edit_filter_btn"    name="edit_filter" args="ui.FrameListView.editFilter"/>
+      <view ctr="bindData"  view="ReportWindowBar.switch_view_btn"    name="switch_view_btn" args="ui.FrameListView.switchView"/>
+      <view ctr="bindData"  view="SignalBarCharView"    name="" args="ZPSUnit.ASSESS.AssessUnit.result"/>
+      <view ctr="bindData"  view="SignalBarCharView"    name="project" args="project"/>
+      <view ctr="bindData"  view="SignalSubView"    name="AmpWeight;DisturbWeight;SlopeWeight;IDFilter;ACKFilter" args="ZPSUnit.ASSESS.AssessUnit"/>-->
+      <!--<view ctr="bindData"  view="EyeView"    name="" args="ZPSUnit.EYE.EyeUnit"/>-->
+      <!--<view ctr="bindData"  view="EyeViewSetting"    name="EyeViewSetting" args="ZPSUnit.EYE.EyeUnit.CanFilter"/>-->
+      <!--<view ctr="bindData"  view="AIOOscillFuncView.run_stop_btn"  name="aistart" args="ZPSUnit.LAIO.LAIO1.AIOState"/>
+	  <view ctr="bindData"  view="AIOBar.AI_menu_button"    name="AI_menu_button" args="ZPSUnit.LAIO.LAIO1.AIOState"/>
+      <view ctr="bindData" view="AIOWaveView" args="ZPSUnit.LAIO.LAIO1.ACQuire" name="axisMsg" />
+	  <func name="ZPSUnit.LAIO.LAIO1.AIS.Init"/>
+	  <ctr 	id="dso_wave_ptr" ctr="BindData ZPSUnit.DSO.CHS"/>
+	  <ctr id="aidi_wave_ptr" ctr="ZPSUnit.LAIO.LAIO1.AIS"/>
+	  <view ctr="bindData"  view="AIOWaveView"   name="AIDataSet"				args="ZPSUnit.LAIO.LAIO1.AIS"/>
+       <view ctr="bindData"  view="AIOOscillCaseProertyView" args="ui.AIOWaveView.ChannelProperties" />
+	    <view ctr="bindData"  view="AIOOscillFuncView.auto_scroll_btn"    name="auto_scroll_btn" args="ZPSUnit.LAIO.LAIO1.ScrollMode"/>
+      <view ctr="bindData"  view="AIOComAxisProertyView" name="ACQuire" args="ZPSUnit.LAIO.LAIO1" />
+      <view ctr="bindData"  view="AIOComAxisProertyView" name="Axis" args="ui.AIOWaveView.Axis" />
+	  <view ctr="bindData"  view="AIOCrusorCaseView" name="X1" 					args="ui.AIOWaveView.X1" />
+      <view ctr="bindData"  view="AIOCrusorCaseView" name="X2" 					args="ui.AIOWaveView.X2" />
+      <view ctr="bindData"  view="AIOCrusorCaseView" name="DeltaX" 				args="ui.AIOWaveView.DeltaX" />
+      <view ctr="bindData"  view="AIOCrusorCaseView" name="ReDeltaX" 			args="ui.AIOWaveView.ReDeltaX" />
+      <view ctr="bindData"  view="AIOCrusorCaseView" name="verCursorVisible" 	args="ui.AIOWaveView.vercursorMenu" />
+      <view ctr="bindData"  view="AIOTriggerCaseView" name="TriggerCaseProperty" args="ZPSUnit.DSO" />-->
+      <!-- <view ctr="bindData"  view="AIChannelView" name="AIChannel" args="ZPSUnit.LAIO.LAIO1" />-->
+      <!-- <view ctr="bindData"  view="AIChannelView" name="AIChannel" args="ZPSUnit.AIOEmpty" /> -->
+      <!--<view ctr="bindData"  view="AIChannelView" name="AIChannel" args="ZPSUnit.DIGLOGIC" />-->
+
+      <!--<view ctr="bindData"  view="dataSetView" name="xxx" args="ZPSUnit.ReceiveDisturb.FrameStructData.DATA" />-->
+      <code statement="isRunning=0"/>
+      <sync sem="RunningSem" ctr="Post" />
+      <sync sem="SampleSem" ctr="Post" />
+      <func name="ZPSUnit.Init"/>
+      <func name="IniDataSetEstSize"/>
+      <ctr id="ZPSUnit.OutputMng" ctr="Connect Version(upgrade.software_upgrade_info.localVersion)" />
+      <func name="this.SendNotifier" />
+      <func name="this.CheckNotice" />
+      <func name="UI:PollEvents"/>
+      <func name="UI:RequestExit" />
+      <!-- <view ctr="bindData"  view="DeviceSettingView" name="runningStatus" args="ZPSUnit.comm.CurState" /> -->
+      <!--<view ctr="bindData"  view="DeviceSettingView" name="runningStatus" args="ZPSUnit.comm.LINState" />
+	  <view ctr="bindData"  view="DeviceSettingView" name="runningStatus" args="ZPSUnit.comm.USBState" />-->
+      <!--<func name="ClassifyParseTimer.Start" param="100,0" />-->
+
+
+    </Func>
+  </funcs>
+</doc>

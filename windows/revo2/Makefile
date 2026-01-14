@@ -1,45 +1,80 @@
-# SHELL := /usr/bin/bash
+# =========================
+# Environment (MSYS2 / MinGW)
+# =========================
+SHELL := /usr/bin/bash
+export PATH := /mingw64/bin:/usr/bin:$(PATH)
 
-# Variable definitions
+# =========================
+# Project paths
+# =========================
 SCRIPT_DIR := $(CURDIR)
-$(info Current dir: $(SCRIPT_DIR))
-DIST_DIR := $(abspath $(SCRIPT_DIR)/../dist)
+DIST_DIR := $(abspath $(SCRIPT_DIR)/../../dist)
 
-# Convert to paths recognizable by MSYS2/MinGW
-RAW_LIB_DIR := $(DIST_DIR)/shared/win
+RAW_LIB_DIR1   := $(DIST_DIR)/shared/win
+RAW_LIB_DIR2   := $(DIST_DIR)/shared/win/kerneldlls
 RAW_HEADER_DIR := $(DIST_DIR)/include
-LIB_DIR := $(shell cygpath -u "$(RAW_LIB_DIR)")
-HEADER_DIR := $(shell cygpath -u "$(RAW_HEADER_DIR)")
+
+# =========================
+# Path conversion (cygpath)
+# =========================
+ifeq ($(shell command -v cygpath 2>/dev/null),)
+    LIB_DIR1   := $(RAW_LIB_DIR1)
+    LIB_DIR2   := $(RAW_LIB_DIR2)
+    HEADER_DIR := $(RAW_HEADER_DIR)
+else
+    LIB_DIR1   := $(shell cygpath -u "$(RAW_LIB_DIR1)")
+    LIB_DIR2   := $(shell cygpath -u "$(RAW_LIB_DIR2)")
+    HEADER_DIR := $(shell cygpath -u "$(RAW_HEADER_DIR)")
+endif
 
 INCLUDE := -I$(HEADER_DIR)
-COMMON_LIBS := -L$(LIB_DIR) -lbc_stark_sdk -lzlgcan # ZQWL CAN/CANFD dll
 
-CC := gcc
-CXX := g++
-CFLAGS := -g -Wall
+# =========================
+# Build target selection
+# =========================
+# Default target
+TARGET ?= revo2_canfd
+
+# Target-specific config
+ifeq ($(TARGET),revo2_canfd)
+    CPP_SOURCE := revo2_canfd.cpp
+    CAN_LIB    := -lzlgcan
+else ifeq ($(TARGET),revo2_canfd_zqwl)
+    CPP_SOURCE := revo2_canfd_zqwl.cpp
+    CAN_LIB    := -lzqwlcan
+else
+    $(error Unsupported TARGET: $(TARGET))
+endif
+
+BIN := $(TARGET).exe
+
+COMMON_LIBS := -L$(LIB_DIR1) -L$(LIB_DIR2) -lbc_stark_sdk $(CAN_LIB)
+
+# =========================
+# Compiler
+# =========================
+CXX := $(shell command -v g++ 2>/dev/null || echo g++)
 CXXFLAGS := -g -Wall -std=c++17
-# CXXFLAGS := -v -g -Wall -std=c++17
 
-CPP_SOURCES := revo2_canfd.cpp
-# CPP_SOURCES := $(wildcard *.cpp)
-CPP_OBJS := $(CPP_SOURCES:.cpp=.exe)
-BINARIES := $(CPP_OBJS)
+# =========================
+# Rules
+# =========================
+all: $(BIN)
 
-all: $(BINARIES)
+$(BIN): $(CPP_SOURCE)
+	@echo "Building target: $(TARGET)"
+	@echo "Compiler: $(CXX)"
+	@echo "Source: $(CPP_SOURCE)"
+	@echo "Libs: $(CAN_LIB)"
+	@bash -c 'export PATH="/mingw64/bin:/usr/bin:$$PATH"; \
+		$(CXX) $(CXXFLAGS) $(INCLUDE) $< -o $@ $(COMMON_LIBS)'
+	@echo "Built -> $@"
+
+run: $(BIN)
+	@echo "Running $(BIN)..."
+	PATH="$(LIB_DIR1):$(LIB_DIR2):$$PATH" ./$(BIN)
 
 clean:
-	rm -f $(BINARIES)
+	rm -f *.exe
 
-%.exe: %.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $< -o $@ $(COMMON_LIBS)
-	@echo "Built $< -> $@"
-
-run_%:
-	@echo "Running $@..."
-	@echo "Using library path: $(LIB_DIR)"
-	PATH="$(LIB_DIR):$$PATH" ./$(subst run_,,$@).exe
-	@echo "Done running $@"
-
-run: run_revo2_canfd
-
-.PHONY: clean all run
+.PHONY: all run clean

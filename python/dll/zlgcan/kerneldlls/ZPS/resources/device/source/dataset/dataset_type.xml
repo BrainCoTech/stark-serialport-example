@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <commenttype comment="数据集公共资源结构">
+    <axis id="m_CanTimeAxis" vtype="AXIS" basetype="UINT64" init="ratio=0.000000008;offset=0.000000004" comment="y=ax+(offset - ratio/2)" />
+    <numeric_formatter id="NormalTime" syms="H(D,#/3600,0);;m(D,#%3600/60,0);;s(F,#%60+$-0.0005-#,0);;u(D,(($-#)*1000000)%1000,0);;" out="HH:mm:ss.sss uuu" in="H*3600+m*60+s"/>
+    <numeric_formatter id="SysTime" syms="H(D,#/3600%24,0);;m(D,#%3600/60,0);;s(F,#%60+$-0.0005-#,0);;u(D,(($-#)*1000000)%1000,0);;" out="HH:mm:ss.sss uuu" in="H*3600+m*60+s"/>
+    <type       type="num"         	    id="FRAME_TIME"           vtype="UINT64" format="NormalTime" translate="m_CanTimeAxis"/>
+    <type       type="num"         	    id="DELAY_TIME"           vtype="UINT64" format="POSTFIX[3,-1,-1,s]" translate="m_CanTimeAxis"/>
+    <!-- <type       type="num"         	    id="TYPE_OCCUPANCYTIME"           vtype="OccupancyTime" /> -->
+    <type     type="struct"      id="CANFD_Frame_Struct"  comment="该结构用于界面显示" >
+      <member>
+        <bit    id="structType"     vtype="UINT64"                       comment=""          				bit="0;8" bitBegin="UINT64" />
+        <bit    id="messageType"    vtype="TYPE_CANFD_TYPE"              comment=""          				bit="8;8"					/>
+        <bit    id="channel"        vtype="TYPE_CANFD_CHANNEL"        	 comment=""          				bit="16;8" 					/>
+        <bit    id="frameIndex"     vtype="UINT64"            			 comment=""          				bit="24;40" 				/>
+        <bit    id="time"           vtype="FRAME_TIME"       			 comment=""          				bit="0;56" bitBegin="UINT64"/>
+        <bit    id="checksum"       vtype="TYPE_LIN_CHECKSUM"            comment="LIN的校验和"          	bit="56;8" 					/>
+        <bit    id="timeDelay"      vtype="DELAY_TIME"           		 comment="发送报文延时时间"        bit="0;32" bitBegin="UINT64"/>
+        <bit    id="baud"       	vtype="UINT64"            			 comment="LIN的波特率"           	bit="32;32" 				/>
+        <bit    id="waveInfo"       vtype="UINT64"            			 comment="波形信息"           		bit="0;16" bitBegin="UINT64"/>
+        <bit    id="canhID"     	vtype="UINT64"           			 comment="CANH波形ID"           	bit="16;48" 				/>
+        <bit    id="resvice2"    	vtype="UINT64"           			 comment=""           				bit="0;16" bitBegin="UINT64"/>
+        <bit    id="canlID"     	vtype="UINT64"            			 comment="CANL波形ID"          		bit="16;48" 				/>
+        <var    id="canhOffset"     vtype="UINT32"           			 comment="canh偏移地址"         								/>
+        <var    id="canlOffset"     vtype="UINT32"           			 comment="canl偏移地址"          								/>
+        <bit id="time_struct" vtype="TYPE_OCCUPANCYTIME" comment="报文占用时间时间值" bit="0;16" bitBegin="UINT64"	/>
+        <bit id="checkType" vtype="UINT64" comment="LIN校验和类型" bit="16;1" />
+        <bit id="resvice3" vtype="UINT64" comment="报文占用时间保留值" bit="17;1" />
+        <bit id="esi"     vtype="UINT64" comment="esi位,在LIN报文中也是一个错误位" bit="18;1"  />
+        <!--<bit    id="occupancyTime"  vtype="UINT64"        				 comment="报文占用时间"            bit="0;19" bitBegin="UINT64"/> -->
+        <bit    id="errorPoint"     vtype="TYPE_CANFD_ERRORNUM"          comment="错误编码"           		bit="19;5"					/>
+        <bit    id="Dir"     	    vtype="TYPE_CANFD_DIR"	  			 comment="报文方向"           		bit="24;1"					/>
+        <bit    id="errorType"     	vtype="TYPE_CANFD_ERRORTYPE"         comment="错误类型"          		bit="25;2"					/>
+        <bit    id="frameType"      vtype="TYPE_CANFD_FRAME"  			 comment="标识位（4位）"           bit="27;4"					/>
+        <bit    id="frameDLC"     	vtype="TYPE_CAN_DLC"            	 comment="数据长度编码"           	bit="31;4"					/>
+        <bit    id="frameID"     	vtype="UINT64"            			 comment="帧ID"           			bit="35;29" 				/>
+        <var    id="Data"           vtype="TYPE_CAN_DATA[64]" 			 comment="数据"       				length="if @frameType&gt;= 7 &amp;&amp; @frameType&lt;=10 then DataLength else if @frameType&amp;1 then	0 else if @frameType&amp;0x4==0x4 then DataLength else if @frameDLC&gt;8 then 8 else DataLength"           />
+        <!-- NOTE: 下面的fn已经废弃，需要在 system/dataset2/canfd_zps/dataset.cpp 中维护 -->
+        <!-- <fn     id="WaveFlag"       vtype="UINT16"     					 comment="暂时只判断通道1，默认通道1有"     data=":channel==1"/> -->
+        <fn     id="WaveFlag"       vtype="UINT16"     					 comment="嵌入式提供的waveInfo中，有波形的时候值为32896，没有波形为0"     data=":waveInfo==32896&amp;&amp;channel==1"/>
+        <fn     id="DataLength"       vtype="TYPE_CAN_LENGTH_DLC"     		 comment="帧数据长度,非fd帧最大长度是8，DLC是编码非FD帧可以16，但是数据长度是实际长度"     data=":IF (@frameType == 14 || @frameType == 12 || @frameType == 6 || @frameType == 4 || @frameType == 15) THEN (@frameDLC) ELSE  (IF(@frameType==1||@frameType == 3) THEN (0) ELSE (IF(@frameDLC &gt; 8) THEN (8) ELSE (@frameDLC)))              "/>
+        <fn     id="HexFrameID"     vtype="UINT32_HEX"     					 comment="16进制ID"     data=":frameID"/>
+        <fn id="frameTypeFormat" vtype="TYPE_CANFD_TYPE_EXT" comment="errorPoint右移 4位 + frameType，errorPoint等于0时，表示正确帧，应答位错误需要显示正常信息" data=":IF ((@errorPoint*16) &gt; 14) THEN 13 ELSE (@frameType)"/>
+        <!-- <fn id="frameTypeFormat" vtype="TYPE_CANFD_TYPE_EXT" comment=" errorPoint右移 4位 + frameType，errorPoint等于0时，表示正确帧，应答位错误需要显示正常信息" data=":IF (@errorPoint*16 + @frameType &gt; 14) THEN 15 ELSE (@frameType)"/> -->
+        <fn id="frameErrorTypeFormat" vtype="TYPE_CANFD_ERROR_TYPE_EXT" comment="" data=":IF (@errorType!=3) THEN @errorType ELSE (IF (@errorPoint==13) THEN 3 ELSE (IF (@errorPoint==15) THEN 4 ELSE 5))" />
+        <fn id="LINPidFormat" vtype="STRING" comment="" data="ZPS_LINPID_FORMAT(frameID)" />
+        <fn id="ErrorPointCombine" vtype="TYPE_FRAME_ERRORNUM_COMBINE" comment="LIN和CAN错误的集合" data="if @messageType==0 then @errorPoint else (@errorPoint + @esi*32)" />
+
+        <!--<func   id="Update" auto="EventItemUpdated">
+          <ctr id="unionStruct.DATA" target="SetLength:${frameDLC}"/>
+        </func>-->
+        <!-- <fn id="occupancyTime" vtype="UINT64" comment="" data="(@timeValue &lt;&lt;@shiftValue)*12.5" /> -->
+      </member>
+      <localsource>
+        <publicproperty type="category" caption="CANFD Struct"  ErrorInfo="DYNAMIC(#$ErrorPointCombine##$errorType#)"  CsvInfo="DYNAMIC(frameType:#@frameType#)" AscInfo="DYNAMIC(resvice0:#$resvice0#,resvice1:#$resvice1#,resvice2:#$resvice2#,waveInfo:#$waveInfo#,canhID:#$canhID#,canlID:#$canlID#,canhOffset:#$canhOffset#,canlOffset:#$canlOffset#,timeDelay:#$timeDelay#,occupancyTime:#$occupancyTime#,errorPoint:#$errorPoint#,Dir:#@Dir#,errorType:#$errorType#,frameType:#@frameType#,frameDLC:#$frameDLC#,frameID:#$frameID#,Data:#$Data#,structType:#$structType#,messageType:#@messageType#,channel:#$channel#,frameIndex:#$frameIndex#,WaveFlag:#$WaveFlag#&#10;)">
+        </publicproperty>
+      </localsource>
+    </type>
+    <type type="struct" id="CANFD_Struct_Sort">
+      <space size="8" />
+      <bit id="time" vtype="UINT64" comment="" bit="0;56" bitBegin="UINT64" />
+      <space size="32" />
+      <fn  id="nano_time" vtype="UINT64" data="time*8" />
+    </type>
+    <type type="struct" id="CANFD_Struct_Channel">
+      <bit id="id" vtype="UINT32" comment="" bit="16;8" bitBegin="UINT64" />
+      <space size="56" />
+    </type>
+  </commenttype>
+  <CanfdDataSet>
+
+    <var id="CANListCtr"  vtype="DataSetListReadSource">
+      <local>
+        <var>
+          <var  id="scrollModel"  vtype="INT8"     type="enum"   value="0"    caption="显示方式"  tooltip="显示方式" option="自动滚屏;停止滚屏" />
+          <var  id="addFilter"    vtype="INT8"     type="button" value="0"    caption="添加过滤"  tooltip="添加过滤" />
+          <var  id="delFilter"    vtype="INT8"     type="button" value="0"    caption="删除过滤"  tooltip="删除过滤" />
+          <var  id="enableFilter" vtype="INT8"     type="button" value="0"    caption="使能过滤"  tooltip="使能过滤" />
+          <var  id="editFilter"   vtype="INT8"     type="button" value="0"    caption="编辑过滤"  tooltip="编辑过滤" />
+          <postfix  id="System"        scale="1" lsd="0"/>
+          <postfix  id="Relativ"       scale="10" lsd="0"/>
+          <postfix  id="Increment"     scale="100" lsd="0"/>
+          <format  id="SELF_ID_FORMAT"    options="Hex:HexFormat;Dec:DecFormat"/>
+          <format  id="SELF_DATA_FORMAT"  options="Hex:HexFormat;Dec:DecFormat"/>
+          <!-- <format  id="SELF_DLC_FORMAT"   options="Hex:HexFormat;Dec:DecFormat"/> -->
+          <format  id="SELF_TIME_FORMAT"  options="系统时间:System;相对时间:Relativ;增量时间:Increment;系统传播延时:SystemreportDelaytime"/>
+          <property id="DataOpt" caption="DATA字段数据显示方式配置" type="category">
+            <item type="edit"    id="DataIpInterval"    vtype="UINT32" caption="间隔字节数" def="8" />
+            <item type="edit"    id="DataIpText"        vtype="STRING" caption="间隔符号" def=" "/>
+          </property>
+        </var>
+        <property id="ListParam" caption="数值格式显示">
+          <ptr  id="m_IDFormat"        type="enum"       caption="ID"    tooltip="CAN ID格式化方法" bind="SELF_ID_FORMAT.property"/>
+          <ptr  id="m_DATAFormat"      type="enum"       caption="DATA"  tooltip="CAN DATA格式化方法" bind="SELF_DATA_FORMAT.property"/>
+          <!-- <ptr  id="m_DLCFormat"       type="enum"       caption="DLC"   tooltip="CAN DLC格式化方法" bind="SELF_DLC_FORMAT.property"/> -->
+          <ptr  id="m_TIMEFormat"      type="enum"       caption="TIME格式化"  tooltip="CAN TIME格式化方法" bind="SELF_TIME_FORMAT.property"/>
+        </property>
+
+      </local>
+
+      <auto>
+        <item id="frameID"    bind="format=SELF_ID_FORMAT"/>
+        <item id="Data" bind="format=SELF_DATA_FORMAT;interval=DataOpt.DataIpInterval;interpolation=DataOpt.DataIpText"/>
+        <!-- <item id="frameDLC"   bind="format=SELF_DLC_FORMAT"/> -->
+        <item id="time" bind="format=SELF_TIME_FORMAT"/>
+        <!-- <item id="Data" bind="interval=DataOpt.DataIpInterval;interpolation=DataOpt.DataIpText" /> -->
+      </auto>
+    </var>
+    <var id="ElementType" vtype="TypeItem" value="CANFD_Frame_Struct" />
+    <var id="ElementSort" vtype="TypeItem" value="CANFD_Struct_Sort" />
+    <var id="ChannelId" vtype="TypeItem" value="CANFD_Struct_Channel" />
+    <var id="SystemBaseTime" vtype="UINT64" value="123456789"/>
+  </CanfdDataSet>
+
+
+  <WaveHeadDataSet>
+    <type     type="struct"      id="Wave_Head_Struct"  comment="该结构用于界面显示" >
+      <bit    id="HeadByte"     		vtype="UINT64"               comment="包头"				bit="0;8" bitBegin="UINT64" />
+      <bit    id="Channel"    		vtype="UINT64"               comment="通道"				bit="8;8"					/>
+      <bit    id="WaveID"        		vtype="UINT64"        	 	 comment="块ID"				bit="16;48" 				/>
+      <var    id="WaveStartTime"      vtype="UINT64"            	 comment="开始时间"/>
+      <var    id="SampleRate"         vtype="UINT16"       		 comment="采样率"/>
+      <var    id="CompressCode"       vtype="UINT16"            	 comment="压缩码"/>
+      <var    id="Scale"      		vtype="FLOAT"           	 comment="档位"/>
+      <var    id="Offset"       		vtype="FLOAT"            	 comment="偏移"/>
+      <var    id="DataLengthInPage"   vtype="UINT32"            	 comment="包长度"/>
+      <var    id="reservebyte1"     	vtype="UINT64"           	 comment="保留字段"/>
+      <var    id="reservebyte2"    	vtype="UINT64"           	 comment="保留字段"/>
+      <bit    id="WaveMin"     		vtype="UINT64"               comment="最小值"				bit="0;12" bitBegin="UINT64" />
+      <bit    id="reserve1"    		vtype="UINT64"               comment="保留位"				bit="12;4"					/>
+      <bit    id="WaveMax"        	vtype="UINT64"        	 	 comment="最大值"				bit="16;12" 				/>
+      <bit    id="reserve2"        	vtype="UINT64"        	 	 comment="保留位"				bit="28;36" 				/>
+      <var    id="reservebyte3"     	vtype="UINT64"            	 comment="保留字段"/>
+      <!--         <func   id="Update" auto="EventItemUpdated">
+          <ctr id="unionStruct.DATA" target="SetLength:${frameDLC}"/>
+        </func> -->
+    </type>
+    <var id="WaveHeadListCtr"  vtype="DataSetListReadSource">
+      <columns   BackColor="">
+        <column name="CWaveID"       		select="1" 		title="块ID"		width="70"		toolips="块ID"			alignment = "AlignCenter" />
+        <column name="CWaveStartTime"       select="1" 		title="开始时间"	width="100"		toolips="开始时间"		alignment = "AlignCenter"     />
+        <column name="CCompressCode"        select="1" 		title="压缩码"		width="70"		toolips="压缩码"		alignment = "AlignCenter"  />
+        <column name="CSampleRate"        	select="1" 		title="采样率"		width="70"		toolips="采样率"		alignment = "AlignCenter"  />
+        <column name="CScale"      			select="1" 		title="档位"		width="70"		toolips="档位"			alignment = "AlignCenter"/>
+        <column name="COffset"        		select="1" 		title="偏移"		width="70"		toolips="偏移"			alignment = "AlignCenter" />
+        <column name="CDataLengthInPage"    select="1"      title="包长度"		width="70"		toolips="包长度"		alignment = "AlignCenter"/>
+        <column name="CMax"        			select="1" 		title="最小值"		width="70"		toolips="最小值"		alignment = "AlignCenter"  />
+        <column name="CMin"        			select="1" 		title="最大值"		width="70"		toolips="最大值"		alignment = "AlignCenter"  />
+      </columns>
+      <defaultline>
+        <item type = "text" name = "CWaveID"			value = "WaveID"/>
+        <item type = "text" name = "CWaveStartTime"		value = "WaveStartTime"/>
+        <item type = "text" name = "CSampleRate"		value = "SampleRate"/>
+        <item type = "text" name = "CCompressCode"		value = "CompressCode"/>
+        <item type = "text" name = "CScale"				value = "Scale" />
+        <item type = "text" name = "COffset"			value = "Offset" />
+        <item type = "text" name = "CDataLengthInPage"	value = "DataLengthInPage" />
+        <item type = "text" name = "CMin"				value = "WaveMin" />
+        <item type = "text" name = "CMax"				value = "WaveMax" />
+      </defaultline>
+      <lineinfos mainKey="HeadByte" BackColor="">
+        <line key="包头固定值" BackColor="" defaultline="1">
+        </line>
+      </lineinfos>
+    </var>
+    <var id="ElementType" vtype="TypeItem" value="Wave_Head_Struct" />
+  </WaveHeadDataSet>
+
+  <FilterIndexDataset>
+    <type     type="struct"      id="Filter_Index_Struct"  comment="该结构用于存储" >
+      <var    id="ChannelID"    vtype="UINT8"            	comment="通道编号"/>
+      <var    id="Index"        vtype="UINT32"            comment="单通道内的索引"/>
+    </type>
+    <var id="ElementType" vtype="TypeItem" value="Filter_Index_Struct" />
+  </FilterIndexDataset>
+
+  <ScanDataset>
+    <type     type="struct"      id="Scan_Index_Struct"  comment="该结构用于存储" >
+      <var    id="Index"        vtype="UINT32"            comment="单通道内的索引"/>
+    </type>
+    <var id="ElementType" vtype="TypeItem" value="CANFD_Frame_Struct" />
+    <var id="ElementSort" vtype="TypeItem" value="CANFD_Struct_Sort" />
+    <!-- <var id="ChannelId"   vtype="TypeItem" value="CANFD_Struct_Channel" /> -->
+  </ScanDataset>
+
+  <LogcatDataSet>
+    <localsource>
+      <!-- spdlog::log_level -->
+      <alias id="LOG_TYPE" key="INT8" value="STRING">
+        <item name="TRACE" value="0" />
+        <item name="DEBUG" value="1" />
+        <item name="INFO" value="2" />
+        <item name="WARNING" value="3" />
+        <item name="ERROR" value="4" />
+        <item name="CRITICAL" value="5" />
+      </alias>
+      <type type="num" id="LogLevel" vtype="UINT8" translate="LOG_TYPE" />
+      <type type="struct" id="LogcatView">
+        <var id="time" vtype="CHAR[32]" />
+        <var id="level" vtype="LogLevel" />
+        <var id="tid"  vtype="UINT32" />
+        <var id="msg"  vtype="CHAR[512]" />
+      </type>
+      <var id="ElementType" vtype="TypeItem" value="LogcatView" />
+    </localsource>
+  </LogcatDataSet>
+  <SystemReportDataSet>
+    <type     type="struct"      id="SystemReport_Struct"  comment="该结构用于界面显示" >
+      <var    id="Head"     		vtype="UINT32"				comment="包头"				/>
+      <var    id="Delay"    		vtype="UINT32"				comment="延迟时间"								/>
+      <var    id="Times"        	vtype="UINT32"				comment="次数"				 				/>
+      <var    id="Channel"      	vtype="UINT8"				comment="开始时间"/>
+      <var    id="Res0"         	vtype="UINT8[3]"       		comment="保留位"/>
+      <var id="Reserve1" caption="保留位3" vtype="UINT8[4]"  />
+      <var id="Index" caption="索引" vtype="UINT32"  />
+      <bit    id="Reserve1"       vtype="UINT64"            	comment="保留位"					bit="0;27" bitBegin="UINT64"/>
+      <bit    id="frameType"      vtype="TYPE_CANFD_FRAME"  			 comment="标识位（4位）"           bit="27;4"					/>
+      <bit    id="frameDLC"     	vtype="TYPE_CAN_DLC"            	 comment="数据长度编码"           	bit="31;4"					/>
+      <bit    id="frameID"     	vtype="UINT64"            			 comment="帧ID"           			bit="35;29" 				/>
+      <var    id="Data"           vtype="TYPE_CAN_DATA[64]" 			 comment="数据"       				length="if @frameType&gt;= 7 &amp;&amp; @frameType&lt;=10 then DataLength else if @frameType&amp;1 then	0 else if @frameType&amp;0x4==0x4 then DataLength else if @frameDLC&gt;8 then 8 else DataLength"           />
+      <fn     id="DataLength"     vtype="TYPE_CAN_LENGTH_DLC"     	comment="帧数据长度,非fd帧最大长度是8，DLC是编码非FD帧可以16，但是数据长度是实际长度"     data=":IF (@frameType == 14 || @frameType == 12 || @frameType == 6 || @frameType == 4 || @frameType == 15) THEN (@frameDLC) ELSE  (IF(@frameType==1||@frameType == 3) THEN (0) ELSE (IF(@frameDLC &gt; 8) THEN (8) ELSE (@frameDLC)))              "/>
+    </type>
+
+    <var id="ElementType" vtype="TypeItem" value="SystemReport_Struct" />
+  </SystemReportDataSet>
+
+
+
+</root>

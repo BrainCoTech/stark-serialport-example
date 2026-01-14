@@ -1,0 +1,19 @@
+<cmds>
+	<!--异步通讯-->
+	<!-- <cmd id="SUNCEN" param="" send_str=":NSYNC:ENABLE tcp,1" visible="false" ch="ch0"/> -->
+	<cmd id="SYNCEN" param="STRING:A" send_str=":NSYNC:ENABLE {A},1" visible="false" ch="ch0" comment="A:ubs||tcp"/>
+	<cmd id="SYNCDIS" param="STRING:A" send_str=":NSYNC:ENABLE {A},0" visible="false" ch="ch0"/>
+	<cmd id="CANSYNCEN" param="" send_str=":NSYNC:MODULE:ENABLE CAN,1" visible="false" ch="ch0"/>
+	<cmd id="CANSYNCDIS" param="" send_str=":NSYNC:MODULE:ENABLE CAN,0" visible="false" ch="ch0"/>
+	
+	<cmd id="ASYNCSetting" param="ASYNC_MODULE_TYPE:type,UINT8:value" send_str=":NSYNC:MODULE:ENABLE {type},{value}" visible="false" ch="ch0"/>
+	
+	<!-- <cmd id="SUNCDIS" param="" send_str=":NSYNC:ENABLE tcp,0" visible="false" ch="ch0"/> -->
+	<cmd id="ASyncFun" param="" send_str=":NSYNC:SPEED:TEST 64" visible="false" ch="ch0"/>
+	<cmd id="StopSyncFun" param="" send_str=":NSYNC:SPEED:TEST 0" visible="false" ch="ch0"/>
+	<cmd id="DsoRun" param="" send_str=":DSO:STOP" visible="false" ch="ch0"/>
+	<cmd id="DsoRunrst" param="STRING&amp;:A" send_str=":DSO:RUN?" recv_str="{A}" visible="false" ch="ch0"/>
+	<cmd id="SetSysRun" param="" send_str=":RUN" visible="false" ch="ch0"/>
+	<cmd id="SetSysStop" param="" send_str=":STOP" visible="false" ch="ch0"/>
+	<cmd id="sysRunrst" param="STRING&amp;:A" send_str=":RUN?" recv_str="{A}" visible="false" ch="ch0"/>
+</cmds>

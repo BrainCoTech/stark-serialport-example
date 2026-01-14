@@ -1,0 +1,822 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<types  version="20190709">
+  <alias    id="FFT_AXISTYPE_FORMAT"  key="UINT16">
+    <item name="相对线性"  value="0"/>
+    <item name="对数"  value="1"/>
+  </alias>
+  <alias    id="FFT_SHOWTYPE_FORMAT"  key="UINT16">
+    <item name="Ampl"  value="0"/>
+    <item name="dBm"  value="1"/>
+    <item name="Vrms"  value="2"/>
+    <item name="PSD"  value="3"/>
+  </alias>
+  <alias    id="FFT_WINTYPE_FORMAT"  key="UINT16">
+    <item name="矩形窗"  value="0"/>
+    <item name="汉宁窗"  value="1"/>
+    <item name="海明窗"  value="2"/>
+    <item name="布莱克曼"  value="3"/>
+  </alias>
+  <alias    id="FFT_COUNT_FORMAT"  key="UINT16">
+    <item name="1K"  value="0"/>
+    <item name="2K"  value="1"/>
+    <item name="4K"  value="2"/>
+    <item name="1M"  value="3"/>
+    <item name="2M"  value="4"/>
+  </alias>
+  <alias   id="CAN_FRAME_DIR_Format"  key="UINT8" comment="这是can数据的方向">
+    <item name="T" value="0"/>
+    <item name="R" value="16"/>
+  </alias>
+  <alias   id="CANFD_FRAME_DIR_Format"  key="UINT8" comment="这是canfd数据的方向">
+    <item name="R" value="0"/>
+    <item name="T" value="1"  />
+  </alias>
+  <alias    id="CAN_FRAME_TYPE_Format"  key="UINT8">
+    <item name="标准数据帧"  value="0"/>
+    <item name="标准远程帧"  value="1"/>
+    <item name="扩展数据帧"  value="2"/>
+    <item name="扩展远程帧"  value="3"/>
+    <item name="错误帧"      value="4"/>
+  </alias>
+  <alias    id="REVEICEDISTURB_TYPE_Format"  key="UINT32">
+    <item name="显性干扰成隐性"  value="0"/>
+    <item name="隐性干扰成显性"  value="1"/>
+  </alias>
+  <alias    id="REVEICEDISTURBBIT_TYPE_Format"  key="UINT32">
+    <item name="非填充位"  value="0"/>
+    <item name="填充位"  value="1"/>
+  </alias>
+  <alias    id="SEND_CANFD_FRAME_TYPE_Format"  key="UINT8" comment="该格式转换用于界面发送列表显示">
+    <item name="标准数据帧"       value="0"/>
+    <item name="标准远程帧"       value="1"/>
+    <item name="扩展数据帧"       value="2"/>
+    <item name="扩展远程帧"       value="3"/>
+    <item name="标准CANFD帧"      value="4"/>
+    <item name="扩展CANFD帧"      value="6"/>
+    <item name="LIN主机请求帧"    value="7"/>
+    <item name="LIN主机应答帧"    value="8"/>
+    <item name="LIN从机应答帧"    value="9"/>
+    <item name="LIN未知帧"        value="10"/>
+    <item name="变速标准CANFD帧"  value="12"/>
+    <item name="变速扩展CANFD帧"  value="14"/>
+  </alias>
+  <alias    id="SEND_FRAME_TYPE_Format"  key="UINT8" comment="该格式转换用于界面发送列表显示">
+    <item name="标准帧"       value="0"/>
+    <item name="扩展帧"       value="1"/>
+  </alias>
+  <alias    id="SEND_FRAME_CHANNEL_TYPE_Format"  key="UINT8" comment="该格式转换用于界面发送列表显示">
+    <item name="CAN1"       value="1"/>
+    <item name="CAN2"       value="2"/>
+    <item name="CAN3"       value="3"/>
+  </alias>
+  <alias    id="SEND_FRAME_FORMAT_Format"  key="UINT8" comment="该格式转换用于界面发送列表显示">
+    <item name="数据帧"       value="0"/>
+    <item name="远程帧"       value="1"/>
+  </alias>
+  <alias    id="SEND_FRAME_DATATYPE_Format"  key="STRING" comment="该格式转换用于界面发送列表显示">
+    <item name="自增" value="GENERAL" />
+    <item name="错误" value="ERROR" />
+  </alias>
+
+  <alias    id="CANFD_FRAME_TYPE_Format"  key="UINT16" comment="该格式转换用于界面报文列表显示">
+    <item name="标准数据帧"       value="0"/>
+    <item name="标准远程帧"       value="1"/>
+    <item name="扩展数据帧"       value="2"/>
+    <item name="扩展远程帧"       value="3"/>
+    <item name="标准CANFD帧"      value="4"/>
+    <item name="扩展CANFD帧"      value="6"/>
+    <item name="变速标准CANFD帧"  value="12"/>
+    <item name="LIN主机请求帧"    value="7"/>
+    <item name="LIN主机应答帧"    value="8"/>
+    <item name="LIN从机应答帧"    value="9"/>
+    <item name="LIN未知帧"        value="10"/>
+    <item name="变速扩展CANFD帧"  value="14"/>
+    <item name="错误帧"           value="13" comment="该操作在dataset_type.xml的frameTypeFormat做处理"/>
+  </alias>
+
+  <alias    id="CANFD_ERROR_TYPE_Format"  key="UINT16" comment="该格式转换用于统计时的五大错误类型">
+    <item name="位错误"		      value="0"/>
+    <item name="格式错误"        value="1"/>
+    <item name="填充错误"        value="2"/>
+    <item name="CRC错误"         value="3"/>
+    <item name="应答位错误"     value="4"/>
+    <item name="正确帧"         value="5"/>
+  </alias>
+  <alias    id="REALTIMEBUSSTATUS_TYPE_Format"  key="UINT8" comment="实时统计状态改变">
+    <item name="总线关闭"     value="0"/>
+    <item name="正常通信"     value="1"/>
+    <item name="总线无变化"   value="2"/>
+    <item name="波特率错误"   value="3"/>
+    <item name="电压错误"     value="4"/>
+  </alias>
+  <alias    id="ZPS_DEVICE_CONNECT_TYPE_Format"  key="UINT8">
+    <item name="USB"       value="0"/>
+    <item name="TCP"       value="1"/>
+  </alias>
+  <alias    id="ZPS_DEVICE_IPMODE_TYPE_Format" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="静态IP"   	value="STATic"/>
+    <item name="DHCP"   	value="DHCP"/>
+  </alias>
+  <alias    id="ZPS_DEVICE_CONNECTSTATE_TYPE_Format" key="UINT8"  comment="示波器捕获模式格式化">
+    <item name="未连接"   	value="0"/>
+    <item name="已连接"   	value="1"/>
+  </alias>
+  <alias    id="CAN_DLC_LENGTH_ALIAS" key="UINT8" >
+    <item name="0"   value="0"/>
+    <item name="1"   value="1"/>
+    <item name="2"   value="2"/>
+    <item name="3"   value="3"/>
+    <item name="4"   value="4"/>
+    <item name="5"   value="5"/>
+    <item name="6"   value="6"/>
+    <item name="7"   value="7"/>
+    <item name="8"   value="8"/>
+    <item name="12"  value="9"/>
+    <item name="16"  value="10"/>
+    <item name="20"  value="11"/>
+    <item name="24"  value="12"/>
+    <item name="32"  value="13"/>
+    <item name="48"  value="14"/>
+    <item name="64"  value="15"/>
+  </alias>
+  <alias    id="CAN_SEND_DLC_ALIAS" key="UINT8" >
+    <item name="00"   value="0"/>
+    <item name="01"   value="1"/>
+    <item name="02"   value="2"/>
+    <item name="03"   value="3"/>
+    <item name="04"   value="4"/>
+    <item name="05"   value="5"/>
+    <item name="06"   value="6"/>
+    <item name="07"   value="7"/>
+    <item name="08"   value="8"/>
+    <item name="09"  value="9"/>
+    <item name="0A"  value="10"/>
+    <item name="0B"  value="11"/>
+    <item name="0C"  value="12"/>
+    <item name="0D"  value="13"/>
+    <item name="0E"  value="14"/>
+    <item name="0F"  value="15"/>
+  </alias>
+  <alias    id="CAN_SEARCH_DLC_ALIAS" key="UINT8" >
+    <item name="0x00"   value="0"/>
+    <item name="0x01"   value="1"/>
+    <item name="0x02"   value="2"/>
+    <item name="0x03"   value="3"/>
+    <item name="0x04"   value="4"/>
+    <item name="0x05"   value="5"/>
+    <item name="0x06"   value="6"/>
+    <item name="0x07"   value="7"/>
+    <item name="0x08"   value="8"/>
+    <item name="0x09"  value="9"/>
+    <item name="0x0A"  value="10"/>
+    <item name="0x0B"  value="11"/>
+    <item name="0x0C"  value="12"/>
+    <item name="0x0D"  value="13"/>
+    <item name="0x0E"  value="14"/>
+    <item name="0x0F"  value="15"/>
+  </alias>
+  <alias    id="CANFD_CHANNEL_FORMAT" key="UINT8">
+    <item name="1"   value="0"/>
+    <item name="2"   value="1"/>
+    <item name="3"   value="2"/>
+  </alias>
+
+  <alias    id="CANFD_CONDITIONGROUP_FORMAT" key="UINT32">
+    <item name="And"        value="0"/>
+    <item name="Or"         value="1"/>
+    <item name="Not And"    value="2"/>
+    <item name="Not Or"     value="3"/>
+  </alias>
+
+  <alias    id="PHY_WAVE_DIV" key="UINT32">
+    <item name="1"    value="0"/>
+    <item name="2"    value="1"/>
+    <item name="5"    value="4"/>
+    <item name="10"   value="9"/>
+  </alias>
+
+  <alias    id="CANFD_TYPE_Format"  >
+    <item name="CAN报文"  value="53"/>
+    <item name="LIN报文"  value="155"/>
+    <item name="格式错误"  value="0"/>
+  </alias>
+  <alias    id="DSO_ACQUIRETYPE_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="标准"   	value="NORMal"/>
+    <item name="峰值"   	value="PEAK"/>
+    <item name="高分辨率"   	value="HRESolution"/>
+  </alias>
+  <alias    id="DSO_TIMEBASEDIVTYPE_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="采样时间"   	value="ACQTime"/>
+    <!-- <item name="采样率"   		value="SAMPrate"/> -->
+  </alias>
+  <alias    id="PHY_ENABLE_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="使能"   	value="ON"/>
+    <item name="禁能"   	value="OFF"/>
+  </alias>
+  <alias    id="CAN_CHMODEL_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="LIN模式"   	value="LIN"/>
+    <item name="CAN模式"   	value="CAN"/>
+  </alias>
+  <alias    id="LIN_PROTOCOL_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="1.x"   	value="1X"/>
+    <item name="2.x"   	value="2X"/>
+  </alias>
+  <alias    id="LIN_MODEL_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="主机"   	value="MASter"/>
+    <item name="从机"   	value="SLAve"/>
+  </alias>
+  <alias    id="LIN_NODE_MODEL_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="监听模式"   	value="MONitor"/>
+    <!-- <item name="正常模式"   	value="NORmal"/> -->
+  </alias>
+  <alias    id="LIN_SOURCESELECT_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="外部电源"   	value="EXTernal"/>
+    <item name="内部电源"   	value="INTerior"/>
+  </alias>
+  <alias    id="CAN_CHTERMINATOR_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="不接入电阻"   	value="OFF"/>
+    <item name="接入120Ω"   	value="ON"/>
+  </alias>
+  <alias    id="PHY_INTERNALMODE_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="静默模式"   	value="SILent"/>
+    <item name="正常模式"   	value="NORmal"/>
+  </alias>
+  <alias    id="PHY_TRANINTERNAL_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="不接入"   			value="NONE"/>
+    <item name="外部CAN收发器"   	value="Extend"/>
+    <item name="内部CAN收发器"   	value="STAndard"/>
+  </alias>
+  <alias    id="PHY_RECRODMODE_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="帧触发"   value="TRIG"/>
+    <!-- <item name="全采样"   	value="ALL"/> -->
+    <!-- <item name="触发采样"   value="CAN1"/> -->
+    <!-- <item name="全采样"   	value="ANY"/> -->
+    <item name="正确帧触发"   	value="NORMAL"/>
+    <item name="错误帧触发"   	value="ERROR"/>
+  </alias>
+  <alias    id="TRIGGER_TYPE_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="完全触发"             value="ANY"       />
+    <item name="标准数据帧"           value="DATA"   	  />
+    <item name="标准远程帧"         	value="REMOTE"    />
+    <item name="拓展数据帧"         	value="EXDATA"    />
+    <item name="拓展远程帧"           value="EXREMOTE"  />
+    <item name="标准CANFD数据帧"    	value="DATA_F"    />
+    <item name="拓展CANFD数据帧"      value="EXDATA_F"  />
+    <item name="变速标准CANFD数据帧" 	value="DATA_FS"   />
+    <item name="变速拓展CANFD数据帧"  value="EXDATA_FS" />
+  </alias>
+  <alias    id="TRIGGER_FRAMETYPE_FORMAT" key="STRING" value="STRING" comment="帧类型格式化">
+    <item name="标准帧"           value=""   	  />
+    <item name="扩展帧"         	value="EX"    />
+  </alias>
+  <alias    id="TRIGGER_FRAMEFORMAT_FORMAT" key="STRING" value="STRING" comment="帧格式格式化">
+    <item name="数据帧"           value="DATA"   	  />
+    <item name="远程帧"         	value="REMOTE"    />
+  </alias>
+  <alias    id="TRIGGER_DIRECTION_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="双向"             value="BOTH"       />
+    <item name="发送"             value="OUT"   	  />
+    <item name="接收"         	  value="IN"    />
+  </alias>
+  <alias    id="TRIGGER_LOGICCONDI_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="&amp;&amp;"      value="AND"       />
+    <item name="||"               value="OR"   	  />
+  </alias>
+  <alias    id="TRIGGER_DLC_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="任意帧长度"      value="ANY"       />
+    <item name="0"               value="0"       />
+    <item name="1"               value="1"       />
+    <item name="2"               value="2"       />
+    <item name="3"               value="3"       />
+    <item name="4"               value="4"       />
+    <item name="5"               value="5"       />
+    <item name="6"               value="6"       />
+    <item name="7"               value="7"       />
+    <item name="8"               value="8"       />
+    <item name="9"               value="9"       />
+    <item name="10"              value="10"       />
+    <item name="11"              value="11"       />
+    <item name="12"              value="12"       />
+    <item name="13"              value="13"       />
+    <item name="14"              value="14"       />
+    <item name="15"              value="15"       />
+  </alias>
+  <alias    id="DIOOUT_SIGNALTYPE_FORMAT" key="STRING" value="STRING" comment="数字逻辑IO输出信号类型格式化">
+    <item name="PWM"           value="PWM"       />
+    <item name="直流信号"      value="NORmal"       />
+  </alias>
+  <alias    id="OUT_EFFECTIVE_LEVEL_FORMAT" key="STRING" value="STRING" comment="数字逻辑IO输出信号输出有效电平">
+    <item name="高电平"   value="HIGH"/>
+    <item name="低电平"   value="LOW "/>
+  </alias>
+  <alias    id="LAOUT_SIGNALTYPE_FORMAT" key="STRING" value="STRING" comment="模拟IO输出信号类型格式化">
+    <item name="方波"             value="SQUAre"       />
+    <item name="正弦波"           value="SIN"          />
+    <item name="三角波"           value="TRIAngle"     />
+    <item name="锯齿波"           value="SWATooth"     />
+    <item name="直流信号"         value="DC"           />
+  </alias>
+  <alias    id="PHY_VIDS_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="内部干扰源"   value="INTernal"/>
+    <item name="外部干扰源"   	value="EXTernal"/>
+  </alias>
+  <alias    id="PHY_CANPOLE_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="负电池"   value="NEGative"/>
+    <item name="正电池"   	value="POSitive"/>
+  </alias>
+  <alias    id="PHY_RESENABLE_FORMAT" key="STRING" value="STRING" comment="示波器捕获模式格式化">
+    <item name="断开"   value="OFF"/>
+    <item name="连接"   value="ON"/>
+  </alias>
+  <alias    id="CANFD_FRAME_ERRORNUM_FORMAT" key="UINT8" value="STRING" comment="帧错误位置">
+    <item name="ASC导入的错误帧"			       value="1"    comment="00001" />
+    <item name="基本ID"			                   value="3"    comment="00011" />
+    <item name="RTR/SRR/RRS"                       value="4"     comment="00100" />
+    <item name="IDE"                               value="5"     comment="00101" />
+    <item name="基本帧的FDF"                       value="6"     comment="00110" />
+    <item name="扩展ID"                            value="7"     comment="00111" />
+    <item name="扩展帧的RTR/RRS"                   value="8"     comment="01000" />
+    <item name="扩展帧的FDF"                       value="9"     comment="01001" />
+    <item name="RES"                               value="10"    comment="01010" />
+    <item name="R0"                                value="11"    comment="01011" />
+    <item name="BRS"                               value="12"    comment="01100" />
+    <item name="ESI"                               value="13"    comment="01101" />
+    <item name="DLC"                               value="14"    comment="01110" />
+    <item name="帧数据"               	           value="15"    comment="01111" />
+    <item name="CRC"                               value="16"    comment="10000" />
+    <item name="CRC定界符"            		         value="17"    comment="10001" />
+    <item name="应答位"          	 	               value="18"    comment="10010" />
+    <item name="应答定界符"                        value="19"    comment="10011" />
+    <item name="帧结束"            		             value="20"    comment="10100" />
+    <item name="错误帧"       	                   value="21"    comment="10101" />
+    <item name="错误定界符"       	               value="22"    comment="10110" />
+    <item name="过载帧"       	                   value="23"    comment="10111" />
+    <item name="过载定界符"       	         	     value="24"    comment="11000" />
+    <item name="帧间隔"       	                   value="25"    comment="11001" />
+    <item name="显性位容限"       	         	     value="30"    comment="11110" />
+    <item name="CRC固定填充位"     		               value="31"    comment="11111" />
+    <item name=""             			               value="0"     comment="00000" />
+    <!-- <item name="未知"             			       value="__default__"     comment="都不匹配时，显示默认项" /> -->
+  </alias>
+  <alias    id="FRAME_ERRORNUM_COMBINE_FORMAT" key="UINT8" value="STRING" comment="帧错误位置">
+    <item name="ASC导入的错误帧"			       value="1"    comment="00001" />
+    <item name="基本ID"			                   value="3"    comment="00011" />
+    <item name="RTR/SRR/RRS"                       value="4"     comment="00100" />
+    <item name="IDE"                               value="5"     comment="00101" />
+    <item name="基本帧的FDF"                       value="6"     comment="00110" />
+    <item name="扩展ID"                            value="7"     comment="00111" />
+    <item name="扩展帧的RTR/RRS"                   value="8"     comment="01000" />
+    <item name="扩展帧的FDF"                       value="9"     comment="01001" />
+    <item name="RES"                               value="10"    comment="01010" />
+    <item name="R0"                                value="11"    comment="01011" />
+    <item name="BRS"                               value="12"    comment="01100" />
+    <item name="ESI"                               value="13"    comment="01101" />
+    <item name="DLC"                               value="14"    comment="01110" />
+    <item name="帧数据"               	           value="15"    comment="01111" />
+    <item name="CRC"                               value="16"    comment="10000" />
+    <item name="CRC定界符"            		         value="17"    comment="10001" />
+    <item name="应答位"          	 	               value="18"    comment="10010" />
+    <item name="应答定界符"                        value="19"    comment="10011" />
+    <item name="帧结束"            		             value="20"    comment="10100" />
+    <item name="错误帧"       	                   value="21"    comment="10101" />
+    <item name="错误定界符"       	               value="22"    comment="10110" />
+    <item name="过载帧"       	                   value="23"    comment="10111" />
+    <item name="过载定界符"       	         	     value="24"    comment="11000" />
+    <item name="帧间隔"       	                   value="25"    comment="11001" />
+    <item name="显性位容限"       	         	     value="30"    comment="11110" />
+    <item name="CRC固定填充位"     		               value="31"    comment="11111" />
+    <item name=""             			               value="0"     comment="00000" />
+    <item name="LIN发送Break"             			value="33"     comment="100001" />
+    <item name="LIN无效数据"             			value="34"     comment="100010" />
+    <item name="LIN同步字段"             			value="35"     comment="100011" />
+    <item name="LINID校验"             			    value="36"     comment="100100" />
+    <item name="LIN累加和校验"             			value="37"     comment="100101" />
+    <item name="LIN数据"             			value="38"     comment="100110" />
+    <!-- <item name="未知"             			       value="__default__"     comment="都不匹配时，显示默认项" /> -->
+  </alias>
+  <alias    id="SAERCH_ERRORNUM_FORMAT" key="UINT8" value="STRING" comment="帧错误位置">
+    <item name="基本ID错误"			                   value="3"    comment="00011" />
+    <item name="RTR/SRR/RRS错误"                       value="4"    comment="00100" />
+    <item name="IDE错误"                               value="5"    comment="00101" />
+    <item name="基本帧的FDF错误"                       value="6"    comment="00110" />
+    <item name="扩展ID错误"                            value="7"    comment="00111" />
+    <item name="扩展帧的RTR/RRS错误"                   value="8"    comment="01000" />
+    <item name="扩展帧的FDF错误"                       value="9"     comment="01001" />
+    <item name="RES错误"                               value="10"    comment="01010" />
+    <item name="R0错误"                                value="11"    comment="01011" />
+    <item name="BRS错误"                               value="12"    comment="01100" />
+    <item name="ESI错误"                               value="13"    comment="01101" />
+    <item name="DLC错误"                               value="14"     comment="01110" />
+    <item name="帧数据错误"               	           value="15"    comment="01111" />
+    <item name="CRC错误"                               value="16"    comment="10000" />
+    <item name="CRC定界符错误"            		       value="17"    comment="10001" />
+    <item name="应答位错误"          	 	           value="18"    comment="10010" />
+    <item name="应答定界符错误"                       value="19"    comment="10011" />
+    <item name="帧结束错误"            		           value="20"    comment="10100" />
+    <item name="错误帧错误"       	                   value="21"    comment="10101" />
+    <item name="错误定界符错误"       	               value="22"    comment="10110" />
+    <item name="过载帧错误"       	                   value="23"    comment="10111" />
+    <item name="过载定界符错误"       	         	   value="24"    comment="11000" />
+    <item name="帧间隔错误"       	                   value="25"    comment="11001" />
+    <item name="显性位容限错误"       	         	   value="30"    comment="11110" />
+    <item name="CRC固定填充位错误"     		       value="31"    comment="11111" />
+    <item name="无错误"             			       value="0"     comment="00000" />
+    <item name="LIN发送Break错误"             			value="33"     comment="100001" />
+    <item name="LIN无效数据错误"             			value="34"     comment="100010" />
+    <item name="LIN同步字段错误"             			value="35"     comment="100011" />
+    <item name="LINID校验错误"             			    value="36"     comment="100100" />
+    <item name="LIN累加和校验错误"             			value="37"     comment="100101" />
+    <item name="LIN数据错误"             			value="38"     comment="100110" />
+  </alias>
+  <alias    id="CANFD_FRAME_ERRORTYPE_FORMAT" key="UINT8" value="STRING" comment="错误类型">
+    <item name="位错误"			            value="0"    comment="00" />
+    <item name="错误"                       value="1"    comment="01" comment="需求：格式错误不显示格式两个字"/>
+    <item name="填充错误"                   value="2"    comment="10" />
+    <item name="错误"                       value="3"    comment="11" comment="需求：其他错误不显示其他两个字"/>
+  </alias>
+  <alias    id="SEARCH_FRAME_ERRORTYPE_FORMAT" key="UINT8" value="STRING" comment="错误类型">
+    <item name="位错误"			            value="0"    comment="00" />
+    <item name="格式错误"                   value="1"    comment="01"/>
+    <item name="填充错误"                   value="2"    comment="10" />
+    <item name="其他错误"                       value="3"    comment="11" comment="需求：其他错误不显示其他两个字"/>
+  </alias>
+  <alias    id="DATA_INCREASE_FORMAT" key="UINT32"  comment="自增显示">
+    <item name="true"			          value="1"     />
+    <item name="false"			        value="0"     />
+  </alias>
+  <alias    id="CANFD_YESORNOT_FORMAT" key="UINT32"  comment="自增显示">
+    <item name="false"			        value="0"     />
+    <item name="true"			        value="1"     />
+  </alias>
+  <alias    id="CYCLESTATISTICS_SORTTYPE_FORMAT" key="UINT32"  comment="周期统计排序内容">
+    <item name="ID"			        		value="0"     />
+    <item name="平均周期"			        value="1"     />
+    <item name="最大周期"			        value="2"     />
+    <item name="最小周期"			        value="3"     />
+  </alias>
+  <alias    id="SORTTYPE_DIRECT_FORMAT" key="UINT32"  comment="排序方向">
+    <item name="升序"			        value="0"     />
+    <item name="降序"			        value="1"     />
+  </alias>
+  <alias    id="CAN_SENDFAILSTRATEGY_FORMAT" key="UINT8"  comment="通道发送失败后的策略">
+    <item name="失败继续"			        value="0"     />
+    <item name="失败停止"			        value="1"     />
+  </alias>
+
+  <alias    id="DATA_ERRORTYPE_FORMAT" key="UINT32"  comment="干扰位置">
+    <item name="标准ID"                   value="0"     />
+    <item name="扩展ID"                   	value="1"     />
+    <item name="RTR"                   		value="2"     />
+    <item name="SRR"                   		value="3"     />
+    <item name="RRS"                   		value="4"     />
+    <item name="BRS"                 		value="5"     />
+    <item name="ESI"                 		value="7"     />
+    <item name="数据长度编码"               value="8"     />
+    <item name="帧数据"                     value="9"     />
+    <item name="CRC"                        value="10"     />
+    <item name="CRC定界符"                  value="11"     />
+    <item name="应答位"                     value="12"     />
+    <item name="应答定界符"                 value="13"     />
+    <item name="帧结束"                     value="14"     />
+    <item name="自定义"                     value="15"     />
+  </alias>
+
+  <!--     <alias    id="DATA_ERRORTYPE_FORMAT" key="UINT32"  comment="干扰位置">
+    <item name="标准ID"                   value="0"     />
+    <item name="扩展ID"                   value="2"     />
+    <item name="扩展R1"                   value="3"     />
+    <item name="R0"                         value="5"     />
+    <item name="位速率切换"                 value="6"     />
+    <item name="错误状态位"                 value="7"     />
+    <item name="数据长度编码"               value="8"     />
+    <item name="帧数据"                     value="9"     />
+    <item name="CRC"                        value="10"     />
+    <item name="CRC定界符"                  value="11"     />
+    <item name="应答位"                     value="12"     />
+    <item name="应答定界符"                 value="13"     />
+    <item name="帧结束"                     value="14"     />
+    <item name="自定义"                         value="15"     />
+  </alias> -->
+
+  <alias    id="DATA_DISTURTYPE_FORMAT" key="UINT32"  comment="干扰类型">
+    <item name="单位干扰"                   value="0"     />
+    <item name="多位干扰"                   value="1"     />
+  </alias>
+  <alias    id="DSO_TIMEBASEMODE_FORMAT" key="STRING" value="STRING" comment="示波器水平时基模式格式化">
+    <item name="主模式"   	value="NORM"/>
+    <item name="滚动模式"   value="ROLL"/>
+  </alias>
+  <alias    id="DSO_COUPING_FORMAT" key="STRING" value="STRING" comment="示波器耦合方式格式化">
+    <item name="直流耦合"   value="DC"/>
+    <item name="交流耦合"   value="AC"/>
+    <item name="GND"   		value="GND"/>
+  </alias>
+  <alias    id="DSO_SOURCE_FORMAT_CHA" key="STRING" value="STRING" comment="示波器耦合方式格式化">
+    <item name="DSO_1"	value="EXT"/>
+    <item name="CAN1_差分"	value="CAN_DIFF"/>
+    <item name="CAN1_H"		value="CAN_H"/>
+    <item name="CAN1_L"		value="CAN_L"/>
+  </alias>
+  <alias    id="DSO_SOURCE_FORMAT_CHB" key="STRING" value="STRING" comment="示波器耦合方式格式化">
+    <item name="DSO_2"	value="EXT"/>
+    <item name="CAN1_差分"	value="CAN_DIFF"/>
+    <item name="CAN1_H"		value="CAN_H"/>
+    <item name="CAN1_L"		value="CAN_L"/>
+  </alias>
+  <alias    id="DSO_BWLIMIT_FORMAT" key="STRING" value="STRING" comment="示波器带宽限制格式化">
+    <item name="0"   value="FIL_OFF"/>
+    <item name="1"   value="FIL_20M"/>
+    <!-- 当前没有设置命令，默认全带宽 -->
+    <!-- <item name="20M"   value="20M"/> -->
+  </alias>
+  <alias    id="DSO_TERMINATOR_FORMAT" key="STRING" value="STRING" comment="示波器带宽限制格式化">
+    <item name="1M"   value="1M"/>
+  </alias>
+  <alias    id="DSO_UNITS_FORMAT" key="STRING" value="STRING" comment="示波器探头类型格式化">
+    <item name="电压探头"   value="VOLTage"/>
+    <item name="电流探头"   value="AMPere"/>
+  </alias>
+  <alias    id="DSO_TRIGERSWEEP_FORMAT" key="STRING" value="STRING" comment="示波器触发方式格式化">
+    <item name="自动触发"   value="AUTO"/>
+    <item name="普通触发"   value="NORMal"/>
+  </alias>
+  <alias    id="DSO_TRIGERMODE_FORMAT" key="STRING" value="STRING" comment="示波器触发类型格式化">
+    <item name="边沿触发"   value="EDGE"/>
+    <item name="脉宽触发"   value="PULSe"/>
+  </alias>
+  <alias    id="DSO_TRIGEREDGESLOPE_FORMAT" key="STRING" value="STRING" comment="示波器边沿类型格式化">
+    <item name="上升沿触发"   value="POSitive"/>
+    <item name="下降沿触发"   value="NEGative"/>
+    <item name="双边沿触发"   value="EITHer"/>
+  </alias>
+  <alias    id="DSO_TRIGERPULSEWHEN_FORMAT" key="STRING" value="STRING" comment="示波器边沿类型格式化">
+    <item name="正脉宽大于"   value="PGReater"/>
+    <item name="正脉宽小于"   	value="PLESs"/>
+    <item name="正脉宽区间"   	value="PGLess"/>
+    <item name="负脉宽大于"   value="NGReater"/>
+    <item name="负脉宽小于"   	value="NLESs"/>
+    <item name="负脉宽区间"   	value="NGLess"/>
+  </alias>
+  <alias    id="DSO_ACQUIREMDEPTH_FORMAT" key="STRING" value="STRING" comment="示波器边沿类型格式化">
+    <item name="1K"   value="1000"/>
+    <item name="10K"   	value="10000"/>
+    <item name="100K"   	value="100000"/>
+    <item name="1M"  value="1000000"/>
+    <item name="10M"   	value="10000000"/>
+    <item name="32M"   	value="32000000"/>
+  </alias>
+  <alias id="DSO_PROBE_V_FORMAT" key="DOUBLE" value="DOUBLE" comment="示波器探头衰减比（电压）">
+    <item name="0.1" value="0.1" />
+    <item name="0.2" value="0.2" />
+    <item name="0.5" value="0.5" />
+    <item name="1" value="1" />
+    <item name="2" value="2" />
+    <item name="5" value="5" />
+    <item name="10" value="10" />
+    <item name="20" value="20" />
+    <item name="50" value="50" />
+    <item name="100" value="100" />
+    <item name="200" value="200" />
+    <item name="500" value="500" />
+    <item name="1000" value="1000" />
+  </alias>
+  <alias id="DSO_PROBE_A_FORMAT" key="DOUBLE" value="DOUBLE" comment="示波器探头衰减比（电流）">
+    <item name="10" value="0.1" />
+    <item name="5" value="0.2" />
+    <item name="2" value="0.5" />
+    <item name="1" value="1" />
+    <item name="0.5" value="2" />
+    <item name="0.2" value="5" />
+    <item name="0.1" value="10" />
+    <item name="0.05" value="20" />
+    <item name="0.02" value="50" />
+    <item name="0.01" value="100" />
+    <item name="0.005" value="200" />
+    <item name="0.002" value="500" />
+    <item name="0.001" value="1000" />
+  </alias>
+  <alias    id="AI_RANGE_FORMAT" key="STRING" value="STRING" comment="AI测量范围">
+    <item name="12V"   value="12V"/>
+    <item name="60V"   value="60V"/>
+  </alias>
+  <alias    id="ABT_DATA_FORMAT" key="STRING" value="STRING" comment="仲裁域和数据域">
+    <item name="仲裁域波特率"   value="仲裁域波特率"/>
+    <item name="数据域波特率"   value="数据域波特率"/>
+  </alias>
+  <alias    id="CACLYNEW_FORMAT" key="UINT32" comment="总线负载率计算的只计算新数据状态">
+    <item name="最新数据"   value="1"/>
+    <item name="所有数据"   value="0"/>
+  </alias>
+  <alias    id="EXSELECT_FORMAT" key="UINT32" comment="传播延迟外部收发器参数选择选项">
+    <item name="预设-快速收发器"   value="0"/>
+    <item name="预设-慢速收发器"   value="1"/>
+	<item name="预设-置0"   value="2"/>
+    <item name="用户自定义..."   value="3"/>
+    <item name="从文件中加载..."   value="4"/>
+  </alias>
+  <alias    id="WORKMODEL_TYPE_FORMAT" key="UINT32" comment="传播延迟工作模式">
+    <item name="主动模式"   value="0"/>
+    <item name="被动模式"   value="1"/>
+    <!-- <item name="被动模式-实时报文"   value="2"/> -->
+  </alias>
+  <alias    id="BUSRATEBEGINETIME_FORMAT" key="UINT8" comment="总线负载率计算历史数据从哪开始的">
+    <item name="基于设备开机时间"   value="0"/>
+    <item name="基于报文首帧"   value="1"/>
+  </alias>
+  <alias    id="UNITTIME_FORMAT" key="UINT32"  comment="总线负载率计算的单位时间">
+    <item name="1ms"   value="1"/>
+    <item name="2ms"   value="2"/>
+    <item name="5ms"   value="5"/>
+    <item name="10ms"   value="10"/>
+    <item name="20ms"   value="20"/>
+    <item name="50ms"   value="50"/>
+    <item name="100ms"   value="100"/>
+    <item name="200ms"   value="200"/>
+    <item name="500ms"   value="500"/>
+    <item name="1s"   value="1000"/>
+  </alias>
+  <postfix  id="System"        scale="1" lsd="0"/>
+  <postfix  id="Relativ"       scale="10" lsd="0"/>
+  <postfix  id="Increment"     scale="100" lsd="0"/>
+  <format  id="CAN_ID_FORMAT"    options="Hex:HexFormat;Dec:DecFormat"/>
+  <format  id="CAN_DATA_FORMAT"    options="Hex:HexFormat;Dec:DecFormat"/>
+  <format  id="CAN_SEND_ID_FORMAT"     options="Hex:HexFormat;Dec:DecFormat"/>
+  <format  id="CAN_SEND_DATA_FORMAT"    options="Hex:HexFormat;Dec:FixDec"/>
+  <format  id="CAN_DLC_FORMAT"    options="Hex:HexFormat;Dec:DecFormat"/>
+  <format  id="LIN_CHECKSUM_FORMAT"    options="Hex:HexFormat;Dec:DecFormat"/>
+  <format  id="CAN_TIME_FORMAT"    options="系统时间:System;相对时间:Relativ;增量时间:Increment"/>
+  <!-- <format  id="CAN_TIME_FORMAT"    options="系统时间:System;相对时间:Relativ;增量时间:Increment;系统重播延时:SystemreportDelaytime"/> -->
+  <type    type="num"            id="FFT_SHOWTYPE"      	vtype="UINT16"    translate="FFT_SHOWTYPE_FORMAT"/>
+  <type    type="num"            id="FFT_AXISTYPE"      	vtype="UINT16"    translate="FFT_AXISTYPE_FORMAT"/>
+  <type    type="num"            id="FFT_WINTYPE"      	vtype="UINT16"    translate="FFT_WINTYPE_FORMAT"/>
+  <type    type="num"            id="FFT_COUNT"      	vtype="UINT16"    translate="FFT_COUNT_FORMAT"/>
+  <type    type="num"            id="DSO_ACQUIREMDEPTH_TYPE"      	vtype="STRING"    translate="DSO_ACQUIREMDEPTH_FORMAT"/>
+  <type    type="num"            id="TYPE_CAN_DATA"      	vtype="UINT8"    format="CAN_DATA_FORMAT"/>
+  <type    type="num"            id="DATA_INCREASE_TYPE"      	vtype="UINT32"    translate="DATA_INCREASE_FORMAT"/>
+  <type    type="num"            id="CANFD_YESORNOT_TYPE"      	vtype="UINT8"    translate="CANFD_YESORNOT_FORMAT"/>
+  <type    type="num"            id="DATA_ERRORTYPE_TYPE"      	vtype="UINT32"    translate="DATA_ERRORTYPE_FORMAT"/>
+  <type    type="num"            id="DATA_DISTURTYPE_TYPE"      	vtype="UINT32"    translate="DATA_DISTURTYPE_FORMAT"/>
+  <type    type="num"            id="CAN_SENDFAILSTRATEGY_TYPE"      	vtype="UINT32"    translate="CAN_SENDFAILSTRATEGY_FORMAT"/>
+  <type    type="num"            id="REVEICEDISTURBBIT_TYPE"      	vtype="UINT32"    translate="REVEICEDISTURBBIT_TYPE_Format"/>
+  <type    type="num"            id="REVEICEDISTURB_TYPE"      	vtype="UINT32"    translate="REVEICEDISTURB_TYPE_Format"/>
+  <type    type="num"            id="TYPE_CAN_ID"        	vtype="UINT16"   format="CAN_ID_FORMAT"/>
+  <type    type="num"            id="TYPE_CAN_ID_Ext"    	vtype="UINT32"   format="CAN_ID_FORMAT"/>
+  <type    type="num"            id="TYPE_CAN_TYPE"      	vtype="UINT8"    translate="CAN_FRAME_TYPE_Format"/>
+  <type    type="num"            id="TYPE_CANFD_TYPE"    	vtype="UINT8"    translate="SEND_CANFD_FRAME_TYPE_Format"/>
+  <type    type="num"            id="TYPE_SEND_TYPE"    	vtype="UINT8"    translate="SEND_FRAME_TYPE_Format"/>
+  <type    type="num"            id="TYPE_SEND_CHANNEL_TYPE"    	vtype="UINT8"    translate="SEND_FRAME_CHANNEL_TYPE_Format"/>
+  <type    type="num"            id="TYPE_FRAME_DATATYPE"    	vtype="STRING"    translate="SEND_FRAME_DATATYPE_Format"/>
+  <type    type="num"            id="TYPE_FORMAT_TYPE"    	vtype="UINT8"    translate="SEND_FRAME_FORMAT_Format"/>
+  <type    type="num"            id="TYPE_CANFD_TYPE_EXT"    	vtype="UINT16"    translate="CANFD_FRAME_TYPE_Format"/>
+  <type    type="num"            id="TYPE_CANFD_ERROR_TYPE_EXT"    	vtype="UINT16"    translate="CANFD_ERROR_TYPE_Format"/>
+  <type    type="num"            id="REALTIMEBUSSTATUS_TYPE"    	vtype="UINT8"    translate="REALTIMEBUSSTATUS_TYPE_Format"/>
+  <type    type="num"            id="TYPE_DEVICE_CONNECT_TYPE"    	vtype="UINT8"    translate="ZPS_DEVICE_CONNECT_TYPE_Format"/>
+  <type    type="num"            id="TYPE_DEVICE_IPMODE_TYPE"    	    vtype="STRING"   translate="ZPS_DEVICE_IPMODE_TYPE_Format"/>
+  <type    type="num"            id="TYPE_DEVICE_CONNECTSTATE_TYPE"    	    vtype="UINT8"   translate="ZPS_DEVICE_CONNECTSTATE_TYPE_Format"/>
+  <type    type="num"            id="TYPE_CAN_DIR"       	vtype="UINT8"    translate="CAN_FRAME_DIR_Format"/>
+  <type    type="num"            id="TYPE_CANFD_DIR"      vtype="UINT8"    translate="CANFD_FRAME_DIR_Format"/>
+  <type    type="num"            id="TYPE_CAN_DLC"       	vtype="UINT8"    format="CAN_DLC_FORMAT"/>
+  <type    type="num"            id="TYPE_LIN_CHECKSUM"       	vtype="UINT8"    format="LIN_CHECKSUM_FORMAT"/>
+  <type    type="num"            id="TYPE_SEND_CAN_DLC"       	vtype="UINT8"    format="CAN_SEND_DLC_ALIAS"/>
+
+  <varex	id="FixDec"	vtype="DEC[3]"/>
+  <varex	id="FixHex"	vtype="HEX[8]"/>
+  <var      id="ValueSelectListID"  	vtype="LIST_CTR" value="FixHex;DecFormat"      	comment="CAN ID格式化方法"/>
+  <var      id="ValueSelectListData"  	vtype="LIST_CTR" value="HexFormat;FixDec"      		comment="CAN Data格式化方法"/>
+  <var 		id="SendIDFormat"       type="enum_s" vtype="POINT"  caption="ID"               tooltip="CAN ID格式化方法"   def="FixHex" 		option="AUTO(ValueSelectListID:caption)" 	title_ex="STRING(IF __base!=FixHex then `Dec` else `Hex`)" />
+  <var 		id="SendDataFormat"     type="enum_s" vtype="POINT"  caption="DATA"             tooltip="CAN DATA格式化方法" def="HexFormat" 		option="AUTO(ValueSelectListData:caption)" 	title_ex="STRING(IF __base!=HexFormat then `Dec` else __base:caption)" />
+  <type    type="num"            id="TYPE_CAN_SEND_DATA"       	vtype="UINT8"    format="SendDataFormat"/>
+  <type    type="num"            id="TYPE_CAN_SEND_ID"       	vtype="UINT32"    format="SendIDFormat"/>
+  <type    type="num"            id="TYPE_CAN_SEND_ID_NO_FORMAT_SWITCH"       	vtype="UINT32"    format="FixHex"/>
+  <type    type="num"            id="TYPE_CAN_SEND_DATA_NO_FORMAT_SWITCH"       	vtype="UINT8"    format="HexFormat"/>
+  <type    type="num"            id="TYPE_CAN_LENGTH_DLC"    vtype="UINT8"    translate="CAN_DLC_LENGTH_ALIAS"/>
+  <type    type="num"            id="TYPE_CANFD_CHANNEL"  vtype="UINT8"    translate="CANFD_CHANNEL_FORMAT"/>
+  <type    type="num"            id="TYPE_CANFD_FRAME"   	vtype="UINT32"   translate="SEND_CANFD_FRAME_TYPE_Format"/>
+  <type    type="num"            id="TYPE_CANFD_ERRORNUM" vtype="UINT8"   translate="CANFD_FRAME_ERRORNUM_FORMAT"/>
+  <type    type="num"            id="TYPE_SEARCH_ERRORNUM" vtype="UINT8"   translate="SAERCH_ERRORNUM_FORMAT"/>
+  <type    type="num"            id="TYPE_FRAME_ERRORNUM_COMBINE" vtype="UINT8"   translate="FRAME_ERRORNUM_COMBINE_FORMAT"/>
+  <type    type="num"            id="TYPE_SEARCH_ERRORTYPE" vtype="UINT8"   translate="SEARCH_FRAME_ERRORTYPE_FORMAT"/>
+  <type    type="num"            id="TYPE_CANFD_ERRORTYPE" vtype="UINT8"   translate="CANFD_FRAME_ERRORTYPE_FORMAT"/>
+  <type    type="num"            id="DSO_ACQUIRETYPE"   	vtype="STRING"   translate="DSO_ACQUIRETYPE_FORMAT"/>
+  <type    type="num"            id="DSO_TIMEBASEDIVTYPE"   	vtype="STRING"   translate="DSO_TIMEBASEDIVTYPE_FORMAT"/>
+  <type    type="num"            id="PHY_INTERNALMODE_TYPE"   	vtype="STRING"   translate="PHY_INTERNALMODE_FORMAT"/>
+  <type    type="num"            id="PHY_TRANINTERNAL_TYPE"   	vtype="STRING"   translate="PHY_TRANINTERNAL_FORMAT"/>
+  <type    type="num"            id="PHY_WAVE_DIV_TYPE"   	vtype="UINT32"   translate="PHY_WAVE_DIV"/>
+  <type    type="num"            id="PHY_ENABLE_TYPE"   	vtype="STRING"   translate="PHY_ENABLE_FORMAT"/>
+  <type    type="num"            id="PHY_VIDS_TYPE"   	vtype="STRING"   translate="PHY_VIDS_FORMAT"/>
+  <type    type="num"            id="PHY_CANPOLE_TYPE"   	vtype="STRING"   translate="PHY_CANPOLE_FORMAT"/>
+  <type    type="num"            id="PHY_RESENABLE_TYPE"   	vtype="STRING"   translate="PHY_RESENABLE_FORMAT"/>
+  <type    type="num"            id="CAN_CHMODEL_TYPE"   	vtype="STRING"   translate="CAN_CHMODEL_FORMAT"/>
+  <type    type="num"            id="LIN_PROTOCOL_TYPE"   	vtype="STRING"   translate="LIN_PROTOCOL_FORMAT"/>
+  <type    type="num"            id="LIN_MODEL_TYPE"   	vtype="STRING"   translate="LIN_MODEL_FORMAT"/>
+  <type    type="num"            id="LIN_NODE_MODEL_TYPE"   	vtype="STRING"   translate="LIN_NODE_MODEL_FORMAT"/>
+  <type    type="num"            id="LIN_SOURCESELECT_TYPE"   	vtype="STRING"   translate="LIN_SOURCESELECT_FORMAT"/>
+  <type    type="num"            id="CAN_CHTERMINATOR_TYPE"   	vtype="STRING"   translate="CAN_CHTERMINATOR_FORMAT"/>
+  <type    type="num"            id="PHY_RECRODMODE_TYPE"   	vtype="STRING"   translate="PHY_RECRODMODE_FORMAT"/>
+  <type    type="num"            id="TRIGGER_TYPE"   	vtype="STRING"   translate="TRIGGER_TYPE_FORMAT"/>
+  <!--触发类型-->
+  <type    type="num"            id="TRIGGER_FRAMETYPE"   	vtype="STRING"   translate="TRIGGER_FRAMETYPE_FORMAT"/>
+  <!--帧类型-->
+  <type    type="num"            id="TRIGGER_FRAMEFORMAT"   	vtype="STRING"   translate="TRIGGER_FRAMEFORMAT_FORMAT"/>
+  <!--帧格式-->
+  <type    type="num"            id="TRIGGER_DIRECTION"   	vtype="STRING"   translate="TRIGGER_DIRECTION_FORMAT"/>
+  <!--触发方向-->
+  <type    type="num"            id="TRIGGER_LOGICCONDI"   	vtype="STRING"   translate="TRIGGER_LOGICCONDI_FORMAT"/>
+  <!--逻辑条件-->
+  <type    type="num"            id="TRIGGER_DLC"   	vtype="STRING"   translate="TRIGGER_DLC_FORMAT"/>
+  <!--DLC-->
+  <type    type="num"            id="DIOOUT_SIGNALTYPE"   	vtype="STRING"   translate="DIOOUT_SIGNALTYPE_FORMAT"/>
+  <!--数字逻辑IO DO信号类型-->
+  <type    type="num"            id="DIOOUT_EFFECTIVE_LEVEL"   vtype="STRING"   translate="OUT_EFFECTIVE_LEVEL_FORMAT"/>
+  <type    type="num"            id="LAOUT_SIGNALTYPE"   	vtype="STRING"   translate="LAOUT_SIGNALTYPE_FORMAT"/>
+  <!--模拟IO输出 AO信号类型-->
+  <type    type="num"            id="DSO_TIMEBASEMODE_TYPE"   	vtype="STRING"   translate="DSO_TIMEBASEMODE_FORMAT"/>
+  <type    type="num"            id="DSO_COUPING"   		vtype="STRING"   translate="DSO_COUPING_FORMAT"/>
+  <!-- <type    type="num"            id="DSO_SOURCE"   		vtype="STRING"   translate="DSO_SOURCE_FORMAT"/> -->
+  <type    type="num"            id="DSO_BWLIMIT"   		vtype="STRING"   translate="DSO_BWLIMIT_FORMAT"/>
+  <type    type="num"            id="DSO_TERMINATOR"   		vtype="STRING"   translate="DSO_TERMINATOR_FORMAT"/>
+  <type    type="num"            id="DSO_UNITS"   		vtype="STRING"   translate="DSO_UNITS_FORMAT"/>
+  <type    type="num"            id="DSO_TRIGERSWEEP"   	vtype="STRING"   translate="DSO_TRIGERSWEEP_FORMAT"/>
+  <type    type="num"            id="AI_RANGE"   	vtype="STRING"   translate="AI_RANGE_FORMAT"/>
+  <type    type="num"            id="ABT_DATA"   	vtype="STRING"   translate="ABT_DATA_FORMAT"/>
+  <type    type="num"            id="CACLYNEW_TYPE"   	vtype="UINT32"   translate="CACLYNEW_FORMAT"/>
+  <type    type="num"            id="EXSELECT_TYPE"   	vtype="UINT32"   translate="EXSELECT_FORMAT"/>
+  <type    type="num"            id="WORKMODEL_TYPE"   	vtype="UINT32"   translate="WORKMODEL_TYPE_FORMAT"/>
+  <type    type="num"            id="BUSRATEBEGINETIME_TYPE"   	vtype="UINT8"   translate="BUSRATEBEGINETIME_FORMAT"/>
+  <type    type="num"            id="UNITTIME_TYPE"   	vtype="UINT32"   translate="UNITTIME_FORMAT"/>
+  <type    type="num"            id="DSO_TRIGERMODE"   	vtype="STRING"   translate="DSO_TRIGERMODE_FORMAT"/>
+  <type    type="num"            id="DSO_TRIGEREDGESLOPE" vtype="STRING"   translate="DSO_TRIGEREDGESLOPE_FORMAT"/>
+  <type    type="num"            id="DSO_TRIGERPULSEWHEN" vtype="STRING"   translate="DSO_TRIGERPULSEWHEN_FORMAT"/>
+  <type    type="num"            id="DOUBLE_LSD0_SCALE1"  vtype="DOUBLE"   format="POSTFIX[0,1]"/>
+  <type    type="num"            id="DOUBLE_LSD1_SCALE1"  vtype="DOUBLE"   format="POSTFIX[1,1]"/>
+  <type    type="num"            id="DOUBLE_LSD2_SCALE1"  vtype="DOUBLE"   format="POSTFIX[2,1]"/>
+  <type    type="num"            id="DOUBLE_LSD3_SCALE1"  vtype="DOUBLE"   format="POSTFIX[3,1]"/>
+  <type    type="num"            id="DOUBLE_LSD4_SCALE1"  vtype="DOUBLE"   format="POSTFIX[4,1]"/>
+  <type    type="num"            id="DOUBLE_LSD5_SCALE1"  vtype="DOUBLE"   format="POSTFIX[5,1]"/>
+  <type    type="num"            id="DOUBLE_LSD6_SCALE1"  vtype="DOUBLE"   format="POSTFIX[6,1]"/>
+  <type    type="num"            id="DOUBLE_LSD7_SCALE1"  vtype="DOUBLE"   format="POSTFIX[7,1]"/>
+  <type    type="num"            id="DOUBLE_LSD8_SCALE1"  vtype="DOUBLE"   format="POSTFIX[8,1]"/>
+  <type    type="num"            id="DOUBLE_LSD9_SCALE1"  vtype="DOUBLE"   format="POSTFIX[9,1]"/>
+  <type    type="num"            id="DOUBLE_LSD10_SCALE1"  vtype="DOUBLE"   format="POSTFIX[10,1]"/>
+  <type    type="num"            id="DOUBLE_LSD12_SCALE1"  vtype="DOUBLE"   format="POSTFIX[12,1]"/>
+  <type    type="num"            id="DOUBLE_AUTOLSD_AUTOSCALE"  vtype="DOUBLE"   format="POSTFIX[-1,0]"/>
+  <type    type="num"            id="DOUBLE_LSD0_AUTOSCALE"  vtype="DOUBLE"   format="POSTFIX[0,-1]"/>
+  <type    type="num"            id="UINT32_HEX"          vtype="UINT32"   format="HexFormat" />
+  <type    type="num"            id="UINT64_HEX"          vtype="UINT64"   format="HexFormat" />
+  <type    type="num"            id="DSO_FIX_DOUBLE"      vtype="DOUBLE"   format="POSTFIX[2,-1,3]" />
+  <type    type="num"            id="DSO_OFFSET_DOUBLE"      vtype="DOUBLE"   format="POSTFIX[4,-1,5]" />
+  <type    type="num"            id="DSO_UI_DOUBLE"      vtype="DOUBLE"   format="POSTFIX[4,-1,5]" />
+  <type    type="num"            id="DSO_UI2_DOUBLE"      vtype="DOUBLE"   format="POSTFIX[5,-1,6]" />
+  <type    type="num"            id="RC_DOUBLE"      	  vtype="DOUBLE"   format="POSTFIX[-1,-1]" />
+  <type    type="num"            id="RC_DOUBLE_LSD0"      vtype="DOUBLE"   format="POSTFIX[0,-1]" />
+  <type    type="num"            id="RC_DOUBLE_LSD1"      vtype="DOUBLE"   format="POSTFIX[1,-1]" />
+  <type    type="num"            id="RC_DOUBLE_LSD2"      vtype="DOUBLE"   format="POSTFIX[2,-1]" />
+  <type    type="num"            id="DOUBLE_LSD0"      vtype="DOUBLE"   format="POSTFIX[0,1]" />
+  <type    type="num"            id="DOUBLE_LSD1"      vtype="DOUBLE"   format="POSTFIX[1,1]" />
+  <type    type="num"            id="DOUBLE_LSD2"      vtype="DOUBLE"   format="POSTFIX[2,1]" />
+  <type    type="num"            id="DOUBLE_LSD3"      vtype="DOUBLE"   format="POSTFIX[3,1]" />
+  <type    type="num"            id="BAUDTOOL_DOUBLE"     vtype="DOUBLE"   format="POSTFIX[2,-1]" />
+  <type    type="num"            id="BINARY_AUTO_SCALE"      vtype="UINT64"   format="MEMSIZE[0,-1]" />
+  <type    type="num"            id="AIO_FIX_DOUBLE"      vtype="DOUBLE"   format="POSTFIX[2,-1,3]" />
+  <type    type="num"            id="UINT32_AUTO_SCALE"      vtype="UINT32"   format="POSTFIX[0,-1]" />
+  <type    type="num"            id="DSO_PROBE_SCALE"      vtype="DOUBLE"   format="POSTFIX[-1,1]" />
+
+ <!--设备管理视图 end-->
+  <type type="struct" id="EditFilterStruct">
+    <member>
+      <var id="KeyCtr" vtype="STRING"  option="Data;Dlc;Direction;FrameName;frameID;FrameType;Other;TimeStamp" def="Data" />
+      <var id="OperatorCtr" vtype="STRING"  option="==;!=;is any of;is none" def="=="/>
+      <var id="Value1Ctr" vtype="STRING"  def="12"/>
+      <var id="Value2Ctr" vtype="STRING"  def="34"/>
+      <var id="Operator" vtype="STRING"  option="And;Or;Not And" def="And"/>
+    </member>
+    <localsource>
+      <memberfunc id="constructor">
+        <code statement="KeyCtr=`Data`"/>
+        <code statement="OperatorCtr=`==`"  />
+        <code statement="Value1Ctr=`12`"  />
+        <code statement="Value2Ctr=`34`"/>
+        <code statement="Operator=`And`"/>
+      </memberfunc>
+    </localsource>
+  </type>
+  <type type="struct" id="DelayParamStruct">
+    <member>
+      <var id="TransTPLH"   vtype="DOUBLE"   def="0" />
+      <var id="TransTPHL"   vtype="DOUBLE"   def="0" />
+      <var id="RecTPLH"     vtype="DOUBLE"   def="0" />
+      <var id="RecTPHL"     vtype="DOUBLE"   def="0" />
+      <var id="TLOOP1"      vtype="DOUBLE"   def="0" />
+      <var id="TLOOP2"      vtype="DOUBLE"   def="0" />
+      <var id="tBitBus"     vtype="DOUBLE"   def="0" />
+      <var id="tBitRxd"     vtype="DOUBLE"   def="0" />
+      <var id="tRec"        vtype="DOUBLE"   def="0" />
+    </member>
+    <localsource>
+      <memberfunc id="constructor">
+        <!-- <code statement="TransTPLH=0"/> -->
+      </memberfunc>
+    </localsource>
+  </type>
+</types>
+

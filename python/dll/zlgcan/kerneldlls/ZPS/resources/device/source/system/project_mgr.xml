@@ -1,0 +1,7 @@
+<?xml version="1.0"  encoding="UTF-8"?>
+<doc version="20190709" UnitName="project">
+  <create_unit id="MTAUnit">
+    <!-- <type   type="unit"  id="ZDSUnitType"    unitInit="\source\zds\device_zds.xml" unitType="\source\zds\type_zds.xml"/>  -->
+    <type   type="unit"  id="MTAUnitType"    unitInit="\source\mta\mta.xml" unitType="\source\mta\mta_type.xml"/>
+  </create_unit>
+</doc>

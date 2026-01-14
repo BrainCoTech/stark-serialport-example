@@ -1,0 +1,42 @@
+<zcomm_config>
+  <multi_comm>
+    <item id="CurrentCommType" caption="连接类型" type="combobox" />
+    <property bind="@child_property" type="category" caption="连接参数" />
+  </multi_comm>
+
+  <tcp_comm>
+    <item id="IP"   caption="IP"   type="ipedit" valid="1" />
+    <item id="Port" caption="端口" type="edit"   enabled="1" />
+  </tcp_comm>
+
+  <udp_comm>
+    <item  id="IP"            type="ipedit"   caption="IP"      enabled="1" />
+    <item  id="Port"          type="edit"     caption="端口"    enabled="1" />
+    <item  id="BoardcastType" type="combobox" caption="Udp类型" option="UNICAST;MULTICAST;BOARDCAST" enabled="0" />
+  </udp_comm>
+
+  <com_comm>
+    <item id="Serialport"  caption="端口"   type="combobox" />
+    <item id="Baudbit"     caption="波特率" type="combobox" option="2400;4800;9600;19200;115200" />
+    <item id="Parity"      caption="校验位" type="combobox" option="None;Odd;Even;Mark;Space" />
+    <item id="Stopbits"    caption="停止位" type="combobox" option="1;1.5;2" />
+    <item id="Bytesize"    caption="数据位" type="combobox" option="5;6;7;8" />
+    <item id="FlowControl" caption="流控制" type="combobox" option="None;Software;Hardware" />
+  </com_comm>
+
+  <usb_comm >
+    <item  id="Vid" type="edit" caption="VID" />
+    <item  id="Pid" type="edit" caption="PID" />
+  </usb_comm>
+
+  <gpib_comm >
+    <item  id="Pad" type="edit" caption="Pad" />
+  </gpib_comm>
+
+  <tcp_config connect_param="IP+`;`+Port"            />
+  <udp_config connect_param="IP+`;`+Port+`;`+BoardcastType"/>
+  <com_config connect_param="Serialport+`;`+Baudbit+`;`+Parity+`;`+Stopbits+`;`+Bytesize+`;`+FlowControl" />
+  <usb_config connect_param="Vid+`;`+Pid"            />
+  <gpib_config connect_param="Pad"                    />
+
+</zcomm_config>

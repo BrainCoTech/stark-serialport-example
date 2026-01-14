@@ -1,0 +1,7 @@
+<cmds>
+	<cmd id="GetCH1OnceBlock"    param="UINT32:BlockID,UINT8_POINT:Buff" send_str=":RECord:WAVE:CHANnel1:DATA? {BlockID}" silence="1"	recv_str="{Buff}"  visible="false"  ch="ch0"/>
+	<cmd id="GetCH2OnceBlock"    param="UINT32:BlockID,UINT8_POINT:Buff" send_str=":RECord:WAVE:CHANnel2:DATA? {BlockID}" silence="1"	recv_str="{Buff}"  visible="false"  ch="ch0"/>
+	<cmd id="GetCH1Blocks"    param="UINT32:BlockID,UINT32:BlockCount,UINT8_POINT:Buff" send_str=":RECord:WAVE:CHANnel1:BLOCK? {BlockID},{BlockCount}" silence="1"	recv_str="{b:@Buff}"  visible="false"  ch="ch0"/>
+	<cmd id="GetCH2Blocks"    param="UINT32:BlockID,UINT32:BlockCount,UINT8_POINT:Buff" send_str=":RECord:WAVE:CHANnel2:BLOCK? {BlockID},{BlockCount}"  silence="1" 	recv_str="{b:@Buff}"  visible="false"  ch="ch0"/>
+</cmds>
+   

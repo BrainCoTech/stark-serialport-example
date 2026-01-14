@@ -5,7 +5,7 @@
 // You need to download the vendor-provided .dll
 // http://39.108.220.80/download/user/ZQWL/UCANFD/
 #include "stark-sdk.h"
-#include "zlgcan/zlgcan.h"
+#include "zqwl-can/zlgcan.h"
 #include <stdio.h>
 #include <windows.h>
 
@@ -46,6 +46,7 @@ int main(int argc, char const *argv[]) {
   setup_can_callbacks(); // Set read/write callbacks
 
   init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_INFO);
+  uint8_t slave_id = 1; // default slave id is 1
   auto handle = create_device_handler();
   get_device_info(handle, slave_id);
 

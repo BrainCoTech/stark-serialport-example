@@ -1,0 +1,198 @@
+<?xml version="1.0"  encoding="utf-8" ?>
+<uint name="WaveDecode" condition="波形解析模块" version="1.0">
+  <localsource>
+    <alias    id="CAN_IDE_Format">
+      <item name="标准帧"  value="0"/>
+      <item name="扩展帧"  value="1"/>
+    </alias>
+    <alias    id="CAN_ACK_Format"  >
+      <item name="应答"    value="0"/>
+      <item name="不应答"  value="1"/>
+    </alias>
+    <alias    id="CAN_RTR_Format"  >
+      <item name="数据帧"  value="0"/>
+      <item name="远程帧"  value="1"/>
+    </alias>
+    <alias    id="CAN_EDL_Format"  >
+      <item name="CAN帧"  value="0"/>
+      <item name="CANFD帧"  value="1"/>
+    </alias>
+    <alias    id="CAN_BRS_Format"  >
+      <item name="转换速率不可变"  value="0"/>
+      <item name="转换速率可变"  value="1"/>
+    </alias>
+    <alias    id="CAN_ESI_Format"  >
+      <item name="节点错误主动状态"  value="0"/>
+      <item name="节点错误被动状态"  value="1"/>
+    </alias>
+    <alias   id="CAN_ERROR_Format" >
+      <item  name="ID:BitstuffErr"     		 value="1"/>
+      <item  name="SRR:BitstuffErr"          value="2"/>
+      <item  name="IDE:BitstuffErr"          value="3"/>
+      <item  name="RTR:BitstuffErr"          value="4"/>
+      <item  name="R1:BitstuffErr"           value="5"/>
+      <item  name="R0:BitstuffErr"           value="6"/>
+      <item  name="DLC:BitstuffErr"          value="7"/>
+      <item  name="DATA:BitstuffErr"         value="8"/>
+      <item  name="CRC:BitstuffErr"          value="9"/>
+      <item  name="CRCDELIM:Err"         	 value="10"/>
+      <item  name="ACK:Err"                  value="11"/>
+      <item  name="ACKDELIM:Err"         	 value="12"/>
+      <item  name="EOF:Err"   	             value="13"/>
+      <item  name="CRC:CheckErr"   	         value="14"/>
+      <item  name="OVER_LOAD:Err"            value="15"/>
+      <item  name="INT:Err"   		         value="16"/>
+      <item  name="OTHER:Out of Data"      	 value="17"/>
+      <item  name="EDL:BitstuffErr"          value="18"/>
+      <item  name="BRS:BitstuffErr"          value="19"/>
+      <item  name="ESI:BitstuffErr"          value="20"/>
+      <item  name="STUFF_CNT:BitstuffErr"    value="21"/>
+      <item  name="STUFF_CNT_PARITY:BitstuffErr"  value="22"/>
+      <item  name="ABT:Fail"  value="23"/>
+      <item  name="Bit:Err"  value="24"/>
+      <item  name="Bus:Err"  value="25"/>
+    </alias>
+	<type    type="num"   id="sof"      	vtype="UINT8"            caption="SOF"     		color="#FFFF00" split="false"  	format="DecFormat"/>
+	<type    type="num"   id="base_id"  	vtype="UINT16"      	 caption="BaseID"    	color="#FFA500" split="true" 	format="CAN_ID_FORMAT"/>
+	<type    type="num"   id="srr"      	vtype="UINT8"            caption="SRR"    		color="#888888" split="false" 	format="DecFormat"/>
+	<type    type="num"   id="ide"      	vtype="UINT8"            caption="IDE"        	color="#888888" split="false"   format="CAN_IDE_Format"/>
+	<type    type="num"   id="ex_id"    	vtype="UINT32"  		 caption="ExtID"      	color="#CA9B2F" split="true" 	format="CAN_ID_FORMAT"/>
+	<type    type="num"   id="rtr"      	vtype="UINT8"            caption="RTR"        	color="#FFA500" split="false"   format="CAN_RTR_Format"/>	
+	<type    type="num"   id="r1"       	vtype="UINT8"            caption="R1"        	color="#888888" split="false" 	format="DecFormat"/>	
+	<type    type="num"   id="r0"       	vtype="UINT8"            caption="R0"        	color="#888888" split="false" 	format="DecFormat"/>
+	<type    type="num"   id="dlc"      	vtype="UINT8"     		 caption="DLC"        	color="#3292C2" split="true" 	format="CAN_ID_FORMAT"/>
+	<type    type="num"   id="data"     	vtype="INT32" 			 caption="Data"       	color="#65B238" split="true" 	format="CAN_DATA_FORMAT"/>
+	<type    type="num"   id="crc"      	vtype="UINT32"  		 caption="CRC"       	color="#36A0D5" split="true" 	format="CAN_DATA_FORMAT"/>
+	<type    type="num"   id="crc_a"      	vtype="UINT8"  			 caption="CRCDELIM" 	color="#36A0D5" split="false" 	format="DecFormat"/>				
+	<type    type="num"   id="ack"      	vtype="UINT8"            caption="ACKSlot"    	color="#FFFF00" split="false"   format="CAN_ACK_Format"/>
+	<type    type="num"   id="ack_a"      	vtype="UINT8"   		 caption="ACKDELIM" 	color="#FFFF00" split="false" 	format="DecFormat"/>				
+	<type    type="num"   id="eof"          vtype="UINT8"         	 caption="EOF"    		color="#AB4BC6" split="false" 	format="DecFormat"/>	
+	<type    type="num"   id="free"         vtype="UINT8"         	 caption="INT"    		color="#AB4BC6" split="false" 	format="DecFormat"/>					
+	<type    type="num"   id="edl"          vtype="UINT8"            caption="FDF"    		color="#888888" split="false"   format="CAN_EDL_Format"/>
+	<type    type="num"   id="brs"          vtype="UINT8"        	 caption="BRS"    		color="#888888" split="false"   format="CAN_BRS_Format"/>
+	<type    type="num"   id="esi"          vtype="UINT8"        	 caption="ESI"    		color="#888888" split="false"   format="CAN_ESI_Format"/> 
+	<type    type="num"   id="stuff_cnt"    vtype="UINT8"        	 caption="STUFF_CNT"    color="#36A0D5" split="true" 	format="DecFormat"/>
+	<type    type="num"   id="stuff_cnt_parity"  vtype="UINT8"      		 caption="STUFF_CNT_PARITY"  color="#36A0D5" split="false" 	format="DecFormat"/>
+	<type    type="num"   id="overload"     vtype="UINT8"      		 caption="OVERLOAD"     color="#888888" split="false" 	format="DecFormat"/>				
+	<type    type="num"   id="can_error"    vtype="UINT8"        	 						color="#ff0000" split="true"    translate="CAN_ERROR_Format"/>
+	<type    type="num"   id="rrs"      	vtype="UINT8"          	 caption="RRS"    		color="#888888" split="false" 	format="DecFormat"/>
+	<type    type="num"   id="res"      	vtype="UINT8"          	 caption="res"    		color="#888888" split="false" 	format="DecFormat"/>
+  <type    type="num"   id="err_flag"      	  vtype="UINT8"          caption="ERR_FLAG"    		color="#ff0000" split="false" 	format="DecFormat"/>
+  <type    type="num"   id="err_del"      	  vtype="UINT8"          caption="ERR_DEL"    		color="#ff0000" split="false" 	format="DecFormat"/>
+  <type    type="num"   id="err_del_err"      	  vtype="UINT8"          caption="ERR_DEL_ERR"    		color="#ff0000" split="false" 	format="DecFormat"/>
+  <type    type="num"   id="over_flag"      	  vtype="UINT8"          caption="OVLD_FLAG"    		color="#ff0000" split="false" 	format="DecFormat"/>
+  <type    type="num"   id="over_del"      	  vtype="UINT8"          	 caption="OVLD_DEL"    		color="#ff0000" split="false" 	format="DecFormat"/>
+  <type    type="num"   id="over_del_err"      	  vtype="UINT8"        caption="OVLD_DEL_ERR"    		color="#ff0000" split="false" 	format="DecFormat"/>
+  <type    type="num"   id="err_flag_err"      	  vtype="UINT8"        caption="ERR_FLAG_ERR"    		color="#ff0000" split="false" 	format="DecFormat"/>
+  <type    type="num"   id="out_of_data"      	  vtype="UINT8"        caption="OTHER:Out of Data"    		color="#888888" split="false" 	format="DecFormat"/>
+    <type type="struct" id="FRAME_DATA">
+      <var id="frame_type" vtype="UINT32" />
+      <union id="frame_data" switch="frame_type">
+        <var id="CAN_SOF"  		     vtype="sof"        	case="1"/>
+        <var id="CAN_ID_BASE"  		 vtype="base_id"    	case="2"/>
+        <var id="CAN_SRR"   		 vtype="srr"        	case="3"/>
+        <var id="CAN_IDE"   		 vtype="ide"        	case="4"/>
+        <var id="CAN_ID_EX"  		 vtype="ex_id"      	case="5"/>
+        <var id="CAN_RTR"  		 	 vtype="rtr"  			case="6"/>
+        <var id="CAN_R1"    		 vtype="r1"       		case="7"/>
+        <var id="CAN_R0"    		 vtype="r0"       		case="8"/>
+        <var id="CAN_DLC"   		 vtype="dlc"        	case="9"/>
+        <var id="CAN_DATA"  		 vtype="data"       	case="10"/>
+        <var id="CAN_CRC"   		 vtype="crc"        	case="11"/>
+        <var id="CAN_CRC_A" 		 vtype="crc_a"      	case="12"/>
+        <var id="CAN_ACK"   		 vtype="ack"        	case="13"/>
+        <var id="CAN_ACK_A" 		 vtype="ack_a"      	case="14"/>
+        <var id="CAN_EOF"   		 vtype="eof"        	case="15"/>
+        <var id="CAN_FREE"   		 vtype="free"       	 case="16"/>
+        <var id="CANFD_EDL"   		 vtype="edl"        	case="17"/>
+        <var id="CANFD_BRS"          vtype="brs"        	case="18"/>
+        <var id="CANFD_ESI"          vtype="esi"        	case="19"/>
+        <var id="CANFD_STUFF_CNT"    vtype="stuff_cnt"    	case="20"/>
+        <var id="CANFD_STUFF_CNT_PARITY"  vtype="stuff_cnt_parity"  	case="21"/>
+        <var id="CAN_OVER_LOAD"      vtype="overload"  		case="22"/>
+        <var id="CAN_ERROR"          vtype="can_error"  	case="23"/>
+        <var id="CAN_RRS"          	 vtype="rrs"  			case="24"/>
+        <var id="CAN_RES"          	 vtype="res"  			case="25"/>
+        <var id="CAN_ERR_FLAG"          vtype="err_flag"  case="26"/>
+        <var id="CAN_ERR_DEL"          vtype="err_del"  case="27"/>
+        <var id="CAN_ERR_DEL_ERR"          vtype="err_del_err"  case="28"/>
+        <var id="CAN_OVER_FLAG"          vtype="over_flag"  case="29"/>
+        <var id="CAN_OVER_DEL"           vtype="over_del"  	case="30"/>
+        <var id="CAN_OVER_DEL_ERR"       vtype="over_del_err"  case="31"/>
+        <var id="CAN_ERR_FLAG_ERR"       vtype="err_flag_err"  case="32"/>
+        <var id="OUT_OF_DATA"       vtype="out_of_data"  case="33"/>
+      </union>
+    </type>
+    <type    type="num"   id="data_b"    				vtype="UINT32"  color="#00ff00"  caption="标准CAN数据帧"  		format="DecFormat"/>
+    <type    type="num"   id="data_e"    				vtype="UINT32"  color="#00ff00"  caption="扩展CAN数据帧"  		format="DecFormat"/>
+    <type    type="num"   id="remote_b"    				vtype="UINT32"  color="#00ff00"  caption="标准CAN远程帧"  		format="DecFormat"/>
+    <type    type="num"   id="remote_e"    				vtype="UINT32"  color="#00ff00"  caption="扩展CAN远程帧"  		format="DecFormat"/>
+    <type    type="num"   id="canfd_data_b"    			vtype="UINT32"  color="#00ff00"  caption="标准CANFD数据帧"  	format="DecFormat"/>
+    <type    type="num"   id="canfd_data_e"    			vtype="UINT32"  color="#00ff00"  caption="扩展CANFD数据帧"  	format="DecFormat"/>
+    <type    type="num"   id="canfd_data_b_isspeed"    	vtype="UINT32"  color="#00ff00"  caption="变速标准CANFD数据帧"  format="DecFormat"/>
+    <type    type="num"   id="canfd_data_e_isspeed"    	vtype="UINT32"  color="#00ff00"  caption="变速扩展CANFD数据帧"  format="DecFormat"/>
+    <type    type="num"   id="canfd_remote_b"   		vtype="UINT32"  color="#00ff00"  caption="标准CANFD远程帧"  	format="DecFormat"/>
+    <type    type="num"   id="canfd_remote_e"    		vtype="UINT32"  color="#00ff00"  caption="扩展CANFD远程帧"  	format="DecFormat"/>
+    <type    type="num"   id="over_load"    			vtype="UINT32"  color="#00ff00"  caption="过载帧"  				format="DecFormat"/>
+    <type    type="num"   id="error"    				vtype="UINT32"  color="#00ff00"  caption="错误帧"  				format="DecFormat"/>
+    <type type="union" id="PACKET_DATA">
+      <var id="DECODE_DATA_B"  	            vtype="data_b"  				case="1"/>
+      <var id="DECODE_DATA_E"  	            vtype="data_e"  	  			case="2"/>
+      <var id="DECODE_REMOTE_B"  	            vtype="remote_b"  		   		case="3"/>
+      <var id="DECODE_REMOTE_E"  	            vtype="remote_e"  		  		case="4"/>
+      <var id="DECODE_CANFD_DATA_B"  	        vtype="canfd_data_b"  		  	case="5"/>
+      <var id="DECODE_CANFD_DATA_E"  	        vtype="canfd_data_e"  		    case="6"/>
+      <var id="DECODE_CANFD_REMOTE_B"  	    vtype="canfd_remote_b"  		case="7"/>
+      <var id="DECODE_CANFD_REMOTE_E"  	    vtype="canfd_remote_e"  		case="8"/>
+      <var id="DECODE_CANFD_DATA_B_ISSPEED"  	vtype="canfd_data_b_isspeed"  	case="9"/>
+      <var id="DECODE_CANFD_DATA_E_ISSPEED"  	vtype="canfd_data_e_isspeed"  	case="10"/>
+      <var id="DECODE_OVER_LOAD"  	        vtype="over_load"  		        case="11"/>
+      <var id="DECODE_ERROR"  	            vtype="error" 		            case="12"/>
+    </type>
+    <type     type="struct"  id="FrameStruct" comment="存储frame">
+      <!-- <var    id="time"       vtype="FRAME_TIME"  comment="帧结束时间"/> -->
+      <var    id="time"       vtype="DOUBLE_LSD9_SCALE1"  comment="帧结束时间"/>
+      <var    id="data"    	vtype="FRAME_DATA"  comment="帧数据"/>
+    </type>
+    <type     type="struct"  id="BitStuffStruct" comment="存储frame">
+      <!-- <var    id="time"       vtype="FRAME_TIME"  comment="帧结束时间"/> -->
+      <var    id="begintime"       	vtype="DOUBLE_LSD9_SCALE1"  comment="帧结束时间"/>
+      <var    id="endtime"       	vtype="DOUBLE_LSD9_SCALE1"  comment="帧结束时间"/>
+      <var    id="type"    			vtype="UINT32"  comment="类型"/>
+      <var    id="data"    			vtype="UINT32"  comment="帧数据"/>
+      <var    id="tqcount"    			vtype="UINT8"  comment="重同步tq数量"/>
+    </type>
+    <type     type="struct"  id="PacketStruct" comment="存储packet">
+      <!-- <var    id="time"       vtype="FRAME_TIME"  comment="包起始时间"/> -->
+      <var    id="time"       vtype="DOUBLE_LSD9_SCALE1"  comment="包起始时间"/>
+      <var    id="type"    	vtype="UINT32"      comment="包类型"/>
+      <union  id="data"    	vtype="PACKET_DATA" comment="包数据" switch="type"/>
+      <var    id="Index"    	vtype="UINT64"      comment="帧起始索引"/>
+      <var    id="count"    	vtype="UINT32"      comment="帧个数"/>
+    </type>
+    <type     type="struct"      id="PacketReadData" comment="界面使用">
+      <!-- <var    id="beginTime"  vtype="FRAME_TIME"               comment="包起始时间"/> -->
+      <var    id="beginTime"  vtype="DOUBLE_LSD9_SCALE1"               comment="包起始时间"/>
+      <!-- <var    id="endTime"    vtype="FRAME_TIME"               comment="包起始时间"/> -->
+      <var    id="endTime"    vtype="DOUBLE_LSD9_SCALE1"               comment="包起始时间"/>
+      <var    id="type"    	vtype="UINT32"                   comment="包类型"/>
+      <union  id="data"    	vtype="PACKET_DATA"              comment="包数据" switch="type"/>
+      <ptr    id="frame"    	vtype="VECTOR[FrameStruct]"      comment="帧数据"/>
+      <ptr    id="FrameBitstuff"    	vtype="VECTOR[BitStuffStruct]"      comment="帧数据"/>
+    </type>
+  </localsource>
+  <DecodeSource>
+    <localsource>
+      <publicproperty id="property" caption="">
+        <childgroup childs="WaveDataSet;s_u32BaudRate;s_u32BaudRateFD;s_CanBusType;s_dError;s_dthresholdVoltage">
+          <ptr  id="WaveDataSet"            type="enum_s"  caption="波形数据集"  option="AUTO(DataMng.DATASET_WAVE:caption)"/>
+          <var  id="s_u32BaudRate" 		  type="edit"    caption="总线波特率"    min="5000"  max="8000000" />
+          <var  id="s_u32BaudRateFD" 		  type="edit"    caption="数据段波特率"  min="5000"  max="8000000" />
+          <var  id="s_CanBusType" 		  type="enum"    caption="总线类型"      option="CANH;CANL;CANDiff"/>
+          <var  id="s_dError" 		      type="edit"    caption="误差电压"/>
+          <var  id="s_dthresholdVoltage" 	  type="edit"    caption="门限电压"/>
+        </childgroup>
+      </publicproperty>
+    </localsource>
+  </DecodeSource>
+</uint>

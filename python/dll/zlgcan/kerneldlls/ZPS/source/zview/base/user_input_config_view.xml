@@ -1,0 +1,84 @@
+<dialog id="TestArgsConfigDlg" size="860,640" title="参数配置" titlebar="min;max;close;title" bind="NULL:source"  form="appmodel;ok;cancel" allMovable="true">
+  <children>
+    <messagedialog id="messagedlg"  form="appmodal"  type="Error" button="Ok|Cancel" title="提示" text="是否保存用户输入参数" />
+  </children>
+
+  <_View id="showview" objectName="SideView"  >
+    <vars>
+      <var id="OpEnable" vtype="UINT8" />
+    </vars>
+
+
+    <vlayout sizeConstraint="default" contentsMargins="10,0,10,10" spacing="5">
+      <view  objectName="tint" >
+        <hlayout sizeConstraint="default">
+          <_IconBtn toolTip="增加"  text="" icon="zr:share:/resource/res/td_res/add to_20_n.png" hover_icon="zr:share:/resource/res/td_res/add to_20_o.png" disabled_icon="zr:share:/resource/res/td_res/add to_20_d.png">
+            <event id="clicked">
+              <code statement="source.AddNewItem(`NewItem`)" />
+            </event>
+          </_IconBtn>
+
+          <_IconBtn toolTip="复制" text="" icon="zr:share:/resource/res/td_res/copy_20_n.png" hover_icon="zr:share:/resource/res/td_res/copy_20_n.png" disabled_icon="zr:share:/resource/res/td_res/copy_20_n.png">
+            <event id="clicked">
+              <ui id="ParamsConfiglist" ctr="sendUIEvent" event="copy"/>
+            </event>
+          </_IconBtn>
+          <_IconBtn toolTip="粘贴" text="" icon="zr:share:/resource/res/td_res/paste_20_n.png" hover_icon="zr:share:/resource/res/td_res/paste_20_o.png" disabled_icon="zr:share:/resource/res/td_res/paste_20_d.png">
+            <event id="clicked">
+              <ui id="ParamsConfiglist" ctr="sendUIEvent" event="paste"/>
+            </event>
+          </_IconBtn>
+          <button objectName="DeleteIconBtn" toolTip="删除"  text="" fixWidth="20" fixHeight="20"  >
+            <event id="clicked">
+              <ui id="ParamsConfiglist" ctr="sendUIEvent" event="delete"/>
+            </event>
+          </button>
+          <stretch stretch="1" />
+        </hlayout>
+      </view>
+
+      <listview  id="ParamsConfiglist" dragType="Drag"  bind="source"  copyPaste="true" multiSelect="true" >
+        <extend root_data="ParamsList">
+          <columns>
+            <column name="number"    title="序号"   width="40"   toolTip="参数"   alignment="AlignCenter" titleExConnect="(;)" />
+            <column name="nameId"      title="文字描述"     width="160"  toolTip="名称"     alignment="AlignCenter" />
+            <column name="captionWidth"      title="文本宽度"     width="80"  toolTip="文本长度"     alignment="AlignCenter" />
+            <column name="controltype"   title="控件类型"  width="120"  toolTip="含义"  alignment="AlignCenter" />
+            <column name="associatvar"  title="关联变量"  width="150"  toolTip="数据类型"  alignment="AlignCenter" />
+            <column name="focus"        title="默认焦点"  width="60"  toolTip="初始值"  alignment="AlignCenter" />
+            <column name="need"   title="必填项"      width="60"  toolTip="值"      alignment="AlignCenter" />
+            <column name="tiptext"   title="提示信息"      width="160"  toolTip="提示信息"  alignment="AlignCenter" />
+          </columns>
+          <lineinfos mainKey="type" BackColor="">
+            <listline key="__def__" init="extend" dragOut="true"   style="data;visible"  editable="true">
+              <linetext   name="number"      text="__INDEX__"   alignment="AlignCenter" />
+              <linetext   name="nameId"      bind="__line__{text=caption}"  alignment="AlignCenter"  color="black" delegateType="edit"/>
+              <linetext   name="captionWidth"      bind="__line__{text=captionWidth}"  alignment="AlignCenter"  color="black" delegateType="edit"/>
+              <_LineComboBox  name="controltype" bind="__line__{value=typeText;text=typeText}" option="编辑框;静态文本" def="编辑框" alignment="AlignCenter"/>
+              <customvarbox   name="associatvar" bind="__line__" />
+              <customfoucscheck   name="focus"  bind="__line__" />
+              <customneedcheck   name="need"  bind="__line__" />
+              <customedit   name="tiptext"      bind="__line__{text=tip}"   color="black"  />
+            </listline>
+          </lineinfos>
+        </extend>
+        <events>
+        </events>
+      </listview>
+    </vlayout>
+  </_View>
+  <event id="accepted">
+    <code statement="source.SaveBackups()" />
+    <code statement="source.update()" />
+  </event>
+  <event id="rejected">
+    <show id="messagedlg"  type="messagedialog" status="exec" />
+    <if condition="messagedlg:result==1">
+      <code statement="source.SaveBackups()" />
+      <code statement="source.update()" />
+      <return />
+    </if>
+    <code statement="source.RestoreBackups()" />
+    <code statement="source.update()" />
+  </event>
+</dialog>
