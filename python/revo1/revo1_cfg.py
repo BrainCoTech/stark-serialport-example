@@ -91,7 +91,8 @@ async def configure_turbo_mode(client, slave_id):
     """
     Configure Turbo mode
 
-    Turbo mode can improve device response speed and performance.
+    Turbo mode is based on stall function. After stalling, the motor stops moving for a period of time (stall time),
+    then continues moving for a period of time (continue motion time), periodically executing stop and continue motion.
 
     Args:
         client: Modbus client instance
