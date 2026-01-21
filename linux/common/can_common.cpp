@@ -36,7 +36,9 @@
 #endif
 
 /****************************************************************************/
-// Device initialization
+// Get CAN backend
+// Determines the CAN backend to use: ZLG or SocketCAN
+// @return CanBackend enum value
 /****************************************************************************/
 
 enum CanBackend {
@@ -63,6 +65,10 @@ static CanBackend get_can_backend(void) {
   }
   return backend;
 }
+
+/****************************************************************************/
+// SocketCAN implementation
+/****************************************************************************/
 
 #if STARK_USE_SOCKETCAN
 static int g_socketcan_fd = -1;
@@ -263,6 +269,12 @@ static int socketcan_recv_canfd(uint32_t *can_id_out, uint8_t *data_out, uintptr
 }
 #endif
 
+/****************************************************************************/
+// Device initialization CAN/CANFD
+// Initializes the CAN/CANFD device
+// @return true if successful, false otherwise
+/****************************************************************************/
+
 bool init_can_device(void) {
   if (get_can_backend() == kBackendSocketcan) {
 #if STARK_USE_SOCKETCAN
@@ -299,7 +311,9 @@ bool init_canfd_device(void) {
 }
 
 /****************************************************************************/
-// Channel configuration and startup
+// Channel configuration and startup CAN/CANFD
+// Configures and starts the CAN/CANFD channel
+// @return true if successful, false otherwise
 /****************************************************************************/
 
 bool start_can_channel(void) {
@@ -545,7 +559,9 @@ void setup_canfd_callbacks(void) {
 }
 
 /****************************************************************************/
-// Resource cleanup
+// setup CAN/CANFD
+// Performs complete CAN/CANFD setup: device init, channel start, and callback setup
+// @return true if successful, false otherwise
 /****************************************************************************/
 
 bool setup_can(void) {
@@ -593,6 +609,12 @@ bool setup_canfd(void) {
   printf("CANFD setup completed successfully\n");
   return true;
 }
+
+/****************************************************************************/
+// Resource cleanup CAN/CANFD
+// Cleans up CAN/CANFD resources: device close, channel reset, and callback cleanup
+// @return void
+/****************************************************************************/
 
 void cleanup_can_resources(void) {
   if (get_can_backend() == kBackendSocketcan) {
