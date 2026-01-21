@@ -30,7 +30,7 @@ int main(int argc, char const *argv[]) {
   // uint8_t slave_id_right = 0x7f; // Default right-hand ID for Revo2 is 0x7f
   // get_device_info(handle, slave_id); return 0;
   get_device_info(handle, slave_id);
-  return 0;
+  // return 0;
 
   // Interface to modify hand baudrate; can also be modified via upper-computer
   // tools stark_set_canfd_baudrate(handle, slave_id_right, 2000); // Set to 2

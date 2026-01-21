@@ -19,5 +19,7 @@ cd python
 (py310) ➜  revo1_can git:(main) ✗ python zqwl_can.py # Read device info, control device
 # ZLG CAN device, both Windows and Linux are supported
 (py310) ➜  revo1_can git:(main) ✗ python zlg_can.py # Read device info, control device
-```
 
+# SocketCAN (Linux)
+(py310) ➜  revo1_can git:(main) ✗ STARK_SOCKETCAN_IFACE=can0 python socketcan_can.py # Read device info, control device
+```

@@ -2,8 +2,13 @@
  * @file can_common.h
  * @brief Common utility functions for CAN/CANFD examples
  * 
- * This header provides shared utility functions for ZLG USB-CANFD device
+ * This header provides shared utility functions for CAN/CANFD device
  * initialization, channel configuration, and callback setup.
+ *
+ * Backend selection:
+ * - Default: ZLG USB-CANFD backend.
+ * - SocketCAN: set STARK_CAN_BACKEND=socketcan and optionally
+ *   STARK_SOCKETCAN_IFACE=can0 (or can1, vcan0, etc.).
  */
 
 #ifndef CAN_COMMON_H
