@@ -383,6 +383,8 @@ Logs are automatically saved to `logs/` directory with timestamps.
 | Firmware Update | OTA firmware update | [revo1_dfu.py](revo1/revo1_dfu.py) |
 | Touch Sensors | Touch sensor data reading | [revo1_touch.py](revo1/revo1_touch.py) |
 | Comm Test | Communication frequency test | [revo1_comm_frequency_test.py](revo1/revo1_comm_frequency_test.py) |
+| Motor Collector | Motor data collection | [revo1_basic_collector.py](revo1/revo1_basic_collector.py) |
+| Touch Collector | Touch data collection | [revo1_touch_collector.py](revo1/revo1_touch_collector.py) |
 
 **Detailed Guide:** [Revo1 RS-485 README](revo1/README.md)
 
@@ -404,6 +406,9 @@ Logs are automatically saved to `logs/` directory with timestamps.
 | Firmware Update | OTA firmware update | [revo2_dfu.py](revo2/revo2_dfu.py) |
 | Touch Sensors | Touch sensor data reading | [revo2_touch.py](revo2/revo2_touch.py) |
 | Touch Pressure | Pressure sensor data | [revo2_touch_pressure.py](revo2/revo2_touch_pressure.py) |
+| Motor Collector | Motor data collection | [revo2_basic_collector.py](revo2/revo2_basic_collector.py) |
+| Touch Collector | Touch data collection | [revo2_touch_collector.py](revo2/revo2_touch_collector.py) |
+| Pressure Collector | Pressure data collection | [revo2_touch_pressure_collector.py](revo2/revo2_touch_pressure_collector.py) |
 
 **Detailed Guide:** [Revo2 RS-485 README](revo2/README.md)
 

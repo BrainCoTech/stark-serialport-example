@@ -221,5 +221,13 @@ async def set_finger_current(client, slave_id: int):
     # Or set all fingers current
     # await client.set_finger_currents(slave_id, [-100] * 6)
 
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

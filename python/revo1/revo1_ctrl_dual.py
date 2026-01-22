@@ -102,5 +102,13 @@ async def monitor_and_control(client_left, client_right, left_id, right_id):
             logger.error(f"Error in monitor_and_control loop: {e}")
             await asyncio.sleep(1)
 
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

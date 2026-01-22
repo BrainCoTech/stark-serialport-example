@@ -146,9 +146,6 @@ async def quick_frequency_test(duration=5.0, target_hz=50, test_type="read"):
         else:
             print("❌ No successful test results")
 
-    except KeyboardInterrupt:
-        print("\n⚠️  Test interrupted by user")
-
     finally:
         libstark.modbus_close(client)
         logger.info("🔌 Connection closed")
@@ -178,5 +175,13 @@ async def main():
     print("   • Position set (set_finger_positions): Used to control finger movement to target position")
     print("   • Mixed function: Simulates read+control operations in actual applications")
 
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

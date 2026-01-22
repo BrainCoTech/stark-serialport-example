@@ -12,6 +12,9 @@ import json
 import sys
 import logging
 import os
+import math
+import time
+import asyncio
 
 # Add parent directory to path to import logger
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,9 +23,7 @@ from logger import getLogger
 # logger = getLogger(logging.DEBUG)
 logger = getLogger(logging.INFO)
 
-from bc_stark_sdk import main_mod
-
-libstark = main_mod
+from bc_stark_sdk import main_mod as libstark
 libstark.init_config(libstark.StarkProtocolType.Modbus)
 
 
@@ -112,27 +113,148 @@ def get_stark_port_name():
     logger.info(f"Using port: {port_name}")
     return port_name
 
-def is_positions_open(status: main_mod.MotorStatusData) -> bool:
+def is_positions_open(status: libstark.MotorStatusData) -> bool:
     """
     Check if fingers are in open state
 
     Args:
-        status (main_mod.MotorStatusData): Motor status data object
+        status (MotorStatusData): Motor status data object
 
     Returns:
         bool: Returns True if fingers are open, otherwise returns False
     """
     return status.positions <= [400, 400, 0, 0, 0, 0]
 
-def is_positions_closed(status: main_mod.MotorStatusData) -> bool:
+def is_positions_closed(status: libstark.MotorStatusData) -> bool:
     """
     Check if fingers are in closed state
 
     Args:
-        status (main_mod.MotorStatusData): Motor status data object
+        status (MotorStatusData): Motor status data object
 
     Returns:
         bool: Returns True if fingers are closed, otherwise returns False
     """
 
     return status.positions >= [399, 399, 950, 950, 950, 950]
+
+
+def init_cosine_trajectory(traj_len=20, min_val=0.0, max_val=100.0, precision=0.1):
+    """
+    Initialize cosine trajectory for position control testing
+
+    Generate a complete cosine wave trajectory for target position sequence.
+    Trajectory range: configurable (default 0-100%), precision: configurable (default 0.1%)
+
+    Note: Thumb finger trajectory will be automatically clamped to max 50% by
+    trajectory_control_task() because Thumb has 2 joints controlled together.
+
+    Args:
+        traj_len (int): Number of trajectory points (cosine wave sampling points), default 20
+        min_val (float): Minimum value of trajectory range (%), default 0.0
+        max_val (float): Maximum value of trajectory range (%), default 100.0
+        precision (float): Trajectory precision (%), default 0.1
+
+    Returns:
+        list: Trajectory point list, each point value range depends on precision
+              For 0.1% precision: [0, 1000] representing [0%, 100%]
+
+    Example:
+        # Generate default trajectory: 20 points, 0-100%, 0.1% precision
+        trajectory = init_cosine_trajectory()
+
+        # Generate custom trajectory: 30 points, 20-80%, 0.1% precision
+        trajectory = init_cosine_trajectory(traj_len=30, min_val=20.0, max_val=80.0)
+    """
+    traj = []
+    amplitude = (max_val - min_val) / 2.0
+    offset = (max_val + min_val) / 2.0
+
+    for i in range(traj_len):
+        # Generate cosine wave: offset + amplitude * cos(2πi/N)
+        value = offset + amplitude * math.cos(2 * math.pi * i / traj_len)
+        # Convert to specified precision (e.g., 0.1% precision means multiply by 10)
+        traj.append(int(value / precision))
+
+    return traj
+
+
+async def trajectory_control_task(
+    client,
+    slave_id,
+    finger_id,
+    trajectory,
+    ctrl_interval=0.01,
+    stop_flag_ref=None,
+    index_ref=None,
+    logger_instance=None
+):
+    """
+    Trajectory control task: Send target positions at specified frequency
+
+    Execute high-frequency position control, cyclically traverse trajectory points and send control commands.
+    Supports 100Hz control frequency (10ms interval) by default.
+
+    IMPORTANT: For Thumb finger, trajectory values are automatically clamped to max 500
+    because the Thumb has 2 joints controlled together.
+
+    Args:
+        client: Modbus client instance
+        slave_id: Device slave ID
+        finger_id: Target finger ID (libstark.FingerId enum)
+        trajectory: Trajectory point list, values in 0.1% precision [0, 1000]
+        ctrl_interval (float): Control interval in seconds, default 0.01 (100Hz)
+        stop_flag_ref (dict): Stop flag reference, e.g., {'value': False}
+        index_ref (dict): Trajectory index reference, e.g., {'value': 0}
+        logger_instance: Logger instance, uses global logger if None
+
+    Example:
+        trajectory = init_cosine_trajectory()
+        stop_flag = {'value': False}
+        index = {'value': 0}
+
+        # Start control task
+        control = asyncio.create_task(
+            trajectory_control_task(
+                client, slave_id, libstark.FingerId.Ring,
+                trajectory, stop_flag_ref=stop_flag, index_ref=index
+            )
+        )
+
+        # Run for 5 seconds then stop
+        await asyncio.sleep(5.0)
+        stop_flag['value'] = True
+        await control
+    """
+    # IMPORTANT: Thumb has 2 joints controlled together, clamp trajectory to max 500
+    if finger_id == libstark.FingerId.Thumb:
+        trajectory = [min(val, 500) for val in trajectory]
+        logger.warning("Thumb finger detected, trajectory clamped to max 500")
+    
+    local_index = 0
+    while True:
+        # Check stop flag
+        if stop_flag_ref and stop_flag_ref.get('value', False):
+            break
+
+        task_start = time.perf_counter()
+
+        # Cyclically traverse trajectory points
+        local_index = (local_index + 1) % len(trajectory)
+        if index_ref is not None:
+            index_ref['value'] = local_index
+
+        # Get target position (already in 0.1% precision [0, 1000])
+        target = trajectory[local_index]
+
+        # Send position control command, 1ms means fastest response
+        await client.set_finger_position(slave_id, finger_id, target)
+
+        elapsed = (time.perf_counter() - task_start) * 1000
+        logger.debug(f"[{local_index}] Target: {target} (0.1%), Control elapsed: {elapsed:.1f}ms")
+
+        # Maintain control frequency
+        sleep_time = ctrl_interval - (elapsed / 1000.0)
+        if sleep_time > 0:
+            await asyncio.sleep(sleep_time)
+

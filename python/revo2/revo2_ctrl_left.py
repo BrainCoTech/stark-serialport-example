@@ -31,11 +31,16 @@ async def main():
             logger.info(f"Publishing positions: {positions}")
             await client.set_finger_positions_and_speeds(SLAVE_ID, positions, speeds)
             await asyncio.sleep(0.01)
-    except KeyboardInterrupt:
-        logger.info("Exiting...")
-    libstark.modbus_close(client)
-    sys.exit(0)
+    finally:
+        libstark.modbus_close(client)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

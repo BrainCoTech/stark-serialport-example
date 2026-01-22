@@ -51,11 +51,12 @@ async def main():
       # await ctx.touch_sensor_reset(slave_pos, 0x1f)  # Adjust all/specified channels
 
 
-    # Use PDO communication to control/monitor motors and touch sensors
-
-    # Clean up resources
-    sys.exit(0)
-
-
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

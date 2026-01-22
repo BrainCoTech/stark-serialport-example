@@ -10,6 +10,5 @@ from common_utils import setup_shutdown_event
 # logger = getLogger(logging.DEBUG)
 logger = getLogger(logging.INFO)
 
-from bc_stark_sdk import main_mod
-libstark = main_mod
+from bc_stark_sdk import main_mod as libstark
 libstark.init_config(libstark.StarkProtocolType.CanFd)

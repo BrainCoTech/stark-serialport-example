@@ -47,7 +47,6 @@ async def main():
     logger.info(f"Finger[{finger_id}] protected current: {protected_current}")
 
     trajectory = init_trajectory()
-    traj_len = len(trajectory)
 
     index = 0
     stop_flag = False
@@ -57,14 +56,14 @@ async def main():
         while not stop_flag:
             start_time = time.perf_counter()
             target = trajectory[index]
-            index = (index + 1) % traj_len
+            index = (index + 1) % TRAJ_LEN
             logger.debug(f"Target: {target}, Index: {index}")
             await ctx.set_finger_position_with_millis(
                 slave_pos, finger_id, target, 1
             )  # 1ms, the firmware will respond as fast as possible
             elapsed = time.perf_counter() - start_time
             logger.info(
-                f"[{(index - 1) % traj_len}] Target: {target}, Elapsed: {elapsed:.3f}s"
+                f"[{(index - 1) % TRAJ_LEN}] Target: {target}, Elapsed: {elapsed:.3f}s"
             )
             if elapsed < CTRL_INTERVAL:
                 await asyncio.sleep(CTRL_INTERVAL - elapsed)
@@ -132,4 +131,11 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

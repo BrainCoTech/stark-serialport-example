@@ -17,12 +17,14 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id);
 
 // ================== Main function ==================
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[])
+{
   // Setup signal handlers for crash debugging
   setup_signal_handlers();
 
   // Setup CAN (device + channel + callbacks)
-  if (!setup_can()) {
+  if (!setup_can())
+  {
     return -1;
   }
 

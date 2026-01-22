@@ -35,7 +35,7 @@ revo2_basic_ota_bin_path = os.path.join(
     parent_dir,
     "ota_bin",
     "stark2",
-    "stark2_fw_V0.0.10_20250714180644.bin",
+    "Revo2_V1.0.20.U_2601091030.bin",
 )
 
 # Global variables for asynchronous event handling
@@ -88,7 +88,7 @@ async def main():
     main_loop = asyncio.get_running_loop()
 
     # Automatically detect device protocol and connection parameters
-    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device("/dev/ttyUSB0") # Replace with actual serial port name, None will try to automatically detect
+    (protocol, port_name, baudrate, slave_id) = await libstark.auto_detect_device() # Replace with actual serial port name, None will try to automatically detect
     logger.info(
         f"Detected protocol: {protocol}, port: {port_name}, baudrate: {baudrate}, slave_id: {slave_id}"
     )
@@ -158,4 +158,11 @@ async def start_dfu(port_name, baudrate, slave_id, ota_bin_path):
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

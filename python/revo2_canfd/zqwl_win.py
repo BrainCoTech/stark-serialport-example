@@ -111,7 +111,8 @@ def zcan_receive_message(quick_retries: int = 2, dely_retries: int = 0):
 
     # Quick reception attempts
     for attempt in range(quick_retries):
-        time.sleep(0.001)  # Short delay
+        time.sleep(0.01)  # Short delay
+        # time.sleep(0.001)  # Short delay
         message = _zcan_read_messages(attempt)
         if message is not None:
             return message

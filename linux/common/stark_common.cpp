@@ -20,7 +20,7 @@
 // Signal handling
 /****************************************************************************/
 
-void signal_handler(int sig) {
+static void signal_handler(int sig) {
   void *array[10];
   size_t size;
 

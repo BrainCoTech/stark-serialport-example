@@ -598,12 +598,17 @@ async def main():
         print("📊 Results charts saved to: revo2_comm_frequency_test_results.png")
         print(f"{'='*60}")
 
-    except KeyboardInterrupt:
-        print("\n⚠️  Test interrupted by user")
     except Exception as e:
         logger.error(f"❌ Error occurred during test: {e}")
     finally:
         await tester.cleanup()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

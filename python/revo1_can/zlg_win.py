@@ -127,7 +127,8 @@ def zlgcan_receive_message(quick_retries: int = 2, dely_retries: int = 0) -> Opt
 
     # Quick receive try
     for _attempt in range(quick_retries):
-        time.sleep(0.001)  # Short delay
+        time.sleep(0.01)  # Short delay
+        # time.sleep(0.001)  # Short delay
         message = _zlgcan_read_messages(channel_handle)
         if message is not None:
             return message

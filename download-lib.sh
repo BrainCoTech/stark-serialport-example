@@ -7,7 +7,7 @@ DIST_DIR="${SCRIPT_DIR}/dist"
 VERSION_FILE="${SCRIPT_DIR}/VERSION"
 
 # Configuration
-LIB_VERSION="v1.0.1"
+LIB_VERSION="v1.0.3"
 BASE_URL="https://app.brainco.cn/universal/bc-stark-sdk/libs/${LIB_VERSION}"
 
 # Colorful echo functions

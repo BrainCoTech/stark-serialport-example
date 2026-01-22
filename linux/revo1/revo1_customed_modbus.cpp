@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-
 // Declare functions
 void setup_modbus_callbacks();
 void get_device_info(DeviceHandler *handle, uint8_t slave_id);

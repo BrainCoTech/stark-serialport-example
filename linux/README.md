@@ -568,6 +568,8 @@ Get and print extended device information (baudrate, voltage, LED, button).
 | Async Modbus | Asynchronous Modbus control | [revo1_customed_modbus_async.cpp](revo1/revo1_customed_modbus_async.cpp) |
 | Firmware Update | OTA firmware update | [revo1_dfu.cpp](revo1/revo1_dfu.cpp) |
 | Touch Sensors | Touch sensor data reading | [revo1_touch.cpp](revo1/revo1_touch.cpp) |
+| Motor Collector | Motor data collection | [revo1_basic_collector.cpp](revo1/revo1_basic_collector.cpp) |
+| Touch Collector | Touch data collection | [revo1_touch_collector.cpp](revo1/revo1_touch_collector.cpp) |
 
 **Detailed Guide:** [Revo1 README](revo1/README.md)
 
@@ -585,6 +587,9 @@ Get and print extended device information (baudrate, voltage, LED, button).
 | Firmware Update | OTA firmware update | [revo2_dfu.cpp](revo2/revo2_dfu.cpp) |
 | Touch Sensors | Touch sensor data reading | [revo2_touch.cpp](revo2/revo2_touch.cpp) |
 | EtherCAT | EtherCAT protocol example | [revo2_ethercat.cpp](revo2/revo2_ethercat.cpp) |
+| **Motor Collector** | **Motor data collection** | [revo2_basic_collector.cpp](revo2/revo2_basic_collector.cpp) |
+| **Touch Collector** | **Touch data collection with trajectory** | [revo2_touch_collector.cpp](revo2/revo2_touch_collector.cpp) |
+| **Pressure Collector** | **Pressure sensor data collection** | [revo2_touch_pressure_collector.cpp](revo2/revo2_touch_pressure_collector.cpp) |
 
 **Detailed Guide:** [Revo2 README](revo2/README.md)
 
@@ -614,6 +619,11 @@ make run revo1_can            # Auto-detects CAN mode
 make run revo2_ctrl           # Modbus programs
 make run revo2_canfd          # Auto-detects CANFD mode
 make run revo2_ethercat       # Auto-detects EtherCAT mode
+
+make run revo1_basic_collector   # Run Revo1 motor collector example
+make run revo1_touch_collector   # Run Revo1 touch collector example
+make run revo2_basic_collector   # Run Revo2 motor collector example
+make run revo2_touch_collector   # Run Revo2 touch collector example
 
 # Show available targets
 make run                      # Shows usage help

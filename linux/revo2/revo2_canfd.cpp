@@ -33,9 +33,9 @@ int main(int argc, char const *argv[]) {
   // return 0;
 
   // Interface to modify hand baudrate; can also be modified via upper-computer
-  // tools stark_set_canfd_baudrate(handle, slave_id_right, 2000); // Set to 2
-  // Mbps stark_set_canfd_baudrate(handle, slave_id_right, 5000); // Set to 5
-  // Mbps return 0;
+  // stark_set_canfd_baudrate(handle, slave_id_right, 2000); // Set to 2 Mbps
+  // stark_set_canfd_baudrate(handle, slave_id_right, 5000); // Set to 5 Mbps
+  // return 0;
 
   while (1) {
     uint16_t durations[6] = {300, 300, 300, 300, 300, 300};

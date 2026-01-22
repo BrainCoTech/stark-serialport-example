@@ -28,8 +28,9 @@ CAN_COMMON_OBJ := $(COMMON_DIR)/can_common.$(CAN_BACKEND).o
 
 # Base libraries
 ZLG_LIB_DIR ?=
-BASE_LIB_DIRS := /usr/local/lib /usr/lib $(LIB_DIR) $(ZLG_LIB_DIR)
-BASE_LIBS := $(foreach d,$(BASE_LIB_DIRS),-L$(d)) -Wl,-rpath,/usr/local/lib:/usr/lib:$(LIB_DIR) -lbc_stark_sdk
+BASE_LIB_DIRS := $(LIB_DIR) $(if $(ZLG_LIB_DIR),$(ZLG_LIB_DIR)) /usr/local/lib /usr/lib
+RPATH_DIRS := $(LIB_DIR)$(if $(ZLG_LIB_DIR),:$(ZLG_LIB_DIR)):/usr/local/lib:/usr/lib
+BASE_LIBS := $(foreach d,$(BASE_LIB_DIRS),-L$(d)) -Wl,-rpath,$(RPATH_DIRS) -lbc_stark_sdk
 
 ifeq ($(CAN_BACKEND),socketcan)
   CAN_LIBS :=

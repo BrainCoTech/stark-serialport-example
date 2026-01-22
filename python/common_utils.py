@@ -38,7 +38,8 @@ def setup_shutdown_event(logger=None):
             logger.info("Shutdown signal received")
         else:
             print("Shutdown signal received")
-        sys.exit(0)
+        shutdown_event.set()
+        # sys.exit(0)
 
     if platform.system() != "Windows":
         # Register signal handler for Unix-like systems

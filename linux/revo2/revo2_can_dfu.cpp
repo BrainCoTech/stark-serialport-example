@@ -42,7 +42,7 @@ int main(int argc, char const *argv[]) {
   setup_dfu_callbacks_with_timing(g_start_time, cleanup_resources);
 
   // Start DFU upgrade
-  start_dfu(handle, slave_id, "ota_bin/stark2/Revo2_V1.0.4_2508291545.bin", 5);
+  start_dfu(handle, slave_id, "ota_bin/stark2/Revo2_V1.0.1.C_2509021442_can.bin", 5);
 
   printf("Revo2 CAN DFU, Waiting for DFU to complete...\n");
   useconds_t delay = 300 * 1000 * 1000; // 300 s, wait for DFU to complete

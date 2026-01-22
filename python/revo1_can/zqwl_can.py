@@ -156,8 +156,8 @@ class Revo1CanController:
             "Open hand": [0, 0, 0, 0, 0, 0],
             "Point": [0, 300, 0, 0, 0, 0],
             "Victory gesture": [0, 300, 800, 0, 0, 0],
-            "OK gesture": [800, 300, 800, 0, 0, 0],
-            "Grip": [800, 300, 1000, 1000, 1000, 1000],
+            "OK gesture": [500, 300, 800, 0, 0, 0],  # Thumb limited to 500 (2 joints)
+            "Grip": [500, 300, 1000, 1000, 1000, 1000],  # Thumb limited to 500 (2 joints)
         }
 
         for gesture_name, positions in gestures.items():
@@ -314,4 +314,11 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

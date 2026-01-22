@@ -243,8 +243,14 @@ async def main():
     reader_task.cancel()  # 取消电机状态监控任务
     # 关闭资源
     zcan_close()
-    sys.exit(0)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

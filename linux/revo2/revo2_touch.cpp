@@ -12,11 +12,8 @@ int main(int argc, char const *argv[]) {
   // Setup signal handlers for crash debugging
   setup_signal_handlers();
 
-  init_cfg(STARK_PROTOCOL_TYPE_MODBUS,
-           LOG_LEVEL_INFO); // Initialize configuration
-  auto cfg = auto_detect_modbus_revo2(
-      "/dev/ttyUSB0", true); // Replace with actual serial port name; passing
-                             // NULL will try auto-detection
+  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO); // Initialize configuration
+  auto cfg = auto_detect_modbus_revo2(NULL, true); // Replace with actual serial port name; passing NULL will try auto-detection
   if (cfg == NULL) {
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");
     return -1;

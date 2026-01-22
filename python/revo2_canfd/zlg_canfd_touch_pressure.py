@@ -149,7 +149,13 @@ async def main():
     reader_task.cancel()  # Cancel motor status monitoring task
     # Clean up resources
     zlgcan_close()
-    sys.exit(0)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)
