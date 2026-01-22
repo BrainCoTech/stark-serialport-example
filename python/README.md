@@ -1,6 +1,6 @@
 # BrainCo RevoHand Python SDK
 
-[English](README.md) | [中文](README-CN.md)
+[English](README.md) | [中文](README.zh.md)
 
 Complete Python SDK and examples for BrainCo RevoHand devices (Revo1 and Revo2 series).
 

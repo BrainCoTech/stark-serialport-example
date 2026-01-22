@@ -3,7 +3,7 @@
 [![版本](https://img.shields.io/badge/版本-v1.0.1-blue.svg)](VERSION)
 [![许可证](https://img.shields.io/badge/许可证-专有-red.svg)]()
 
-[English](README.md) | [中文](README-CN.md)
+[English](README.md) | [中文](README.zh.md)
 
 本仓库提供了 BrainCo 灵巧手设备（包括 Revo1 和 Revo2 系列）的完整 SDK 开发示例。包含 C++ 和 Python 的即用代码示例，帮助开发者快速集成和控制灵巧机械手。
 

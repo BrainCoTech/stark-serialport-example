@@ -1,6 +1,6 @@
 # BrainCo 灵巧手 Python SDK
 
-[English](README.md) | [中文](README-CN.md)
+[English](README.md) | [中文](README.zh.md)
 
 BrainCo 灵巧手设备（Revo1 和 Revo2 系列）的完整 Python SDK 和示例。
 

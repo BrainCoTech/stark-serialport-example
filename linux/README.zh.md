@@ -1,6 +1,6 @@
 # BrainCo 灵巧手 C++ SDK（Linux/Ubuntu）
 
-[English](README.md) | [中文](README-CN.md)
+[English](README.md) | [中文](README.zh.md)
 
 BrainCo 灵巧手设备在 Linux/Ubuntu 平台上的完整 C++ SDK 和示例。
 

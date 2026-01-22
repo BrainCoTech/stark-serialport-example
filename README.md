@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-v1.0.1-blue.svg)](VERSION)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)]()
 
-[English](README.md) | [中文](README-CN.md)
+[English](README.md) | [中文](README.zh.md)
 
 This repository provides comprehensive SDK examples for BrainCo RevoHand devices, including both Revo1 and Revo2 series. It contains ready-to-use code samples in C++ and Python to help developers quickly integrate and control the dexterous robotic hand.
 

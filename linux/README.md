@@ -1,6 +1,6 @@
 # BrainCo RevoHand C++ SDK for Linux/Ubuntu
 
-[English](README.md) | [中文](README-CN.md)
+[English](README.md) | [中文](README.zh.md)
 
 Complete C++ SDK and examples for BrainCo RevoHand devices on Linux/Ubuntu platforms.
 
