@@ -1,3 +1,3 @@
-bc-stark-sdk==1.0.3
+bc-stark-sdk==1.0.4
 asyncio>=3.4.3
 colorlog>=6.9.0
