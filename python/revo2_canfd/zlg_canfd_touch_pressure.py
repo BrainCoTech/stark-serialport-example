@@ -131,7 +131,7 @@ async def main():
     baudrate = await client.get_canfd_baudrate(slave_id)
     logger.info(f"CANFD, Baudrate: {baudrate}")
 
-    if not client.is_touch_pressure():
+    if not client.is_touch_pressure(slave_id):
         logger.error("This example is only for Revo2 Touch Pressure hardware")
         zlgcan_close()
         sys.exit(1)

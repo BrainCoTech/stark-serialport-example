@@ -29,7 +29,7 @@ async def main():
         logger.error("This example is only for Revo2 Touch hardware")
         sys.exit(1)
 
-    if not client.is_touch_pressure():
+    if not client.is_touch_pressure(slave_id):
         logger.error("This example is only for Revo2 Touch Pressure hardware")
         libstark.modbus_close(client)
         sys.exit(1)

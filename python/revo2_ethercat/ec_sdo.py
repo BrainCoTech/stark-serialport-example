@@ -33,11 +33,11 @@ async def main():
     turbo_conf = await ctx.get_turbo_config(slave_pos)
     logger.info(f"Turbo config: {turbo_conf.description}")
 
-    if ctx.is_touch_hand():
+    if ctx.is_touch_hand(slave_pos):
       touch_fw_versions = await ctx.get_touch_sensor_fw_versions(slave_pos)
       logger.info(f"Touch Fw Versions: {touch_fw_versions}")
 
-      if ctx.is_touch_pressure():
+      if ctx.is_touch_pressure(slave_pos):
         data_type = await ctx.get_modulus_touch_data_type(slave_pos)
         logger.info(f"Modulus Touch Data Type: {data_type}")
 

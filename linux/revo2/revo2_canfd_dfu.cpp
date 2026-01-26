@@ -45,7 +45,7 @@ int main(int argc, char const *argv[]) {
 
   // Start DFU upgrade
   // start_dfu(handle, slave_id,
-  // "ota_bin/stark2/stark2_fw_V0.0.14_20250723135853.bin", 5);
+  // "ota_bin/stark2/Revo2_V1.0.20.U_2601091030.bin", 5);
   start_dfu(handle, slave_id,
             "ota_bin/stark2/Revo2_V1.0.2.C_2511031119_can.bin", 5);
 

@@ -139,6 +139,10 @@ bool verify_device_is_revo1(DeviceHandler *handle, uint8_t slave_id) {
     hw_type = "Revo1 Advanced";
     is_revo1 = true;
     break;
+  case STARK_HARDWARE_TYPE_REVO1_ADVANCED_TOUCH:
+    hw_type = "Revo1 Advanced Touch";
+    is_revo1 = true;
+    break;
   case STARK_HARDWARE_TYPE_REVO2_BASIC:
     hw_type = "Revo2 Basic";
     break;
@@ -189,8 +193,14 @@ bool verify_device_is_revo2(DeviceHandler *handle, uint8_t slave_id) {
     break;
   case STARK_HARDWARE_TYPE_REVO1_ADVANCED:
     hw_type = "Revo1 Advanced";
+    is_revo2 = true;
+    break;
+  case STARK_HARDWARE_TYPE_REVO1_ADVANCED_TOUCH:
+    hw_type = "Revo1 Advanced Touch";
+    is_revo2 = true;
     break;
   default:
+    printf("Warning: Unknown hardware type\n");
     break;
   }
   printf("Hardware Type: %s (%hhu)\n", hw_type, info->hardware_type);

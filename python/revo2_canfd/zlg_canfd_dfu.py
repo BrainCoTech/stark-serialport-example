@@ -18,7 +18,7 @@ ota_bin_path = os.path.join(
     parent_dir,
     "ota_bin",
     "stark2",
-    "stark2_fw_V0.0.14_20250723135853.bin",
+    "Revo2_V1.0.20.U_2601091030.bin",
 )
 
 if not os.path.exists(ota_bin_path):

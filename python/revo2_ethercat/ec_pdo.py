@@ -79,8 +79,8 @@ async def main():
                 logger.info(f"get_motor_status, elapsed:  {elapsed:.2f}ms")
                 logger.debug(f"Motor status: {status.description}")
 
-                if ctx.is_touch_hand():
-                    if ctx.is_touch_pressure():
+                if ctx.is_touch_hand(slave_pos):
+                    if ctx.is_touch_pressure(slave_pos):
                       logger.debug("get_modulus_touch_data")
                       start_time = time.perf_counter()
                       modulus_touch_data = await ctx.get_modulus_touch_data(slave_pos)

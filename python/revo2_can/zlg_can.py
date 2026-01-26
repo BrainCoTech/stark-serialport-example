@@ -25,6 +25,7 @@ class Revo2CanController:
         self.master_id = master_id
         self.slave_id = slave_id
         self.client = libstark.PyDeviceContext()
+        self.device_info = None  # Initialize device info
 
     async def initialize(self):
         """Initialize CAN connection"""
@@ -77,10 +78,17 @@ class Revo2CanController:
         try:
             device_info = await self.client.get_device_info(self.slave_id)
             logger.info(f"Device information: {device_info.description}")
+            self.device_info = device_info  # Store device info
             return device_info
         except Exception as e:
             logger.error(f"Failed to get device information: {e}")
             return None
+    
+    def is_revo1_advanced_touch(self) -> bool:
+        """Check if device is Revo1AdvancedTouch"""
+        if not hasattr(self, 'device_info') or self.device_info is None:
+            return False
+        return self.device_info.hardware_type == libstark.StarkHardwareType.Revo1AdvancedTouch
 
     async def change_slave_id(self, new_slave_id: int):
         """Change device slave ID (use with caution, device will reboot)"""
@@ -247,19 +255,125 @@ class Revo2CanController:
                 logger.error(f"Motor status monitoring exception: {e}")
                 await asyncio.sleep(1)
 
+    async def test_touch_sensor_control(self):
+        """Test touch sensor control (Revo1AdvancedTouch)"""
+        logger.info("=== Test touch sensor control ===")
+
+        try:
+            # 1. Enable touch sensors for all fingers
+            logger.info("1. Enable touch sensors for all fingers...")
+            await self.client.touch_sensor_setup(self.slave_id, 0xFF)
+            await asyncio.sleep(0.5)
+
+            # 2. Calibrate touch sensors
+            logger.info("2. Calibrate touch sensors for all fingers...")
+            await self.client.touch_sensor_calibrate(self.slave_id, 0xFF)
+            await asyncio.sleep(2.0)
+
+            # 3. Reset touch sensors
+            logger.info("3. Reset touch sensors for all fingers...")
+            await self.client.touch_sensor_reset(self.slave_id, 0xFF)
+            await asyncio.sleep(0.5)
+
+            logger.info("Touch sensor control test completed\n")
+        except Exception as e:
+            logger.error(f"Touch sensor control test failed: {e}")
+
+    def print_finger_touch_data(self, finger, channel: int, finger_name: str):
+        """Print touch data for a single finger"""
+        logger.info(f"\n--- {finger_name} (Channel {channel}) ---")
+
+        # Display different data groups based on finger type
+        if channel == 0:
+            # Thumb: 2 force groups, 1 self-proximity
+            logger.info(f"  Force Group 1: Normal={finger.normal_force1}, Tangential={finger.tangential_force1}, Direction={finger.tangential_direction1}°")
+            logger.info(f"  Force Group 2: Normal={finger.normal_force2}, Tangential={finger.tangential_force2}, Direction={finger.tangential_direction2}°")
+            logger.info(f"  Self-proximity: {finger.self_proximity1}")
+        elif channel in [1, 2, 3]:
+            # Index/Middle/Ring: 3 force groups, 2 self-proximity, 1 mutual-proximity
+            logger.info(f"  Force Group 1: Normal={finger.normal_force1}, Tangential={finger.tangential_force1}, Direction={finger.tangential_direction1}°")
+            logger.info(f"  Force Group 2: Normal={finger.normal_force2}, Tangential={finger.tangential_force2}, Direction={finger.tangential_direction2}°")
+            logger.info(f"  Force Group 3: Normal={finger.normal_force3}, Tangential={finger.tangential_force3}, Direction={finger.tangential_direction3}°")
+            logger.info(f"  Self-proximity 1: {finger.self_proximity1}, Self-proximity 2: {finger.self_proximity2}")
+            logger.info(f"  Mutual-proximity: {finger.mutual_proximity}")
+        elif channel == 4:
+            # Pinky: 2 force groups, 1 self-proximity, 1 mutual-proximity
+            logger.info(f"  Force Group 1: Normal={finger.normal_force1}, Tangential={finger.tangential_force1}, Direction={finger.tangential_direction1}°")
+            logger.info(f"  Force Group 2: Normal={finger.normal_force2}, Tangential={finger.tangential_force2}, Direction={finger.tangential_direction2}°")
+            logger.info(f"  Self-proximity: {finger.self_proximity1}")
+            logger.info(f"  Mutual-proximity: {finger.mutual_proximity}")
+
+        # Display status
+        status_map = {0: "Normal", 1: "Data Error", 2: "Communication Error"}
+        status_str = status_map.get(finger.status, "Unknown")
+        logger.info(f"  Status: {finger.status} ({status_str})")
+
+    async def test_touch_sensor_reading(self):
+        """Test touch sensor data reading (Revo1AdvancedTouch)"""
+        logger.info("\n=== Test touch sensor data reading ===")
+
+        try:
+            touch_data = await self.client.get_touch_sensor_status(self.slave_id)
+            logger.info(f"Successfully read touch data for {len(touch_data)} fingers")
+
+            finger_names = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
+
+            for i, finger in enumerate(touch_data):
+                if i < len(finger_names):
+                    self.print_finger_touch_data(finger, i, finger_names[i])
+
+            logger.info("\nTouch sensor data reading test completed\n")
+        except Exception as e:
+            logger.error(f"Touch sensor data reading failed: {e}")
+
+    async def monitor_touch_sensor(self, iterations: int = 10, interval: float = 0.5):
+        """Periodic touch sensor data monitoring (Revo1AdvancedTouch)"""
+        logger.info(f"\n=== Periodic touch sensor monitoring ({iterations} iterations) ===")
+
+        finger_names = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
+
+        for i in range(iterations):
+            try:
+                touch_data = await self.client.get_touch_sensor_status(self.slave_id)
+
+                logger.info(f"\n[{i + 1}] Touch data snapshot:")
+                for idx, finger in enumerate(touch_data):
+                    if idx < len(finger_names):
+                        logger.info(
+                            f"  {finger_names[idx]}: Normal={finger.normal_force1:4}, "
+                            f"Tangential={finger.tangential_force1:4}, "
+                            f"Self-prox={finger.self_proximity1:8}, Status={finger.status}"
+                        )
+
+                await asyncio.sleep(interval)
+            except Exception as e:
+                logger.error(f"[{i + 1}] Reading failed: {e}")
+
+        logger.info("\nPeriodic monitoring completed\n")
+
     async def demo_task(self):
         """Demo task"""
+        # Get device information first
+        await self.get_device_info()
+        
         # Configure device parameters, enable as needed
         # await self.configure_device()
 
-        # Enable the following demos as needed
-        await self.finger_position_examples()
-        await asyncio.sleep(1.0)
+        # Check if device is Revo1AdvancedTouch
+        if self.is_revo1_advanced_touch():
+            logger.info("Detected Revo1AdvancedTouch device, running touch sensor demos...")
+            # await self.test_touch_sensor_control()
+            await self.test_touch_sensor_reading()
+            await self.monitor_touch_sensor(iterations=10, interval=0.5)
+        else:
+            # Enable the following demos for other devices
+            await self.finger_position_examples()
+            await asyncio.sleep(1.0)
 
-        # await self.finger_speed_examples()
-        # await asyncio.sleep(1.0)
+            # await self.finger_speed_examples()
+            # await asyncio.sleep(1.0)
 
-        # await self.single_finger_control_example(libstark.FingerId.Pinky)
+            # await self.single_finger_control_example(libstark.FingerId.Pinky)
 
     def cleanup(self):
         """Clean up resources"""

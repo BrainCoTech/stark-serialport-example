@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
   setup_dfu_callbacks_simple();
 
   start_dfu(handle, slave_id,
-            "ota_bin/stark2/stark2_fw_V0.0.12_20250619182005.bin", 5);
+            "ota_bin/stark2/Revo2_V1.0.20.U_2601091030.bin", 5);
 
   printf("Revo2 Modbus DFU, Waiting for DFU to complete...\n");
   wait_for_dfu_completion(60);

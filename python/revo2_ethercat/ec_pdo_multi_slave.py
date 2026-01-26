@@ -101,7 +101,7 @@ async def main():
 
         info: libstark.DeviceInfo = await ctx.get_device_info(slave_pos)
         is_touch = info.is_touch()
-        is_pressure = ctx.is_touch_pressure()  # 此时 ctx.touch_vendor 针对当前 slave_pos
+        is_pressure = ctx.is_touch_pressure(slave_pos)  # 此时 ctx.touch_vendor 针对当前 slave_pos
         slave_cfg[slave_pos]["info"] = info
         slave_cfg[slave_pos]["is_touch"] = is_touch
         slave_cfg[slave_pos]["is_pressure"] = is_pressure

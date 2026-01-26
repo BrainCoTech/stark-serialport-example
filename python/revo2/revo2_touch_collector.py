@@ -50,7 +50,7 @@ async def main():
         sys.exit(1)
 
     # Check touch sensor type
-    if client.is_touch_pressure():
+    if client.is_touch_pressure(slave_id):
         logger.error("This example is for capacitive touch sensors!")
         logger.error("Current device has pressure touch sensor (Modulus)")
         logger.error("Please use revo2_touch_pressure_buffer.py instead")
