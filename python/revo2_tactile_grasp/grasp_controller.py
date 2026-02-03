@@ -27,7 +27,7 @@ class TactileGraspController:
         self.logger = getLogger(logging.INFO)
         self.contacted = False
         self.current_ctrl_list = [0] * 6
-
+        self.stiffness_clear=False
 
     def set_control_mode(self, mode: str):
         self.control_mode = mode.upper()
@@ -64,9 +64,7 @@ class TactileGraspController:
 
         new_currents = []
         for i, val in enumerate(cur_currents):
-            if i == 1:  # 第二个值保持为0
-                new_currents.append(100)
-            elif i in target_indices:
+            if i in target_indices:
                 new_currents.append(base_current)
             else:
                 new_currents.append(0)
@@ -130,7 +128,7 @@ class TactileGraspController:
             position: List[int] = None,
             speed: int = 100,
             thumb_base_position: int = 500,
-            thumb_flex_position: int = 850
+            thumb_flex_position: int = 750
     ):
         """
         基于位置和速度控制的抓握方法
@@ -141,6 +139,7 @@ class TactileGraspController:
             speed: 运动速度
             thumb_position: 拇指位置
         """
+        self.algorithm.stiffness_clear = True
         self.num_fingers = num_fingers
         self.algorithm.num_fingers = num_fingers
         position_all_default = [thumb_base_position, thumb_flex_position, 850, 1000, 1000, 1000]

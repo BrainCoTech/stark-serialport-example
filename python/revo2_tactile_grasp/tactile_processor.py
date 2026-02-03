@@ -25,7 +25,7 @@ class AlgorithmModule:
         self.device = device
         self.num_fingers = 0
         self.stiffness_detect_step = stiffness_detect_step
-
+        self.stiffness_clear=False
         slip_model_path = 'models/slip_detection_model.pkl'
         stiffness_model_path = 'models/stiffness_detect_model.pth'
 
@@ -112,7 +112,10 @@ class AlgorithmModule:
         channel 0 = normal force
         channel 1 = tangential force
         """
-
+        #清空上一轮抓握的刚度信息
+        if self.stiffness_clear:
+            stiffness_.clear()         # 重置刚度窗口，用于开始新一轮检测
+            self.stiffness_clear=False
         # ===== 构造数据 =====
         data = np.array([forces for _, forces in buffer])
         contact_info = {}
