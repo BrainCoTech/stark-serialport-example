@@ -57,14 +57,14 @@ def zlgcan_receive_message(quick_retries: int = 2, dely_retries: int = 0) -> Opt
     Returns:
         Received message or None(receive failed)
     """
-    # Quick receive attempt
+    # Quick receive attempt with longer delay for device response
     for _attempt in range(quick_retries):
-        time.sleep(0.001)  # Short delay
+        time.sleep(0.001)  # 1ms delay - device needs time to respond
         message = _zlgcan_read_messages()
         if message is not None:
             return message
 
-    logger.warning("Quick receive timeout")
+    logger.debug("Quick receive timeout")
 
     # Slow receive attempt
     for _attempt in range(dely_retries):
@@ -75,6 +75,57 @@ def zlgcan_receive_message(quick_retries: int = 2, dely_retries: int = 0) -> Opt
 
     if dely_retries > 0:
         logger.error("Slow receive attempt also timeout!")
+    return None
+
+
+def zlgcan_receive_filtered(expected_can_id: int, max_retries: int = 5) -> Optional[tuple[int, list[int], int]]:
+    """
+    Receive CAN bus message filtered by expected CAN ID.
+    
+    This function filters received frames to only return those matching the expected CAN ID.
+    Non-matching frames are discarded (they belong to other concurrent requests).
+    
+    Args:
+        expected_can_id: Expected CAN ID to filter by
+        max_retries: Maximum retry attempts
+        
+    Returns:
+        (can_id, data, frame_count) tuple or None if timeout
+    """
+    for _attempt in range(max_retries):
+        time.sleep(0.005)  # 5ms delay
+        
+        try:
+            can_msgs = can_receive(DEVICE_TYPE, DEVICE_INDEX, 0)
+            if can_msgs is None:
+                continue
+            
+            # Filter frames by expected CAN ID
+            matching_data = []
+            frame_count = 0
+            
+            for msg in can_msgs:
+                # Skip TX echo
+                if msg.hdr.inf.tx == 1:
+                    continue
+                
+                frame_id = msg.hdr.id
+                
+                # Check if this frame matches expected CAN ID
+                if frame_id == expected_can_id:
+                    # Append frame data
+                    matching_data.extend([msg.dat[j] for j in range(msg.hdr.len)])
+                    frame_count += 1
+                else:
+                    # Log but don't fail - other responses are for different requests
+                    logger.debug(f"Skipping frame with different CAN ID: 0x{frame_id:x} (expected 0x{expected_can_id:x})")
+            
+            if frame_count > 0:
+                return (expected_can_id, matching_data, frame_count)
+                
+        except Exception as e:
+            logger.error(f"Receive filtered exception: {e}")
+    
     return None
 
 

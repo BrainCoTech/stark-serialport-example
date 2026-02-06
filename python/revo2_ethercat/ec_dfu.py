@@ -12,7 +12,7 @@ sys.path.append(str(parent_dir))
 async def main():
     # fmt: off
     master_pos = 0
-    ctx = libstark.PyDeviceContext.open_ethercat_master(master_pos)
+    ctx = libstark.init_device_handler(libstark.StarkProtocolType.EtherCAT, master_pos)
     slave_pos = 0
     await ctx.ec_setup_sdo(slave_pos)
 

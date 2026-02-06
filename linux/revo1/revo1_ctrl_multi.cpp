@@ -83,8 +83,7 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id) {
         "Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n",
         slave_id, (uint8_t)info->sku_type, info->serial_number,
         info->firmware_version);
-    if (info->hardware_type == STARK_HARDWARE_TYPE_REVO1_TOUCH ||
-        info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH) {
+    if (stark_is_touch_device(info->hardware_type)) {
       // Enable all tactile sensors
       stark_enable_touch_sensor(handle, slave_id, 0x1F);
       usleep(1000 * 1000); // wait for tactile sensor to be ready

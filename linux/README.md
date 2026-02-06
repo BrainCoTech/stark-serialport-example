@@ -1,5 +1,7 @@
 # BrainCo RevoHand C++ SDK for Linux/Ubuntu
 
+> ⚠️ **DEPRECATED**: This folder is deprecated and will be removed in future versions. Please use the unified cross-platform `c/` folder instead: [C++ Development Guide](../c/README.md)
+
 [English](README.md) | [中文](README.zh.md)
 
 Complete C++ SDK and examples for BrainCo RevoHand devices on Linux/Ubuntu platforms.
@@ -16,7 +18,7 @@ Complete C++ SDK and examples for BrainCo RevoHand devices on Linux/Ubuntu platf
 
 ## 💻 System Requirements
 
-- **Operating System**: Ubuntu 20.04 LTS or later
+- **Operating System**: Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
 - **Compiler**: GCC with C++11 support
 - **Build Tools**: make, pkg-config
 - **Dependencies**: Stark SDK libraries (auto-downloaded)
@@ -82,8 +84,8 @@ int main() {
 #include <unistd.h>
 
 int main() {
-    // Initialize configuration
-    init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
+    // Initialize logging
+    init_logging(LOG_LEVEL_INFO);
     
     // Auto-detect and connect to device
     auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true);
@@ -117,7 +119,6 @@ int main() {
 | RS-485 (Modbus) | Serial communication | [revo2/](revo2/) | USB-to-RS485 adapter |
 | CAN | Controller Area Network | [revo2/](revo2/) | ZLG USB-CAN device or SocketCAN |
 | CANFD | CAN with Flexible Data-Rate | [revo2/](revo2/) | ZLG USB-CANFD device or SocketCAN |
-| EtherCAT | Industrial Ethernet | [revo2_ec/](revo2_ec/) | EtherCAT master |
 
 ## 📚 API Reference
 
@@ -130,15 +131,10 @@ Include the SDK in your code:
 
 ### Initialization and Configuration
 
-#### `init_cfg(protocol_type, log_level)`
-Initialize SDK configuration (Revo2 only).
+#### `init_logging(log_level)`
+Initialize SDK logging.
 
 **Parameters:**
-- `protocol_type` (StarkProtocolType): Protocol type
-  - `STARK_PROTOCOL_TYPE_MODBUS`
-  - `STARK_PROTOCOL_TYPE_CAN`
-  - `STARK_PROTOCOL_TYPE_CANFD`
-  - `STARK_PROTOCOL_TYPE_ETHERCAT`
 - `log_level` (LogLevel): Logging level
   - `LOG_LEVEL_DEBUG`
   - `LOG_LEVEL_INFO`
@@ -147,7 +143,25 @@ Initialize SDK configuration (Revo2 only).
 
 **Example:**
 ```cpp
-init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
+init_logging(LOG_LEVEL_INFO);
+```
+
+#### `init_device_handler(protocol_type, master_id)` (New in v1.1.0)
+Initialize device handler for CAN/CANFD/EtherCAT protocols.
+
+**Parameters:**
+- `protocol_type` (StarkProtocolType): Protocol type
+  - `STARK_PROTOCOL_TYPE_MODBUS`
+  - `STARK_PROTOCOL_TYPE_CAN`
+  - `STARK_PROTOCOL_TYPE_CAN_FD`
+  - `STARK_PROTOCOL_TYPE_ETHER_CAT`
+- `master_id` (uint8_t): Master ID (default: 0)
+
+**Returns:** `DeviceHandler*` - Device handler instance
+
+**Example:**
+```cpp
+auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN_FD, 0);
 ```
 
 ### Connection Management
@@ -564,12 +578,10 @@ Get and print extended device information (baudrate, voltage, LED, button).
 | Basic Control | Get device info, control fingers | [revo1_ctrl.cpp](revo1/revo1_ctrl.cpp) |
 | Multi Hand | Control multiple hands | [revo1_ctrl_multi.cpp](revo1/revo1_ctrl_multi.cpp) |
 | CAN Control | Control via CAN protocol | [revo1_can.cpp](revo1/revo1_can.cpp) |
+| Custom CAN | Custom CAN implementation | [revo1_can_customed.cpp](revo1/revo1_can_customed.cpp) |
 | Custom Modbus | Custom Modbus implementation | [revo1_customed_modbus.cpp](revo1/revo1_customed_modbus.cpp) |
 | Async Modbus | Asynchronous Modbus control | [revo1_customed_modbus_async.cpp](revo1/revo1_customed_modbus_async.cpp) |
-| Firmware Update | OTA firmware update | [revo1_dfu.cpp](revo1/revo1_dfu.cpp) |
 | Touch Sensors | Touch sensor data reading | [revo1_touch.cpp](revo1/revo1_touch.cpp) |
-| Motor Collector | Motor data collection | [revo1_basic_collector.cpp](revo1/revo1_basic_collector.cpp) |
-| Touch Collector | Touch data collection | [revo1_touch_collector.cpp](revo1/revo1_touch_collector.cpp) |
 
 **Detailed Guide:** [Revo1 README](revo1/README.md)
 
@@ -582,29 +594,12 @@ Get and print extended device information (baudrate, voltage, LED, button).
 | CAN Control | Control via CAN protocol | [revo2_can_ctrl.cpp](revo2/revo2_can_ctrl.cpp) |
 | CANFD Control | Control via CANFD protocol | [revo2_canfd.cpp](revo2/revo2_canfd.cpp) |
 | CANFD Touch | Touch control via CANFD | [revo2_canfd_touch.cpp](revo2/revo2_canfd_touch.cpp) |
+| Custom CANFD | Custom CANFD implementation | [revo2_canfd_customed.cpp](revo2/revo2_canfd_customed.cpp) |
 | Custom Modbus | Custom Modbus implementation | [revo2_customed_modbus.cpp](revo2/revo2_customed_modbus.cpp) |
 | Async Modbus | Asynchronous Modbus control | [revo2_customed_modbus_async.cpp](revo2/revo2_customed_modbus_async.cpp) |
-| Firmware Update | OTA firmware update | [revo2_dfu.cpp](revo2/revo2_dfu.cpp) |
 | Touch Sensors | Touch sensor data reading | [revo2_touch.cpp](revo2/revo2_touch.cpp) |
-| EtherCAT | EtherCAT protocol example | [revo2_ethercat.cpp](revo2/revo2_ethercat.cpp) |
-| **Motor Collector** | **Motor data collection** | [revo2_basic_collector.cpp](revo2/revo2_basic_collector.cpp) |
-| **Touch Collector** | **Touch data collection with trajectory** | [revo2_touch_collector.cpp](revo2/revo2_touch_collector.cpp) |
-| **Pressure Collector** | **Pressure sensor data collection** | [revo2_touch_pressure_collector.cpp](revo2/revo2_touch_pressure_collector.cpp) |
 
 **Detailed Guide:** [Revo2 README](revo2/README.md)
-
-### Revo2 EtherCAT Examples
-
-| Example | Description | File |
-|---------|-------------|------|
-| SDO Operations | Service Data Object read/write | [revo2_sdo.cpp](revo2_ec/revo2_sdo.cpp) |
-| PDO Operations | Process Data Object control | [revo2_pdo.cpp](revo2_ec/revo2_pdo.cpp) |
-| Multi-Hand PDO | Control multiple hands via PDO | [revo2_multi_pdo.cpp](revo2_ec/revo2_multi_pdo.cpp) |
-| Touch SDO | Touch sensor via SDO | [revo2_touch_sdo.cpp](revo2_ec/revo2_touch_sdo.cpp) |
-| Touch PDO | Touch sensor via PDO | [revo2_touch_pdo.cpp](revo2_ec/revo2_touch_pdo.cpp) |
-| Touch Pressure | Pressure sensor data | [revo2_touch_pressure_pdo.cpp](revo2_ec/revo2_touch_pressure_pdo.cpp) |
-
-**Detailed Guide:** [Revo2 EtherCAT README](revo2_ec/README.md)
 
 ## 🛠️ Build System
 
@@ -618,12 +613,6 @@ make run revo1_ctrl           # Modbus programs (default)
 make run revo1_can            # Auto-detects CAN mode
 make run revo2_ctrl           # Modbus programs
 make run revo2_canfd          # Auto-detects CANFD mode
-make run revo2_ethercat       # Auto-detects EtherCAT mode
-
-make run revo1_basic_collector   # Run Revo1 motor collector example
-make run revo1_touch_collector   # Run Revo1 touch collector example
-make run revo2_basic_collector   # Run Revo2 motor collector example
-make run revo2_touch_collector   # Run Revo2 touch collector example
 
 # Show available targets
 make run                      # Shows usage help
@@ -638,7 +627,6 @@ make clean
 # Build with specific modes
 make                          # Build with default mode (Modbus)
 make MODE=can                 # Build with CAN interface mode
-make MODE=ethercat            # Build with EtherCAT interface mode
 
 # Run only (must be compiled first)
 make run_revo1_ctrl           # Run revo1_ctrl example
@@ -651,7 +639,6 @@ make run_revo2_ctrl           # Run revo2_ctrl example
 |------|-------------|-------------------|
 | (default) | Modbus/RS-485 | USB-to-RS485 adapter |
 | `MODE=can` | CAN/CANFD | ZLG USB-CAN(FD) device or SocketCAN adapter |
-| `MODE=ethercat` | EtherCAT | EtherCAT master |
 
 For ZLG USB-CAN(FD), ensure `libusbcanfd.so` is installed. If missing, run `./download-lib.sh`
 to populate `dist/shared/linux` or set `ZLG_LIB_DIR=/path/to/lib`.
@@ -706,23 +693,6 @@ STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_can_ctrl
 STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_canfd
 ```
 
-### EtherCAT Build Notes
-
-EtherCAT examples require special capabilities:
-
-```bash
-# Compile (automatically sets capabilities)
-cd revo2_ec
-make
-
-# Verify capabilities
-getcap revo2_pdo.exe
-# Output: revo2_pdo.exe cap_net_admin,cap_net_raw,cap_sys_nice=eip
-
-# Run without sudo
-./revo2_pdo.exe
-```
-
 ## 📖 Additional Resources
 
 - [Official Documentation](https://www.brainco-hz.com/docs/revolimb-hand/index.html)
@@ -741,10 +711,8 @@ For technical support:
 - Remember to free allocated structures (`free_device_config`, `free_device_info`, `free_motor_status_data`, etc.)
 - Position values range from 0 (open) to 1000 (closed) for all devices
 - For Revo2, use `init_cfg()` before connecting to the device
-- Touch-enabled devices require `stark_enable_touch_sensor()` before reading sensor data
-- EtherCAT examples should run without `sudo` to avoid D-state issues
-- Always check slave positions with `sudo ethercat slaves` before using EtherCAT commands
+- Touch-enabled devices require `stark_enable_touch_sensor()` before reading sensor datads
 
 ---
 
-**Version:** Compatible with Stark SDK v1.0.1
+**Version:** Compatible with Stark SDK v1.1.0

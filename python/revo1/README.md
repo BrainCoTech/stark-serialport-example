@@ -1,4 +1,11 @@
-# Revo1 Python SDK
+# Revo1 Python SDK (RS-485/Modbus)
+
+## Requirement
+
+- Python 3.8~3.12
+- Linux: Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- macOS: 10.15+
+- Windows: 10/11
 
 ## Usage
 
@@ -9,8 +16,6 @@ cd python
 pip3 install -r requirements.txt
 
 cd revo1
-# Read device information
-python3 revo1_get.py
 # Control device - single dexterous hand
 python3 revo1_ctrl.py
 # Control device - multiple hands on one bus
@@ -21,6 +26,4 @@ python3 revo1_action_seq.py
 python3 revo1_cfg.py
 # Tactile version
 python3 revo1_touch.py
-# Upgrade device firmware
-python3 dfu.py
 ```

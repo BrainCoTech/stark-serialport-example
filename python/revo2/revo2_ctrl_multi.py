@@ -94,10 +94,10 @@ async def setup_touch_sensor(client, slave_id):
     # Verify device type
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
     logger.info(f"Device {slave_id:02x} info: {device_info.description}")
-    is_revo2_touch = device_info.is_revo2_touch()
-    slave_is_touch[slave_id] = is_revo2_touch
+    uses_revo2_touch = device_info.uses_revo2_touch_api()
+    slave_is_touch[slave_id] = uses_revo2_touch
 
-    if not is_revo2_touch:
+    if not uses_revo2_touch:
         logger.warning(f"Device {slave_id:02x} is not Revo2 Touch hardware, skipping tactile sensor setup")
         return
 

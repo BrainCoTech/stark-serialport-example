@@ -22,8 +22,8 @@ int main(int argc, char const *argv[]) {
   }
 
   // Initialize STARK SDK
-  init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_INFO);
-  auto handle = create_device_handler();
+  init_logging(LOG_LEVEL_INFO);
+  auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN, 0);
   uint8_t slave_id = 1; // Default slave ID for Revo1 is 1
   get_device_info(handle, slave_id);
 

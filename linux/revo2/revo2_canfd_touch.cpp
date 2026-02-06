@@ -23,9 +23,9 @@ int main(int argc, char const *argv[]) {
   }
 
   // Initialize STARK SDK
-  init_cfg(STARK_PROTOCOL_TYPE_CAN_FD, LOG_LEVEL_INFO);
+  init_logging(LOG_LEVEL_INFO);
   const uint8_t MASTER_ID = 1; // Master device ID
-  auto handle = canfd_init(MASTER_ID);
+  auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN_FD, MASTER_ID);
   uint8_t slave_id = 0x7f; // Default right-hand ID for Revo2 is 0x7f
 
   get_device_info(handle, slave_id);
@@ -134,12 +134,12 @@ void get_device_info(DeviceHandler *handle, uint8_t slave_id) {
   if (info != NULL) {
     printf("Slave[%hhu] SKU Type: %hhu, Serial Number: %s, Firmware Version: %s\n",
            slave_id, (uint8_t)info->sku_type, info->serial_number, info->firmware_version);
-    if (info->hardware_type == STARK_HARDWARE_TYPE_REVO2_TOUCH) {
+    if (stark_is_touch_device(info->hardware_type)) {
       // Enable all tactile sensors
       stark_enable_touch_sensor(handle, slave_id, 0x1F);
       usleep(1000 * 1000); // wait for tactile sensor to be ready
     } else {
-      printf("Not Revo2 Touch, hardware type: %hhu\n", info->hardware_type);
+      printf("Not a touch device, hardware type: %hhu\n", info->hardware_type);
       exit(1);
     }
     free_device_info(info);

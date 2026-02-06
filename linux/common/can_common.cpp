@@ -175,57 +175,132 @@ static int socketcan_send_can(uint32_t can_id, const uint8_t *data, uintptr_t da
   return (nbytes == static_cast<int>(sizeof(frame))) ? 0 : -1;
 }
 
-static int socketcan_recv_can(uint32_t *can_id_out, uint8_t *data_out, uintptr_t *data_len_out) {
+static int socketcan_recv_can(uint32_t expected_can_id, uint8_t expected_frames,
+                              uint32_t *can_id_out, uint8_t *data_out, uintptr_t *data_len_out) {
   if (g_socketcan_fd < 0) {
     return -1;
   }
 
-  int ret = socketcan_wait_for_frame();
-  if (ret <= 0) {
-    return -1;
-  }
-
-  struct can_frame frame;
-  int nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
-  if (nbytes != static_cast<int>(sizeof(frame))) {
-    return -1;
-  }
-  if (frame.can_id & CAN_RTR_FLAG) {
-    return -1;
-  }
-
-  uint32_t can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK)
-                                                  : (frame.can_id & CAN_SFF_MASK);
-  *can_id_out = can_id;
   int total_dlc = 0;
+  int received_count = 0;
+  uint8_t total_frames = 0;
+  bool is_multi_frame = false;
 
-  int can_dlc = frame.can_dlc;
-  for (int i = 0; i < can_dlc; ++i) {
-    data_out[total_dlc++] = frame.data[i];
-  }
+  // Check if this is DFU mode (expected_can_id == 0)
+  bool is_dfu_mode = (expected_can_id == 0);
 
-  while (1) {
-    nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
-    if (nbytes < 0) {
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        break;
-      }
-      return -1;
+  // Extract command from CAN ID to detect multi-frame commands
+  uint8_t cmd = (expected_can_id >> 3) & 0x0F;
+  bool is_multi_frame_cmd = (cmd == 0x0B || cmd == 0x0D);  // MultiRead or TouchSensorRead
+
+  // Determine retry strategy:
+  // - DFU mode: 200 attempts (for CRC verification)
+  // - Multi-frame commands: 30 attempts
+  // - Single frame: 10 attempts
+  int max_attempts = is_dfu_mode ? 200 : (expected_frames > 1 || is_multi_frame_cmd ? 30 : 10);
+
+  for (int attempt = 0; attempt < max_attempts; attempt++) {
+    int ret = socketcan_wait_for_frame();
+    if (ret <= 0) {
+      int wait_ms = (attempt < 5) ? 2 : 5;
+      usleep(wait_ms * 1000);
+      continue;
     }
+
+    struct can_frame frame;
+    int nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
     if (nbytes != static_cast<int>(sizeof(frame))) {
-      break;
+      continue;
     }
     if (frame.can_id & CAN_RTR_FLAG) {
       continue;
     }
-    can_dlc = frame.can_dlc;
-    for (int i = 0; i < can_dlc; ++i) {
-      data_out[total_dlc++] = frame.data[i];
+
+    uint32_t can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK)
+                                                    : (frame.can_id & CAN_SFF_MASK);
+    int can_dlc = frame.can_dlc;
+
+    // Check for multi-frame protocol format
+    if (is_multi_frame_cmd && can_dlc > 0) {
+      uint8_t frame_header = frame.data[0];
+
+      if (cmd == 0x0B) {
+        // MultiRead format: [addr, len|flag, data...]
+        if (can_dlc >= 2) {
+          uint8_t len_and_flag = frame.data[1];
+          bool is_last = (len_and_flag & 0x80) != 0;
+
+          // Append entire frame (8 bytes)
+          for (int j = 0; j < can_dlc; j++) {
+            data_out[total_dlc++] = frame.data[j];
+          }
+          received_count++;
+
+          // Check if this is the last frame
+          if (is_last) {
+            *can_id_out = can_id;
+            *data_len_out = total_dlc;
+            return 0;
+          }
+          continue;
+        }
+      } else if (cmd == 0x0D) {
+        // TouchSensorRead format: [total:4bit|seq:4bit, data...]
+        uint8_t total = (frame_header >> 4) & 0x0F;
+        uint8_t seq = frame_header & 0x0F;
+
+        // Detect multi-frame data
+        if (total > 0 && seq > 0) {
+          if (!is_multi_frame) {
+            is_multi_frame = true;
+            total_frames = total;
+          }
+
+          // Append entire frame (8 bytes)
+          for (int j = 0; j < can_dlc; j++) {
+            data_out[total_dlc++] = frame.data[j];
+          }
+          received_count++;
+
+          // Check if all frames received
+          if (received_count >= total_frames) {
+            *can_id_out = can_id;
+            *data_len_out = total_dlc;
+            return 0;
+          }
+          continue;
+        }
+      }
+    }
+
+    // Standard single-frame or non-protocol data
+    for (int j = 0; j < can_dlc; j++) {
+      data_out[total_dlc++] = frame.data[j];
+    }
+    received_count++;
+    *can_id_out = can_id;
+
+    // For single frame request, return immediately
+    if (expected_frames <= 1 && !is_multi_frame_cmd) {
+      *data_len_out = total_dlc;
+      return 0;
+    }
+
+    // Check if we have enough frames (for non-protocol multi-frame)
+    if (expected_frames > 1 && received_count >= expected_frames) {
+      *data_len_out = total_dlc;
+      return 0;
     }
   }
 
-  *data_len_out = total_dlc;
-  return 0;
+  // Timeout - return whatever we have
+  if (total_dlc > 0) {
+    *can_id_out = expected_can_id;
+    *data_len_out = total_dlc;
+    return 0;
+  }
+
+  return -1;
 }
 
 static int socketcan_send_canfd(uint32_t can_id, const uint8_t *data, uintptr_t data_len) {
@@ -244,28 +319,53 @@ static int socketcan_send_canfd(uint32_t can_id, const uint8_t *data, uintptr_t 
   return (nbytes == static_cast<int>(sizeof(frame))) ? 0 : -1;
 }
 
-static int socketcan_recv_canfd(uint32_t *can_id_out, uint8_t *data_out, uintptr_t *data_len_out) {
+static int socketcan_recv_canfd(uint32_t expected_can_id, uint8_t expected_frames,
+                                uint32_t *can_id_out, uint8_t *data_out, uintptr_t *data_len_out) {
   if (g_socketcan_fd < 0 || !g_socketcan_is_canfd) {
     return -1;
   }
 
-  int ret = socketcan_wait_for_frame();
-  if (ret <= 0) {
-    return -1;
+  // Check if this is DFU mode (expected_can_id == 0)
+  bool is_dfu_mode = (expected_can_id == 0);
+
+  // CANFD uses application-layer chunking, so most operations are single-frame
+  // But we still need retry logic for DFU and slow responses
+  int max_attempts = is_dfu_mode ? 200 : 10;
+
+  for (int attempt = 0; attempt < max_attempts; attempt++) {
+    int ret = socketcan_wait_for_frame();
+    if (ret <= 0) {
+      if (is_dfu_mode) {
+        // DFU may take longer, wait more
+        usleep(100 * 1000);
+      } else {
+        int wait_ms = (attempt < 5) ? 2 : 5;
+        usleep(wait_ms * 1000);
+      }
+      continue;
+    }
+
+    struct canfd_frame frame;
+    int nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
+    if (nbytes != static_cast<int>(sizeof(frame))) {
+      continue;
+    }
+
+    uint32_t can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK)
+                                                    : (frame.can_id & CAN_SFF_MASK);
+
+    // For non-DFU mode, filter by expected CAN ID if specified
+    if (!is_dfu_mode && expected_can_id != 0 && can_id != expected_can_id) {
+      continue;
+    }
+
+    *can_id_out = can_id;
+    *data_len_out = frame.len;
+    memcpy(data_out, frame.data, frame.len);
+    return 0;
   }
 
-  struct canfd_frame frame;
-  int nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
-  if (nbytes != static_cast<int>(sizeof(frame))) {
-    return -1;
-  }
-
-  uint32_t can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK)
-                                                  : (frame.can_id & CAN_SFF_MASK);
-  *can_id_out = can_id;
-  *data_len_out = frame.len;
-  memcpy(data_out, frame.data, frame.len);
-  return 0;
+  return -1;
 }
 #endif
 
@@ -321,7 +421,8 @@ bool start_can_channel(void) {
     return true;
   }
 #if STARK_USE_ZLG
-  ZCAN_INIT init;      // Baud rate configuration, values are based on zcanpro baud-rate calculator
+  ZCAN_INIT init;      // Baud rate configuration, values are based on ZCANPRO baud-rate calculator
+                       // [ZCANPRO](https://zlg.cn/data/upload/software/Can/CAN-bus-ZCANPRO_Setup.zip)
   init.mode = 0;       // 0 - normal mode
   init.clk = 60000000; // clock: 60M (V1.01) or 80M (V1.03 and above)
 
@@ -379,11 +480,13 @@ void setup_can_callbacks(void) {
     });
 
     set_can_rx_callback([](uint8_t slave_id,
+                           uint32_t expected_can_id,
+                           uint8_t expected_frames,
                            uint32_t *can_id_out,
                            uint8_t *data_out,
                            uintptr_t *data_len_out) -> int {
       (void)slave_id;
-      return socketcan_recv_can(can_id_out, data_out, data_len_out);
+      return socketcan_recv_can(expected_can_id, expected_frames, can_id_out, data_out, data_len_out);
     });
 #else
     printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
@@ -421,43 +524,134 @@ void setup_can_callbacks(void) {
     return result == 1 ? 0 : -1; // 0 indicates success
   });
 
-  // CAN receive callback
+  // CAN receive callback with multi-frame support
+  // SDK tells us how many frames to expect via expected_frames parameter.
+  // We need to collect all frames and return concatenated data.
+  // Supports MultiRead (0x0B) and TouchSensorRead (0x0D) multi-frame protocols.
   set_can_rx_callback([](uint8_t slave_id,
+                         uint32_t expected_can_id,
+                         uint8_t expected_frames,
                          uint32_t *can_id_out,
                          uint8_t *data_out,
                          uintptr_t *data_len_out) -> int {
-    // Read data
-    ZCAN_20_MSG can_data[RX_BUFF_SIZE];
-    int len = VCI_Receive(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME);
-    if (len < 1) {
-      printf("CAN Receive, len: %d\n", len);
-      // Retry once; the last response may take a long time while firmware writes to flash, wait 2 seconds then continue
-      usleep(2000 * 1000);
-      printf("Retrying CAN Receive...\n");
-      len = VCI_Receive(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME);
-      printf("CAN Receive, len: %d\n", len);
-    }
-    if (len < 1) {
-      return -1;
-    }
-
-    // Concatenate multiple CAN frames; all frames should have the same CAN ID
-    *can_id_out = can_data[0].hdr.id & 0x1FFFFFFF;
-
-    int idx = 0;
+    (void)slave_id;
+    
     int total_dlc = 0;
-
-    for (int i = 0; i < len; i++) {
-      ZCAN_20_MSG recv_data = can_data[i];
-      int can_dlc = recv_data.hdr.len;
-      for (int j = 0; j < can_dlc; j++) {
-        data_out[idx++] = recv_data.dat[j];
+    int received_count = 0;
+    uint8_t total_frames = 0;  // For multi-frame detection
+    bool is_multi_frame = false;
+    
+    // Check if this is DFU mode (expected_can_id == 0)
+    bool is_dfu_mode = (expected_can_id == 0);
+    
+    // Extract command from CAN ID to detect multi-frame commands
+    uint8_t cmd = (expected_can_id >> 3) & 0x0F;
+    bool is_multi_frame_cmd = (cmd == 0x0B || cmd == 0x0D);  // MultiRead or TouchSensorRead
+    
+    // Determine retry strategy:
+    // - DFU mode: 200 attempts (for CRC verification)
+    // - Multi-frame commands: 30 attempts
+    // - Single frame: 10 attempts
+    int max_attempts = is_dfu_mode ? 200 : (expected_frames > 1 || is_multi_frame_cmd ? 30 : 10);
+    
+    for (int attempt = 0; attempt < max_attempts; attempt++) {
+      ZCAN_20_MSG can_data[RX_BUFF_SIZE];
+      int len = VCI_Receive(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME);
+      
+      if (len < 1) {
+        int wait_ms = (attempt < 5) ? 2 : 5;
+        usleep(wait_ms * 1000);
+        continue;
       }
-      total_dlc += can_dlc;
+      
+      // Process all frames in this batch
+      for (int i = 0; i < len; i++) {
+        ZCAN_20_MSG& frame = can_data[i];
+        int can_dlc = frame.hdr.len;
+        
+        // Check for multi-frame protocol format
+        if (is_multi_frame_cmd && can_dlc > 0) {
+          uint8_t frame_header = frame.dat[0];
+          
+          if (cmd == 0x0B) {
+            // MultiRead format: [addr, len|flag, data...]
+            if (can_dlc >= 2) {
+              uint8_t len_and_flag = frame.dat[1];
+              bool is_last = (len_and_flag & 0x80) != 0;
+              
+              // Append entire frame (8 bytes)
+              for (int j = 0; j < can_dlc; j++) {
+                data_out[total_dlc++] = frame.dat[j];
+              }
+              received_count++;
+              
+              // Check if this is the last frame
+              if (is_last) {
+                *can_id_out = frame.hdr.id & 0x1FFFFFFF;
+                *data_len_out = total_dlc;
+                return 0;
+              }
+              continue;
+            }
+          } else if (cmd == 0x0D) {
+            // TouchSensorRead format: [total:4bit|seq:4bit, data...]
+            uint8_t total = (frame_header >> 4) & 0x0F;
+            uint8_t seq = frame_header & 0x0F;
+            
+            // Detect multi-frame data
+            if (total > 0 && seq > 0) {
+              if (!is_multi_frame) {
+                is_multi_frame = true;
+                total_frames = total;
+              }
+              
+              // Append entire frame (8 bytes)
+              for (int j = 0; j < can_dlc; j++) {
+                data_out[total_dlc++] = frame.dat[j];
+              }
+              received_count++;
+              
+              // Check if all frames received
+              if (received_count >= total_frames) {
+                *can_id_out = frame.hdr.id & 0x1FFFFFFF;
+                *data_len_out = total_dlc;
+                return 0;
+              }
+              continue;
+            }
+          }
+        }
+        
+        // Standard single-frame or non-protocol data
+        for (int j = 0; j < can_dlc; j++) {
+          data_out[total_dlc++] = frame.dat[j];
+        }
+        received_count++;
+      }
+      
+      *can_id_out = can_data[0].hdr.id & 0x1FFFFFFF;
+      
+      // For single frame request, return immediately
+      if (expected_frames <= 1 && !is_multi_frame_cmd) {
+        *data_len_out = total_dlc;
+        return 0;
+      }
+      
+      // Check if we have enough frames (for non-protocol multi-frame)
+      if (expected_frames > 1 && received_count >= expected_frames) {
+        *data_len_out = total_dlc;
+        return 0;
+      }
     }
-
-    *data_len_out = total_dlc;
-    return 0; // Return 0 on success
+    
+    // Timeout - return whatever we have
+    if (total_dlc > 0) {
+      *can_id_out = expected_can_id;
+      *data_len_out = total_dlc;
+      return 0;
+    }
+    
+    return -1;
   });
 #else
   printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
@@ -480,11 +674,13 @@ void setup_canfd_callbacks(void) {
     });
 
     set_can_rx_callback([](uint8_t slave_id,
+                           uint32_t expected_can_id,
+                           uint8_t expected_frames,
                            uint32_t *can_id_out,
                            uint8_t *data_out,
                            uintptr_t *data_len_out) -> int {
       (void)slave_id;
-      return socketcan_recv_canfd(can_id_out, data_out, data_len_out);
+      return socketcan_recv_canfd(expected_can_id, expected_frames, can_id_out, data_out, data_len_out);
     });
 #else
     printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
@@ -523,10 +719,22 @@ void setup_canfd_callbacks(void) {
   });
 
   // CANFD receive callback
+  // Parameters:
+  // - slave_id: Slave ID
+  // - expected_can_id: Expected CAN ID to filter responses
+  // - expected_frames: Expected frame count (0=auto-detect, >0=specific count)
+  // - canfd_id_out: Output CAN ID
+  // - data_out: Output data buffer
+  // - data_len_out: Output data length
   set_can_rx_callback([](uint8_t slave_id,
+                         uint32_t expected_can_id,
+                         uint8_t expected_frames,
                          uint32_t *canfd_id_out,
                          uint8_t *data_out,
                          uintptr_t *data_len_out) -> int {
+    (void)expected_can_id;   // Can be used for filtering if needed
+    (void)expected_frames;   // Can be used for multi-frame handling if needed
+    
     // Read data
     ZCAN_FD_MSG canfd_data[RX_BUFF_SIZE];
     int len = VCI_ReceiveFD(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, canfd_data, RX_BUFF_SIZE, RX_WAIT_TIME);

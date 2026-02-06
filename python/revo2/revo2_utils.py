@@ -10,21 +10,24 @@ This module provides common utility functions for Revo2 dexterous hand, includin
 
 import json
 import sys
-import logging
 import os
 import math
 import time
 import asyncio
 
-# Add parent directory to path to import logger
+# Import from common_imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from logger import getLogger
+from common_imports import logger, libstark
 
-# logger = getLogger(logging.DEBUG)
-logger = getLogger(logging.INFO)
+libstark.init_logging()
 
-from bc_stark_sdk import main_mod as libstark
-libstark.init_config(libstark.StarkProtocolType.Modbus)
+# Export for `from revo2_utils import *`
+__all__ = [
+    'logger', 'libstark',
+    'open_modbus_revo2', 'get_stark_port_name',
+    'is_positions_open', 'is_positions_closed',
+    'init_cosine_trajectory', 'trajectory_control_task',
+]
 
 
 async def open_modbus_revo2(port_name=None, quick=True):
@@ -50,7 +53,7 @@ async def open_modbus_revo2(port_name=None, quick=True):
     Example:
         client, slave_id = await open_modbus_revo2()
         # Or manually specify parameters:
-        # client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
+        # client: libstark.DeviceContext = await libstark.modbus_open(port_name, baudrate)
     """
     try:
         # Auto-detect the first available slave device
@@ -67,14 +70,14 @@ async def open_modbus_revo2(port_name=None, quick=True):
 
     # set_latency_by_com_or_serial(detected_port_name)
     # Establish Modbus connection
-    client: libstark.PyDeviceContext = await libstark.modbus_open(detected_port_name, baudrate)
+    client: libstark.DeviceContext = await libstark.modbus_open(detected_port_name, baudrate)
 
     # Get device information
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
 
-    if device_info.is_revo2():
-        if device_info.is_revo2_touch():
+    if device_info.uses_revo2_motor_api():
+        if device_info.uses_revo2_touch_api():
             logger.info(f"Touch hand")
         else:
             logger.info(f"Standard version")

@@ -1,19 +1,13 @@
 import json
-import logging
 import sys
 import os
 import math
 import time
 import asyncio
 
-# Add parent directory to path to import logger
+# Import from common_imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from logger import getLogger
-
-# logger = getLogger(logging.DEBUG)
-logger = getLogger(logging.INFO)
-
-from bc_stark_sdk import main_mod as libstark
+from common_imports import logger, libstark
 
 async def open_modbus_revo1(port_name = None, quick = True):
     """
@@ -38,7 +32,7 @@ async def open_modbus_revo1(port_name = None, quick = True):
     Example:
         client, slave_id = await open_modbus_revo1()
         # Or manually specify parameters:
-        # client: libstark.PyDeviceContext = await libstark.modbus_open(port_name, baudrate)
+        # client: libstark.DeviceContext = await libstark.modbus_open(port_name, baudrate)
     """
     # Auto-detect the first available slave device
     (protocol, detected_port_name, baudrate, slave_id) = await libstark.auto_detect_modbus_revo1(
@@ -51,14 +45,14 @@ async def open_modbus_revo1(port_name = None, quick = True):
     ), "Only Modbus protocol is supported for Revo1"
 
     # Establish Modbus connection
-    client: libstark.PyDeviceContext = await libstark.modbus_open(detected_port_name, baudrate)
+    client: libstark.DeviceContext = await libstark.modbus_open(detected_port_name, baudrate)
 
     # Get device information
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
 
-    if device_info.is_revo1():
-        if device_info.is_revo1_touch():
+    if device_info.uses_revo1_motor_api():
+        if device_info.uses_revo1_touch_api():
             logger.info(f"Touch hand")
         else:
             logger.info(f"Standard version")

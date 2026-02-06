@@ -58,7 +58,7 @@ void print_hex(const unsigned char *data, int len) {
 /****************************************************************************/
 
 bool get_and_print_device_info(DeviceHandler *handle, uint8_t slave_id) {
-  DeviceInfo *info = stark_get_device_info(handle, slave_id);
+  CDeviceInfo *info = stark_get_device_info(handle, slave_id);
   if (info != NULL) {
     printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id,
            info->serial_number, info->firmware_version);
@@ -113,7 +113,7 @@ void get_and_print_extended_info(DeviceHandler *handle, uint8_t slave_id) {
 }
 
 bool verify_device_is_revo1(DeviceHandler *handle, uint8_t slave_id) {
-  DeviceInfo *info = stark_get_device_info(handle, slave_id);
+  CDeviceInfo *info = stark_get_device_info(handle, slave_id);
   if (info == NULL) {
     printf("Error: Failed to get device info\n");
     return false;
@@ -163,7 +163,7 @@ bool verify_device_is_revo1(DeviceHandler *handle, uint8_t slave_id) {
 }
 
 bool verify_device_is_revo2(DeviceHandler *handle, uint8_t slave_id) {
-  DeviceInfo *info = stark_get_device_info(handle, slave_id);
+  CDeviceInfo *info = stark_get_device_info(handle, slave_id);
   if (info == NULL) {
     printf("Error: Failed to get device info\n");
     return false;

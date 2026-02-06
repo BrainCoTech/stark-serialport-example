@@ -1,6 +1,6 @@
 # BrainCo 灵巧手 SDK 开发示例
 
-[![版本](https://img.shields.io/badge/版本-v1.0.1-blue.svg)](VERSION)
+[![版本](https://img.shields.io/badge/版本-v1.1.2-blue.svg)](VERSION)
 [![许可证](https://img.shields.io/badge/许可证-专有-red.svg)]()
 
 [English](README.md) | [中文](README.zh.md)
@@ -15,18 +15,17 @@
 
 ### 系统要求
 
-- **Python 版本**：3.8 ~ 3.12
-- **操作系统**：
-  - macOS 10.15 或更高版本
-  - Windows 10 build 10.0.15063 或更高版本
-  - Ubuntu 20.04 LTS 或更高版本
+- **Python**：3.8 ~ 3.12
+- **Linux**：Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- **macOS**：10.15+
+- **Windows**：10/11
 
 ### 安装步骤
 
 1. 克隆本仓库：
 ```bash
-git clone https://github.com/BrainCoTech/brainco_hand_sdk.git
-cd brainco_hand_sdk
+git clone https://github.com/BrainCoTech/stark-serialport-example.git
+cd stark-serialport-example
 ```
 
 2. Python 开发环境配置：
@@ -51,19 +50,22 @@ Python 开发示例支持多种通信协议：
 
 详细说明请参考：[Python 开发指南](python/README.md)
 
-### C++ 示例（Linux/Ubuntu）
+### C++ 示例（跨平台）
 
-Linux 环境下的 C++ 开发示例和编译说明：
+跨平台 C++ 开发示例，支持 Linux、macOS 和 Windows：
 - **Revo1**：RS-485、CAN
 - **Revo2**：RS-485、CAN、CANFD、EtherCAT
 
-详细说明请参考：[Ubuntu C++ 开发指南](linux/README.md)
+详细说明请参考：[C++ 开发指南](c/README.md)
 
-### Windows 示例
+> 💡 `c/demo/` 目录下的 C++ 演示程序与 `python/` 目录下的 Python 示例功能对应，两者提供等效的设备控制、监控和固件升级功能。
 
-Windows 平台下的 Revo1 和 Revo2 设备示例。
+### 旧版 C++ 示例（已弃用）
 
-详见：[Windows 示例](windows/)
+> ⚠️ **已弃用**：以下文件夹将在未来版本中删除，请迁移至 `c/` 文件夹。
+
+- [Linux 示例](linux/) - 旧版 Linux 专用示例
+- [Windows 示例](windows/) - 旧版 Windows 专用示例
 
 ### ROS/ROS2 集成
 
@@ -71,30 +73,36 @@ ROS/ROS2 集成和示例：[ROS 开发指南](https://github.com/BrainCoTech/bra
 
 ## 🔌 支持的通信协议
 
-| 设备型号 | RS-485 | CAN | CANFD | EtherCAT |
-|---------|--------|-----|-------|----------|
-| Revo1   | ✅     | ✅  | ❌    | ❌       |
-| Revo2   | ✅     | ✅  | ✅    | ✅       |
+| 设备型号 | RS-485 | Protobuf | CAN | CANFD | EtherCAT |
+|---------|--------|----------|-----|-------|----------|
+| Revo1   | ✅     | ✅       | ✅  | ❌    | ❌       |
+| Revo2   | ✅     | ❌       | ✅  | ✅    | ✅       |
 
 ## 📁 仓库结构
 
 ```
 .
+├── c/                   # ⭐ 跨平台 C++ 示例（推荐）
+│   ├── demo/           # 主要演示程序（hand_demo、hand_monitor、hand_dfu）
+│   ├── common/         # 共享代码库
+│   └── platform/       # 平台特定代码
 ├── python/             # Python 示例和 SDK
+│   ├── demo/           # ⭐ 统一演示程序（hand_demo、hand_monitor、hand_dfu）
+│   ├── gui/            # GUI 调试工具
 │   ├── revo1/          # Revo1 RS-485 示例
 │   ├── revo1_can/      # Revo1 CAN 示例
 │   ├── revo2/          # Revo2 RS-485 示例
+│   ├── revo2_can/      # Revo2 CAN 示例
 │   ├── revo2_canfd/    # Revo2 CANFD 示例
 │   └── revo2_ethercat/ # Revo2 EtherCAT 示例
-├── linux/              # Linux C++ 示例
-│   ├── revo1/          # Revo1 示例
-│   ├── revo2/          # Revo2 CAN/CANFD 示例
-│   └── revo2_ec/       # Revo2 EtherCAT 示例
-├── windows/            # Windows 平台示例
+├── linux/              # ⚠️ 已弃用 - 请使用 c/ 文件夹
+├── windows/            # ⚠️ 已弃用 - 请使用 c/ 文件夹
 ├── dll/                # Windows 所需的 DLL 文件
 └── dist/               # 发布文件
 
 ```
+
+> ⚠️ **弃用通知**：`linux/` 和 `windows/` 文件夹已弃用，将在未来版本中删除。请使用统一的 `c/` 文件夹进行跨平台 C++ 开发。
 
 ## 🛠️ 开发指南
 
@@ -108,9 +116,9 @@ ROS/ROS2 集成和示例：[ROS 开发指南](https://github.com/BrainCoTech/bra
 
 ## 📝 版本信息
 
-当前 SDK 版本：**v1.0.1**
+当前 SDK 版本：**v1.1.2**
 
-更新历史请查看 [VERSION](VERSION) 文件。
+更新历史请查看 [CHANGELOG](CHANGELOG.md) 文件。
 
 ## 🤝 技术支持
 

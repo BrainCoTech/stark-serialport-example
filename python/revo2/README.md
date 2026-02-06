@@ -1,4 +1,11 @@
-# Revo2 Python SDK
+# Revo2 Python SDK (RS-485/Modbus)
+
+## Requirement
+
+- Python 3.8~3.12
+- Linux: Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- macOS: 10.15+
+- Windows: 10/11
 
 ## Usage
 
@@ -23,6 +30,4 @@ cd python
 (py310) ➜  revo2 git:(main) ✗ python revo2_action_seq.py
 # Update configuration, modify device ID, baud rate, Turbo mode, etc.
 (py310) ➜  revo2 git:(main) ✗ python revo2_cfg.py
-# Firmware OTA
-(py310) ➜  revo2 git:(main) ✗ python revo2_dfu.py
 ```

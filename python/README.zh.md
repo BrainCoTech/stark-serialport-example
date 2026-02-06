@@ -16,11 +16,10 @@ BrainCo 灵巧手设备（Revo1 和 Revo2 系列）的完整 Python SDK 和示�
 
 ## 💻 系统要求
 
-- **Python 版本**：3.8 ~ 3.12
-- **操作系统**：
-  - macOS 10.15 或更高版本
-  - Windows 10 build 10.0.15063 或更高版本
-  - Ubuntu 20.04 LTS 或更高版本
+- **Python**：3.8 ~ 3.12
+- **Linux**：Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- **macOS**：10.15+
+- **Windows**：10/11
 
 ## 📦 安装
 
@@ -33,7 +32,7 @@ pip3 install -r requirements.txt
 
 ### 依赖包
 
-- `bc-stark-sdk==1.0.1` - BrainCo Stark SDK 核心库
+- `bc-stark-sdk==1.1.1` - BrainCo Stark SDK 核心库
 - `asyncio>=3.4.3` - 异步 I/O 支持
 - `colorlog>=6.9.0` - 彩色日志输出
 
@@ -142,7 +141,7 @@ protocol, port, baud, slave_id = await libstark.auto_detect_modbus_revo1(None, T
 - `port_name` (str)：串口名称（例如："/dev/ttyUSB0"、"COM3"）
 - `baudrate` (int)：通信波特率
 
-**返回值：** `PyDeviceContext` - 客户端实例
+**返回值：** `DeviceContext` - 客户端实例
 
 **示例：**
 ```python
@@ -153,7 +152,46 @@ client = await libstark.modbus_open("/dev/ttyUSB0", 115200)
 关闭 Modbus 连接并释放资源。
 
 **参数：**
-- `client` (PyDeviceContext)：要关闭的客户端实例
+- `client` (DeviceContext)：要关闭的客户端实例
+
+#### `auto_detect()` (v1.1.0 新增)
+统一自动检测所有协议（Modbus、CAN、CANFD）。
+
+**参数：**
+- `scan_all` (bool)：如果为 True，扫描所有设备。默认：False
+- `port` (str, 可选)：指定扫描的端口。默认：None（扫描所有）
+- `protocol` (str, 可选)：使用的协议。默认：None（尝试所有）
+
+**返回值：** `list[DetectedDevice]` - 检测到的设备列表
+
+**示例：**
+```python
+devices = await libstark.auto_detect()
+if devices:
+    ctx = await libstark.init_from_detected(devices[0])
+```
+
+#### `init_from_detected(device)` (v1.1.0 新增)
+从检测到的设备信息初始化设备处理器。
+
+**参数：**
+- `device` (DetectedDevice)：来自 auto_detect() 的设备
+
+**返回值：** `DeviceContext` - 可直接使用的设备上下文
+
+#### `init_device_handler(protocol_type, master_id)` (v1.1.0 新增)
+为 CAN/CANFD/EtherCAT 协议初始化设备处理器。
+
+**参数：**
+- `protocol_type` (StarkProtocolType)：协议类型枚举
+- `master_id` (int)：主站 ID（默认：0）
+
+**返回值：** `DeviceContext` - 设备上下文
+
+**示例：**
+```python
+ctx = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, 0)
+```
 
 ### 设备信息
 
@@ -162,17 +200,18 @@ client = await libstark.modbus_open("/dev/ttyUSB0", 115200)
 
 **返回值：** `DeviceInfo` 对象，包含以下属性：
 - `description` (str)：设备描述
-- `is_revo1()` (bool)：检查是否为 Revo1 设备
-- `is_revo2()` (bool)：检查是否为 Revo2 设备
-- `is_revo1_touch()` (bool)：检查 Revo1 是否有触觉传感器
-- `is_revo2_touch()` (bool)：检查 Revo2 是否有触觉传感器
+- `uses_revo1_motor_api()` (bool)：检查是否使用 Revo1 电机 API
+- `uses_revo2_motor_api()` (bool)：检查是否使用 Revo2 电机 API
+- `uses_revo1_touch_api()` (bool)：检查是否使用 Revo1 触觉 API
+- `uses_revo2_touch_api()` (bool)：检查是否使用 Revo2 触觉 API
+- `is_touch()` (bool)：检查是否有触觉传感器
 
 **示例：**
 ```python
 device_info = await client.get_device_info(slave_id)
 print(device_info.description)
-if device_info.is_revo2_touch():
-    print("触觉版本设备")
+if device_info.uses_revo2_touch_api():
+    print("Revo2 触觉版本设备")
 ```
 
 #### `client.get_voltage(slave_id)`
@@ -248,15 +287,15 @@ await client.set_finger_position(slave_id, libstark.FingerId.Pinky, 1000)
 - `speeds` (list[int])：6 个关节的速度值
   - 正值：闭合方向
   - 负值：张开方向
-  - 范围：通常为 -100 到 100
+  - 范围：-1000 到 +1000
 
 **示例：**
 ```python
-# 以速度 100 闭合所有手指
-await client.set_finger_speeds(slave_id, [100] * 6)
+# 以速度 500 闭合所有手指
+await client.set_finger_speeds(slave_id, [500] * 6)
 
-# 以速度 -100 张开所有手指
-await client.set_finger_speeds(slave_id, [-100] * 6)
+# 以速度 -500 张开所有手指
+await client.set_finger_speeds(slave_id, [-500] * 6)
 ```
 
 ### 电机状态
@@ -314,12 +353,12 @@ port_name = get_stark_port_name()
 ```python
 from revo1_utils import convert_to_position, convert_to_angle
 
-# 将角度转换为位置
+# 将角度转换为位置百分比
 angles = [30, 45, 35, 35, 35, 35]  # 度
-positions = convert_to_position(angles)  # [0-1000]
+positions = convert_to_position(angles)  # [0-100]
 
-# 将位置转换为角度
-positions = [500, 500, 500, 500, 500, 500]
+# 将位置百分比转换为角度
+positions = [50, 50, 50, 50, 50, 50]
 angles = convert_to_angle(positions)  # 度
 ```
 
@@ -374,15 +413,12 @@ logger.error("错误消息")
 
 | 示例 | 说明 | 文件 |
 |------|------|------|
-| 基础控制 | 获取设备信息，控制手指 | [revo1_get.py](revo1/revo1_get.py) |
 | 自动控制 | 自动抓握/张开循环 | [revo1_ctrl.py](revo1/revo1_ctrl.py) |
 | 双手控制 | 同时控制两只手 | [revo1_ctrl_dual.py](revo1/revo1_ctrl_dual.py) |
 | 多手控制 | 控制多只手 | [revo1_ctrl_multi.py](revo1/revo1_ctrl_multi.py) |
 | 动作序列 | 执行预定义动作序列 | [revo1_action_seq.py](revo1/revo1_action_seq.py) |
 | 配置管理 | 读取/写入设备配置 | [revo1_cfg.py](revo1/revo1_cfg.py) |
-| 固件更新 | OTA 固件升级 | [revo1_dfu.py](revo1/revo1_dfu.py) |
 | 触觉传感器 | 读取触觉传感器数据 | [revo1_touch.py](revo1/revo1_touch.py) |
-| 通信测试 | 通信频率测试 | [revo1_comm_frequency_test.py](revo1/revo1_comm_frequency_test.py) |
 
 **详细指南：** [Revo1 RS-485 README](revo1/README.md)
 
@@ -401,9 +437,10 @@ logger.error("错误消息")
 | 多手控制 | 控制多只手 | [revo2_ctrl_multi.py](revo2/revo2_ctrl_multi.py) |
 | 动作序列 | 执行预定义动作序列 | [revo2_action_seq.py](revo2/revo2_action_seq.py) |
 | 配置管理 | 读取/写入设备配置 | [revo2_cfg.py](revo2/revo2_cfg.py) |
-| 固件更新 | OTA 固件升级 | [revo2_dfu.py](revo2/revo2_dfu.py) |
 | 触觉传感器 | 读取触觉传感器数据 | [revo2_touch.py](revo2/revo2_touch.py) |
 | 触觉压力 | 压力传感器数据 | [revo2_touch_pressure.py](revo2/revo2_touch_pressure.py) |
+| 触觉数据采集 | 触觉数据采集 | [revo2_touch_collector.py](revo2/revo2_touch_collector.py) |
+| 压力数据采集 | 压力数据采集 | [revo2_touch_pressure_collector.py](revo2/revo2_touch_pressure_collector.py) |
 
 **详细指南：** [Revo2 RS-485 README](revo2/README.md)
 
@@ -413,7 +450,7 @@ logger.error("错误消息")
 
 ### Revo2 CANFD 示例
 
-支持 ZLG USBCAN-FD 和 ZQWL CANFD 设备。
+支持 ZLG USBCAN-FD 和 SocketCAN 设备。
 
 **详细指南：** [Revo2 CANFD README](revo2_canfd/README.md)
 
@@ -467,4 +504,4 @@ logger.error("错误消息")
 
 ---
 
-**版本：** 兼容 bc-stark-sdk 1.0.1
+**版本：** 兼容 bc-stark-sdk 1.1.2

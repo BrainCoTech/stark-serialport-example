@@ -13,8 +13,8 @@ int main(int argc, char const *argv[]) {
 
   setup_can_callbacks(); // set read/write callbacks
 
-  init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_INFO);
-  auto handle = create_device_handler();
+  init_logging(LOG_LEVEL_INFO);
+  auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN, 0);
   uint8_t slave_id = 1;
   get_device_info(handle, slave_id);
   return 0;
@@ -35,8 +35,11 @@ void setup_can_callbacks() {
     // TODO: sending data
     return 0; // Return 0 to indicate success
   });
-  set_can_rx_callback([](uint8_t slave_id, uint32_t *can_id_out,
+  set_can_rx_callback([](uint8_t slave_id, uint32_t expected_can_id,
+                         uint8_t expected_frames, uint32_t *can_id_out,
                          uint8_t *data_out, uintptr_t *data_len_out) -> int {
+    (void)expected_can_id;
+    (void)expected_frames;
     printf("CAN Read: Slave ID: %d\n", slave_id);
     // TODO: Read data
 

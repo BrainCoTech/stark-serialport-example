@@ -90,10 +90,10 @@ async def setup_touch_sensor(client, slave_id):
     # Verify device type
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device {slave_id} info: {device_info.description}")
-    is_revo1_touch = device_info.is_revo1_touch()
-    slave_is_touch[slave_id] = is_revo1_touch
+    uses_revo1_touch = device_info.uses_revo1_touch_api()
+    slave_is_touch[slave_id] = uses_revo1_touch
 
-    if not is_revo1_touch:
+    if not uses_revo1_touch:
         logger.warning(f"Device {slave_id} is not Revo1 Touch hardware, skipping tactile sensor setup")
         return
 

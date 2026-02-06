@@ -91,7 +91,7 @@ async def main():
 
     master_id = int(os.getenv("STARK_MASTER_ID", "1"), 0)
     slave_id = int(os.getenv("STARK_SLAVE_ID", "0x7f"), 0)
-    client = libstark.PyDeviceContext.init_canfd(master_id)
+    client = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, master_id)
 
     socketcan_open()
     libstark.set_can_tx_callback(canfd_send)

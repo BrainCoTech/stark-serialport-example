@@ -26,7 +26,7 @@ async def main():
 
     # Directly specify device ID, serial port, and baud rate
     # slave_id = 0x7e
-    # client: libstark.PyDeviceContext = await libstark.modbus_open(port_name='/dev/ttyUSB0', baudrate=libstark.Baudrate.Baud115200)
+    # client: libstark.DeviceContext = await libstark.modbus_open(port_name='/dev/ttyUSB0', baudrate=libstark.Baudrate.Baud115200)
 
     device_info = client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info}")

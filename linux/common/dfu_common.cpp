@@ -20,18 +20,18 @@ static void (*g_cleanup_function)(void) = NULL;
 /****************************************************************************/
 
 static void internal_dfu_state_callback(uint8_t slave_id, uint8_t state) {
-    dfu_state_callback_with_timing(slave_id, state, g_dfu_start_time, g_cleanup_function);
+    on_dfu_state_with_timing(slave_id, state, g_dfu_start_time, g_cleanup_function);
 }
 
 static void internal_dfu_progress_callback(uint8_t slave_id, float progress) {
-    dfu_progress_callback_standard(slave_id, progress);
+    on_dfu_progress(slave_id, progress);
 }
 
 /****************************************************************************/
 // Public functions
 /****************************************************************************/
 
-void dfu_state_callback_with_timing(uint8_t slave_id, uint8_t state, int start_time_ms, void (*cleanup_func)(void)) {
+void on_dfu_state_with_timing(uint8_t slave_id, uint8_t state, int start_time_ms, void (*cleanup_func)(void)) {
     printf("DFU State: %hhu\n", state);
     if (state == 4) {
         if (start_time_ms > 0) {
@@ -47,17 +47,17 @@ void dfu_state_callback_with_timing(uint8_t slave_id, uint8_t state, int start_t
     }
 }
 
-void dfu_state_callback_simple(uint8_t slave_id, uint8_t state) {
-    dfu_state_callback_with_timing(slave_id, state, 0, NULL);
+void on_dfu_state(uint8_t slave_id, uint8_t state) {
+    on_dfu_state_with_timing(slave_id, state, 0, NULL);
 }
 
-void dfu_progress_callback_standard(uint8_t slave_id, float progress) {
+void on_dfu_progress(uint8_t slave_id, float progress) {
     printf("DFU Progress: %.2f%%\n", progress * 100);
 }
 
-void setup_dfu_callbacks_simple(void) {
-    set_dfu_state_callback(dfu_state_callback_simple);
-    set_dfu_progress_callback(dfu_progress_callback_standard);
+void setup_dfu_callbacks(void) {
+    set_dfu_state_callback(on_dfu_state);
+    set_dfu_progress_callback(on_dfu_progress);
 }
 
 void setup_dfu_callbacks_with_timing(int start_time_ms, void (*cleanup_func)(void)) {

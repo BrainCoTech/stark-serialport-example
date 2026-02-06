@@ -11,7 +11,7 @@ class Revo1CanController:
     def __init__(self, master_id: int = 1, slave_id: int = 1):
         self.master_id = master_id
         self.slave_id = slave_id
-        self.client = libstark.PyDeviceContext()
+        self.client = libstark.init_device_handler(libstark.StarkProtocolType.Can, master_id)
 
     async def initialize(
         self, device_type: int = 42, channel: int = 0, baudrate: int = 1000000

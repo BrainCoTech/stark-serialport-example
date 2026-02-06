@@ -1,5 +1,7 @@
 # BrainCo 灵巧手 C++ SDK（Linux/Ubuntu）
 
+> ⚠️ **已弃用**: 此文件夹已弃用，将在未来版本中删除。请使用统一的跨平台 `c/` 文件夹：[C++ 开发指南](../c/README.md)
+
 [English](README.md) | [中文](README.zh.md)
 
 BrainCo 灵巧手设备在 Linux/Ubuntu 平台上的完整 C++ SDK 和示例。
@@ -16,7 +18,7 @@ BrainCo 灵巧手设备在 Linux/Ubuntu 平台上的完整 C++ SDK 和示例。
 
 ## 💻 系统要求
 
-- **操作系统**：Ubuntu 20.04 LTS 或更高版本
+- **操作系统**：Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
 - **编译器**：支持 C++11 的 GCC
 - **构建工具**：make、pkg-config
 - **依赖项**：Stark SDK 库（自动下载）
@@ -82,8 +84,8 @@ int main() {
 #include <unistd.h>
 
 int main() {
-    // 初始化配置
-    init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
+    // 初始化日志
+    init_logging(LOG_LEVEL_INFO);
     
     // 自动检测并连接设备
     auto cfg = auto_detect_modbus_revo2("/dev/ttyUSB0", true);
@@ -117,7 +119,6 @@ int main() {
 | RS-485 (Modbus) | 串口通信 | [revo2/](revo2/) | USB 转 RS485 适配器 |
 | CAN | 控制器局域网络 | [revo2/](revo2/) | ZLG USB-CAN 设备或 SocketCAN |
 | CANFD | 灵活数据速率 CAN | [revo2/](revo2/) | ZLG USB-CANFD 设备或 SocketCAN |
-| EtherCAT | 工业以太网 | [revo2_ec/](revo2_ec/) | EtherCAT 主站 |
 
 ## 📚 API 参考
 
@@ -130,21 +131,34 @@ int main() {
 
 ### 初始化和配置
 
-#### `init_cfg(protocol_type, log_level)`
-初始化 SDK 配置（仅 Revo2）。
+#### `init_logging(log_level)`
+初始化 SDK 日志。
 
 **参数：**
-- `protocol_type` (StarkProtocolType)：协议类型
-  - `STARK_PROTOCOL_TYPE_MODBUS`
-  - `STARK_PROTOCOL_TYPE_CAN`
-  - `STARK_PROTOCOL_TYPE_CANFD`
-  - `STARK_PROTOCOL_TYPE_ETHERCAT`
 - `log_level` (LogLevel)：日志级别
   - `LOG_LEVEL_DEBUG`、`LOG_LEVEL_INFO`、`LOG_LEVEL_WARN`、`LOG_LEVEL_ERROR`
 
 **示例：**
 ```cpp
-init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
+init_logging(LOG_LEVEL_INFO);
+```
+
+#### `init_device_handler(protocol_type, master_id)` (v1.1.0 新增)
+为 CAN/CANFD/EtherCAT 协议初始化设备处理器。
+
+**参数：**
+- `protocol_type` (StarkProtocolType)：协议类型
+  - `STARK_PROTOCOL_TYPE_MODBUS`
+  - `STARK_PROTOCOL_TYPE_CAN`
+  - `STARK_PROTOCOL_TYPE_CAN_FD`
+  - `STARK_PROTOCOL_TYPE_ETHER_CAT`
+- `master_id` (uint8_t)：主站 ID（默认：0）
+
+**返回值：** `DeviceHandler*` - 设备处理器实例
+
+**示例：**
+```cpp
+auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN_FD, 0);
 ```
 
 ### 连接管理
@@ -376,9 +390,9 @@ get_and_print_extended_info(handle, slave_id);
 | 基础控制 | 获取设备信息，控制手指 | [revo1_ctrl.cpp](revo1/revo1_ctrl.cpp) |
 | 多手控制 | 控制多只手 | [revo1_ctrl_multi.cpp](revo1/revo1_ctrl_multi.cpp) |
 | CAN 控制 | 通过 CAN 协议控制 | [revo1_can.cpp](revo1/revo1_can.cpp) |
+| 自定义 CAN | 自定义 CAN 实现 | [revo1_can_customed.cpp](revo1/revo1_can_customed.cpp) |
 | 自定义 Modbus | 自定义 Modbus 实现 | [revo1_customed_modbus.cpp](revo1/revo1_customed_modbus.cpp) |
 | 异步 Modbus | 异步 Modbus 控制 | [revo1_customed_modbus_async.cpp](revo1/revo1_customed_modbus_async.cpp) |
-| 固件更新 | OTA 固件升级 | [revo1_dfu.cpp](revo1/revo1_dfu.cpp) |
 | 触觉传感器 | 读取触觉传感器数据 | [revo1_touch.cpp](revo1/revo1_touch.cpp) |
 
 **详细指南：** [Revo1 README](revo1/README.md)
@@ -392,26 +406,12 @@ get_and_print_extended_info(handle, slave_id);
 | CAN 控制 | 通过 CAN 协议控制 | [revo2_can_ctrl.cpp](revo2/revo2_can_ctrl.cpp) |
 | CANFD 控制 | 通过 CANFD 协议控制 | [revo2_canfd.cpp](revo2/revo2_canfd.cpp) |
 | CANFD 触觉 | 通过 CANFD 控制触觉版本 | [revo2_canfd_touch.cpp](revo2/revo2_canfd_touch.cpp) |
+| 自定义 CANFD | 自定义 CANFD 实现 | [revo2_canfd_customed.cpp](revo2/revo2_canfd_customed.cpp) |
 | 自定义 Modbus | 自定义 Modbus 实现 | [revo2_customed_modbus.cpp](revo2/revo2_customed_modbus.cpp) |
 | 异步 Modbus | 异步 Modbus 控制 | [revo2_customed_modbus_async.cpp](revo2/revo2_customed_modbus_async.cpp) |
-| 固件更新 | OTA 固件升级 | [revo2_dfu.cpp](revo2/revo2_dfu.cpp) |
 | 触觉传感器 | 读取触觉传感器数据 | [revo2_touch.cpp](revo2/revo2_touch.cpp) |
-| EtherCAT | EtherCAT 协议示例 | [revo2_ethercat.cpp](revo2/revo2_ethercat.cpp) |
 
 **详细指南：** [Revo2 README](revo2/README.md)
-
-### Revo2 EtherCAT 示例
-
-| 示例 | 说明 | 文件 |
-|------|------|------|
-| SDO 操作 | 服务数据对象读写 | [revo2_sdo.cpp](revo2_ec/revo2_sdo.cpp) |
-| PDO 操作 | 过程数据对象控制 | [revo2_pdo.cpp](revo2_ec/revo2_pdo.cpp) |
-| 多手 PDO | 通过 PDO 控制多只手 | [revo2_multi_pdo.cpp](revo2_ec/revo2_multi_pdo.cpp) |
-| 触觉 SDO | 通过 SDO 读取触觉传感器 | [revo2_touch_sdo.cpp](revo2_ec/revo2_touch_sdo.cpp) |
-| 触觉 PDO | 通过 PDO 读取触觉传感器 | [revo2_touch_pdo.cpp](revo2_ec/revo2_touch_pdo.cpp) |
-| 触觉压力 | 压力传感器数据 | [revo2_touch_pressure_pdo.cpp](revo2_ec/revo2_touch_pressure_pdo.cpp) |
-
-**详细指南：** [Revo2 EtherCAT README](revo2_ec/README.md)
 
 ## 🛠️ 构建系统
 
@@ -425,7 +425,6 @@ make run revo1_ctrl           # Modbus 程序（默认）
 make run revo1_can            # 自动检测 CAN 模式
 make run revo2_ctrl           # Modbus 程序
 make run revo2_canfd          # 自动检测 CANFD 模式
-make run revo2_ethercat       # 自动检测 EtherCAT 模式
 
 # 显示可用目标
 make run                      # 显示使用帮助
@@ -440,7 +439,6 @@ make clean
 # 使用特定模式构建
 make                          # 使用默认模式构建（Modbus）
 make MODE=can                 # 使用 CAN 接口模式构建
-make MODE=ethercat            # 使用 EtherCAT 接口模式构建
 
 # 仅运行（必须先编译）
 make run_revo1_ctrl           # 运行 revo1_ctrl 示例
@@ -453,7 +451,6 @@ make run_revo2_ctrl           # 运行 revo2_ctrl 示例
 |------|------|---------|
 | (默认) | Modbus/RS-485 | USB 转 RS485 适配器 |
 | `MODE=can` | CAN/CANFD | ZLG USB-CAN(FD) 设备或 SocketCAN 适配器 |
-| `MODE=ethercat` | EtherCAT | EtherCAT 主站 |
 
 若使用 ZLG USB-CAN(FD)，请确保已安装 `libusbcanfd.so`。缺失时可运行
 `./download-lib.sh` 写入 `dist/shared/linux`，或设置 `ZLG_LIB_DIR=/path/to/lib`。
@@ -508,23 +505,6 @@ STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_can_ctrl
 STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_canfd
 ```
 
-### EtherCAT 构建注意事项
-
-EtherCAT 示例需要特殊权限：
-
-```bash
-# 编译（自动设置权限）
-cd revo2_ec
-make
-
-# 验证权限
-getcap revo2_pdo.exe
-# 输出：revo2_pdo.exe cap_net_admin,cap_net_raw,cap_sys_nice=eip
-
-# 无需 sudo 运行
-./revo2_pdo.exe
-```
-
 ## 📖 其他资源
 
 - [官方文档](https://www.brainco-hz.com/docs/revolimb-hand/index.html)
@@ -544,9 +524,7 @@ getcap revo2_pdo.exe
 - 所有设备的位置值范围为 0（张开）到 1000（闭合）
 - 对于 Revo2，在连接设备前使用 `init_cfg()` 初始化
 - 触觉设备需要在读取传感器数据前调用 `stark_enable_touch_sensor()`
-- EtherCAT 示例应在不使用 `sudo` 的情况下运行，以避免 D 状态问题
-- 使用 EtherCAT 命令前，始终使用 `sudo ethercat slaves` 检查从站位置
 
 ---
 
-**版本：** 兼容 Stark SDK v1.0.1
+**版本：** 兼容 Stark SDK v1.1.0

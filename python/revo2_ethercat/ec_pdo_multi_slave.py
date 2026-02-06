@@ -1,10 +1,11 @@
 import asyncio
+import sys
 import time
 
 from ec_utils import logger, libstark, setup_shutdown_event
 
 
-async def control_slave(ctx: libstark.PyDeviceContext, slave_pos: int, is_touch: bool, is_pressure: bool):
+async def control_slave(ctx: libstark.DeviceContext, slave_pos: int, is_touch: bool, is_pressure: bool):
     """
     Per-slave control & read task.
     - 周期性做：单指控制 → 多指控制 → 读取马达状态 (+ 触觉)
@@ -84,8 +85,8 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     master_pos = 0
-    # 也可以用: ctx = libstark.ethercat_open_master(master_pos)
-    ctx = libstark.PyDeviceContext.open_ethercat_master(master_pos)
+    # 也可以用: ctx = libstark.init_device_handler(libstark.StarkProtocolType.EtherCAT, master_pos)
+    ctx = libstark.init_device_handler(libstark.StarkProtocolType.EtherCAT, master_pos)
 
     # 多从站位置（根据实际 ethercat slaves 输出来调整）
     slave_positions = [1, 2]
@@ -101,7 +102,7 @@ async def main():
 
         info: libstark.DeviceInfo = await ctx.get_device_info(slave_pos)
         is_touch = info.is_touch()
-        is_pressure = ctx.is_touch_pressure(slave_pos)  # 此时 ctx.touch_vendor 针对当前 slave_pos
+        is_pressure = ctx.uses_pressure_touch_api(slave_pos)  # 此时 ctx.touch_vendor 针对当前 slave_pos
         slave_cfg[slave_pos]["info"] = info
         slave_cfg[slave_pos]["is_touch"] = is_touch
         slave_cfg[slave_pos]["is_pressure"] = is_pressure

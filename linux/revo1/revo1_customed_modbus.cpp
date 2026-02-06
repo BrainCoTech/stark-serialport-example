@@ -13,8 +13,8 @@ int main(int argc, char const *argv[]) {
 
   setup_modbus_callbacks(); // Set read and write callbacks
 
-  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO);
-  auto handle = create_device_handler();
+  init_logging(LOG_LEVEL_INFO);
+  auto handle = init_device_handler(STARK_PROTOCOL_TYPE_MODBUS, 0);
   uint8_t slave_id = 1;
   get_device_info(handle, slave_id);
   return 0;
@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
 void get_device_info(DeviceHandler *handle, uint8_t slave_id) {
   uint32_t baudrate = stark_get_rs485_baudrate(handle, slave_id);
   printf("Slave[%hhu] Baudrate: %d\n", slave_id, baudrate);
-  DeviceInfo *info = stark_get_device_info(handle, slave_id);
+  CDeviceInfo *info = stark_get_device_info(handle, slave_id);
   if (info != NULL) {
     printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id,
            info->serial_number, info->firmware_version);

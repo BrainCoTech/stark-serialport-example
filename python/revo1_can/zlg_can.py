@@ -13,12 +13,22 @@ else:
 
 
 class Revo1CanController:
-    """Revo1 CAN communication controller"""
+    """
+    Revo1 CAN communication controller with multi-frame support
+    
+    Implements proper multi-frame handling for:
+    - MultiRead (0x0B): Firmware version, serial number, etc.
+    - TouchSensorRead (0x0D): Touch sensor data (Revo1AdvancedTouch)
+    
+    Multi-frame formats:
+    - MultiRead: [addr, len|flag, data...] - bit 7 of len is last frame flag
+    - TouchSensorRead: [total:4bit|seq:4bit, data...]
+    """
 
     def __init__(self, master_id: int = 1, slave_id: int = 1):
         self.master_id = master_id
         self.slave_id = slave_id
-        self.client = libstark.PyDeviceContext()
+        self.client = None  # Will be initialized in initialize()
 
     async def initialize(self):
         """Initialize CAN connection"""
@@ -29,6 +39,9 @@ class Revo1CanController:
             # Set callback functions
             libstark.set_can_tx_callback(self._can_send)
             libstark.set_can_rx_callback(self._can_read)
+
+            # Initialize device handler for CAN protocol
+            self.client = libstark.init_device_handler(libstark.StarkProtocolType.Can, self.master_id)
 
             logger.info(
                 f"CAN connection initialized successfully - Master ID: {self.master_id}, Slave ID: {self.slave_id}"
@@ -50,17 +63,55 @@ class Revo1CanController:
             logger.error(f"CAN message sending failed: {e}")
             return False
 
-    def _can_read(self, _slave_id: int) -> tuple:
-        """CAN message receiving"""
+    def _can_read(self, _slave_id: int, expected_can_id: int, expected_frames: int) -> tuple:
+        """
+        CAN message receiving with multi-frame support
+        
+        SDK tells us how many frames to expect via expected_frames parameter.
+        We need to collect all frames and return concatenated data.
+        Filters frames by expected_can_id to handle interleaved responses.
+        
+        Args:
+            _slave_id: Slave ID (not used)
+            expected_can_id: Expected CAN ID (used for filtering)
+            expected_frames: Expected frame count (0 = single frame, >0 = multi-frame)
+            
+        Returns:
+            tuple: (can_id, data)
+        """
         try:
-            recv_msg = zlgcan_receive_message()
-            if recv_msg is None:
-                return 0, bytes([])
-
-            can_id, data = recv_msg
-            # Optional: Enable detailed debug logging
-            # logger.debug(f"CAN - ID: {can_id:029b}, Data: {bytes(data).hex()}")
-            return can_id, data
+            all_data = []
+            received_count = 0
+            target_frames = expected_frames if expected_frames > 0 else 1
+            max_attempts = 30 if expected_frames > 1 else 10
+            
+            for attempt in range(max_attempts):
+                # Use raw receive to get all frames and filter by CAN ID
+                recv_msg = zlgcan_receive_filtered(expected_can_id)
+                if recv_msg is None:
+                    import time
+                    wait_ms = 0.005 if attempt < 5 else 0.010
+                    time.sleep(wait_ms)
+                    continue
+                
+                can_id, data, frames_in_batch = recv_msg
+                
+                all_data.extend(data)
+                received_count += frames_in_batch
+                
+                # Check if we have enough frames
+                if received_count >= target_frames:
+                    return expected_can_id, bytes(all_data)
+                
+                # For single frame request, return immediately
+                if expected_frames <= 1:
+                    return can_id, bytes(data)
+            
+            # Timeout - return whatever we have
+            if all_data:
+                return expected_can_id, bytes(all_data)
+            
+            return 0, bytes([])
 
         except Exception as e:
             logger.error(f"CAN message receiving failed: {e}")
@@ -257,15 +308,15 @@ class Revo1CanController:
             await self.client.touch_sensor_setup(self.slave_id, 0xFF)
             await asyncio.sleep(0.5)
 
-            # 2. Calibrate touch sensors
-            logger.info("2. Calibrate touch sensors for all fingers...")
-            await self.client.touch_sensor_calibrate(self.slave_id, 0xFF)
-            await asyncio.sleep(2.0)
+            # # 2. Calibrate touch sensors
+            # logger.info("2. Calibrate touch sensors for all fingers...")
+            # await self.client.touch_sensor_calibrate(self.slave_id, 0xFF)
+            # await asyncio.sleep(2.0)
 
-            # 3. Reset touch sensors
-            logger.info("3. Reset touch sensors for all fingers...")
-            await self.client.touch_sensor_reset(self.slave_id, 0xFF)
-            await asyncio.sleep(0.5)
+            # # 3. Reset touch sensors
+            # logger.info("3. Reset touch sensors for all fingers...")
+            # await self.client.touch_sensor_reset(self.slave_id, 0xFF)
+            # await asyncio.sleep(0.5)
 
             logger.info("Touch sensor control test completed\n")
         except Exception as e:
@@ -383,7 +434,7 @@ class Revo1CanController:
 
 async def main():
     """Main function"""
-    controller = Revo1CanController(master_id=1, slave_id=1)
+    controller = Revo1CanController(master_id=1, slave_id=2)
 
     try:
         # Initialize connection

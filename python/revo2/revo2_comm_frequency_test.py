@@ -77,7 +77,7 @@ class Revo2CommTester:
 
     def __init__(self, config: TestConfig):
         self.config = config
-        self.client: Optional[libstark.PyDeviceContext] = None
+        self.client: Optional[libstark.DeviceContext] = None
         self.slave_id: Optional[int] = None
         self.test_results: Dict[str, List[TestResult]] = {}
 

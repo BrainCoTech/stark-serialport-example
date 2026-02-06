@@ -1,4 +1,10 @@
-# Revo2 Python SDK
+# Revo2 EtherCAT Python SDK
+
+## Requirement
+
+- Python 3.8~3.12
+- Linux: Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- EtherCAT Master (IgH EtherCAT Master) installed and configured
 
 ## Usage
 

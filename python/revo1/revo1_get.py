@@ -30,7 +30,7 @@ async def main():
 
     # Touch hand uses current control interface
     # Non-touch hand uses force level configuration
-    if not device_info.is_revo1_touch():
+    if not device_info.uses_revo1_touch_api():
         logger.debug("get_force_level")  # Get force level: large-medium-small
         force_level = await client.get_force_level(slave_id)
         logger.info(f"Force level: {force_level}")

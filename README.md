@@ -1,6 +1,6 @@
 # BrainCo RevoHand SDK Examples
 
-[![Version](https://img.shields.io/badge/version-v1.0.1-blue.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-v1.1.2-blue.svg)](VERSION)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)]()
 
 [English](README.md) | [中文](README.zh.md)
@@ -16,17 +16,16 @@ For detailed technical specifications and API references, visit: [BrainCo RevoHa
 ### System Requirements
 
 - **Python**: 3.8 ~ 3.12
-- **Operating Systems**:
-  - macOS 10.15 or later
-  - Windows 10 build 10.0.15063 or later
-  - Ubuntu 20.04 LTS or later
+- **Linux**: Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- **macOS**: 10.15+
+- **Windows**: 10/11
 
 ### Installation
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/BrainCoTech/brainco_hand_sdk.git
-cd brainco_hand_sdk
+git clone https://github.com/BrainCoTech/stark-serialport-example.git
+cd stark-serialport-example
 ```
 
 2. For Python development:
@@ -51,19 +50,22 @@ Python development examples support multiple communication protocols:
 
 For detailed instructions: [Python Development Guide](python/README.md)
 
-### C++ Examples (Linux/Ubuntu)
+### C++ Examples (Cross-platform)
 
-C++ development examples and compilation instructions for Linux environments:
+Cross-platform C++ development examples supporting Linux, macOS, and Windows:
 - **Revo1**: RS-485, CAN
 - **Revo2**: RS-485, CAN, CANFD, EtherCAT
 
-For detailed instructions: [Ubuntu C++ Development Guide](linux/README.md)
+For detailed instructions: [C++ Development Guide](c/README.md)
 
-### Windows Examples
+> 💡 The C++ demos in `c/demo/` correspond to the Python demos in `python/` - both provide equivalent functionality for device control, monitoring, and firmware upgrade.
 
-Windows-specific examples for Revo1 and Revo2 devices.
+### Legacy C++ Examples (Deprecated)
 
-See: [Windows Examples](windows/)
+> ⚠️ **Deprecated**: The following folders will be removed in future versions. Please migrate to the `c/` folder.
+
+- [Linux Examples](linux/) - Legacy Linux-specific examples
+- [Windows Examples](windows/) - Legacy Windows-specific examples
 
 ### ROS/ROS2 Integration
 
@@ -71,30 +73,36 @@ For ROS/ROS2 integration and examples: [ROS Development Guide](https://github.co
 
 ## 🔌 Supported Communication Protocols
 
-| Device | RS-485 | CAN | CANFD | EtherCAT |
-|--------|--------|-----|-------|----------|
-| Revo1  | ✅     | ✅  | ❌    | ❌       |
-| Revo2  | ✅     | ✅  | ✅    | ✅       |
+| Device | RS-485 | Protobuf | CAN | CANFD | EtherCAT |
+|--------|--------|----------|-----|-------|----------|
+| Revo1  | ✅     | ✅       | ✅  | ❌    | ❌       |
+| Revo2  | ✅     | ❌       | ✅  | ✅    | ✅       |
 
 ## 📁 Repository Structure
 
 ```
 .
+├── c/                   # ⭐ Cross-platform C++ examples (recommended)
+│   ├── demo/           # Main demos (hand_demo, hand_monitor, hand_dfu)
+│   ├── common/         # Shared code library
+│   └── platform/       # Platform-specific code
 ├── python/              # Python examples and SDK
+│   ├── demo/           # ⭐ Unified demos (hand_demo, hand_monitor, hand_dfu)
+│   ├── gui/            # GUI debugging tool
 │   ├── revo1/          # Revo1 RS-485 examples
 │   ├── revo1_can/      # Revo1 CAN examples
 │   ├── revo2/          # Revo2 RS-485 examples
+│   ├── revo2_can/      # Revo2 CAN examples
 │   ├── revo2_canfd/    # Revo2 CANFD examples
 │   └── revo2_ethercat/ # Revo2 EtherCAT examples
-├── linux/              # C++ examples for Linux
-│   ├── revo1/          # Revo1 examples
-│   ├── revo2/          # Revo2 CAN/CANFD examples
-│   └── revo2_ec/       # Revo2 EtherCAT examples
-├── windows/            # Windows-specific examples
+├── linux/              # ⚠️ DEPRECATED - use c/ folder instead
+├── windows/            # ⚠️ DEPRECATED - use c/ folder instead
 ├── dll/                # Required DLL files for Windows
 └── dist/               # Distribution files
 
 ```
+
+> ⚠️ **Deprecation Notice**: The `linux/` and `windows/` folders are deprecated and will be removed in future versions. Please use the unified `c/` folder for cross-platform C++ development.
 
 ## 🛠️ Development
 
@@ -108,9 +116,9 @@ Each example directory contains its own README with specific usage instructions.
 
 ## 📝 Version
 
-Current SDK Version: **v1.0.1**
+Current SDK Version: **v1.1.2**
 
-See [VERSION](VERSION) file for update history.
+See [CHANGELOG](CHANGELOG.md) for update history.
 
 ## 🤝 Support
 

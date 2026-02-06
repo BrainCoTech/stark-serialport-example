@@ -17,7 +17,7 @@ class Revo1CanController:
     def __init__(self, master_id: int = 1, slave_id: int = 1):
         self.master_id = master_id
         self.slave_id = slave_id
-        self.client = libstark.PyDeviceContext()
+        self.client = libstark.init_device_handler(libstark.StarkProtocolType.Can, master_id)
 
     async def initialize(self):
         try:
@@ -42,13 +42,58 @@ class Revo1CanController:
             logger.error(f"CAN message sending failed: {e}")
             return False
 
-    def _can_read(self, _slave_id: int) -> tuple:
+    def _can_read(self, _slave_id: int, expected_can_id: int, expected_frames: int) -> tuple:
+        """
+        CAN message receiving with multi-frame support
+        
+        SDK tells us how many frames to expect via expected_frames parameter.
+        We need to collect all frames and return concatenated data.
+        
+        Args:
+            _slave_id: Slave ID (not used)
+            expected_can_id: Expected CAN ID
+            expected_frames: Expected frame count (0 = single frame, >0 = multi-frame)
+            
+        Returns:
+            tuple: (can_id, data)
+        """
         try:
-            recv_msg = socketcan_receive_message()
-            if recv_msg is None:
-                return 0, bytes([])
-            can_id, data = recv_msg
-            return can_id, data
+            all_data = []
+            received_count = 0
+            target_frames = expected_frames if expected_frames > 0 else 1
+            max_attempts = 30 if expected_frames > 1 else 10
+            
+            for attempt in range(max_attempts):
+                recv_msg = socketcan_receive_message()
+                if recv_msg is None:
+                    import time
+                    wait_ms = 0.005 if attempt < 5 else 0.010
+                    time.sleep(wait_ms)
+                    continue
+                
+                can_id, data = recv_msg
+                
+                # socketcan_receive_message may return multiple frames concatenated
+                # Each CAN 2.0 frame is 8 bytes max
+                frame_size = 8
+                num_frames_in_batch = (len(data) + frame_size - 1) // frame_size
+                
+                all_data.extend(data)
+                received_count += num_frames_in_batch
+                
+                # Check if we have enough frames
+                if received_count >= target_frames:
+                    return expected_can_id, bytes(all_data)
+                
+                # For single frame request, return immediately
+                if expected_frames <= 1:
+                    return can_id, bytes(data)
+            
+            # Timeout - return whatever we have
+            if all_data:
+                return expected_can_id, bytes(all_data)
+            
+            return 0, bytes([])
         except Exception as e:
             logger.error(f"CAN message receiving failed: {e}")
             return 0, bytes([])

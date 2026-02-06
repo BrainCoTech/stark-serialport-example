@@ -31,7 +31,12 @@ from utils import setup_shutdown_event
 
 # Trajectory control parameters
 TRAJ_LEN = 20           # Number of trajectory points
-CTRL_INTERVAL = 0.01    # Control interval: 10ms (100Hz)
+# Platform-dependent control interval
+# Total operations (motor + summary + detailed + control) should not exceed:
+# - Linux: 250Hz total
+# - Windows/macOS: 60Hz total
+import platform
+CTRL_INTERVAL = 0.02 if platform.system() == 'Linux' else 0.05  # Linux: 50Hz, macOS/Windows: 20Hz
 ENABLE_CONTROL = True   # Enable/disable trajectory control
 
 
@@ -66,7 +71,7 @@ async def main():
         sys.exit(1)
 
     # Check touch sensor type
-    if not client.is_touch_pressure(slave_id):
+    if not client.uses_pressure_touch_api(slave_id):
         logger.error("This example is for pressure touch sensors (Modulus)!")
         logger.error("Current device has capacitive touch sensor")
         logger.error("Please use revo2_touch_buffer.py instead")
@@ -114,11 +119,13 @@ async def main():
     # Define frequencies (platform-dependent)
     # Linux: 100Hz motor, 100Hz summary, 10Hz detailed (high-performance)
     # Windows/macOS: 20Hz motor, 20Hz summary, 10Hz detailed (conservative)
-    import platform
-    is_linux = platform.system() == 'Linux'
+    # Collection frequencies (platform-dependent)
+    # Total operations (motor + summary + detailed + control) should not exceed:
+    # - Linux: 250Hz total
+    # - Windows/macOS: 60Hz total
     motor_frequency = 100 if is_linux else 20
-    summary_frequency = 100 if is_linux else 20
-    detailed_frequency = 10  # Same for all platforms (detailed data is large)
+    summary_frequency = 50 if is_linux else 10
+    detailed_frequency = 10 if is_linux else 5
     
     logger.info(f"Platform: {platform.system()}, Motor: {motor_frequency}Hz, Summary: {summary_frequency}Hz, Detailed: {detailed_frequency}Hz")
 

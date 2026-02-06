@@ -1,0 +1,17 @@
+# Stark SDK GUI Requirements
+
+# Stark SDK
+bc_stark_sdk>=1.1.0
+
+# GUI Framework
+PySide6>=6.5.0
+
+# Charts (high-performance real-time plotting)
+pyqtgraph>=0.13.0
+numpy>=1.20,<2.0
+
+# Serial port listing
+pyserial>=3.5
+
+# Optional: For better async support
+qasync>=0.24.0

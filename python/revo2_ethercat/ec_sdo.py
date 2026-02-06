@@ -6,7 +6,7 @@ from ec_utils import *
 async def main():
     # fmt: off
     master_pos = 0
-    ctx = libstark.PyDeviceContext.open_ethercat_master(master_pos)
+    ctx = libstark.init_device_handler(libstark.StarkProtocolType.EtherCAT, master_pos)
     slave_pos = 0
     await ctx.ec_setup_sdo(slave_pos)
 
@@ -37,7 +37,7 @@ async def main():
       touch_fw_versions = await ctx.get_touch_sensor_fw_versions(slave_pos)
       logger.info(f"Touch Fw Versions: {touch_fw_versions}")
 
-      if ctx.is_touch_pressure(slave_pos):
+      if ctx.uses_pressure_touch_api(slave_pos):
         data_type = await ctx.get_modulus_touch_data_type(slave_pos)
         logger.info(f"Modulus Touch Data Type: {data_type}")
 

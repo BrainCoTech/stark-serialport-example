@@ -8,7 +8,13 @@ from can_utils import *
 if platform.system() != "Linux":
     raise NotImplementedError("SocketCAN is only supported on Linux.")
 
-from socketcan_linux_utils import *
+from socketcan_linux_utils import (
+    socketcan_open,
+    socketcan_close,
+    socketcan_send_message,
+    socketcan_receive_message,
+    socketcan_receive_filtered,
+)
 
 
 class Revo2CanController:
@@ -17,7 +23,7 @@ class Revo2CanController:
     def __init__(self, master_id: int = 1, slave_id: int = 1):
         self.master_id = master_id
         self.slave_id = slave_id
-        self.client = libstark.PyDeviceContext()
+        self.client = libstark.init_device_handler(libstark.StarkProtocolType.Can, master_id)
 
     async def initialize(self):
         try:
@@ -42,13 +48,33 @@ class Revo2CanController:
             logger.error(f"CAN sending exception: {e}")
             return False
 
-    def _can_read(self, _slave_id: int) -> tuple:
+    def _can_read(self, _slave_id: int, expected_can_id: int, expected_frames: int) -> tuple:
+        """
+        CAN message receiving with multi-frame protocol support
+        
+        SDK tells us how many frames to expect via expected_frames parameter.
+        We need to collect all frames and return concatenated data.
+        
+        Supports multi-frame protocols:
+        - MultiRead (0x0B): Detects is_last flag in byte[1] bit 7
+        - TouchSensorRead (0x0D): Detects total/seq in byte[0] (total:4bit|seq:4bit)
+        
+        Args:
+            _slave_id: Slave ID (not used)
+            expected_can_id: Expected CAN ID
+            expected_frames: Expected frame count (0 = single frame, >0 = multi-frame)
+            
+        Returns:
+            tuple: (can_id, data)
+        """
         try:
-            recv_msg = socketcan_receive_message()
-            if recv_msg is None:
+            result = socketcan_receive_filtered(expected_can_id, expected_frames)
+            if result is None:
                 return 0, bytes([])
-            can_id, data = recv_msg
+            
+            can_id, data, frame_count = result
             return can_id, data
+            
         except Exception as e:
             logger.error(f"CAN reception exception: {e}")
             return 0, bytes([])

@@ -27,7 +27,7 @@ async def main():
     # Verify device type is touch hand
     device_info = await client.get_device_info(slave_id)
     logger.info(f"Device info: {device_info.description}")
-    if not device_info.is_revo1_touch():
+    if not device_info.uses_revo1_touch_api():
         logger.error("This example is only for Revo1 Touch hardware")
         sys.exit(1)
 

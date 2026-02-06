@@ -1,5 +1,6 @@
 import asyncio
 import math
+import sys
 import time
 from ec_utils import *
 
@@ -21,7 +22,7 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     master_pos = 0
-    ctx = libstark.PyDeviceContext.open_ethercat_master(master_pos)
+    ctx = libstark.init_device_handler(libstark.StarkProtocolType.EtherCAT, master_pos)
     slave_pos = 0
     # slave_pos = 1
     await ctx.ec_setup_sdo(slave_pos)
@@ -80,7 +81,7 @@ async def main():
                 logger.debug(f"Motor status: {status.description}")
 
                 if ctx.is_touch_hand(slave_pos):
-                    if ctx.is_touch_pressure(slave_pos):
+                    if ctx.uses_pressure_touch_api(slave_pos):
                       logger.debug("get_modulus_touch_data")
                       start_time = time.perf_counter()
                       modulus_touch_data = await ctx.get_modulus_touch_data(slave_pos)

@@ -11,7 +11,6 @@ make run revo2_touch          # Modbus touch-hand example
 make run revo2_canfd          # Auto-detects CAN mode, includes -lusbcanfd (ZLG)
 make run revo2_canfd_touch    # Auto-detects CAN mode
 make run revo2_can_ctrl       # Auto-detects CAN mode
-make run revo2_ethercat       # Auto-detects EtherCAT mode
 
 # Show usage help
 make run                      # Shows available targets and examples
@@ -33,14 +32,21 @@ make MODE=ethercat            # Build with EtherCAT interface mode
 # Run only (must be compiled first)
 make run_revo2_ctrl           # Run Modbus control example
 make run_revo2_ctrl_multi     # Run Modbus multi-hand control example
-make run_revo2_dfu            # Run Modbus firmware upgrade example
 make run_revo2_touch          # Run Modbus touch-hand example
 make run_revo2_can_ctrl       # Run CAN control example
-make run_revo2_can_dfu        # Run CAN firmware upgrade example
 make run_revo2_canfd          # Run CANFD control example
 make run_revo2_canfd_touch    # Run CANFD touch example
-make run_revo2_canfd_dfu      # Run CANFD firmware upgrade example
-make run_revo2_ethercat       # Run EtherCAT example
+```
+
+## EtherCAT Examples
+
+EtherCAT examples are located in a separate directory:
+
+```shell
+# See c/platform/linux/revo2_ec/ for standalone EtherCAT examples
+cd ../../c/platform/linux/revo2_ec/
+make
+./revo2_pdo.exe
 ```
 
 ## SocketCAN Backend (Linux)

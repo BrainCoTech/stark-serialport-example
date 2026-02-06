@@ -18,14 +18,31 @@ def canfd_send(_slave_id: int, can_id: int, data: list):
         return
 
 
-def canfd_read(_slave_id: int):
+def canfd_read(_slave_id: int, expected_can_id: int, expected_frames: int):
+    """
+    CANFD message receiving with filtering and multi-frame support
+    
+    Args:
+        _slave_id: Slave ID (not used)
+        expected_can_id: Expected CAN ID to filter responses
+        expected_frames: Expected frame count (0=auto-detect, >0=specific count)
+        
+    Returns:
+        tuple: (can_id, data) where data is concatenated frames if multi-frame
+    """
     recv_msg = zlgcan_receive_message(quick_retries=5, dely_retries=2)
     if recv_msg is None:
         logger.error("No message received")
         return 0, bytes([])
 
     (can_id, data) = recv_msg
-    logger.debug(f"Received CANFD - ID: {can_id:02x}, Data: {bytes(data).hex()}")
+    
+    # Filter by expected CAN ID
+    if can_id != expected_can_id:
+        logger.warning(f"CAN ID mismatch: expected 0x{expected_can_id:X}, got 0x{can_id:X}")
+        return 0, bytes([])
+    
+    logger.debug(f"Received CANFD - ID: 0x{can_id:02x}, Data: {bytes(data).hex()}")
     return can_id, data
 
 
@@ -213,7 +230,7 @@ async def main():
     # Connect to Revo2 device
     master_id = 1
     slave_id = 0x7e # Left hand default ID is 0x7e, right hand default ID is 0x7f
-    client = libstark.PyDeviceContext.init_canfd(master_id)
+    client = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, master_id)
 
     zlgcan_open()
     libstark.set_can_tx_callback(canfd_send)

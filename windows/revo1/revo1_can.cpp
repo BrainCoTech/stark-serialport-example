@@ -45,9 +45,9 @@ int main(int argc, char const *argv[]) {
 
   setup_can_callbacks(); // Set read/write callbacks
 
-  init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_INFO);
+  init_logging(LOG_LEVEL_INFO);
   uint8_t slave_id = 1; // default slave id is 1
-  auto handle = create_device_handler();
+  auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN, 0);
   get_device_info(handle, slave_id);
 
   uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist

@@ -8,7 +8,7 @@ PORT = "/dev/ttyUSB0"  # Replace with actual serial port name
 BAUDRATE = libstark.Baudrate.Baud460800
 
 async def main():
-    client: libstark.PyDeviceContext = await libstark.modbus_open(PORT, BAUDRATE)
+    client: libstark.DeviceContext = await libstark.modbus_open(PORT, BAUDRATE)
     if not client:
         logger.critical(f"Failed to open serial port: {PORT}")
         sys.exit(1)

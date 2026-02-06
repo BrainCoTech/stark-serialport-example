@@ -29,7 +29,7 @@ async def main():
 
     # Verify that the device type is Revo2 Touch Device (capacitive sensor)
     device_info: libstark.DeviceInfo = await client.get_device_info(slave_id)
-    if not device_info.is_revo2_touch():
+    if not device_info.uses_revo2_touch_api():
         logger.error("This example is only for Revo2 Touch hardware")
         sys.exit(1)
 

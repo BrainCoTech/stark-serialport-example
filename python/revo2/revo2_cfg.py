@@ -67,7 +67,7 @@ async def set_baudrate(client, slave_id, new_baudrate):
     sys.exit(0)
 
 
-async def configure_device_features(client: libstark.PyDeviceContext, slave_id: int):
+async def configure_device_features(client: libstark.DeviceContext, slave_id: int):
     """
     Configure device feature settings
 
@@ -91,7 +91,7 @@ async def configure_device_features(client: libstark.PyDeviceContext, slave_id: 
     logger.info(f"Vibration Enabled: {vibration_enabled}")
 
 
-async def configure_turbo_mode(client: libstark.PyDeviceContext, slave_id: int):
+async def configure_turbo_mode(client: libstark.DeviceContext, slave_id: int):
     """
     Configure Turbo mode
 
@@ -125,7 +125,7 @@ async def configure_turbo_mode(client: libstark.PyDeviceContext, slave_id: int):
     # logger.info(f"Turbo conf: {turbo_conf.description}")
 
 
-async def configure_position_calibration(client: libstark.PyDeviceContext, slave_id: int):
+async def configure_position_calibration(client: libstark.DeviceContext, slave_id: int):
     """
     Configure position calibration
 
@@ -161,6 +161,9 @@ async def main():
     logger.debug("get_serialport_cfg")
     serialport_cfg: libstark.SerialPortCfg = await client.get_serialport_cfg(slave_id)
     logger.info(f"Serial Port Config: {serialport_cfg.description}")
+    
+    await client.factory_set_key(slave_id, "stark-level1")
+    await client.factory_set_device_sn(slave_id, "BCMTR2027J2500001")
 
     # Choose one of the following configuration operations as needed:
 

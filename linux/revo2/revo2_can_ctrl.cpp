@@ -29,8 +29,8 @@ int main(int argc, char const *argv[])
   }
 
   // Initialize STARK SDK
-  init_cfg(STARK_PROTOCOL_TYPE_CAN, LOG_LEVEL_INFO);
-  auto handle = create_device_handler();
+  init_logging(LOG_LEVEL_INFO);
+  auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN, 0);
   // uint8_t slave_id = 1; // Default left-hand ID for Revo2 is 1
   uint8_t slave_id = 2; // Default right-hand ID for Revo2 is 2
   get_device_info(handle, slave_id);
@@ -134,15 +134,16 @@ void cleanup_resources()
 
 void get_device_info(DeviceHandler *handle, uint8_t slave_id)
 {
-  DeviceInfo *info = stark_get_device_info(handle, slave_id);
+  CDeviceInfo *info = stark_get_device_info(handle, slave_id);
   if (info != NULL)
   {
     printf("Slave[%hhu] Serial Number: %s, FW: %s\n", slave_id,
            info->serial_number, info->firmware_version);
-    if (info->hardware_type != STARK_HARDWARE_TYPE_REVO2_BASIC &&
-        info->hardware_type != STARK_HARDWARE_TYPE_REVO2_TOUCH)
+    // Check if device uses Revo2 motor API
+    if (stark_uses_revo1_motor_api(info->hardware_type))
     {
-      printf("Not Revo2, hardware type: %hhu\n", info->hardware_type);
+      printf("Device uses Revo1 motor API, hardware type: %hhu\n", info->hardware_type);
+      free_device_info(info);
       exit(1);
     }
     free_device_info(info);

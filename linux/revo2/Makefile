@@ -19,7 +19,7 @@ CXX := g++
 CFLAGS := -g -Wall
 CXXFLAGS := -g -Wall -std=c++17  # Use C++17 standard
 
-# Mode selection: modbus(default) / can / ethercat / all
+# Mode selection: modbus(default) / can / all
 MODE := $(shell echo $(if $(mod),$(mod),$(if $(MODE),$(MODE),modbus)) | tr '[:upper:]' '[:lower:]')
 
 # CAN backend selection: zlg / socketcan / both(default)
@@ -55,17 +55,14 @@ endif
 
 # Mode-specific settings
 ifeq ($(MODE),modbus)
-  CPP_SOURCES := $(filter-out revo2_can% revo2_ethercat%,$(wildcard revo2*.cpp))
+  CPP_SOURCES := $(filter-out revo2_can%,$(wildcard revo2*.cpp))
   COMMON_LIBS := $(BASE_LIBS)
 else ifeq ($(MODE),can)
   CPP_SOURCES := $(wildcard revo2_can*.cpp)
   COMMON_LIBS := $(BASE_LIBS) $(CAN_LIBS)
-else ifeq ($(MODE),ethercat)
-  CPP_SOURCES := $(wildcard revo2_ethercat*.cpp)
-  COMMON_LIBS := $(BASE_LIBS) -lethercat
 else ifeq ($(MODE),all)
   CPP_SOURCES := $(wildcard revo2*.cpp)
-  COMMON_LIBS := $(BASE_LIBS) $(CAN_LIBS) -lethercat
+  COMMON_LIBS := $(BASE_LIBS) $(CAN_LIBS)
 endif
 
 # ---------------- Sources and targets ----------------
@@ -141,11 +138,6 @@ run_revo2_can% run_revo2_canfd%:
 	@echo "\033[1;36m[Running] $(patsubst run_%,%,$@).exe\033[0m"
 	@./$(patsubst run_%,%,$@).exe
 
-run_revo2_ethercat%:
-	@$(MAKE) MODE=ethercat $(patsubst run_%,%,$@).exe
-	@echo "\033[1;36m[Running] $(patsubst run_%,%,$@).exe\033[0m"
-	@./$(patsubst run_%,%,$@).exe
-
 run_%: %.exe
 	@echo "\033[1;36m[Running] $<\033[0m"
 	@./$<
@@ -160,7 +152,6 @@ run:
 	else \
 		case "$$target" in \
 			revo2_can*|revo2_canfd*) $(MAKE) MODE=can run_$$target ;; \
-			revo2_ethercat*) $(MAKE) MODE=ethercat run_$$target ;; \
 			*) $(MAKE) run_$$target ;; \
 		esac; \
 	fi
@@ -173,7 +164,7 @@ endif
 
 help:
 	@echo "\033[1;32m=== Revo2 Makefile ===\033[0m"
-	@echo "Modes: make [MODE=modbus|can|ethercat|all]"
+	@echo "Modes: make [MODE=modbus|can|all]"
 	@echo "CAN backend: make [CAN_BACKEND=zlg|socketcan|both]"
 	@echo "ZLG library dir: make [ZLG_LIB_DIR=/path/to/lib]"
 	@echo "Run:   make run_<target> OR make run <target>"

@@ -21,7 +21,7 @@ async def main():
     """
     Main function: Initialize device connection and control tasks
     """
-    libstark.init_config(libstark.StarkProtocolType.Modbus)
+    libstark.init_logging()
     shutdown_event = setup_shutdown_event(logger)
 
     # Open two devices

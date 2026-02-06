@@ -17,10 +17,9 @@ Complete Python SDK and examples for BrainCo RevoHand devices (Revo1 and Revo2 s
 ## 💻 System Requirements
 
 - **Python**: 3.8 ~ 3.12
-- **Operating Systems**:
-  - macOS 10.15 or later
-  - Windows 10 build 10.0.15063 or later
-  - Ubuntu 20.04 LTS or later
+- **Linux**: Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- **macOS**: 10.15+
+- **Windows**: 10/11
 
 ## 📦 Installation
 
@@ -33,7 +32,7 @@ pip3 install -r requirements.txt
 
 ### Dependencies
 
-- `bc-stark-sdk==1.0.1` - BrainCo Stark SDK core library
+- `bc-stark-sdk==1.1.1` - BrainCo Stark SDK core library
 - `asyncio>=3.4.3` - Asynchronous I/O support
 - `colorlog>=6.9.0` - Colored logging output
 
@@ -142,7 +141,7 @@ Open Modbus connection with specified parameters.
 - `port_name` (str): Serial port name (e.g., "/dev/ttyUSB0", "COM3")
 - `baudrate` (int): Communication baud rate
 
-**Returns:** `PyDeviceContext` - Client instance
+**Returns:** `DeviceContext` - Client instance
 
 **Example:**
 ```python
@@ -153,7 +152,46 @@ client = await libstark.modbus_open("/dev/ttyUSB0", 115200)
 Close Modbus connection and release resources.
 
 **Parameters:**
-- `client` (PyDeviceContext): Client instance to close
+- `client` (DeviceContext): Client instance to close
+
+#### `auto_detect()` (New in v1.1.0)
+Unified auto-detection for all protocols (Modbus, CAN, CANFD).
+
+**Parameters:**
+- `scan_all` (bool): If True, scan for all devices. Default: False
+- `port` (str, optional): Specific port to scan. Default: None (scan all)
+- `protocol` (str, optional): Protocol to use. Default: None (try all)
+
+**Returns:** `list[DetectedDevice]` - List of detected devices
+
+**Example:**
+```python
+devices = await libstark.auto_detect()
+if devices:
+    ctx = await libstark.init_from_detected(devices[0])
+```
+
+#### `init_from_detected(device)` (New in v1.1.0)
+Initialize device handler from detected device info.
+
+**Parameters:**
+- `device` (DetectedDevice): Device from auto_detect()
+
+**Returns:** `DeviceContext` - Ready-to-use device context
+
+#### `init_device_handler(protocol_type, master_id)` (New in v1.1.0)
+Initialize device handler for CAN/CANFD/EtherCAT protocols.
+
+**Parameters:**
+- `protocol_type` (StarkProtocolType): Protocol type enum
+- `master_id` (int): Master ID (default: 0)
+
+**Returns:** `DeviceContext` - Device context
+
+**Example:**
+```python
+ctx = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, 0)
+```
 
 ### Device Information
 
@@ -162,17 +200,18 @@ Get device information and configuration.
 
 **Returns:** `DeviceInfo` object with properties:
 - `description` (str): Device description
-- `is_revo1()` (bool): Check if device is Revo1
-- `is_revo2()` (bool): Check if device is Revo2
-- `is_revo1_touch()` (bool): Check if Revo1 has touch sensors
-- `is_revo2_touch()` (bool): Check if Revo2 has touch sensors
+- `uses_revo1_motor_api()` (bool): Check if device uses Revo1 Motor API
+- `uses_revo2_motor_api()` (bool): Check if device uses Revo2 Motor API
+- `uses_revo1_touch_api()` (bool): Check if device uses Revo1 Touch API
+- `uses_revo2_touch_api()` (bool): Check if device uses Revo2 Touch API
+- `is_touch()` (bool): Check if device has touch sensors
 
 **Example:**
 ```python
 device_info = await client.get_device_info(slave_id)
 print(device_info.description)
-if device_info.is_revo2_touch():
-    print("Touch-enabled device")
+if device_info.uses_revo2_touch_api():
+    print("Revo2 Touch-enabled device")
 ```
 
 #### `client.get_voltage(slave_id)`
@@ -248,15 +287,15 @@ Set movement speeds for all fingers (speed control mode).
 - `speeds` (list[int]): Speed values for 6 joints
   - Positive values: Close direction
   - Negative values: Open direction
-  - Range: typically -100 to 100
+  - Range: -1000 to +1000
 
 **Example:**
 ```python
-# Close all fingers at speed 100
-await client.set_finger_speeds(slave_id, [100] * 6)
+# Close all fingers at speed 500
+await client.set_finger_speeds(slave_id, [500] * 6)
 
-# Open all fingers at speed -100
-await client.set_finger_speeds(slave_id, [-100] * 6)
+# Open all fingers at speed -500
+await client.set_finger_speeds(slave_id, [-500] * 6)
 ```
 
 ### Motor Status
@@ -314,12 +353,12 @@ port_name = get_stark_port_name()
 ```python
 from revo1_utils import convert_to_position, convert_to_angle
 
-# Convert angles to positions
+# Convert angles to position percentages
 angles = [30, 45, 35, 35, 35, 35]  # degrees
-positions = convert_to_position(angles)  # [0-1000]
+positions = convert_to_position(angles)  # [0-100]
 
-# Convert positions to angles
-positions = [500, 500, 500, 500, 500, 500]
+# Convert position percentages to angles
+positions = [50, 50, 50, 50, 50, 50]
 angles = convert_to_angle(positions)  # degrees
 ```
 
@@ -374,17 +413,12 @@ Logs are automatically saved to `logs/` directory with timestamps.
 
 | Example | Description | File |
 |---------|-------------|------|
-| Basic Control | Get device info, control fingers | [revo1_get.py](revo1/revo1_get.py) |
 | Auto Control | Automatic grip/open cycle | [revo1_ctrl.py](revo1/revo1_ctrl.py) |
 | Dual Hand | Control two hands simultaneously | [revo1_ctrl_dual.py](revo1/revo1_ctrl_dual.py) |
 | Multi Hand | Control multiple hands | [revo1_ctrl_multi.py](revo1/revo1_ctrl_multi.py) |
 | Action Sequence | Execute predefined action sequences | [revo1_action_seq.py](revo1/revo1_action_seq.py) |
 | Configuration | Read/write device configuration | [revo1_cfg.py](revo1/revo1_cfg.py) |
-| Firmware Update | OTA firmware update | [revo1_dfu.py](revo1/revo1_dfu.py) |
 | Touch Sensors | Touch sensor data reading | [revo1_touch.py](revo1/revo1_touch.py) |
-| Comm Test | Communication frequency test | [revo1_comm_frequency_test.py](revo1/revo1_comm_frequency_test.py) |
-| Motor Collector | Motor data collection | [revo1_basic_collector.py](revo1/revo1_basic_collector.py) |
-| Touch Collector | Touch data collection | [revo1_touch_collector.py](revo1/revo1_touch_collector.py) |
 
 **Detailed Guide:** [Revo1 RS-485 README](revo1/README.md)
 
@@ -403,10 +437,8 @@ Logs are automatically saved to `logs/` directory with timestamps.
 | Multi Hand | Control multiple hands | [revo2_ctrl_multi.py](revo2/revo2_ctrl_multi.py) |
 | Action Sequence | Execute predefined action sequences | [revo2_action_seq.py](revo2/revo2_action_seq.py) |
 | Configuration | Read/write device configuration | [revo2_cfg.py](revo2/revo2_cfg.py) |
-| Firmware Update | OTA firmware update | [revo2_dfu.py](revo2/revo2_dfu.py) |
 | Touch Sensors | Touch sensor data reading | [revo2_touch.py](revo2/revo2_touch.py) |
 | Touch Pressure | Pressure sensor data | [revo2_touch_pressure.py](revo2/revo2_touch_pressure.py) |
-| Motor Collector | Motor data collection | [revo2_basic_collector.py](revo2/revo2_basic_collector.py) |
 | Touch Collector | Touch data collection | [revo2_touch_collector.py](revo2/revo2_touch_collector.py) |
 | Pressure Collector | Pressure data collection | [revo2_touch_pressure_collector.py](revo2/revo2_touch_pressure_collector.py) |
 
@@ -418,7 +450,7 @@ Logs are automatically saved to `logs/` directory with timestamps.
 
 ### Revo2 CANFD Examples
 
-Supports ZLG USBCAN-FD and ZQWL CANFD devices.
+Supports ZLG USBCAN-FD and SocketCAN devices.
 
 **Detailed Guide:** [Revo2 CANFD README](revo2_canfd/README.md)
 
@@ -472,4 +504,4 @@ For technical support:
 
 ---
 
-**Version:** Compatible with bc-stark-sdk 1.0.1
+**Version:** Compatible with bc-stark-sdk 1.1.2

@@ -24,7 +24,7 @@ class Revo2CanController:
     def __init__(self, master_id: int = 1, slave_id: int = 1):
         self.master_id = master_id
         self.slave_id = slave_id
-        self.client = libstark.PyDeviceContext()
+        self.client = None  # Will be initialized in initialize()
         self.device_info = None  # Initialize device info
 
     async def initialize(self):
@@ -36,6 +36,9 @@ class Revo2CanController:
             # Set callback functions
             libstark.set_can_tx_callback(self._can_send)
             libstark.set_can_rx_callback(self._can_read)
+
+            # Initialize device handler for CAN protocol
+            self.client = libstark.init_device_handler(libstark.StarkProtocolType.Can, self.master_id)
 
             logger.info(
                 f"CAN connection initialized successfully - Master ID: {self.master_id}, Slave ID: {self.slave_id}"
@@ -57,20 +60,35 @@ class Revo2CanController:
             logger.error(f"CAN sending exception: {e}")
             return False
 
-    def _can_read(self, _slave_id: int) -> tuple:
-        """CAN message reception"""
+    def _can_read(self, _slave_id: int, expected_can_id: int, expected_frames: int) -> tuple:
+        """
+        CAN message receiving with multi-frame protocol support
+        
+        SDK tells us how many frames to expect via expected_frames parameter.
+        We need to collect all frames and return concatenated data.
+        
+        Supports multi-frame protocols:
+        - MultiRead (0x0B): Detects is_last flag in byte[1] bit 7
+        - TouchSensorRead (0x0D): Detects total/seq in byte[0] (total:4bit|seq:4bit)
+        
+        Args:
+            _slave_id: Slave ID (not used)
+            expected_can_id: Expected CAN ID (used for filtering)
+            expected_frames: Expected frame count (0 = single frame, >0 = multi-frame)
+            
+        Returns:
+            tuple: (can_id, data)
+        """
         try:
-            recv_msg = zlgcan_receive_message()  # type: ignore
-            if recv_msg is None:
+            result = zlgcan_receive_filtered(expected_can_id, expected_frames)  # type: ignore
+            if result is None:
                 return 0, bytes([])
-
-            can_id, data = recv_msg
-            # Optional: enable detailed debug logging
-            # logger.debug(f"Receive CAN - ID: {can_id:029b}, Data: {bytes(data).hex()}")
-            return can_id, data
+            
+            can_id, data, frame_count = result
+            return can_id, bytes(data)
 
         except Exception as e:
-            logger.error(f"CAN reception exception: {e}")
+            logger.error(f"CAN message receiving failed: {e}")
             return 0, bytes([])
 
     async def get_device_info(self):
@@ -151,8 +169,8 @@ class Revo2CanController:
         """Finger position control example"""
         logger.info("=== Finger position control example ===")
 
-        # Example 1:逐个握拳动作
-        logger.info("Example 1:逐个手指握拳")
+        # Example 1: Sequential finger grip
+        logger.info("Example 1: Sequential finger grip")
         positions = [
             [200, 0, 0, 0, 0, 0],  # Thumb
             [200, 300, 0, 0, 0, 0],  # Thumb + Index
@@ -265,15 +283,15 @@ class Revo2CanController:
             await self.client.touch_sensor_setup(self.slave_id, 0xFF)
             await asyncio.sleep(0.5)
 
-            # 2. Calibrate touch sensors
-            logger.info("2. Calibrate touch sensors for all fingers...")
-            await self.client.touch_sensor_calibrate(self.slave_id, 0xFF)
-            await asyncio.sleep(2.0)
+            # # 2. Calibrate touch sensors
+            # logger.info("2. Calibrate touch sensors for all fingers...")
+            # await self.client.touch_sensor_calibrate(self.slave_id, 0xFF)
+            # await asyncio.sleep(2.0)
 
-            # 3. Reset touch sensors
-            logger.info("3. Reset touch sensors for all fingers...")
-            await self.client.touch_sensor_reset(self.slave_id, 0xFF)
-            await asyncio.sleep(0.5)
+            # # 3. Reset touch sensors
+            # logger.info("3. Reset touch sensors for all fingers...")
+            # await self.client.touch_sensor_reset(self.slave_id, 0xFF)
+            # await asyncio.sleep(0.5)
 
             logger.info("Touch sensor control test completed\n")
         except Exception as e:
@@ -398,18 +416,15 @@ async def main():
         # Set shutdown event listener
         shutdown_event = setup_shutdown_event(logger)
 
-        # Get device information
-        await controller.get_device_info()
-
         # Create tasks
         tasks = []
         # Start demo task
         demo_task = asyncio.create_task(controller.demo_task())
         tasks.append(demo_task)
 
-        # Optional: start motor status monitoring
-        monitor_task = asyncio.create_task(controller.monitor_motor_status())
-        tasks.append(monitor_task)
+        # Optional: start motor status monitoring (disabled to avoid CAN bus conflicts)
+        # monitor_task = asyncio.create_task(controller.monitor_motor_status())
+        # tasks.append(monitor_task)
 
         # Wait for shutdown signal
         await shutdown_event.wait()

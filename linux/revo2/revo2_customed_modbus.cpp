@@ -12,7 +12,7 @@ int main(int argc, char const *argv[]) {
   setup_signal_handlers();
   setup_modbus_callbacks(); // Set Modbus read/write callbacks
 
-  init_cfg(STARK_PROTOCOL_TYPE_MODBUS, LOG_LEVEL_INFO); // Initialize configuration
+  init_logging(LOG_LEVEL_INFO); // Initialize logging
   auto cfg = auto_detect_modbus_revo2(NULL, true); // Replace with actual serial port name; passing NULL will try auto-detection
   if (cfg == NULL) {
     fprintf(stderr, "Failed to auto-detect Modbus device configuration.\n");

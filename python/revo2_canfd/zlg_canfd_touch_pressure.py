@@ -118,7 +118,7 @@ async def main():
     # Connect Revo2 device
     master_id = 1
     slave_id = 0x7e # Default left hand ID is 0x7e, right hand ID is 0x7f
-    client = libstark.PyDeviceContext.init_canfd(master_id)
+    client = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, master_id)
 
     zlgcan_open()
     libstark.set_can_tx_callback(canfd_send)
@@ -131,7 +131,7 @@ async def main():
     baudrate = await client.get_canfd_baudrate(slave_id)
     logger.info(f"CANFD, Baudrate: {baudrate}")
 
-    if not client.is_touch_pressure(slave_id):
+    if not client.uses_pressure_touch_api(slave_id):
         logger.error("This example is only for Revo2 Touch Pressure hardware")
         zlgcan_close()
         sys.exit(1)

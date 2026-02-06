@@ -3,7 +3,9 @@
 ## Requirement
 
 - Python 3.8~3.12
-- Windows 10 build 10.0.15063 or later
+- Linux: Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- macOS: 10.15+ (ZQWL only)
+- Windows: 10/11
 
 ## Usage
 

@@ -1,9 +1,11 @@
-# Revo2 Python SDK
+# Revo2 CANFD Python SDK
 
 ## Requirement
 
 - Python 3.8~3.12
-- Windows 10 build 10.0.15063 or later
+- Linux: Ubuntu 20.04/22.04 LTS (x86_64/aarch64), glibc ≥ 2.31
+- macOS: 10.15+ (ZQWL only)
+- Windows: 10/11
 
 ## Usage
 
@@ -18,7 +20,6 @@ cd python
 
 # ZLG USBCAN-FD device, supports Windows and Linux
 (py310) ➜  revo2_canfd git:(main) ✗ python zlg_canfd.py # Read device info, control device
-(py310) ➜  revo2_canfd git:(main) ✗ python zlg_canfd_dfu.py # Firmware OTA
 (py310) ➜  revo2_canfd git:(main) ✗ python zlg_canfd_touch_pressure.py # Pressure-sensitive tactile hand example
 
 # SocketCAN (Linux)
@@ -26,13 +27,4 @@ cd python
 (py310) ➜  revo2_canfd git:(main) ✗ STARK_SOCKETCAN_IFACE=can0 STARK_SLAVE_ID=0x7f python socketcan_canfd.py # Select slave id
 (py310) ➜  revo2_canfd git:(main) ✗ STARK_SOCKETCAN_IFACE=can0 python socketcan_canfd_touch_pressure.py # Touch pressure example
 (py310) ➜  revo2_canfd git:(main) ✗ STARK_SOCKETCAN_IFACE=can0 python socketcan_canfd_dfu.py # Firmware OTA
-
-# ZQWL CANFD device, currently only Windows dependencies are provided
-(py310) ➜  revo2_canfd git:(main) ✗ python zqwl_canfd.py # Read device info, control device
-(py310) ➜  revo2_canfd git:(main) ✗ python zqwl_canfd_dfu.py # Firmware OTA
-
-# ZLG CAN device, both Windows and Linux are supported
-(py310) ➜  revo2_canfd git:(main) ✗ python zlg_can.py # Read device info, control device
-(py310) ➜  revo2_canfd git:(main) ✗ python zlg_can_dfu.py # Firmware OTA
-(py310) ➜  revo2_canfd git:(main) ✗ python zlg_can_touch_pressure.py # Pressure-sensitive tactile hand example
 ```
