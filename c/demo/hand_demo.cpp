@@ -818,8 +818,13 @@ void setup_custom_can_callbacks() {
 }
 
 //=============================================================================
-// Initialization Modes
+// Initialization Modes (use stark_common.h implementations)
 //=============================================================================
+// All init functions are now in stark_common.cpp:
+//   - init_modbus()           for Modbus
+//   - init_zqwl_device()      for CAN/CANFD via ZQWL adapter
+//   - init_socketcan_device() for SocketCAN (Linux)
+//   - init_zlg_device()       for ZLG USB-CANFD (Linux)
 
 /**
  * Mode 1: Auto-detect (default)
@@ -828,105 +833,6 @@ void setup_custom_can_callbacks() {
 bool init_auto_detect(CollectorContext *ctx, bool require_touch) {
     printf("\n[Init] Mode: Auto-detect\n");
     return auto_detect_and_init(ctx, require_touch);
-}
-
-/**
- * Mode 2: Manual Modbus initialization
- * Specify port, baudrate, and slave_id directly
- */
-bool init_manual_modbus(CollectorContext *ctx, const char *port, uint32_t baudrate, uint8_t slave_id) {
-    printf("\n[Init] Mode: Manual Modbus\n");
-    printf("  Port: %s, Baudrate: %u, Slave ID: %d\n", port, baudrate, slave_id);
-
-    ctx->handle = modbus_open(port, baudrate);
-    if (ctx->handle == NULL) {
-        printf("[ERROR] Failed to open Modbus port\n");
-        return false;
-    }
-
-    ctx->slave_id = slave_id;
-    ctx->protocol = STARK_PROTOCOL_TYPE_MODBUS;
-    ctx->baudrate = baudrate;
-    strncpy(ctx->port_name, port, sizeof(ctx->port_name) - 1);
-
-    // Get device info to determine type
-    CDeviceInfo *info = stark_get_device_info(ctx->handle, slave_id);
-    if (info != NULL) {
-        ctx->hw_type = (StarkHardwareType)info->hardware_type;
-        if (info->serial_number) {
-            strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
-        }
-        free_device_info(info);
-    }
-
-    ctx->motor_freq = 20;
-    ctx->touch_freq = 10;
-
-    return true;
-}
-
-/**
- * Mode 3: Manual CAN 2.0 initialization (ZQWL adapter)
- * For Revo1 devices
- */
-bool init_manual_can(CollectorContext *ctx, const char *port, uint32_t baudrate, uint8_t slave_id) {
-    printf("\n[Init] Mode: Manual CAN 2.0\n");
-    printf("  Port: %s, Baudrate: %u, Slave ID: %d\n", port, baudrate, slave_id);
-
-    // Initialize ZQWL CAN adapter
-    if (init_zqwl_can(port, baudrate) != 0) {
-        printf("[ERROR] Failed to initialize ZQWL CAN adapter\n");
-        return false;
-    }
-
-    ctx->handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN, 1);
-    if (ctx->handle == NULL) {
-        printf("[ERROR] Failed to create device handler\n");
-        close_zqwl();
-        return false;
-    }
-
-    ctx->slave_id = slave_id;
-    ctx->protocol = STARK_PROTOCOL_TYPE_CAN;
-    ctx->baudrate = baudrate;
-    strncpy(ctx->port_name, port, sizeof(ctx->port_name) - 1);
-    ctx->motor_freq = 20;
-    ctx->touch_freq = 10;
-
-    return true;
-}
-
-/**
- * Mode 4: Manual CANFD initialization (ZQWL adapter)
- * For Revo2 devices
- */
-bool init_manual_canfd(CollectorContext *ctx, const char *port, uint32_t arb_baudrate,
-                       uint32_t data_baudrate, uint8_t slave_id) {
-    printf("\n[Init] Mode: Manual CANFD\n");
-    printf("  Port: %s, Arb Baudrate: %u, Data Baudrate: %u, Slave ID: %d\n",
-           port, arb_baudrate, data_baudrate, slave_id);
-
-    // Initialize ZQWL CANFD adapter
-    if (init_zqwl_canfd(port, arb_baudrate, data_baudrate) != 0) {
-        printf("[ERROR] Failed to initialize ZQWL CANFD adapter\n");
-        return false;
-    }
-
-    ctx->handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN_FD, 1);
-    if (ctx->handle == NULL) {
-        printf("[ERROR] Failed to create device handler\n");
-        close_zqwl();
-        return false;
-    }
-
-    ctx->slave_id = slave_id;
-    ctx->protocol = STARK_PROTOCOL_TYPE_CAN_FD;
-    ctx->baudrate = arb_baudrate;
-    strncpy(ctx->port_name, port, sizeof(ctx->port_name) - 1);
-    ctx->motor_freq = 50;
-    ctx->touch_freq = 20;
-
-    return true;
 }
 
 /**
@@ -959,90 +865,6 @@ bool init_custom_callback(CollectorContext *ctx, StarkProtocolType protocol, uin
 
     return true;
 }
-
-#ifdef __linux__
-/**
- * Mode 6: SocketCAN initialization (Linux only)
- * Use Linux kernel CAN interface
- */
-bool init_socketcan(CollectorContext *ctx, const char *iface, uint8_t slave_id, bool is_canfd) {
-    printf("\n[Init] Mode: SocketCAN %s\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
-    printf("  Interface: %s, Slave ID: %d\n", iface, slave_id);
-
-    // Set environment variables for can_common.cpp
-    setenv("STARK_CAN_BACKEND", "socketcan", 1);
-    setenv("STARK_SOCKETCAN_IFACE", iface, 1);
-
-    // Initialize SocketCAN via can_common
-    bool success = is_canfd ? setup_canfd() : setup_can();
-    if (!success) {
-        printf("[ERROR] Failed to initialize SocketCAN\n");
-        printf("[TIP] Make sure the interface is up:\n");
-        printf("      sudo ip link set %s type can bitrate 1000000\n", iface);
-        printf("      sudo ip link set %s up\n", iface);
-        return false;
-    }
-
-    StarkProtocolType protocol = is_canfd ? STARK_PROTOCOL_TYPE_CAN_FD : STARK_PROTOCOL_TYPE_CAN;
-    ctx->handle = init_device_handler(protocol, 1);
-    if (ctx->handle == NULL) {
-        printf("[ERROR] Failed to create device handler\n");
-        cleanup_can_resources();
-        return false;
-    }
-
-    ctx->slave_id = slave_id;
-    ctx->protocol = is_canfd ? STARK_PROTOCOL_TYPE_CAN_FD : STARK_PROTOCOL_TYPE_CAN;
-    strncpy(ctx->port_name, iface, sizeof(ctx->port_name) - 1);
-    CDeviceInfo *info = stark_get_device_info(ctx->handle, slave_id);
-    if (info != NULL) {
-        ctx->hw_type = (StarkHardwareType)info->hardware_type;
-        free_device_info(info);
-    }
-    ctx->motor_freq = is_canfd ? 100 : 50;
-    ctx->touch_freq = is_canfd ? 50 : 20;
-
-    return true;
-}
-
-/**
- * Mode 7: ZLG USB-CANFD initialization (Linux only)
- * Use Zhou Ligong USB-CANFD adapter
- */
-bool init_zlg(CollectorContext *ctx, uint8_t slave_id, bool is_canfd) {
-    printf("\n[Init] Mode: ZLG USB-CANFD %s\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
-    printf("  Slave ID: %d\n", slave_id);
-
-    // Initialize ZLG via can_common (default backend when STARK_USE_ZLG=1)
-    bool success = is_canfd ? setup_canfd() : setup_can();
-    if (!success) {
-        printf("[ERROR] Failed to initialize ZLG CAN device\n");
-        printf("[TIP] Make sure ZLG USB-CANFD is connected and libusbcanfd.so is installed\n");
-        return false;
-    }
-
-    StarkProtocolType protocol = is_canfd ? STARK_PROTOCOL_TYPE_CAN_FD : STARK_PROTOCOL_TYPE_CAN;
-    ctx->handle = init_device_handler(protocol, 1);
-    if (ctx->handle == NULL) {
-        printf("[ERROR] Failed to create device handler\n");
-        cleanup_can_resources();
-        return false;
-    }
-
-    ctx->slave_id = slave_id;
-    ctx->protocol = protocol;
-    strncpy(ctx->port_name, "zlg", sizeof(ctx->port_name) - 1);
-    CDeviceInfo *info = stark_get_device_info(ctx->handle, slave_id);
-    if (info != NULL) {
-        ctx->hw_type = (StarkHardwareType)info->hardware_type;
-        free_device_info(info);
-    }
-    ctx->motor_freq = is_canfd ? 100 : 50;
-    ctx->touch_freq = is_canfd ? 50 : 20;
-
-    return true;
-}
-#endif
 
 //=============================================================================
 // Main
@@ -1114,7 +936,7 @@ int main(int argc, char const *argv[]) {
                     print_usage(argv[0]);
                     return -1;
                 }
-                init_success = init_manual_modbus(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]));
+                init_success = init_modbus(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]));
                 arg_idx = 5;
                 break;
 
@@ -1124,7 +946,7 @@ int main(int argc, char const *argv[]) {
                     print_usage(argv[0]);
                     return -1;
                 }
-                init_success = init_manual_can(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]));
+                init_success = init_zqwl_device(&ctx, argv[2], atoi(argv[3]), 0, atoi(argv[4]), false);
                 arg_idx = 5;
                 break;
 
@@ -1134,7 +956,7 @@ int main(int argc, char const *argv[]) {
                     print_usage(argv[0]);
                     return -1;
                 }
-                init_success = init_manual_canfd(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]));
+                init_success = init_zqwl_device(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), true);
                 arg_idx = 6;
                 break;
 
@@ -1163,7 +985,7 @@ int main(int argc, char const *argv[]) {
                     print_usage(argv[0]);
                     return -1;
                 }
-                init_success = init_socketcan(&ctx, argv[2], atoi(argv[3]), false);
+                init_success = init_socketcan_device(&ctx, argv[2], atoi(argv[3]), false);
                 arg_idx = 4;
                 break;
 
@@ -1173,7 +995,7 @@ int main(int argc, char const *argv[]) {
                     print_usage(argv[0]);
                     return -1;
                 }
-                init_success = init_socketcan(&ctx, argv[2], atoi(argv[3]), true);
+                init_success = init_socketcan_device(&ctx, argv[2], atoi(argv[3]), true);
                 arg_idx = 4;
                 break;
 
@@ -1183,7 +1005,7 @@ int main(int argc, char const *argv[]) {
                     print_usage(argv[0]);
                     return -1;
                 }
-                init_success = init_zlg(&ctx, atoi(argv[2]), false);
+                init_success = init_zlg_device(&ctx, atoi(argv[2]), false);
                 arg_idx = 3;
                 break;
 
@@ -1193,7 +1015,7 @@ int main(int argc, char const *argv[]) {
                     print_usage(argv[0]);
                     return -1;
                 }
-                init_success = init_zlg(&ctx, atoi(argv[2]), true);
+                init_success = init_zlg_device(&ctx, atoi(argv[2]), true);
                 arg_idx = 3;
                 break;
 #endif

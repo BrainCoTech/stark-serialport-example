@@ -2,6 +2,16 @@
 # Include this file in subdirectory Makefiles
 #
 # Cross-compile for Windows: make TARGET=win
+#
+# Platform-specific libraries:
+#   - Windows: ws2_32 (Winsock2 network library)
+#   - macOS: Foundation framework
+#   - Linux: pthread
+#
+# Compiler flags:
+#   -g      : Generate debug symbols for GDB/LLDB debugging
+#   -Wall   : Enable all common compiler warnings
+#   -std=c++17 : Use C++17 standard (current mainstream, widely supported)
 
 # Cross-compile target override (TARGET=win for Windows cross-compile)
 ifdef TARGET
@@ -77,10 +87,15 @@ endif
 #    - Usage: make (no CAN_BACKEND needed)
 #    - Platforms: Linux, macOS, Windows
 #
-# 2. ZLG: Zhou Ligong USB-CANFD adapter (device type 41)
+# 2. ZLG: ZLG USB-CANFD adapter (device type 41)
 #    - Usage: make CAN_BACKEND=zlg
 #    - Platforms: Linux, Windows (not supported on macOS)
-#    - Requires: libusbcanfd.so from https://manual.zlg.cn/web/#/146
+#    - Requires: libusbcanfd.so/.dll from https://manual.zlg.cn/web/#/146
+#      - Windows: libusbcanfd.dll (x64/x86 versions available)
+#      - Linux: libusbcanfd.so (x86_64/aarch64 versions available)
+#        - Depends on libusb-1.0:
+#          Ubuntu/Debian: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
+#          CentOS/RHEL:   sudo yum install libusb1-devel
 #    - Config: Arbitration 1 Mbps, Data 5 Mbps
 #
 # 3. SocketCAN: Linux kernel CAN interface

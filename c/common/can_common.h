@@ -1,13 +1,13 @@
 /**
  * @file can_common.h
  * @brief Common utility functions for CAN/CANFD examples
- * 
+ *
  * This header provides shared utility functions for CAN/CANFD device
  * initialization, channel configuration, and callback setup.
  *
  * Supported CAN backends:
  * 1. ZQWL (default): SDK built-in support, no configuration needed
- * 2. ZLG: Zhou Ligong USB-CANFD adapter
+ * 2. ZLG: ZLG USB-CANFD adapter
  *    - Compile: make CAN_BACKEND=zlg
  *    - Device type: 41 (USB-CANFD)
  *    - Default config: Arbitration 1 Mbps, Data 5 Mbps

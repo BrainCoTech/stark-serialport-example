@@ -4,12 +4,12 @@ Cross-platform demo programs with auto-detection for devices and protocols.
 
 ## Examples
 
-| Example | Description |
-|---------|-------------|
-| `hand_demo` | Comprehensive demo (8 modes) |
-| `hand_monitor` | Real-time data monitor |
-| `hand_dfu` | Firmware upgrade |
-| `auto_detect` | Device detection |
+| Example        | Description                  |
+| -------------- | ---------------------------- |
+| `hand_demo`    | Comprehensive demo (8 modes) |
+| `hand_monitor` | Real-time data monitor       |
+| `hand_dfu`     | Firmware upgrade             |
+| `auto_detect`  | Device detection             |
 
 ## Build
 
@@ -28,6 +28,7 @@ make clean              # Clean
 ```
 
 **Initialization options:**
+
 ```bash
 ./hand_demo.exe                                    # Auto-detect
 ./hand_demo.exe -m /dev/ttyUSB0 460800 127         # Modbus
@@ -47,6 +48,7 @@ make clean              # Clean
 **Hardware type override:**
 
 Use `-t <type>` before init option to override auto-detected hardware type:
+
 ```bash
 ./hand_demo.exe -t 6 -z 2                          # ZLG CAN, slave 2, force Revo2 Touch
 ./hand_monitor.exe -t 7 -z 2 touch                 # ZLG CAN, slave 2, force Revo2 Touch Pressure
@@ -66,16 +68,16 @@ Hardware type values:
 
 **Demo modes:**
 
-| Mode | Function | Device |
-|------|----------|--------|
-| 1 | Position control | All |
-| 2 | Speed/current control | All |
-| 3 | Advanced control (position+time/speed) | Revo2 |
-| 4 | Action sequences | All |
-| 5 | Config info (baudrate/motor params/force level) | All |
-| 6 | Touch sensor | Touch models |
-| 7 | Interactive loop | All |
-| 8 | Multi-device control | All |
+| Mode | Function                                        | Device       |
+| ---- | ----------------------------------------------- | ------------ |
+| 1    | Position control                                | All          |
+| 2    | Speed/current control                           | All          |
+| 3    | Advanced control (position+time/speed)          | Revo2        |
+| 4    | Action sequences                                | All          |
+| 5    | Config info (baudrate/motor params/force level) | All          |
+| 6    | Touch sensor                                    | Touch models |
+| 7    | Interactive loop                                | All          |
+| 8    | Multi-device control                            | All          |
 
 ## hand_monitor - Real-time Monitor
 
@@ -89,6 +91,7 @@ Hardware type values:
 ```
 
 **Initialization options:**
+
 ```bash
 ./hand_monitor.exe                                    # Auto-detect
 ./hand_monitor.exe -m /dev/ttyUSB0 460800 127 motor   # Modbus
@@ -101,12 +104,12 @@ Hardware type values:
 ./hand_monitor.exe -t 6 -z 2 touch                    # ZLG CAN 2.0 with hw type override
 ```
 
-| Mode | Data | Device |
-|------|------|--------|
-| `motor` | Position/speed/current | All |
-| `touch` | + Capacitive touch | Touch models |
-| `summary` | + Pressure summary (6 values) | Modulus |
-| `detailed` | + Pressure detailed (per sensor) | Modulus |
+| Mode       | Data                             | Device       |
+| ---------- | -------------------------------- | ------------ |
+| `motor`    | Position/speed/current           | All          |
+| `touch`    | + Capacitive touch               | Touch models |
+| `summary`  | + Pressure summary (6 values)    | Modulus      |
+| `detailed` | + Pressure detailed (per sensor) | Modulus      |
 
 ## hand_dfu - Firmware Upgrade
 
@@ -126,12 +129,12 @@ Hardware type values:
 
 ### Supported CAN Backends
 
-| Backend | Platform | Build | Description |
-|---------|----------|-------|-------------|
-| ZQWL | All | Default | SDK built-in, auto-detect |
-| SocketCAN | Linux | Default | SDK built-in (`-b/-B`) |
-| SocketCAN | Linux | `make CAN_BACKEND=socketcan` | can_common.cpp (`-s/-S`) |
-| ZLG | Linux/Windows | `make CAN_BACKEND=zlg` | Zhou Ligong USB-CANFD |
+| Backend   | Platform      | Build                        | Description               |
+| --------- | ------------- | ---------------------------- | ------------------------- |
+| ZQWL      | All           | Default                      | SDK built-in, auto-detect |
+| SocketCAN | Linux         | Default                      | SDK built-in (`-b/-B`)    |
+| SocketCAN | Linux         | `make CAN_BACKEND=socketcan` | can_common.cpp (`-s/-S`)  |
+| ZLG       | Linux/Windows | `make CAN_BACKEND=zlg`       | ZLG USB-CANFD             |
 
 ### ZQWL (Default)
 
@@ -143,12 +146,13 @@ SDK built-in support with auto-detection:
 ```
 
 Manual specification (optional, skip auto-detect):
+
 ```bash
 ./hand_demo.exe -c /dev/ttyUSB0 1000000 1              # CAN 2.0
 ./hand_demo.exe -f /dev/ttyUSB0 1000000 5000000 127    # CANFD
 ```
 
-### ZLG (Zhou Ligong USB-CANFD)
+### ZLG (ZLG USB-CANFD)
 
 Download driver library from: https://manual.zlg.cn/web/#/146
 
@@ -167,11 +171,13 @@ make CAN_BACKEND=zlg
 ```
 
 Custom library path:
+
 ```bash
 make CAN_BACKEND=zlg ZLG_LIB_DIR=/path/to/lib
 ```
 
 **Notes:**
+
 - `-z <slave_id>` - ZLG CAN 2.0 mode
 - `-Z <slave_id>` - ZLG CANFD mode
 - ZLG uses device index, no port required
@@ -215,6 +221,7 @@ make CAN_BACKEND=socketcan
 > **ZLG USB-CAN/CANFD with SocketCAN**: If using ZLG adapter with SocketCAN driver, see [../platform/linux/README.md](../platform/linux/README.md) for driver installation.
 
 **Environment variables:**
+
 ```bash
 export STARK_CAN_BACKEND=socketcan    # Switch backend
 export STARK_SOCKETCAN_IFACE=can0     # Specify interface

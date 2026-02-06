@@ -45,6 +45,7 @@ c/
 
 | Protocol | Adapter | Platform | Notes |
 |----------|---------|----------|-------|
+| CAN 2.0 / CANFD | SocketCAN | Linux | SDK built-in (`-b/-B`) or can_common.cpp (`-s/-S`) |
 | CAN 2.0 / CANFD | ZLG | Linux/Win | Requires external DLL + callback |
 | EtherCAT | NIC | Linux | Requires IgH driver |
 

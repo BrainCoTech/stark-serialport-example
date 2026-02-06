@@ -36,14 +36,14 @@ void on_dfu_state_with_timing(uint8_t slave_id, uint8_t state, int start_time_ms
     const char* state_names[] = {"Idle", "Starting", "Started", "Transfer", "Completed", "Aborted"};
     const char* state_name = (state < 6) ? state_names[state] : "Unknown";
     printf("DFU State: %s (%hhu)\n", state_name, state);
-    
+
     if (dfu_state == DFU_STATE_COMPLETED) {
         if (start_time_ms > 0) {
             printf("DFU finished, elapsed time: %d ms\n", get_current_time_ms() - start_time_ms);
         } else {
             printf("DFU finished\n");
         }
-        
+
         if (cleanup_func != NULL) {
             cleanup_func();
         }
@@ -73,7 +73,7 @@ void setup_dfu_callbacks(void) {
 void setup_dfu_callbacks_with_timing(int start_time_ms, void (*cleanup_func)(void)) {
     g_dfu_start_time = start_time_ms;
     g_cleanup_function = cleanup_func;
-    
+
     set_dfu_state_callback(internal_dfu_state_callback);
     set_dfu_progress_callback(internal_dfu_progress_callback);
 }
@@ -82,7 +82,7 @@ void wait_for_dfu_completion(int timeout_seconds) {
     if (timeout_seconds <= 0) {
         timeout_seconds = 60; // Default 60 seconds
     }
-    
+
     printf("Waiting for DFU to complete (timeout: %d seconds)...\n", timeout_seconds);
     compat_sleep_s(timeout_seconds);
 }

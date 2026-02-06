@@ -463,7 +463,7 @@ bool init_protobuf(CollectorContext* ctx, const char* port, uint8_t slave_id) {
         return false;
     }
     
-    ctx->handle = protobuf_open(port, slave_id);
+    ctx->handle = protobuf_open(port, slave_id, 0);
     if (ctx->handle == NULL) {
         printf("[ERROR] Failed to open Protobuf port\n");
         return false;
