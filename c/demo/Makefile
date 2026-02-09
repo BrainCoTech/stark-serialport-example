@@ -32,8 +32,12 @@ hand_dfu.exe: hand_dfu.cpp $(DEMO_OBJ) $(DFU_COMMON_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(DEMO_OBJ) $(DFU_COMMON_OBJ) $(INCLUDE) $(LIBS) $(EXTRA_LDFLAGS)
 	@echo "\033[1;32m[$(OS)] Built $@\033[0m"
 
+hand_protolbuf_test.exe: hand_protolbuf_test.cpp $(DEMO_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(DEMO_OBJ) $(INCLUDE) $(LIBS) $(EXTRA_LDFLAGS)
+	@echo "\033[1;32m[$(OS)] Built $@\033[0m"
+
 # Default target
-all: hand_demo.exe hand_monitor.exe auto_detect.exe hand_dfu.exe
+all: hand_demo.exe hand_monitor.exe auto_detect.exe hand_dfu.exe hand_protolbuf_test.exe
 	@echo "\033[1;32m[$(OS)] build done\033[0m"
 
 # Run targets

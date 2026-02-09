@@ -133,7 +133,7 @@ async def main():
     logger.info(f"Custom action sequence uploaded to {custom_action_id}")
 
     # Read and verify uploaded action sequence
-    action_result: libstark.ActionSequenceItem = await client.get_action_sequence(slave_id, custom_action_id)
+    action_result = await client.get_action_sequence(slave_id, custom_action_id)
     logger.info(f"Action sequence: {action_result.description}")
 
     # Execute built-in action sequence: fist gesture

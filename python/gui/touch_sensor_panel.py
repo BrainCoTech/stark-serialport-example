@@ -1,12 +1,16 @@
 """Touch Sensor Panel with Charts - Supports Revo1 multi-sensor per finger"""
 
 import asyncio
+from typing import Optional, TYPE_CHECKING
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QCheckBox, QGridLayout, QTabWidget,
     QScrollArea, QFrame, QSplitter, QMessageBox, QComboBox
 )
 from PySide6.QtCore import Qt, QTimer
+
+if TYPE_CHECKING:
+    from .shared_data import SharedDataManager
 
 from .i18n import tr
 from .styles import COLORS
@@ -26,6 +30,7 @@ try:
     import pyqtgraph as pg
     HAS_PYQTGRAPH = True
 except ImportError:
+    pg = None  # type: ignore
     HAS_PYQTGRAPH = False
 
 # Use constants from constants.py
@@ -56,7 +61,7 @@ class MultiSensorChart(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
-        if HAS_PYQTGRAPH:
+        if HAS_PYQTGRAPH and pg is not None:
             self.plot = pg.PlotWidget()
             self.plot.setBackground('#1a1a2e')
             self.plot.showGrid(x=True, y=True, alpha=0.3)
@@ -135,7 +140,7 @@ class FingerDetailWidget(QWidget):
         title.setStyleSheet(f"font-size: 14px; font-weight: bold; color: rgb{FINGER_COLORS[self.finger_idx]};")
         layout.addWidget(title)
         
-        if HAS_PYQTGRAPH:
+        if HAS_PYQTGRAPH and pg is not None:
             # Charts for this finger
             charts_layout = QGridLayout()
             charts_layout.setSpacing(8)
@@ -352,7 +357,7 @@ class TouchSensorPanel(QWidget):
     
     def __init__(self):
         super().__init__()
-        self.shared_data = None
+        self.shared_data: Optional['SharedDataManager'] = None
         self.touch_data = None
         
         self._setup_ui()
@@ -724,6 +729,8 @@ class TouchSensorPanel(QWidget):
             run_async(self._async_enable_touch(bits))
     
     async def _async_enable_touch(self, bits):
+        if not self.device:
+            return
         try:
             await self.device.touch_sensor_setup(self.slave_id, bits)
         except Exception as e:
@@ -748,6 +755,8 @@ class TouchSensorPanel(QWidget):
             run_async(self._async_calibrate(bits))
     
     async def _async_calibrate(self, bits):
+        if not self.device:
+            return
         try:
             await self.device.touch_sensor_calibrate(self.slave_id, bits)
         except Exception as e:
@@ -772,6 +781,8 @@ class TouchSensorPanel(QWidget):
             run_async(self._async_reset(bits))
     
     async def _async_reset(self, bits):
+        if not self.device:
+            return
         try:
             await self.device.touch_sensor_reset(self.slave_id, bits)
         except Exception as e:

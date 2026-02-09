@@ -419,7 +419,7 @@ def print_init_usage(prog_name: str = "program"):
     print(f"  {prog_name} -z 2")
 
 
-def create_init_parser(prog_name: str = None) -> argparse.ArgumentParser:
+def create_init_parser(prog_name: Optional[str] = None) -> argparse.ArgumentParser:
     """Create argument parser with initialization options"""
     parser = argparse.ArgumentParser(
         prog=prog_name,
@@ -453,7 +453,7 @@ def create_init_parser(prog_name: str = None) -> argparse.ArgumentParser:
     return parser
 
 
-async def parse_args_and_init(argv: List[str], extra_parser: argparse.ArgumentParser = None) -> tuple:
+async def parse_args_and_init(argv: List[str], extra_parser: Optional[argparse.ArgumentParser] = None) -> tuple:
     """Parse command line arguments and initialize device
     
     Args:

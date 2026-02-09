@@ -7,7 +7,7 @@ This avoids GIL overhead from async callbacks and provides better real-time perf
 import sys
 import time
 from collections import deque
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING, Sequence
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -16,6 +16,9 @@ from PySide6.QtWidgets import (
     QSplitter, QFrame
 )
 from PySide6.QtCore import Qt, QTimer
+
+if TYPE_CHECKING:
+    from .shared_data import SharedDataManager
 
 from .i18n import tr
 from .styles import COLORS
@@ -31,6 +34,7 @@ try:
     import pyqtgraph as pg
     HAS_PYQTGRAPH = True
 except ImportError:
+    pg = None  # type: ignore
     HAS_PYQTGRAPH = False
 
 # Add parent directory to path for SDK import
@@ -163,7 +167,7 @@ class WaveformChart(QWidget):
     """Single waveform chart with multiple finger curves"""
 
     def __init__(self, title: str, y_label: str, y_range: tuple = (0, 1000), 
-                 num_curves: int = MOTOR_COUNT, colors: list = None, scale: float = 1.0):
+                 num_curves: int = MOTOR_COUNT, colors: Optional[list] = None, scale: float = 1.0):
         super().__init__()
         self.title = title
         self.y_label = y_label
@@ -172,7 +176,7 @@ class WaveformChart(QWidget):
         self.curves = []
         self.plot_widget = None
         self.num_curves = num_curves
-        self.colors = colors or MOTOR_COLORS[:num_curves]
+        self.colors = colors if colors is not None else MOTOR_COLORS[:num_curves]
         self.scale = scale  # Scale factor for data (e.g., 0.01 to convert 0-2500 to 0-25N)
         
         self._setup_ui()
@@ -182,7 +186,7 @@ class WaveformChart(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
-        if HAS_PYQTGRAPH:
+        if HAS_PYQTGRAPH and pg is not None:
             self.plot_widget = pg.PlotWidget()
             self.plot_widget.setBackground('#1a1a2e')
             self.plot_widget.showGrid(x=True, y=True, alpha=0.3)
@@ -204,7 +208,7 @@ class WaveformChart(QWidget):
             label.setStyleSheet("color: #888; font-style: italic;")
             layout.addWidget(label)
 
-    def update_data(self, times: list, data: List[list]):
+    def update_data(self, times: list, data: Sequence[Sequence]):
         """Update all curves with new data"""
         if not HAS_PYQTGRAPH or not self.curves:
             return
@@ -259,7 +263,7 @@ class RealtimeMonitorPanel(QWidget):
         self.device = None
         self.slave_id = 1
         self.device_info = None
-        self.shared_data = None
+        self.shared_data: Optional['SharedDataManager'] = None
         self.is_running = False
         self.is_paused = False
         
@@ -622,6 +626,8 @@ class RealtimeMonitorPanel(QWidget):
     
     def _read_from_shared_data(self):
         """Read data from SharedDataManager into DataManager"""
+        if not self.shared_data:
+            return
         timestamp = time.time()
         
         # Read motor data from shared data manager

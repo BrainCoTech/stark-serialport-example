@@ -2,16 +2,23 @@ import asyncio
 import sys
 import platform
 from canfd_utils import *
+from typing import Callable, Tuple, Optional, Any
 
 # Import corresponding ZLG CAN driver module according to operating system
+# These functions are imported from platform-specific modules
+zlgcan_open: Callable[[], None]
+zlgcan_close: Callable[[], None]
+zlgcan_send_message: Callable[[int, bytes], bool]
+zlgcan_receive_message: Callable[..., Optional[Tuple[int, bytes]]]
+
 if platform.system() == "Windows":
-    from zlg_win import *
+    from zlg_win import zlgcan_open, zlgcan_close, zlgcan_send_message, zlgcan_receive_message  # type: ignore
 elif platform.system() == "Linux":
-    from zlg_linux import *
+    from zlg_linux import zlgcan_open, zlgcan_close, zlgcan_send_message, zlgcan_receive_message  # type: ignore
 else:
     raise NotImplementedError(f"Unsupported operating system: {platform.system()}")
 
-def canfd_send(_slave_id: int, can_id: int, data: list):
+def canfd_send(_slave_id: int, can_id: int, data: list) -> None:
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
     if not zlgcan_send_message(can_id, bytes(data)):
         logger.error("Failed to send CANFD message")
@@ -197,7 +204,7 @@ async def get_and_display_motor_status(client, slave_id):
         slave_id: Device ID
     """
     logger.debug("get_motor_status")
-    status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
+    status = await client.get_motor_status(slave_id)
 
     # Display detailed status information
     # logger.info(f"positions: {list(status.positions)}")  # Position

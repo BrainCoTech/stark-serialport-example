@@ -99,6 +99,8 @@ def socketcan_receive_message(
 
 
 def _socketcan_read_message() -> Optional[Tuple[int, bytes]]:
+    if _sock is None:
+        return None
     try:
         data = _sock.recv(CANFD_MTU)
         if len(data) == CANFD_MTU:

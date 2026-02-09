@@ -13,12 +13,16 @@ Data structure (from SDK):
 """
 
 import asyncio
+from typing import Optional, TYPE_CHECKING
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QCheckBox, QGridLayout, QTabWidget,
     QFrame, QProgressBar, QComboBox
 )
 from PySide6.QtCore import Qt, QTimer
+
+if TYPE_CHECKING:
+    from .shared_data import SharedDataManager
 
 from .i18n import tr
 from .styles import COLORS
@@ -37,6 +41,7 @@ try:
     import pyqtgraph as pg
     HAS_PYQTGRAPH = True
 except ImportError:
+    pg = None  # type: ignore
     HAS_PYQTGRAPH = False
 
 
@@ -82,7 +87,7 @@ class PressureSummaryChart(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
-        if HAS_PYQTGRAPH:
+        if HAS_PYQTGRAPH and pg is not None:
             self.plot = pg.PlotWidget()
             self.plot.setBackground('#1a1a2e')
             self.plot.showGrid(x=True, y=True, alpha=0.3)
@@ -140,6 +145,7 @@ class PressureDetailChart(QWidget):
         self.data = [[] for _ in range(point_count)]
         self.current_values = [0] * point_count
         self.total_force = 0
+        self.point_colors = []  # Will be populated in _setup_ui
         
         self._setup_ui()
     
@@ -153,7 +159,7 @@ class PressureDetailChart(QWidget):
         chart_layout = QVBoxLayout(chart_widget)
         chart_layout.setContentsMargins(0, 0, 0, 0)
         
-        if HAS_PYQTGRAPH:
+        if HAS_PYQTGRAPH and pg is not None:
             self.plot = pg.PlotWidget()
             self.plot.setBackground('#1a1a2e')
             self.plot.showGrid(x=True, y=True, alpha=0.3)
@@ -166,12 +172,17 @@ class PressureDetailChart(QWidget):
             # Create curves for each sampling point
             self.curves = []
             base_r, base_g, base_b = self.color
+            
+            # Generate distinct colors for each point using HSV color wheel
+            import colorsys
             for i in range(self.point_count):
-                # Vary brightness for different points
-                factor = 0.5 + 0.5 * (i / max(1, self.point_count - 1))
-                r = int(base_r * factor)
-                g = int(base_g * factor)
-                b = int(base_b * factor)
+                # Use HSV to generate distinct colors
+                # Hue varies across the spectrum, saturation and value stay high
+                hue = (i / max(1, self.point_count)) * 0.8  # 0 to 0.8 (red to purple)
+                sat = 0.8
+                val = 0.9
+                r, g, b = colorsys.hsv_to_rgb(hue, sat, val)
+                r, g, b = int(r * 255), int(g * 255), int(b * 255)
                 pen = pg.mkPen(color=(r, g, b), width=1)
                 curve = self.plot.plot([], [], pen=pen)
                 self.curves.append(curve)
@@ -240,20 +251,32 @@ class PressureDetailChart(QWidget):
         points_layout.setContentsMargins(0, 0, 0, 0)
         
         self.point_labels = []
+        self.point_colors = []  # Store colors for each point
         cols = 3 if self.point_count > 12 else 2
+        
+        # Generate colors matching the curves
+        import colorsys
         for i in range(self.point_count):
             row = i // cols
             col = i % cols
             
+            # Generate same color as curve
+            hue = (i / max(1, self.point_count)) * 0.8
+            sat = 0.8
+            val = 0.9
+            r, g, b = colorsys.hsv_to_rgb(hue, sat, val)
+            r, g, b = int(r * 255), int(g * 255), int(b * 255)
+            self.point_colors.append((r, g, b))
+            
             point_frame = QFrame()
-            point_frame.setStyleSheet("background-color: #2a2a3e; border-radius: 4px; padding: 2px;")
+            point_frame.setStyleSheet(f"background-color: #2a2a3e; border-radius: 4px; padding: 2px; border-left: 3px solid rgb({r}, {g}, {b});")
             point_layout = QHBoxLayout(point_frame)
             point_layout.setContentsMargins(4, 2, 4, 2)
             point_layout.setSpacing(4)
             
             idx_label = QLabel(f"P{i+1}:")
             idx_label.setFixedWidth(28)
-            idx_label.setStyleSheet("font-size: 10px; color: #888;")
+            idx_label.setStyleSheet(f"font-size: 10px; color: rgb({r}, {g}, {b});")
             point_layout.addWidget(idx_label)
             
             val_label = QLabel("0")
@@ -306,11 +329,12 @@ class PressureDetailChart(QWidget):
         for i, val in enumerate(self.current_values):
             if i < len(self.point_labels):
                 self.point_labels[i].setText(str(val))
-                # Highlight active points
+                # Highlight active points with their own color
                 if val > 50:
-                    self.point_labels[i].setStyleSheet(f"font-size: 10px; font-weight: bold; color: {COLORS['accent']};")
+                    r, g, b = self.point_colors[i] if i < len(self.point_colors) else (255, 165, 0)
+                    self.point_labels[i].setStyleSheet(f"font-size: 10px; font-weight: bold; color: rgb({r}, {g}, {b});")
                 else:
-                    self.point_labels[i].setStyleSheet("font-size: 10px; font-weight: bold; color: #ccc;")
+                    self.point_labels[i].setStyleSheet("font-size: 10px; font-weight: bold; color: #888;")
     
     def clear(self):
         self.data = [[] for _ in range(self.point_count)]
@@ -328,7 +352,7 @@ class PressureTouchPanel(QWidget):
     
     def __init__(self):
         super().__init__()
-        self.shared_data = None
+        self.shared_data: Optional['SharedDataManager'] = None
         
         self._setup_ui()
         self.update_texts()
@@ -605,6 +629,8 @@ class PressureTouchPanel(QWidget):
             run_async(self._async_enable_touch(bits))
     
     async def _async_enable_touch(self, bits):
+        if not self.device:
+            return
         try:
             await self.device.touch_sensor_setup(self.slave_id, bits)
         except Exception as e:
@@ -617,6 +643,8 @@ class PressureTouchPanel(QWidget):
             run_async(self._async_calibrate(bits))
     
     async def _async_calibrate(self, bits):
+        if not self.device:
+            return
         try:
             await self.device.touch_sensor_calibrate(self.slave_id, bits)
         except Exception as e:

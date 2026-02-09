@@ -49,7 +49,7 @@ int main(int argc, char const *argv[]) {
     init_logging(LOG_LEVEL_INFO);
 
     // Auto-detect and initialize device
-    CollectorContext ctx;
+    DeviceContext ctx;
     memset(&ctx, 0, sizeof(ctx));
     
     if (!auto_detect_and_init(&ctx, false)) {
@@ -63,7 +63,7 @@ int main(int argc, char const *argv[]) {
     test_finger_control(ctx.handle, ctx.slave_id);
 
     // Cleanup
-    cleanup_collector_context(&ctx);
+    cleanup_device_context(&ctx);
 
     printf("\n=== Example completed ===\n");
     return 0;

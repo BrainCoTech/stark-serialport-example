@@ -1,6 +1,6 @@
 # BrainCo RevoHand SDK Examples
 
-[![Version](https://img.shields.io/badge/version-v1.1.2-blue.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-v1.1.4-blue.svg)](VERSION)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)]()
 
 [English](README.md) | [中文](README.zh.md)
@@ -116,7 +116,7 @@ Each example directory contains its own README with specific usage instructions.
 
 ## 📝 Version
 
-Current SDK Version: **v1.1.2**
+Current SDK Version: **v1.1.4**
 
 See [CHANGELOG](CHANGELOG.md) for update history.
 

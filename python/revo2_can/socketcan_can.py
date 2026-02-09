@@ -155,6 +155,7 @@ class Revo2CanController:
 
 
 async def main():
+    controller: Revo2CanController | None = None
     try:
         master_id = int(os.getenv("STARK_MASTER_ID", "1"), 0)
         slave_id = int(os.getenv("STARK_SLAVE_ID", "1"), 0)
@@ -167,7 +168,8 @@ async def main():
     except Exception as e:
         logger.error(f"Program execution exception: {e}")
     finally:
-        controller.cleanup()
+        if controller is not None:
+            controller.cleanup()
         sys.exit(0)
 
 

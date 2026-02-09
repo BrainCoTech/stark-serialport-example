@@ -5,6 +5,7 @@ import sys
 import os
 from pathlib import Path
 
+from typing import Optional, TYPE_CHECKING
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QLineEdit,
@@ -18,6 +19,9 @@ from .styles import COLORS
 # Add parent directory to path for SDK import
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from common_imports import sdk, logger
+
+if TYPE_CHECKING:
+    from .shared_data import SharedDataManager
 
 # DfuState enum from SDK
 DfuState = sdk.DfuState
@@ -179,9 +183,9 @@ class DfuPanel(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.shared_data = None
-        self.worker = None
-        self.thread = None
+        self.shared_data: Optional['SharedDataManager'] = None
+        self.worker: Optional[DfuWorker] = None
+        self._thread: Optional[QThread] = None
 
         self._setup_ui()
     
@@ -457,18 +461,18 @@ class DfuPanel(QWidget):
         self.state_label.setText("状态: 启动中")
 
         # Start worker
-        self.thread = QThread()
+        self._thread = QThread()
         self.worker = DfuWorker(self.device, self.slave_id, firmware_path)
-        self.worker.moveToThread(self.thread)
+        self.worker.moveToThread(self._thread)
 
-        self.thread.started.connect(self.worker.run)
+        self._thread.started.connect(self.worker.run)
         self.worker.progress.connect(self._on_progress)
         self.worker.state_changed.connect(self._on_state_changed)
         self.worker.finished.connect(self._on_finished)
-        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self._thread.quit)
 
         self.dfu_started.emit()
-        self.thread.start()
+        self._thread.start()
 
     def _on_progress(self, percent):
         """Progress update"""
@@ -509,9 +513,11 @@ class DfuPanel(QWidget):
         
         try:
             import asyncio
+            device = self.device
+            slave_id = self.slave_id
             
             async def do_reset():
-                await self.device.reset_dfu_state(self.slave_id)
+                await device.reset_dfu_state(slave_id)
             
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

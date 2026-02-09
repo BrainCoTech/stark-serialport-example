@@ -220,6 +220,8 @@ def socketcan_receive_filtered(
 
 
 def _socketcan_read_message() -> Optional[Tuple[int, bytes]]:
+    if _sock is None:
+        return None
     try:
         data = _sock.recv(CAN_MTU)
         if len(data) != CAN_MTU:

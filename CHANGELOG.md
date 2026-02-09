@@ -2,6 +2,24 @@
 
 > 📋 此更新日志面向外部客户和集成开发者。如需了解 SDK 内部实现细节，请联系 BrainCo 技术支持团队。
 
+## v1.1.4 (2026/02/09)
+
+### 🚀 新增功能
+
+#### 设备上下文查询
+- 新增 `stark_get_protocol_type`、`stark_get_port_name`、`stark_get_baudrate`、`stark_get_can_arb_baudrate`、`stark_get_can_data_baudrate` 查询接口
+- 新增 `init_device_handler_can()` / `init_device_handler_can_with_hw_type()` CAN 设备初始化
+- 新增 `StarkProtocolType::Auto = 0` 枚举值，用于自动检测所有协议
+
+### 🔧 示例代码改进
+- C++: `CollectorContext` 重命名为 `DeviceContext`，移除 `protocol`、`port_name`、`baudrate` 字段，改用 C API 查询接口
+- C++: CAN 初始化函数统一改用 `init_device_handler_can()` 存储波特率
+- C++: `stark_auto_detect` 返回类型改用 `StarkProtocolType` 枚举，增强类型安全
+- C++: 修复 `hand_demo.cpp` 编译错误：使用 `STARK_PROTOCOL_TYPE_AUTO` 替代字面量 `0`
+- Python: 全面添加类型注解，提升代码质量
+
+---
+
 ## v1.1.2 (2026/02/06)
 
 ### 🚀 新增功能
@@ -102,7 +120,7 @@ ctx = sdk.init_device_handler(StarkProtocolType.CanFd, master_id)
 
 ---
 
-## v1.0.4 (2025/01)
+## v1.0.4 (2026/01/23)
 
 - 支持 Data Collector 数据采集器
 - 支持轨迹控制功能

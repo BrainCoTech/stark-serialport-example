@@ -84,7 +84,7 @@ int main(int argc, char const *argv[]) {
     init_logging(LOG_LEVEL_INFO);
 
     // Parse arguments and initialize device
-    CollectorContext ctx;
+    DeviceContext ctx;
     memset(&ctx, 0, sizeof(ctx));
     
     int arg_idx = 1;
@@ -116,7 +116,7 @@ int main(int argc, char const *argv[]) {
         if (firmware_path == NULL) {
             printf("[ERROR] Cannot auto-select firmware for hardware type %d\n", ctx.hw_type);
             print_usage(argv[0]);
-            cleanup_collector_context(&ctx);
+            cleanup_device_context(&ctx);
             return -1;
         }
         printf("[INFO] Auto-selected firmware: %s\n", firmware_path);
@@ -126,7 +126,7 @@ int main(int argc, char const *argv[]) {
     FILE* f = fopen(firmware_path, "rb");
     if (f == NULL) {
         printf("[ERROR] Firmware file not found: %s\n", firmware_path);
-        cleanup_collector_context(&ctx);
+        cleanup_device_context(&ctx);
         return -1;
     }
     fclose(f);
@@ -172,6 +172,6 @@ int main(int argc, char const *argv[]) {
         printf("\n[ERROR] Firmware upgrade failed!\n");
     }
 
-    cleanup_collector_context(&ctx);
+    cleanup_device_context(&ctx);
     return g_dfu_completed ? 0 : -1;
 }

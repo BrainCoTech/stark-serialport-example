@@ -434,7 +434,7 @@ int main(int argc, char const *argv[]) {
     // init_logging(LOG_LEVEL_DEBUG);
     init_logging(LOG_LEVEL_INFO);
 
-    CollectorContext ctx;
+    DeviceContext ctx;
     memset(&ctx, 0, sizeof(ctx));
     
     CollectionMode mode = MODE_AUTO;
@@ -626,7 +626,7 @@ int main(int argc, char const *argv[]) {
     auto motor_buffer = motor_buffer_new(1000);
     if (motor_buffer == NULL) {
         fprintf(stderr, "[ERROR] Failed to create motor buffer.\n");
-        cleanup_collector_context(&ctx);
+        cleanup_device_context(&ctx);
         return -1;
     }
 
@@ -639,7 +639,7 @@ int main(int argc, char const *argv[]) {
         if (touch_buffer == NULL) {
             fprintf(stderr, "[ERROR] Failed to create touch buffer.\n");
             motor_buffer_free(motor_buffer);
-            cleanup_collector_context(&ctx);
+            cleanup_device_context(&ctx);
             return -1;
         }
     }
@@ -649,7 +649,7 @@ int main(int argc, char const *argv[]) {
         if (summary_buffer == NULL) {
             fprintf(stderr, "[ERROR] Failed to create summary buffer.\n");
             motor_buffer_free(motor_buffer);
-            cleanup_collector_context(&ctx);
+            cleanup_device_context(&ctx);
             return -1;
         }
     }
@@ -660,7 +660,7 @@ int main(int argc, char const *argv[]) {
             fprintf(stderr, "[ERROR] Failed to create detailed buffer.\n");
             if (summary_buffer) pressure_summary_buffer_free(summary_buffer);
             motor_buffer_free(motor_buffer);
-            cleanup_collector_context(&ctx);
+            cleanup_device_context(&ctx);
             return -1;
         }
     }
@@ -738,7 +738,7 @@ int main(int argc, char const *argv[]) {
         if (summary_buffer) pressure_summary_buffer_free(summary_buffer);
         if (touch_buffer) touch_buffer_free(touch_buffer);
         motor_buffer_free(motor_buffer);
-        cleanup_collector_context(&ctx);
+        cleanup_device_context(&ctx);
         return -1;
     }
 
@@ -751,7 +751,7 @@ int main(int argc, char const *argv[]) {
         if (summary_buffer) pressure_summary_buffer_free(summary_buffer);
         if (touch_buffer) touch_buffer_free(touch_buffer);
         motor_buffer_free(motor_buffer);
-        cleanup_collector_context(&ctx);
+        cleanup_device_context(&ctx);
         return -1;
     }
 
@@ -848,7 +848,7 @@ int main(int argc, char const *argv[]) {
     if (summary_buffer) pressure_summary_buffer_free(summary_buffer);
     if (touch_buffer) touch_buffer_free(touch_buffer);
     motor_buffer_free(motor_buffer);
-    cleanup_collector_context(&ctx);
+    cleanup_device_context(&ctx);
 
     printf("[INFO] Done!\n");
     return 0;

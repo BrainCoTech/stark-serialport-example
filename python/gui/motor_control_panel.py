@@ -3,6 +3,7 @@
 import asyncio
 import sys
 from pathlib import Path
+from typing import Optional, TYPE_CHECKING
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QSlider, QSpinBox, QPushButton, QLabel, QComboBox, QGridLayout,
@@ -20,6 +21,9 @@ from .constants import (
 # Add parent directory to path for SDK import
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from common_imports import sdk, is_protobuf_device
+
+if TYPE_CHECKING:
+    from .shared_data import SharedDataManager
 
 
 def run_async(coro):
@@ -396,7 +400,7 @@ class MotorControlPanel(QWidget):
     
     def __init__(self):
         super().__init__()
-        self.shared_data = None
+        self.shared_data: Optional['SharedDataManager'] = None
         self.current_mode = MODE_POSITION
         
         self._setup_ui()

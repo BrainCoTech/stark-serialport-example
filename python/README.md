@@ -504,4 +504,4 @@ For technical support:
 
 ---
 
-**Version:** Compatible with bc-stark-sdk 1.1.2
+**Version:** Compatible with bc-stark-sdk 1.1.4

@@ -1,5 +1,6 @@
 """Modern Main Window"""
 
+import asyncio
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTabWidget, QStatusBar, QMenuBar, QMenu, QMessageBox,
@@ -25,7 +26,7 @@ from .shared_data import SharedDataManager
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from common_imports import has_touch, uses_pressure_touch_api, is_protobuf_device
+from common_imports import sdk, has_touch, uses_pressure_touch_api, is_protobuf_device
 
 
 class DfuOverlay(QWidget):
@@ -71,6 +72,7 @@ class MainWindow(QMainWindow):
         
         self.device = None
         self.slave_id = 1
+        self.protocol = None
         
         # Shared data manager for all panels
         self.shared_data = SharedDataManager()
@@ -259,6 +261,7 @@ class MainWindow(QMainWindow):
         """Device connected"""
         self.device = device
         self.slave_id = slave_id
+        self.protocol = protocol
         
         # Get hardware type once
         hw_type = getattr(device_info, 'hardware_type', None) if device_info else None
@@ -266,10 +269,15 @@ class MainWindow(QMainWindow):
         # Enable tabs
         self.tabs.setEnabled(True)
         
+        # Determine protocol-based visibility
+        is_ethercat = (protocol == "EtherCAT")
+        
         # Show/hide tabs based on device capability
         touch_tab_index = self.tabs.indexOf(self.touch_panel)
         pressure_touch_tab_index = self.tabs.indexOf(self.pressure_touch_panel)
         action_tab_index = self.tabs.indexOf(self.action_panel)
+        dfu_tab_index = self.tabs.indexOf(self.dfu_panel)
+        config_tab_index = self.tabs.indexOf(self.config_panel)
         
         # Determine if device has touch and what type
         has_touch_sensor = has_touch(hw_type)
@@ -284,9 +292,15 @@ class MainWindow(QMainWindow):
             # Pressure touch: show only for pressure touch devices
             self.tabs.setTabVisible(pressure_touch_tab_index, has_touch_sensor and is_pressure)
         
-        # Hide Action Sequence panel for Protobuf devices (not supported)
+        # Hide Action Sequence panel for Protobuf devices (not supported) and EtherCAT
         if action_tab_index >= 0:
-            self.tabs.setTabVisible(action_tab_index, not is_protobuf)
+            self.tabs.setTabVisible(action_tab_index, not is_protobuf and not is_ethercat)
+        
+        # Hide DFU and Settings panels for EtherCAT (not applicable via GUI)
+        if dfu_tab_index >= 0:
+            self.tabs.setTabVisible(dfu_tab_index, not is_ethercat)
+        if config_tab_index >= 0:
+            self.tabs.setTabVisible(config_tab_index, not is_ethercat)
         
         # Setup shared data manager
         self.shared_data.set_device(device, slave_id, device_info)
@@ -344,6 +358,7 @@ class MainWindow(QMainWindow):
         
         self.device = None
         self.slave_id = 1
+        self.protocol = None
         
         # Clear device from panels (stops timers)
         self.motor_panel.clear_device()
@@ -352,15 +367,11 @@ class MainWindow(QMainWindow):
         self.collector_panel.clear_device()
         
         # Show all tabs again (will be filtered on next connect)
-        touch_tab_index = self.tabs.indexOf(self.touch_panel)
-        if touch_tab_index >= 0:
-            self.tabs.setTabVisible(touch_tab_index, True)
-        pressure_touch_tab_index = self.tabs.indexOf(self.pressure_touch_panel)
-        if pressure_touch_tab_index >= 0:
-            self.tabs.setTabVisible(pressure_touch_tab_index, True)
-        action_tab_index = self.tabs.indexOf(self.action_panel)
-        if action_tab_index >= 0:
-            self.tabs.setTabVisible(action_tab_index, True)
+        for panel in [self.touch_panel, self.pressure_touch_panel,
+                      self.action_panel, self.dfu_panel, self.config_panel]:
+            idx = self.tabs.indexOf(panel)
+            if idx >= 0:
+                self.tabs.setTabVisible(idx, True)
         
         # Update status bar
         self.device_info_label.setText("")
@@ -488,7 +499,7 @@ class MainWindow(QMainWindow):
 <li>Revo2 Basic / Touch</li>
 </ul>
 
-<p style="color: #7f8c8d;">© 2024-2026 BrainCo Inc.</p>
+<p style="color: #7f8c8d;">© 2015-2026 BrainCo Inc.</p>
         """
         
         msg = QMessageBox(self)
@@ -500,11 +511,48 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Handle window close - cleanup resources"""
-        # Stop shared data manager
+        # Stop shared data manager first (this stops the data collector thread)
         self.shared_data.stop()
         
-        # Disconnect device if connected
-        if self.device:
-            self.connection_panel._on_disconnect()
+        # Clear device from panels (stops timers)
+        self.motor_panel.clear_device()
+        self.touch_panel.clear_device()
+        self.pressure_touch_panel.clear_device()
+        self.collector_panel.clear_device()
         
+        # Disconnect device if connected - use sync close to avoid event loop issues
+        if self.connection_panel.ctx:
+            try:
+                ctx = self.connection_panel.ctx
+                protocol = self.connection_panel.protocol
+                
+                # Use sync close for CAN protocols, async for others
+                if protocol in ["CAN 2.0", "CANFD"]:
+                    if hasattr(sdk, 'close_zqwl'):
+                        sdk.close_zqwl()
+                elif protocol == "EtherCAT":
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        loop.run_until_complete(ctx.ec_stop_loop())
+                        loop.run_until_complete(ctx.close())
+                    finally:
+                        loop.close()
+                else:
+                    # Create event loop for async close
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        if hasattr(sdk, 'close_device_handler'):
+                            loop.run_until_complete(sdk.close_device_handler(ctx))
+                        elif hasattr(ctx, 'close'):
+                            loop.run_until_complete(ctx.close())
+                    finally:
+                        loop.close()
+            except Exception as e:
+                print(f"Error closing device on exit: {e}")
+            
+            self.connection_panel.ctx = None
+        
+        self.device = None
         event.accept()

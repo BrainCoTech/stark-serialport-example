@@ -137,20 +137,29 @@ typedef enum {
 
 /**
  * @brief Device context for data collection
- * Contains all information needed to communicate with a device
+ * Contains all information needed to communicate with a device.
+ * 
+ * This is a lightweight wrapper around DeviceHandler that caches frequently-accessed
+ * device information to avoid repeated queries.
+ * 
+ * Note: protocol, port_name, and baudrate can be queried via:
+ *   - stark_get_protocol_type(handle)
+ *   - stark_get_port_name(handle)
+ *   - stark_get_baudrate(handle)
  */
 typedef struct {
-  StarkProtocolType protocol;      // Protocol type (from stark-sdk.h)
-  DeviceHandler* handle;           // Device handler
-  uint8_t slave_id;                // Slave ID
-  StarkHardwareType hw_type;       // Hardware type (use helper functions to query capabilities)
+  DeviceHandler* handle;           // Device handler (opaque)
+  uint8_t slave_id;                // Current slave ID
+  
+  // Cached device information (to avoid repeated queries)
+  StarkHardwareType hw_type;       // Detected or overridden hardware type
   StarkHardwareType hw_type_override; // Manual hardware type override (0 = auto-detect)
-  uint32_t motor_freq;             // Recommended motor frequency (Hz)
-  uint32_t touch_freq;             // Recommended touch frequency (Hz)
-  char port_name[256];             // Port name
-  uint32_t baudrate;               // Baudrate
-  char serial_number[20];          // Serial number (e.g., "BCMER247J250888EF")
-} CollectorContext;
+  char serial_number[20];          // Device serial number (e.g., "BCMER247J250888EF")
+  
+  // Application-level recommendations
+  uint32_t motor_freq;             // Recommended motor polling frequency (Hz)
+  uint32_t touch_freq;             // Recommended touch polling frequency (Hz)
+} DeviceContext;
 
 /**
  * @brief Auto-detect devices and let user select one
@@ -161,7 +170,7 @@ typedef struct {
  * @param require_touch If true, only show devices with touch sensors
  * @return true if device selected and initialized, false otherwise
  */
-bool auto_detect_and_init(CollectorContext* ctx, bool require_touch);
+bool auto_detect_and_init(DeviceContext* ctx, bool require_touch);
 
 /**
  * @brief Cleanup device context
@@ -169,7 +178,7 @@ bool auto_detect_and_init(CollectorContext* ctx, bool require_touch);
  * 
  * @param ctx Device context to cleanup
  */
-void cleanup_collector_context(CollectorContext* ctx);
+void cleanup_device_context(DeviceContext* ctx);
 
 /****************************************************************************/
 // Manual initialization functions
@@ -183,7 +192,7 @@ void cleanup_collector_context(CollectorContext* ctx);
  * @param slave_id Slave ID
  * @return true if successful
  */
-bool init_modbus(CollectorContext* ctx, const char* port, uint32_t baudrate, uint8_t slave_id);
+bool init_modbus(DeviceContext* ctx, const char* port, uint32_t baudrate, uint8_t slave_id);
 
 /**
  * @brief Initialize device via Protobuf protocol
@@ -195,7 +204,7 @@ bool init_modbus(CollectorContext* ctx, const char* port, uint32_t baudrate, uin
  * @param slave_id Slave ID (default 10, range 10-254)
  * @return true if successful
  */
-bool init_protobuf(CollectorContext* ctx, const char* port, uint8_t slave_id);
+bool init_protobuf(DeviceContext* ctx, const char* port, uint8_t slave_id);
 
 /**
  * @brief Initialize device via ZQWL CAN/CANFD
@@ -207,7 +216,7 @@ bool init_protobuf(CollectorContext* ctx, const char* port, uint8_t slave_id);
  * @param is_canfd true for CANFD, false for CAN 2.0
  * @return true if successful
  */
-bool init_zqwl_device(CollectorContext* ctx, const char* port, uint32_t arb_baudrate, 
+bool init_zqwl_device(DeviceContext* ctx, const char* port, uint32_t arb_baudrate, 
                       uint32_t data_baudrate, uint8_t slave_id, bool is_canfd);
 
 #ifdef __linux__
@@ -223,7 +232,7 @@ bool init_zqwl_device(CollectorContext* ctx, const char* port, uint32_t arb_baud
  * @param is_canfd true for CANFD, false for CAN 2.0
  * @return true if successful
  */
-bool init_socketcan_device(CollectorContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd);
+bool init_socketcan_device(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd);
 
 /**
  * @brief Initialize device via SocketCAN (using SDK built-in implementation)
@@ -237,7 +246,7 @@ bool init_socketcan_device(CollectorContext* ctx, const char* iface, uint8_t sla
  * @param is_canfd true for CANFD, false for CAN 2.0
  * @return true if successful
  */
-bool init_socketcan_device_builtin(CollectorContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd);
+bool init_socketcan_device_builtin(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd);
 
 /**
  * @brief Initialize device via ZLG USB-CANFD
@@ -246,7 +255,7 @@ bool init_socketcan_device_builtin(CollectorContext* ctx, const char* iface, uin
  * @param is_canfd true for CANFD, false for CAN 2.0
  * @return true if successful
  */
-bool init_zlg_device(CollectorContext* ctx, uint8_t slave_id, bool is_canfd);
+bool init_zlg_device(DeviceContext* ctx, uint8_t slave_id, bool is_canfd);
 #endif
 
 /**
@@ -260,7 +269,7 @@ bool init_zlg_device(CollectorContext* ctx, uint8_t slave_id, bool is_canfd);
  * @param arg_idx Output: Index of next argument after init options
  * @return true if successful, false if error or help requested
  */
-bool parse_args_and_init(CollectorContext* ctx, int argc, const char* argv[], int* arg_idx);
+bool parse_args_and_init(DeviceContext* ctx, int argc, const char* argv[], int* arg_idx);
 
 /**
  * @brief Print common initialization usage

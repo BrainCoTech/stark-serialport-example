@@ -4,6 +4,7 @@ import asyncio
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional, TYPE_CHECKING
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QSpinBox, QTextEdit,
@@ -15,6 +16,9 @@ from PySide6.QtCore import Signal
 # Add parent directory to path for SDK import
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from common_imports import sdk
+
+if TYPE_CHECKING:
+    from .shared_data import SharedDataManager
 
 from .i18n import tr
 from .styles import COLORS
@@ -42,7 +46,7 @@ class SystemConfigPanel(QWidget):
     
     def __init__(self):
         super().__init__()
-        self.shared_data = None
+        self.shared_data: Optional['SharedDataManager'] = None
         self.protocol = None
         self._loading_settings = False  # Prevent triggering saves during load
         
@@ -79,6 +83,18 @@ class SystemConfigPanel(QWidget):
         if self.device_info:
             return self.device_info.uses_revo2_motor_api()
         return False
+    
+    def _supports_finger_settings(self):
+        """Check if device supports finger settings API (requires Modbus or CANFD)"""
+        if not self.device or not self._uses_revo2_motor_api():
+            return False
+        # get_all_finger_settings only works with Modbus or CANFD
+        try:
+            from common_imports import sdk
+            protocol = self.device.get_protocol_type()
+            return protocol in [sdk.StarkProtocolType.Modbus, sdk.StarkProtocolType.CanFd]
+        except:
+            return False
     
     def _setup_ui(self):
         """Setup UI with tabs"""
@@ -523,8 +539,8 @@ class SystemConfigPanel(QWidget):
         self._load_motor_settings()
         self._load_comm_settings()
         
-        # Load Revo2 finger settings if applicable
-        if self._uses_revo2_motor_api():
+        # Load Revo2 finger settings if applicable (only for Modbus/CANFD)
+        if self._supports_finger_settings():
             self._load_finger_settings()
     
     def _update_device_specific_ui(self):
@@ -556,6 +572,8 @@ class SystemConfigPanel(QWidget):
     
     async def _async_load_motor_settings(self):
         """Async load motor settings"""
+        if not self.device:
+            return
         try:
             # Check if Protobuf protocol (limited feature support)
             is_protobuf = self.protocol and "Protobuf" in self.protocol
@@ -633,6 +651,8 @@ class SystemConfigPanel(QWidget):
     
     async def _async_load_comm_settings(self):
         """Async load communication settings"""
+        if not self.device:
+            return
         try:
             # Check protocol type - only load baudrate for Modbus/CANFD protocols
             is_modbus = self.protocol and "Modbus" in self.protocol
@@ -695,6 +715,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_turbo_enabled(enabled))
     
     async def _async_set_turbo_enabled(self, enabled):
+        if not self.device:
+            return
         try:
             self._log(f"Setting turbo mode: {'enabled' if enabled else 'disabled'}...")
             await self.device.set_turbo_mode_enabled(self.slave_id, enabled)
@@ -711,6 +733,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_turbo_config(interval, duration))
     
     async def _async_set_turbo_config(self, interval, duration):
+        if not self.device:
+            return
         try:
             self._log(f"Setting turbo config: interval={interval}ms, duration={duration}ms...")
             config = sdk.TurboConfig(interval, duration)
@@ -727,6 +751,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_auto_calib(enabled))
     
     async def _async_set_auto_calib(self, enabled):
+        if not self.device:
+            return
         try:
             self._log(f"Setting auto calibration: {'enabled' if enabled else 'disabled'}...")
             await self.device.set_auto_calibration(self.slave_id, enabled)
@@ -751,6 +777,8 @@ class SystemConfigPanel(QWidget):
             run_async(self._async_manual_calibrate())
     
     async def _async_manual_calibrate(self):
+        if not self.device:
+            return
         try:
             self._log("Sending calibrate_position command...")
             await self.device.calibrate_position(self.slave_id)
@@ -765,6 +793,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_force_level(index))
     
     async def _async_set_force_level(self, index):
+        if not self.device:
+            return
         try:
             level_names = ['Small', 'Normal', 'Full']
             self._log(f"Setting force level: {level_names[index]}...")
@@ -781,6 +811,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_unit_mode(index))
     
     async def _async_set_unit_mode(self, index):
+        if not self.device:
+            return
         try:
             mode_names = ['Normalized', 'Physical']
             self._log(f"Setting unit mode: {mode_names[index]}...")
@@ -798,6 +830,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_led(enabled))
     
     async def _async_set_led(self, enabled):
+        if not self.device:
+            return
         try:
             self._log(f"Setting LED: {'enabled' if enabled else 'disabled'}...")
             await self.device.set_led_enabled(self.slave_id, enabled)
@@ -813,6 +847,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_buzzer(enabled))
     
     async def _async_set_buzzer(self, enabled):
+        if not self.device:
+            return
         try:
             self._log(f"Setting buzzer: {'enabled' if enabled else 'disabled'}...")
             await self.device.set_buzzer_enabled(self.slave_id, enabled)
@@ -828,6 +864,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_vibration(enabled))
     
     async def _async_set_vibration(self, enabled):
+        if not self.device:
+            return
         try:
             self._log(f"Setting vibration: {'enabled' if enabled else 'disabled'}...")
             await self.device.set_vibration_enabled(self.slave_id, enabled)
@@ -855,6 +893,8 @@ class SystemConfigPanel(QWidget):
             run_async(self._async_set_modbus_baudrate(baud_text))
     
     async def _async_set_modbus_baudrate(self, baud_text):
+        if not self.device:
+            return
         try:
             self._log(f"Setting Modbus baudrate: {baud_text}...")
             baud_map = {
@@ -889,6 +929,8 @@ class SystemConfigPanel(QWidget):
             run_async(self._async_set_canfd_baudrate(baud_text))
     
     async def _async_set_canfd_baudrate(self, baud_text):
+        if not self.device:
+            return
         try:
             self._log(f"Setting CANFD data rate: {baud_text}...")
             baud_map = {
@@ -908,7 +950,7 @@ class SystemConfigPanel(QWidget):
     
     def _load_finger_settings(self):
         """Load Revo2 finger settings from device"""
-        if not self.device or not self._uses_revo2_motor_api():
+        if not self._supports_finger_settings():
             return
         self._loading_settings = True
         run_async(self._async_load_finger_settings())
@@ -916,6 +958,8 @@ class SystemConfigPanel(QWidget):
     
     async def _async_load_finger_settings(self):
         """Async load finger settings"""
+        if not self.device:
+            return
         try:
             # Load all finger settings
             all_settings = await self.device.get_all_finger_settings(self.slave_id)
@@ -938,12 +982,14 @@ class SystemConfigPanel(QWidget):
     
     def _apply_all_finger_settings(self):
         """Apply all finger settings to device"""
-        if not self.device or not self._uses_revo2_motor_api():
+        if not self._supports_finger_settings():
             return
         run_async(self._async_apply_all_finger_settings())
     
     async def _async_apply_all_finger_settings(self):
         """Async apply all finger settings"""
+        if not self.device:
+            return
         try:
             for i in range(6):
                 finger_id = sdk.FingerId(i + 1)  # FingerId starts from 1
@@ -960,12 +1006,14 @@ class SystemConfigPanel(QWidget):
     
     def _apply_protected_currents(self):
         """Apply protected currents to device"""
-        if not self.device or not self._uses_revo2_motor_api():
+        if not self._supports_finger_settings():
             return
         run_async(self._async_apply_protected_currents())
     
     async def _async_apply_protected_currents(self):
         """Async apply protected currents"""
+        if not self.device:
+            return
         try:
             currents = [spin.value() for spin in self.protected_current_spins]
             await self.device.set_finger_protected_currents(self.slave_id, currents)
@@ -985,6 +1033,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_set_slave_id(new_id))
     
     async def _async_set_slave_id(self, new_id):
+        if not self.device:
+            return
         try:
             old_id = self.slave_id
             await self.device.set_slave_id(old_id, new_id)
@@ -1004,6 +1054,8 @@ class SystemConfigPanel(QWidget):
         run_async(self._async_reboot())
     
     async def _async_reboot(self):
+        if not self.device:
+            return
         try:
             await self.device.reboot(self.slave_id)
             self._log(tr("log_rebooted"))
@@ -1028,6 +1080,8 @@ class SystemConfigPanel(QWidget):
             run_async(self._async_factory_reset())
     
     async def _async_factory_reset(self):
+        if not self.device:
+            return
         try:
             await self.device.reset_default_settings(self.slave_id)
             self._log(tr("log_factory_reset_done"))

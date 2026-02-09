@@ -504,4 +504,4 @@ logger.error("错误消息")
 
 ---
 
-**版本：** 兼容 bc-stark-sdk 1.1.2
+**版本：** 兼容 bc-stark-sdk 1.1.4

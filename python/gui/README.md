@@ -11,7 +11,7 @@ Unified GUI tool for controlling and monitoring Stark dexterous hand devices.
 - ✅ CAN 2.0 (ZQWL)
 - ✅ CANFD (ZQWL)
 - ✅ SocketCAN (Linux, via Auto Detect)
-- 🚧 EtherCAT (Linux only)
+- ✅ EtherCAT (Linux only, manual connect)
 
 ### Supported Devices
 - Revo1 Basic / Touch / Advanced / AdvancedTouch
@@ -98,6 +98,14 @@ Switch language via: Menu → Language → Select language
 
 ### SocketCAN (Linux)
 - Uses same IDs as CAN 2.0 or CANFD depending on device
+
+### EtherCAT (Linux)
+- Select "EtherCAT" protocol in the connection panel
+- Master position: usually 0 (first EtherCAT master)
+- Slave position: 0-based index of the slave on the bus
+- Available panels: Motor Control, Touch Sensor, Timing Test
+- Panels not applicable to EtherCAT (Actions, DFU, Settings) are hidden automatically
+- Data Collector is available via Tools menu
 - Auto-detected via "Auto Detect" button
 - Configure interface before use:
   ```bash

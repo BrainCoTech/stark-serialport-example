@@ -618,7 +618,7 @@ void demo_multi_device(DeviceHandler *handle, uint8_t primary_slave_id) {
     CDetectedDeviceList* device_list = stark_auto_detect(
         true,   // scan_all: find ALL devices
         NULL,   // port: scan all ports
-        0       // protocol: auto (try all)
+        STARK_PROTOCOL_TYPE_AUTO  // protocol: auto (try all)
     );
 
     if (device_list == NULL || device_list->count == 0) {
@@ -830,7 +830,7 @@ void setup_custom_can_callbacks() {
  * Mode 1: Auto-detect (default)
  * Scans all protocols and ports to find devices
  */
-bool init_auto_detect(CollectorContext *ctx, bool require_touch) {
+bool init_auto_detect(DeviceContext *ctx, bool require_touch) {
     printf("\n[Init] Mode: Auto-detect\n");
     return auto_detect_and_init(ctx, require_touch);
 }
@@ -839,7 +839,7 @@ bool init_auto_detect(CollectorContext *ctx, bool require_touch) {
  * Mode 5: Custom callback mode
  * Use your own CAN/Modbus adapter with custom callbacks
  */
-bool init_custom_callback(CollectorContext *ctx, StarkProtocolType protocol, uint8_t slave_id) {
+bool init_custom_callback(DeviceContext *ctx, StarkProtocolType protocol, uint8_t slave_id) {
     printf("\n[Init] Mode: Custom Callback\n");
     printf("  Protocol: %s, Slave ID: %d\n",
            protocol == STARK_PROTOCOL_TYPE_MODBUS ? "Modbus" :
@@ -859,7 +859,6 @@ bool init_custom_callback(CollectorContext *ctx, StarkProtocolType protocol, uin
     }
 
     ctx->slave_id = slave_id;
-    ctx->protocol = protocol;
     ctx->motor_freq = 20;
     ctx->touch_freq = 10;
 
@@ -915,10 +914,10 @@ int main(int argc, char const *argv[]) {
     printf("=== Universal Motor Control - Complete Demo ===\n\n");
 
     // Initialize logging
-    init_logging(LOG_LEVEL_DEBUG);
-    // init_logging(LOG_LEVEL_INFO);
+    // init_logging(LOG_LEVEL_DEBUG);
+    init_logging(LOG_LEVEL_INFO);
 
-    CollectorContext ctx;
+    DeviceContext ctx;
     memset(&ctx, 0, sizeof(ctx));
 
     int demo_id = 0;
@@ -1044,7 +1043,7 @@ int main(int argc, char const *argv[]) {
         demo_id = atoi(argv[arg_idx]);
         if (demo_id < 0 || demo_id > 8) {
             print_usage(argv[0]);
-            cleanup_collector_context(&ctx);
+            cleanup_device_context(&ctx);
             return -1;
         }
     }
@@ -1066,7 +1065,7 @@ int main(int argc, char const *argv[]) {
             break;
         case 3:
             if (uses_revo2_api) {
-                demo_advanced_revo2(ctx.handle, ctx.slave_id, ctx.protocol);
+                demo_advanced_revo2(ctx.handle, ctx.slave_id, stark_get_protocol_type(ctx.handle));
             } else {
                 printf("\n[WARN] Demo 3 (Advanced) is Revo2 only. Skipping.\n");
             }
@@ -1101,7 +1100,7 @@ int main(int argc, char const *argv[]) {
             if (!keep_running) break;
 
             if (uses_revo2_api) {
-                demo_advanced_revo2(ctx.handle, ctx.slave_id, ctx.protocol);
+                demo_advanced_revo2(ctx.handle, ctx.slave_id, stark_get_protocol_type(ctx.handle));
                 if (!keep_running) break;
             }
 
@@ -1118,7 +1117,7 @@ int main(int argc, char const *argv[]) {
             break;
     }
 
-    cleanup_collector_context(&ctx);
+    cleanup_device_context(&ctx);
     printf("\n[INFO] Done!\n");
 
     return 0;

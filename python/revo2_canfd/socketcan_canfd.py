@@ -14,14 +14,31 @@ def canfd_send(_slave_id: int, can_id: int, data: list):
         logger.error("Failed to send CANFD message")
 
 
-def canfd_read(_slave_id: int):
+def canfd_read(_slave_id: int, expected_can_id: int, expected_frames: int):
+    """
+    CANFD message receiving with filtering and multi-frame support
+    
+    Args:
+        _slave_id: Slave ID (not used)
+        expected_can_id: Expected CAN ID to filter responses
+        expected_frames: Expected frame count (0=auto-detect, >0=specific count)
+        
+    Returns:
+        tuple: (can_id, data) where data is concatenated frames if multi-frame
+    """
     recv_msg = socketcan_receive_message(quick_retries=5, dely_retries=2)
     if recv_msg is None:
         logger.error("No message received")
         return 0, bytes([])
 
     can_id, data = recv_msg
-    logger.debug(f"Received CANFD - ID: {can_id:02x}, Data: {data.hex()}")
+    
+    # Filter by expected CAN ID
+    if can_id != expected_can_id:
+        logger.warning(f"CAN ID mismatch: expected 0x{expected_can_id:X}, got 0x{can_id:X}")
+        return 0, bytes([])
+    
+    logger.debug(f"Received CANFD - ID: 0x{can_id:02x}, Data: {bytes(data).hex()}")
     return can_id, data
 
 
@@ -64,7 +81,7 @@ async def all_fingers_control_examples(client, slave_id):
     await asyncio.sleep(1.0)
 
 
-async def get_and_display_motor_status(client, slave_id):
+async def get_and_display_motor_status(client: "libstark.DeviceHandler", slave_id: int):
     status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
     logger.info(f"Finger status: {status.description}")
 

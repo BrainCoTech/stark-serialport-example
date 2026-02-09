@@ -28,7 +28,7 @@ def canfd_read(_slave_id: int):
     return can_id, data
 
 
-async def get_and_display_motor_status(client, slave_id):
+async def get_and_display_motor_status(client: "libstark.DeviceHandler", slave_id: int):
     logger.debug("get_motor_status")
     status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
     logger.info(f"Finger status: {status.description}")

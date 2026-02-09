@@ -7,6 +7,7 @@ import sys
 import time
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, TYPE_CHECKING
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
@@ -21,6 +22,9 @@ from .constants import MOTOR_COUNT, TOUCH_COUNT
 # Add parent directory to path for SDK import
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from common_imports import sdk
+
+if TYPE_CHECKING:
+    from .shared_data import SharedDataManager
 
 
 class CollectorWorker(QObject):
@@ -139,6 +143,9 @@ class CollectorWorker(QObject):
         self.log_message.emit("Writing CSV...")
         
         # Get all data from buffers
+        if not self.motor_buffer:
+            self.log_message.emit("No motor buffer available")
+            return
         motor_data = self.motor_buffer.pop_all()
         touch_data = None
         if has_touch and self.touch_buffer:
@@ -200,10 +207,10 @@ class DataCollectorPanel(QWidget):
     
     def __init__(self):
         super().__init__()
-        self.shared_data = None
+        self.shared_data: Optional['SharedDataManager'] = None
         self.is_collecting = False
-        self.worker = None
-        self.thread = None
+        self.worker: Optional[CollectorWorker] = None
+        self._thread: Optional[QThread] = None
         
         self._setup_ui()
         self.update_texts()
@@ -405,7 +412,7 @@ class DataCollectorPanel(QWidget):
         self._log("Starting collection...")
         
         # Start worker thread
-        self.thread = QThread()
+        self._thread = QThread()
         self.worker = CollectorWorker(
             self.device,
             self.slave_id,
@@ -416,15 +423,15 @@ class DataCollectorPanel(QWidget):
             self.motor_check.isChecked(),
             self.touch_check.isChecked()
         )
-        self.worker.moveToThread(self.thread)
+        self.worker.moveToThread(self._thread)
         
-        self.thread.started.connect(self.worker.run)
+        self._thread.started.connect(self.worker.run)
         self.worker.progress.connect(self._on_progress)
         self.worker.log_message.connect(self._log)
         self.worker.finished.connect(self._on_finished)
-        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self._thread.quit)
         
-        self.thread.start()
+        self._thread.start()
     
     def _stop_collection(self):
         """Stop collection"""

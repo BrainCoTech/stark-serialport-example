@@ -191,8 +191,6 @@ int get_current_time_ms(void) {
 
 #include <string.h>
 
-#define PROTOCOL_AUTO 0
-
 const char* get_hardware_type_name_str(uint8_t hw_type) {
     switch (hw_type) {
         case STARK_HARDWARE_TYPE_REVO1_PROTOBUF: return "Revo1 ProtoBuf";
@@ -232,13 +230,13 @@ const char* get_protocol_name_str(uint8_t protocol) {
     }
 }
 
-bool auto_detect_and_init(CollectorContext* ctx, bool require_touch) {
+bool auto_detect_and_init(DeviceContext* ctx, bool require_touch) {
     printf("[INFO] Auto-detecting devices...\n");
 
     CDetectedDeviceList* device_list = stark_auto_detect(
         true,   // scan_all: find all devices
         NULL,   // port: scan all ports
-        PROTOCOL_AUTO  // protocol: try all protocols
+        STARK_PROTOCOL_TYPE_AUTO  // protocol: auto-detect all protocols
     );
 
     if (device_list == NULL || device_list->count == 0) {
@@ -328,9 +326,6 @@ bool auto_detect_and_init(CollectorContext* ctx, bool require_touch) {
     // Copy device info
     ctx->slave_id = selected_device->slave_id;
     ctx->hw_type = (StarkHardwareType)selected_device->hardware_type;
-    ctx->baudrate = selected_device->baudrate;
-    strncpy(ctx->port_name, selected_device->port_name, sizeof(ctx->port_name) - 1);
-    ctx->port_name[sizeof(ctx->port_name) - 1] = '\0';
 
     // Copy serial number for touch type detection
     if (selected_device->serial_number) {
@@ -340,14 +335,14 @@ bool auto_detect_and_init(CollectorContext* ctx, bool require_touch) {
         ctx->serial_number[0] = '\0';
     }
 
-    // Set protocol type (same enum type now)
-    ctx->protocol = static_cast<StarkProtocolType>(selected_device->protocol);
+    // Get protocol type from device handler
+    StarkProtocolType protocol = stark_get_protocol_type(ctx->handle);
 
     free_detected_device_list(device_list);
 
     // Determine optimal frequencies based on protocol and platform
     #ifdef __linux__
-        switch (ctx->protocol) {
+        switch (protocol) {
             case STARK_PROTOCOL_TYPE_MODBUS:
                 ctx->motor_freq = 100;
                 ctx->touch_freq = 50;
@@ -366,7 +361,7 @@ bool auto_detect_and_init(CollectorContext* ctx, bool require_touch) {
                 break;
         }
     #else
-        switch (ctx->protocol) {
+        switch (protocol) {
             case STARK_PROTOCOL_TYPE_MODBUS:
                 ctx->motor_freq = 20;
                 ctx->touch_freq = 10;
@@ -389,18 +384,19 @@ bool auto_detect_and_init(CollectorContext* ctx, bool require_touch) {
     printf("[INFO] Device: %s\n", get_hardware_type_name_str(ctx->hw_type));
     printf("[INFO] Touch: %s\n", get_touch_type_name_str(get_touch_sensor_type(ctx->hw_type)));
     printf("[INFO] Protocol: %s, Motor: %dHz, Touch: %dHz\n",
-           get_protocol_name_str(ctx->protocol), ctx->motor_freq, ctx->touch_freq);
+           get_protocol_name_str(protocol), ctx->motor_freq, ctx->touch_freq);
 
     return true;
 }
 
-void cleanup_collector_context(CollectorContext* ctx) {
+void cleanup_device_context(DeviceContext* ctx) {
     if (ctx == NULL || ctx->handle == NULL) {
         return;
     }
 
     // Use SDK's unified close function
-    close_device_handler(ctx->handle, ctx->protocol);
+    StarkProtocolType protocol = stark_get_protocol_type(ctx->handle);
+    close_device_handler(ctx->handle, protocol);
     ctx->handle = NULL;
     printf("[INFO] Device connection closed\n");
 }
@@ -409,7 +405,7 @@ void cleanup_collector_context(CollectorContext* ctx) {
 // Manual initialization functions
 /****************************************************************************/
 
-bool init_modbus(CollectorContext* ctx, const char* port, uint32_t baudrate, uint8_t slave_id) {
+bool init_modbus(DeviceContext* ctx, const char* port, uint32_t baudrate, uint8_t slave_id) {
     printf("\n[Init] Mode: Modbus\n");
     printf("  Port: %s, Baudrate: %u, Slave ID: %d\n", port, baudrate, slave_id);
     
@@ -420,9 +416,6 @@ bool init_modbus(CollectorContext* ctx, const char* port, uint32_t baudrate, uin
     }
     
     ctx->slave_id = slave_id;
-    ctx->protocol = STARK_PROTOCOL_TYPE_MODBUS;
-    ctx->baudrate = baudrate;
-    strncpy(ctx->port_name, port, sizeof(ctx->port_name) - 1);
     
     // Print override info if set
     if (ctx->hw_type_override != 0) {
@@ -440,6 +433,11 @@ bool init_modbus(CollectorContext* ctx, const char* port, uint32_t baudrate, uin
         printf("  Device: %s, SN: %s, FW: %s\n", 
                get_hardware_type_name_str(info->hardware_type),
                info->serial_number, info->firmware_version);
+        
+        // Copy serial number
+        strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
+        ctx->serial_number[sizeof(ctx->serial_number) - 1] = '\0';
+        
         free_device_info(info);
     }
     
@@ -453,7 +451,7 @@ bool init_modbus(CollectorContext* ctx, const char* port, uint32_t baudrate, uin
     return true;
 }
 
-bool init_protobuf(CollectorContext* ctx, const char* port, uint8_t slave_id) {
+bool init_protobuf(DeviceContext* ctx, const char* port, uint8_t slave_id) {
     printf("\n[Init] Mode: Protobuf\n");
     printf("  Port: %s, Slave ID: %d (baudrate: 115200)\n", port, slave_id);
     
@@ -470,9 +468,6 @@ bool init_protobuf(CollectorContext* ctx, const char* port, uint8_t slave_id) {
     }
     
     ctx->slave_id = slave_id;
-    ctx->protocol = STARK_PROTOCOL_TYPE_PROTOBUF;
-    ctx->baudrate = 115200;
-    strncpy(ctx->port_name, port, sizeof(ctx->port_name) - 1);
     ctx->hw_type = STARK_HARDWARE_TYPE_REVO1_PROTOBUF;
     
     // Try to get device info (optional for Protobuf)
@@ -483,6 +478,7 @@ bool init_protobuf(CollectorContext* ctx, const char* port, uint8_t slave_id) {
                info->serial_number, info->firmware_version);
         if (info->serial_number) {
             strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
+            ctx->serial_number[sizeof(ctx->serial_number) - 1] = '\0';
         }
         free_device_info(info);
     }
@@ -493,7 +489,7 @@ bool init_protobuf(CollectorContext* ctx, const char* port, uint8_t slave_id) {
     return true;
 }
 
-bool init_zqwl_device(CollectorContext* ctx, const char* port, uint32_t arb_baudrate, 
+bool init_zqwl_device(DeviceContext* ctx, const char* port, uint32_t arb_baudrate, 
                       uint32_t data_baudrate, uint8_t slave_id, bool is_canfd) {
     printf("\n[Init] Mode: ZQWL %s\n", is_canfd ? "CANFD" : "CAN 2.0");
     if (is_canfd) {
@@ -515,10 +511,10 @@ bool init_zqwl_device(CollectorContext* ctx, const char* port, uint32_t arb_baud
     if (ctx->hw_type_override != 0) {
         printf("  Hardware type override: %s (%d)\n", 
                get_hardware_type_name_str(ctx->hw_type_override), ctx->hw_type_override);
-        ctx->handle = init_device_handler_with_hw_type(protocol, 1, slave_id, ctx->hw_type_override);
+        ctx->handle = init_device_handler_can_with_hw_type(protocol, 1, slave_id, arb_baudrate, data_baudrate, ctx->hw_type_override);
         ctx->hw_type = ctx->hw_type_override;
     } else {
-        ctx->handle = init_device_handler(protocol, 1);
+        ctx->handle = init_device_handler_can(protocol, 1, arb_baudrate, data_baudrate);
     }
     
     if (ctx->handle == NULL) {
@@ -528,9 +524,6 @@ bool init_zqwl_device(CollectorContext* ctx, const char* port, uint32_t arb_baud
     }
     
     ctx->slave_id = slave_id;
-    ctx->protocol = protocol;
-    ctx->baudrate = arb_baudrate;
-    strncpy(ctx->port_name, port, sizeof(ctx->port_name) - 1);
     
     // Always get device info for serial number and firmware version
     CDeviceInfo* info = stark_get_device_info(ctx->handle, slave_id);
@@ -541,6 +534,13 @@ bool init_zqwl_device(CollectorContext* ctx, const char* port, uint32_t arb_baud
         printf("  Device: %s, SN: %s, FW: %s\n", 
                get_hardware_type_name_str(info->hardware_type),
                info->serial_number, info->firmware_version);
+        
+        // Copy serial number
+        if (info->serial_number) {
+            strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
+            ctx->serial_number[sizeof(ctx->serial_number) - 1] = '\0';
+        }
+        
         free_device_info(info);
     }
     
@@ -552,7 +552,7 @@ bool init_zqwl_device(CollectorContext* ctx, const char* port, uint32_t arb_baud
 #ifdef __linux__
 #include "can_common.h"
 
-bool init_socketcan_device(CollectorContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd) {
+bool init_socketcan_device(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd) {
     printf("\n[Init] Mode: SocketCAN %s\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
     printf("  Interface: %s, Slave ID: %d\n", iface, slave_id);
     
@@ -570,14 +570,18 @@ bool init_socketcan_device(CollectorContext* ctx, const char* iface, uint8_t sla
     
     StarkProtocolType protocol = is_canfd ? STARK_PROTOCOL_TYPE_CAN_FD : STARK_PROTOCOL_TYPE_CAN;
     
+    // SocketCAN baudrates are configured at OS level, but we store typical values for query APIs
+    uint32_t arb_baudrate = 1000000;  // 1 Mbps (typical for both CAN 2.0 and CANFD)
+    uint32_t data_baudrate = is_canfd ? 5000000 : 1000000;  // 5 Mbps for CANFD, 1 Mbps for CAN 2.0
+    
     // Use hw_type override if set
     if (ctx->hw_type_override != 0) {
         printf("  Hardware type override: %s (%d)\n", 
                get_hardware_type_name_str(ctx->hw_type_override), ctx->hw_type_override);
-        ctx->handle = init_device_handler_with_hw_type(protocol, 1, slave_id, ctx->hw_type_override);
+        ctx->handle = init_device_handler_can_with_hw_type(protocol, 1, slave_id, arb_baudrate, data_baudrate, ctx->hw_type_override);
         ctx->hw_type = ctx->hw_type_override;
     } else {
-        ctx->handle = init_device_handler(protocol, 1);
+        ctx->handle = init_device_handler_can(protocol, 1, arb_baudrate, data_baudrate);
     }
     
     if (ctx->handle == NULL) {
@@ -587,14 +591,19 @@ bool init_socketcan_device(CollectorContext* ctx, const char* iface, uint8_t sla
     }
     
     ctx->slave_id = slave_id;
-    ctx->protocol = protocol;
-    strncpy(ctx->port_name, iface, sizeof(ctx->port_name) - 1);
     
     // Get device info if no override
     if (ctx->hw_type_override == 0) {
         CDeviceInfo* info = stark_get_device_info(ctx->handle, slave_id);
         if (info != NULL) {
             ctx->hw_type = (StarkHardwareType)info->hardware_type;
+            
+            // Copy serial number
+            if (info->serial_number) {
+                strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
+                ctx->serial_number[sizeof(ctx->serial_number) - 1] = '\0';
+            }
+            
             free_device_info(info);
         }
     }
@@ -604,7 +613,7 @@ bool init_socketcan_device(CollectorContext* ctx, const char* iface, uint8_t sla
     return true;
 }
 
-bool init_socketcan_device_builtin(CollectorContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd) {
+bool init_socketcan_device_builtin(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd) {
     const char* iface_name = iface ? iface : "can0";
     printf("\n[Init] Mode: SocketCAN %s (SDK built-in)\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
     printf("  Interface: %s, Slave ID: %d\n", iface_name, slave_id);
@@ -624,14 +633,18 @@ bool init_socketcan_device_builtin(CollectorContext* ctx, const char* iface, uin
     
     StarkProtocolType protocol = is_canfd ? STARK_PROTOCOL_TYPE_CAN_FD : STARK_PROTOCOL_TYPE_CAN;
     
+    // SocketCAN baudrates are configured at OS level, but we store typical values for query APIs
+    uint32_t arb_baudrate = 1000000;  // 1 Mbps (typical for both CAN 2.0 and CANFD)
+    uint32_t data_baudrate = is_canfd ? 5000000 : 1000000;  // 5 Mbps for CANFD, 1 Mbps for CAN 2.0
+    
     // Use hw_type override if set
     if (ctx->hw_type_override != 0) {
         printf("  Hardware type override: %s (%d)\n", 
                get_hardware_type_name_str(ctx->hw_type_override), ctx->hw_type_override);
-        ctx->handle = init_device_handler_with_hw_type(protocol, 1, slave_id, ctx->hw_type_override);
+        ctx->handle = init_device_handler_can_with_hw_type(protocol, 1, slave_id, arb_baudrate, data_baudrate, ctx->hw_type_override);
         ctx->hw_type = ctx->hw_type_override;
     } else {
-        ctx->handle = init_device_handler(protocol, 1);
+        ctx->handle = init_device_handler_can(protocol, 1, arb_baudrate, data_baudrate);
     }
     
     if (ctx->handle == NULL) {
@@ -641,14 +654,19 @@ bool init_socketcan_device_builtin(CollectorContext* ctx, const char* iface, uin
     }
     
     ctx->slave_id = slave_id;
-    ctx->protocol = protocol;
-    strncpy(ctx->port_name, iface_name, sizeof(ctx->port_name) - 1);
     
     // Get device info if no override
     if (ctx->hw_type_override == 0) {
         CDeviceInfo* info = stark_get_device_info(ctx->handle, slave_id);
         if (info != NULL) {
             ctx->hw_type = (StarkHardwareType)info->hardware_type;
+            
+            // Copy serial number
+            if (info->serial_number) {
+                strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
+                ctx->serial_number[sizeof(ctx->serial_number) - 1] = '\0';
+            }
+            
             free_device_info(info);
         }
     }
@@ -658,7 +676,7 @@ bool init_socketcan_device_builtin(CollectorContext* ctx, const char* iface, uin
     return true;
 }
 
-bool init_zlg_device(CollectorContext* ctx, uint8_t slave_id, bool is_canfd) {
+bool init_zlg_device(DeviceContext* ctx, uint8_t slave_id, bool is_canfd) {
     printf("\n[Init] Mode: ZLG USB-CANFD %s\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
     printf("  Slave ID: %d\n", slave_id);
     
@@ -671,14 +689,18 @@ bool init_zlg_device(CollectorContext* ctx, uint8_t slave_id, bool is_canfd) {
     
     StarkProtocolType protocol = is_canfd ? STARK_PROTOCOL_TYPE_CAN_FD : STARK_PROTOCOL_TYPE_CAN;
     
+    // ZLG baudrates are configured internally by setup_can/setup_canfd, store typical values for query APIs
+    uint32_t arb_baudrate = 1000000;  // 1 Mbps (typical for both CAN 2.0 and CANFD)
+    uint32_t data_baudrate = is_canfd ? 5000000 : 1000000;  // 5 Mbps for CANFD, 1 Mbps for CAN 2.0
+    
     // Use hw_type override if set
     if (ctx->hw_type_override != 0) {
         printf("  Hardware type override: %s (%d)\n", 
                get_hardware_type_name_str(ctx->hw_type_override), ctx->hw_type_override);
-        ctx->handle = init_device_handler_with_hw_type(protocol, 1, slave_id, ctx->hw_type_override);
+        ctx->handle = init_device_handler_can_with_hw_type(protocol, 1, slave_id, arb_baudrate, data_baudrate, ctx->hw_type_override);
         ctx->hw_type = ctx->hw_type_override;
     } else {
-        ctx->handle = init_device_handler(protocol, 1);
+        ctx->handle = init_device_handler_can(protocol, 1, arb_baudrate, data_baudrate);
     }
     
     if (ctx->handle == NULL) {
@@ -688,14 +710,19 @@ bool init_zlg_device(CollectorContext* ctx, uint8_t slave_id, bool is_canfd) {
     }
     
     ctx->slave_id = slave_id;
-    ctx->protocol = protocol;
-    strncpy(ctx->port_name, "zlg", sizeof(ctx->port_name) - 1);
     
     // Get device info if no override
     if (ctx->hw_type_override == 0) {
         CDeviceInfo* info = stark_get_device_info(ctx->handle, slave_id);
         if (info != NULL) {
             ctx->hw_type = (StarkHardwareType)info->hardware_type;
+            
+            // Copy serial number
+            if (info->serial_number) {
+                strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
+                ctx->serial_number[sizeof(ctx->serial_number) - 1] = '\0';
+            }
+            
             free_device_info(info);
         }
     }
@@ -727,7 +754,7 @@ void print_init_usage(const char* prog_name) {
     printf("                               5=Revo2 Basic, 6=Revo2 Touch, 7=Revo2 Touch Pressure\n");
 }
 
-bool parse_args_and_init(CollectorContext* ctx, int argc, const char* argv[], int* arg_idx) {
+bool parse_args_and_init(DeviceContext* ctx, int argc, const char* argv[], int* arg_idx) {
     *arg_idx = 1;
     
     // Initialize hw_type_override to 0 (auto-detect)

@@ -49,6 +49,8 @@ def int_to_baudrate(value: int):
 
 def _int_to_baudrate_fallback(value: int):
     """Fallback baudrate conversion for older SDK versions"""
+    if sdk is None:
+        return None
     baudrate_map = {
         115200: sdk.Baudrate.Baud115200,
         57600: sdk.Baudrate.Baud57600,
@@ -100,6 +102,8 @@ def get_protocol_display_name(protocol_type) -> str:
         return "CAN 2.0"
     elif protocol_type == sdk.StarkProtocolType.CanFd:
         return "CANFD"
+    elif protocol_type == sdk.StarkProtocolType.EtherCAT:
+        return "EtherCAT"
     else:
         return str(protocol_type)
 

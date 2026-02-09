@@ -106,12 +106,11 @@ class SharedDataManager(QObject):
         self._slave_id = slave_id
         self._device_info = device_info
         
-        # Determine touch type using helper function
-        from common_imports import uses_pressure_touch_api
+        # Determine touch type using ctx.uses_pressure_touch_api (reads from saved hw_type)
         self._is_pressure_touch = False
-        if device_info and hasattr(device_info, 'hardware_type'):
-            hw_type = device_info.hardware_type
-            self._is_pressure_touch = uses_pressure_touch_api(hw_type)
+        if device and device_info and device_info.is_touch():
+            # Use ctx method which checks hw_type == Revo2TouchPressure
+            self._is_pressure_touch = device.uses_pressure_touch_api(slave_id)
         
         # Create buffers
         if sdk and device:
@@ -184,8 +183,11 @@ class SharedDataManager(QObject):
         touch_freq = 10
         
         # Create DataCollector based on touch type
-        if self._is_pressure_touch and self.pressure_summary_buffer:
+        if self._is_pressure_touch and self.pressure_summary_buffer and self.motor_buffer:
             # Pressure touch: use hybrid mode (summary + detailed)
+            if not self.pressure_detailed_buffer:
+                print("[SharedDataManager] Missing pressure_detailed_buffer")
+                return False
             self.data_collector = sdk.DataCollector.new_pressure_hybrid(
                 self._device,
                 self.motor_buffer,
@@ -198,7 +200,7 @@ class SharedDataManager(QObject):
                 enable_stats=False
             )
             print(f"[SharedDataManager] Started: {motor_freq}Hz motor, 20Hz pressure summary, 5Hz pressure detailed")
-        elif self.touch_buffer:
+        elif self.touch_buffer and self.motor_buffer:
             # Capacitive touch
             self.data_collector = sdk.DataCollector.new_capacitive(
                 self._device,
@@ -210,7 +212,7 @@ class SharedDataManager(QObject):
                 enable_stats=False
             )
             print(f"[SharedDataManager] Started: {motor_freq}Hz motor, {touch_freq}Hz capacitive touch")
-        else:
+        elif self.motor_buffer:
             # Basic (no touch)
             self.data_collector = sdk.DataCollector.new_basic(
                 self._device,
@@ -220,6 +222,9 @@ class SharedDataManager(QObject):
                 enable_stats=False
             )
             print(f"[SharedDataManager] Started: {motor_freq}Hz motor (no touch)")
+        else:
+            print("[SharedDataManager] Missing motor_buffer")
+            return False
         
         self.data_collector.start()
         self.is_running = True

@@ -37,7 +37,7 @@ class I18n(QObject):
             self._current_language = lang
             self.language_changed.emit(lang)
     
-    def tr(self, key: str) -> str:
+    def translate(self, key: str) -> str:
         """Get translated text"""
         translations = self._translations.get(self._current_language, TRANSLATIONS_EN)
         return translations.get(key, key)
@@ -71,7 +71,7 @@ TRANSLATIONS_EN = {
         "- Revo1 Basic/Touch\n"
         "- Revo1 Advanced/AdvancedTouch\n"
         "- Revo2 Basic/Touch\n\n"
-        "© 2024 BrainCo"
+        "© 2026 BrainCo"
     ),
     
     # Connection panel
@@ -369,7 +369,7 @@ TRANSLATIONS_ZH = {
         "- Revo1 Basic/Touch\n"
         "- Revo1 Advanced/AdvancedTouch\n"
         "- Revo2 Basic/Touch\n\n"
-        "© 2024 BrainCo"
+        "© 2026 BrainCo"
     ),
     
     # Connection Panel
@@ -653,4 +653,4 @@ def get_i18n() -> I18n:
 
 def tr(key: str) -> str:
     """Translation shortcut function"""
-    return get_i18n().tr(key)
+    return get_i18n().translate(key)
