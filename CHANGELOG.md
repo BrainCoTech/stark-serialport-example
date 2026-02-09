@@ -1,98 +1,123 @@
-# BrainCo RevoHand SDK Examples 更新日志
+# BrainCo RevoHand SDK Examples Changelog
 
-> 📋 此更新日志面向外部客户和集成开发者。如需了解 SDK 内部实现细节，请联系 BrainCo 技术支持团队。
+> This changelog is for external customers and integration developers. For SDK internal implementation details, please contact BrainCo technical support.
+
+## v1.1.5 (2026/02/09)
+
+### SDK Changes
+- Fixed `canfd_ctx.rs` boundary check
+- SocketCAN scan now iterates all interfaces instead of single interface
+- Added SocketCAN Python bindings (`init_socketcan_canfd`, `close_socketcan`, `socketcan_scan_devices`)
+
+### Example Improvements
+
+#### Runtime CAN Backend Selection
+- Changed CAN backend from compile-time to runtime selection
+- Use `STARK_CAN_BACKEND` env var or CLI options to select backend
+  - `-s` / `-S`: SocketCAN
+  - `-z` / `-Z`: ZLG
+  - `-c` / `-f`: ZQWL
+- Linux builds all backends by default, use `STARK_NO_CAN` to disable CAN support
+- ZLG backend now uses dlopen for dynamic loading (no compile-time dependency)
+
+### Other Changes
+- Added `zlgcan_linux_utils.py` / `zlgcan_win_utils.py`, `print_finger_touch_data()` utility
+- Removed deprecated `zqwl.py`, `zqwl_can.py`, `socketcan_canfd_dfu.py`, `CAN_BACKEND` variable
+- Fixed `zlg_canfd_touch_pressure.py` callback signature, added slave_id notes
+
+---
 
 ## v1.1.4 (2026/02/09)
 
-### 🚀 新增功能
+### New Features
 
-#### 设备上下文查询
-- 新增 `stark_get_protocol_type`、`stark_get_port_name`、`stark_get_baudrate`、`stark_get_can_arb_baudrate`、`stark_get_can_data_baudrate` 查询接口
-- 新增 `init_device_handler_can()` / `init_device_handler_can_with_hw_type()` CAN 设备初始化
-- 新增 `StarkProtocolType::Auto = 0` 枚举值，用于自动检测所有协议
+#### Device Context Query
+- Added `stark_get_protocol_type`, `stark_get_port_name`, `stark_get_baudrate`, `stark_get_can_arb_baudrate`, `stark_get_can_data_baudrate` query APIs
+- Added `init_device_handler_can()` / `init_device_handler_can_with_hw_type()` CAN device initialization
+- Added `StarkProtocolType::Auto = 0` enum value for auto-detecting all protocols
 
-### 🔧 示例代码改进
-- C++: `CollectorContext` 重命名为 `DeviceContext`，移除 `protocol`、`port_name`、`baudrate` 字段，改用 C API 查询接口
-- C++: CAN 初始化函数统一改用 `init_device_handler_can()` 存储波特率
-- C++: `stark_auto_detect` 返回类型改用 `StarkProtocolType` 枚举，增强类型安全
-- C++: 修复 `hand_demo.cpp` 编译错误：使用 `STARK_PROTOCOL_TYPE_AUTO` 替代字面量 `0`
-- Python: 全面添加类型注解，提升代码质量
+### Example Improvements
+- C++: Renamed `CollectorContext` to `DeviceContext`, removed `protocol`, `port_name`, `baudrate` fields, use C API query instead
+- C++: CAN initialization functions now use `init_device_handler_can()` to store baudrate
+- C++: `stark_auto_detect` return type changed to `StarkProtocolType` enum for type safety
+- C++: Fixed `hand_demo.cpp` compile error: use `STARK_PROTOCOL_TYPE_AUTO` instead of literal `0`
+- Python: Added comprehensive type annotations
 
 ---
 
 ## v1.1.2 (2026/02/06)
 
-### 🚀 新增功能
+### New Features
 
-#### 协议支持扩展
-- **ZQWL CAN 内置** - SDK 内置驱动，无需额外 DLL，支持 Linux/macOS/Windows
-- **SocketCAN 内置** (Linux) - 无需外部代码
-- **Protobuf 协议** - Revo1 串口协议，波特率 115200，Slave ID 10-254
+#### Protocol Support Extension
+- **ZQWL CAN Built-in** - SDK built-in driver, no extra DLL needed, supports Linux/macOS/Windows
+- **SocketCAN Built-in** (Linux) - No external code required
+- **Protobuf Protocol** - Revo1 serial protocol, baudrate 115200, Slave ID 10-254
 
-#### 统一自动检测
-- `auto_detect()` 支持 Modbus、ZQWL CAN/CANFD 多协议自动检测
-- `init_from_detected()` 从检测结果直接初始化设备
+#### Unified Auto Detection
+- `auto_detect()` supports Modbus, ZQWL CAN/CANFD multi-protocol auto detection
+- `init_from_detected()` initializes device directly from detection result
 
-#### Revo1 触觉 API
-- 支持 Modbus 和 CAN 2.0 协议的触觉传感器
-- 支持 Revo1Touch 和 Revo1AdvancedTouch 设备
+#### Revo1 Touch API
+- Touch sensor support for Modbus and CAN 2.0 protocols
+- Support for Revo1Touch and Revo1AdvancedTouch devices
 
-#### 新增硬件类型
-- `Revo1Advanced` - 一代进阶版（序列号 BCMEL/BCMER）
-- `Revo1AdvancedTouch` - 一代进阶触觉版（序列号 BCMTL2/BCMTR2）
+#### New Hardware Types
+- `Revo1Advanced` - Gen1 Advanced (serial prefix BCMEL/BCMER)
+- `Revo1AdvancedTouch` - Gen1 Advanced Touch (serial prefix BCMTL2/BCMTR2)
 
-#### 示例与工具
-- `c/demo/` - 跨平台 C++ 示例（hand_demo、hand_monitor、hand_dfu、auto_detect）
-- `python/demo/` - 统一 Python 示例
-- `python/gui/` - 图形化调试工具（仅供调试）
+#### Examples and Tools
+- `c/demo/` - Cross-platform C++ examples (hand_demo, hand_monitor, hand_dfu, auto_detect)
+- `python/demo/` - Unified Python examples
+- `python/gui/` - GUI debugging tool (for debugging only)
 
-### ⚠️ 迁移指南
+### Migration Guide
 
-#### API 重命名
+#### API Renaming
 
-| 旧 API | 新 API |
-|--------|--------|
+| Old API | New API |
+|---------|---------|
 | `is_revo1()` | `uses_revo1_motor_api()` |
 | `is_revo1_touch()` | `uses_revo1_touch_api()` |
 | `PyDeviceContext` | `DeviceContext` |
 
-> 注：判断是否使用 Revo2 API 可用 `!uses_revo1_motor_api()` / `!uses_revo1_touch_api()`
+> Note: To check if using Revo2 API, use `!uses_revo1_motor_api()` / `!uses_revo1_touch_api()`
 
-#### 初始化 API 变更
+#### Initialization API Changes
 
-**旧 API：**
+**Old API:**
 ```python
 sdk.init_config(protocol, log_level)
 ctx = PyDeviceContext.init_canfd(master_id)
 ```
 
-**新 API：**
+**New API:**
 ```python
 sdk.init_logging(log_level)
 ctx = sdk.init_device_handler(StarkProtocolType.CanFd, master_id)
 ```
 
-#### C 结构体命名变更
+#### C Struct Naming Changes
 
-所有 C 导出结构体添加 `C` 前缀：`MotorStatusData` → `CMotorStatusData`、`DeviceInfo` → `CDeviceInfo` 等。
+All C exported structs now have `C` prefix: `MotorStatusData` → `CMotorStatusData`, `DeviceInfo` → `CDeviceInfo`, etc.
 
-#### 弃用通知
-- `linux/` 和 `windows/` 文件夹已弃用，请迁移至 `c/` 文件夹
+#### Deprecation Notice
+- `linux/` and `windows/` folders are deprecated, please migrate to `c/` folder
 
 ---
 
 ## v1.0.6 (2026/01/26)
 
-### 🚀 新增功能
+### 🚀 New Features
 
-#### 新增硬件支持
-- **Revo1Advanced** - 一代进阶版（序列号 BCMEL/BCMER），使用 Revo2 API
-- **Revo1AdvancedTouch** - 一代进阶触觉版（序列号 BCMTL2/BCMTR2）
+#### New Hardware Support
+- **Revo1Advanced** - Gen1 Advanced (serial prefix BCMEL/BCMER), uses Revo2 API
+- **Revo1AdvancedTouch** - Gen1 Advanced Touch (serial prefix BCMTL2/BCMTR2)
 
-#### 序列号自动识别
+#### Serial Number Auto Recognition
 
-| 序列号前缀 | 硬件类型 |
-|-----------|---------|
+| Serial Prefix | Hardware Type |
+|---------------|---------------|
 | `BCMRL/BCMRR` | Revo1Basic |
 | `BCMEL/BCMER` | Revo1Advanced |
 | `BCMTL1/BCMTR1` | Revo1Touch |
@@ -100,84 +125,84 @@ ctx = sdk.init_device_handler(StarkProtocolType.CanFd, master_id)
 | `BCXTL/BCXTR` | Revo2Touch |
 | `BCX*` | Revo2Basic |
 
-#### 架构优化
-- 马达/触觉状态采用底层多线程采集，上层被动读取
-- 物理量模式控制逻辑修复
-- Revo2 RS-485 DFU 波特率自动检测
-- SocketCAN 后端支持
+#### Architecture Optimization
+- Motor/touch status uses low-level multi-threaded collection, upper layer passive reading
+- Physical mode control logic fix
+- Revo2 RS-485 DFU baudrate auto detection
+- SocketCAN backend support
 
-#### 自动检测增强
-- 多端口自动遍历
-- Revo1/Revo2/Protobuf 协议自动识别
-- Quick 模式快速检测
+#### Auto Detection Enhancement
+- Multi-port auto traversal
+- Revo1/Revo2/Protobuf protocol auto recognition
+- Quick mode for fast detection
 
-### 📚 新增示例
-- `revo2_touch_collector.py` - 触觉数据采集
-- `revo2_timing_test_gui.py` - 时序测试 GUI
+### 📚 New Examples
+- `revo2_touch_collector.py` - Touch data collection
+- `revo2_timing_test_gui.py` - Timing test GUI
 
-### ⚠️ 注意
-- Revo1Advanced（BCMEL/BCMER）需使用 `revo2` 目录下的示例代码
+### ⚠️ Note
+- Revo1Advanced (BCMEL/BCMER) should use examples in `revo2` directory
 
 ---
 
 ## v1.0.4 (2026/01/23)
 
-- 支持 Data Collector 数据采集器
-- 支持轨迹控制功能
+- Data Collector support
+- Trajectory control support
 
 ---
 
 ## v1.0.1 (2025/12/23)
 
-- 支持 EtherCAT 多从站通信
+- EtherCAT multi-slave communication support
 
 ---
 
 ## v1.0.0 (2025/12/08)
 
-### 🎉 正式版本
-- 支持 Revo1 和 Revo2 设备
-- 支持 RS-485、CAN、CANFD、EtherCAT 协议
-- 提供 Python 和 C++ 示例代码
+### 🎉 Official Release
+- Support for Revo1 and Revo2 devices
+- Support for RS-485, CAN, CANFD, EtherCAT protocols
+- Python and C++ example code provided
 
 ---
 
 ## v0.9.9 (2025/11/19)
 
-- 支持 Revo1 进阶版设备
-- 统一控制参数范围：位置 0~1000，速度/电流/PWM -1000~+1000
+- Revo1 Advanced device support
+- Unified control parameter range: position 0~1000, speed/current/PWM -1000~+1000
 
-> ⚠️ Revo1 进阶版设备需要 SDK v0.9.9+
+> ⚠️ Revo1 Advanced devices require SDK v0.9.9+
 
 ---
 
 ## v0.9.8 (2025/11/04)
 
-### � 新增功能
+### 🚀 New Features
 
-#### CAN/CANFD 支持
-- Revo2 CAN2.0/CANFD 协议栈
-- ZLG CAN/CANFD 驱动封装
-- CANFD 分块读写（支持超过 29 寄存器）
+#### CAN/CANFD Support
+- Revo2 CAN2.0/CANFD protocol stack
+- ZLG CAN/CANFD driver wrapper
+- CANFD chunked read/write (supports more than 29 registers)
 
-#### EtherCAT 支持
-- 触觉传感器数据采集（PDO/SDO）
-- 触觉压力传感器支持
+#### EtherCAT Support
+- Touch sensor data collection (PDO/SDO)
+- Touch pressure sensor support
 
-#### 通用功能
-- ProtectedCurrent 读写接口
-- `run_action_sequence` 动作序列执行
-- 序列号设备类型判断
+#### General Features
+- ProtectedCurrent read/write API
+- `run_action_sequence` action sequence execution
+- Serial number device type detection
 
-#### 性能优化
-- C/C++ 端 `set` 类指令异步执行
-- 高频接口禁用重试，避免指令堆积
+#### Performance Optimization
+- C/C++ `set` commands execute asynchronously
+- High-frequency APIs disable retry to avoid command queue buildup
 
-### � 问题修复
-- TurboConfig 字节序问题
-- Modbus C API 异步调用
-- DFU 升级流程优化
+### 🐛 Bug Fixes
+- TurboConfig byte order issue
+- Modbus C API async call
+- DFU upgrade process optimization
 
 ---
 
-如有问题，请访问 [官方文档](https://www.brainco-hz.com/docs/revolimb-hand/index.html) 或联系 BrainCo 技术支持。
+For questions, visit [Official Documentation](https://www.brainco-hz.com/docs/revolimb-hand/index.html) or contact BrainCo technical support.

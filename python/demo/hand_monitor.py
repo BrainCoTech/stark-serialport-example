@@ -180,8 +180,8 @@ async def monitor_pressure_summary(ctx, slave_id: int, shutdown_event, duration:
     print("\n[Pressure Summary Monitor] Press Ctrl+C to stop\n")
     print("Mode: 100Hz motor + 10Hz pressure summary")
     print(f"Duration: {duration} seconds\n")
-    print("Finger:  Thumb  Index  Middle  Ring  Pinky  Palm")
-    print("-" * 50)
+    print("         Finger:  Thumb  Index Middle   Ring  Pinky   Palm")
+    print("-" * 60)
 
     try:
         motor_buffer = sdk.MotorStatusBuffer(max_size=10000)
@@ -210,7 +210,7 @@ async def monitor_pressure_summary(ctx, slave_id: int, shutdown_event, duration:
 
             if pressure_data:
                 latest = [data[-1] if data else 0 for data in pressure_data]
-                print(f"[{i+1:2d}s] {sum(len(d) for d in pressure_data):3d} samples | "
+                print(f"[{i+1:2d}s] {len(motor_data):4d} motor | "
                       f"Pressure: {latest[0]:5} {latest[1]:5} {latest[2]:5} "
                       f"{latest[3]:5} {latest[4]:5} {latest[5]:5}")
             else:

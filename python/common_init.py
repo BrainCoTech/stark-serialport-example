@@ -39,6 +39,7 @@ class DeviceContext:
     port_name: str              # Port name or interface
     baudrate: int = 0           # Baudrate (for Modbus/CAN)
     serial_number: str = ""     # Device serial number
+    firmware_version: str = ""  # Firmware version
     # Internal state
     _zlg_controller: Any = None # ZLG controller (if using ZLG)
     _is_socketcan: bool = False # SocketCAN mode (SDK built-in)
@@ -62,6 +63,7 @@ async def init_modbus(port: str, baudrate: int, slave_id: int) -> Optional[Devic
             port_name=port,
             baudrate=baudrate,
             serial_number=info.serial_number or "",
+            firmware_version=info.firmware_version or "",
         )
     except Exception as e:
         logger.error(f"Modbus init failed: {e}")
@@ -99,6 +101,7 @@ async def init_zqwl(port: str, baudrate: int, slave_id: int, is_canfd: bool = Fa
             port_name=port,
             baudrate=baudrate,
             serial_number=info.serial_number or "",
+            firmware_version=info.firmware_version or "",
         )
     except Exception as e:
         logger.error(f"ZQWL {'CANFD' if is_canfd else 'CAN'} init failed: {e}")
@@ -129,11 +132,15 @@ async def init_zlg(slave_id: int, is_canfd: bool = False) -> Optional[DeviceCont
     
     check_sdk()
     try:
-        # Import ZLG adapter
-        sys.path.insert(0, os.path.join(_current_dir, "revo2_can"))
-        from zlg_can import Revo2CanController
+        # Import ZLG adapter based on mode
+        if is_canfd:
+            sys.path.insert(0, os.path.join(_current_dir, "revo2_canfd"))
+            from zlg_canfd import Revo2CanfdController as Controller
+        else:
+            sys.path.insert(0, os.path.join(_current_dir, "revo2_can"))
+            from zlg_can import Revo2CanController as Controller
         
-        controller = Revo2CanController(master_id=1, slave_id=slave_id)
+        controller = Controller(master_id=1, slave_id=slave_id)
         if not await controller.initialize():
             logger.error("Failed to initialize ZLG adapter")
             return None
@@ -149,8 +156,9 @@ async def init_zlg(slave_id: int, is_canfd: bool = False) -> Optional[DeviceCont
             slave_id=slave_id,
             hw_type=info.hardware_type,
             protocol_type=sdk.StarkProtocolType.CanFd if is_canfd else sdk.StarkProtocolType.Can,
-            port_name="ZLG USB-CAN",
+            port_name="ZLG USB-CAN" + ("FD" if is_canfd else ""),
             serial_number=info.serial_number or "",
+            firmware_version=info.firmware_version or "",
             _zlg_controller=controller,
         )
     except ImportError as e:
@@ -183,9 +191,11 @@ async def init_protobuf(port: str, slave_id: int = 10) -> Optional[DeviceContext
         
         # Try to get device info (SN, FW version)
         serial_number = ""
+        firmware_version = ""
         try:
             info = await ctx.get_device_info(slave_id)
             serial_number = info.serial_number or ""
+            firmware_version = info.firmware_version or ""
         except Exception:
             pass  # Device info is optional for Protobuf
         
@@ -197,6 +207,7 @@ async def init_protobuf(port: str, slave_id: int = 10) -> Optional[DeviceContext
             port_name=port,
             baudrate=115200,
             serial_number=serial_number,
+            firmware_version=firmware_version,
         )
     except Exception as e:
         logger.error(f"Protobuf init failed: {e}")
@@ -251,6 +262,7 @@ async def init_socketcan(iface: str, slave_id: int, is_canfd: bool = False) -> O
             protocol_type=protocol,
             port_name=iface,
             serial_number=info.serial_number or "",
+            firmware_version=info.firmware_version or "",
             _is_socketcan=True,
         )
     except Exception as e:
@@ -300,6 +312,7 @@ async def init_socketcan_external(iface: str, slave_id: int, is_canfd: bool = Fa
             protocol_type=sdk.StarkProtocolType.CanFd if is_canfd else sdk.StarkProtocolType.Can,
             port_name=iface,
             serial_number=info.serial_number or "",
+            firmware_version=info.firmware_version or "",
             _is_socketcan=True,
             _socketcan_controller=controller,  # Keep reference for cleanup
         )
@@ -360,6 +373,7 @@ async def auto_detect_and_init(select_device: bool = True) -> Optional[DeviceCon
             protocol_type=device.protocol_type,
             port_name=device.port_name,
             serial_number=device.serial_number or "",
+            firmware_version=device.firmware_version or "",
         )
     except Exception as e:
         logger.error(f"Auto-detect failed: {e}")
@@ -539,6 +553,8 @@ async def parse_args_and_init(argv: List[str], extra_parser: Optional[argparse.A
     print(f"  Slave ID: 0x{ctx.slave_id:02X} ({ctx.slave_id})")
     if ctx.serial_number:
         print(f"  Serial: {ctx.serial_number}")
+    if ctx.firmware_version:
+        print(f"  Firmware: {ctx.firmware_version}")
     print()
     
     return ctx, extra_args, remaining

@@ -649,29 +649,31 @@ The build system automatically includes:
 - `-I../../dist/include` - SDK headers
 - `-L../../dist/lib` - SDK libraries
 - `-lstark-sdk` - Stark SDK library
-- `-lusbcanfd` - USB-CANFD library (CAN mode, ZLG backend only)
+- `-ldl` - Dynamic loading library (for ZLG runtime loading)
 - `-std=c++11` - C++11 standard
 
-### SocketCAN Backend (Linux)
+### CAN Backend Selection (Runtime)
 
-Use SocketCAN for standard Linux CAN/CANFD interfaces (e.g., `can0`, `can1`, `vcan0`).
+All CAN backends are compiled by default. Select at runtime via environment variables:
 
 ```bash
-# Build with both backends (ZLG + SocketCAN)
+# Build (all backends compiled by default)
 make MODE=can
 
-# Build with ZLG USB-CAN(FD) backend only
-make MODE=can CAN_BACKEND=zlg
+# Disable CAN support entirely
+make STARK_NO_CAN=1
+```
 
-# Build without ZLG USB-CANFD library
-make MODE=can CAN_BACKEND=socketcan
+Runtime backend selection:
 
-# Build with both backends (ZLG + SocketCAN)
-make MODE=can CAN_BACKEND=both
-
-# Select backend + interface at runtime
+```bash
+# SocketCAN (Linux default, no 3rd party deps)
 export STARK_CAN_BACKEND=socketcan
 export STARK_SOCKETCAN_IFACE=can0
+
+# ZLG USB-CANFD (dynamic loading, no compile-time dependency)
+export STARK_CAN_BACKEND=zlg
+export STARK_ZLG_LIB_PATH=/path/to/libusbcanfd.so  # Optional custom path
 ```
 
 Typical CANFD interface setup (example only):
@@ -682,15 +684,16 @@ sudo ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
 sudo ip link set can0 up
 ```
 
-Run examples with SocketCAN:
+Run examples:
 
 ```bash
-# CAN
-STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo1_can
-STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_can_ctrl
+# SocketCAN (default on Linux)
+STARK_SOCKETCAN_IFACE=can0 make run revo1_can
+STARK_SOCKETCAN_IFACE=can0 make run revo2_can_ctrl
+STARK_SOCKETCAN_IFACE=can0 make run revo2_canfd
 
-# CANFD
-STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_canfd
+# ZLG backend
+STARK_CAN_BACKEND=zlg make run revo2_canfd
 ```
 
 ## 📖 Additional Resources

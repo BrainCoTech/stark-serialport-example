@@ -1,10 +1,19 @@
 /**
  * @file can_common.cpp
  * @brief Implementation of common utility functions for CAN/CANFD examples
+ * 
+ * Supports multiple CAN backends with runtime selection:
+ * - SocketCAN (Linux): Native kernel CAN interface
+ * - ZLG: USB-CANFD adapter (dynamic loading, no compile-time dependency)
+ * 
+ * Backend selection:
+ * - Environment: STARK_CAN_BACKEND=socketcan|zlg
+ * - Default: SocketCAN on Linux if available, otherwise ZLG
  */
 
 #include "can_common.h"
 #include "stark-sdk.h"
+#include <dlfcn.h>
 #include <errno.h>
 #include <poll.h>
 #include <stdbool.h>
@@ -14,18 +23,90 @@
 #include <strings.h>
 #include <unistd.h>
 
+// Backend compile flags (both can be enabled for runtime selection)
 #ifndef STARK_USE_ZLG
-#define STARK_USE_ZLG 1
-#endif
-
-#if STARK_USE_ZLG
-#include "zlgcan/zcan.h"
+  #define STARK_USE_ZLG 0
 #endif
 
 #ifndef STARK_USE_SOCKETCAN
-#define STARK_USE_SOCKETCAN 1
+  #define STARK_USE_SOCKETCAN 0
 #endif
 
+// ZLG types and function pointers (for dynamic loading)
+#if STARK_USE_ZLG
+#include "zlgcan/zcan.h"
+
+// Dynamic library handle
+static void* g_zlg_lib = nullptr;
+static bool g_zlg_loaded = false;
+
+// Function pointers
+typedef int (*VCI_OpenDevice_t)(unsigned int, unsigned int, unsigned int);
+typedef int (*VCI_CloseDevice_t)(unsigned int, unsigned int);
+typedef int (*VCI_InitCAN_t)(unsigned int, unsigned int, unsigned int, void*);
+typedef int (*VCI_StartCAN_t)(unsigned int, unsigned int, unsigned int);
+typedef int (*VCI_ResetCAN_t)(unsigned int, unsigned int, unsigned int);
+typedef int (*VCI_Transmit_t)(unsigned int, unsigned int, unsigned int, void*, unsigned int);
+typedef int (*VCI_Receive_t)(unsigned int, unsigned int, unsigned int, void*, unsigned int, int);
+typedef int (*VCI_TransmitFD_t)(unsigned int, unsigned int, unsigned int, void*, unsigned int);
+typedef int (*VCI_ReceiveFD_t)(unsigned int, unsigned int, unsigned int, void*, unsigned int, int);
+
+static VCI_OpenDevice_t pVCI_OpenDevice = nullptr;
+static VCI_CloseDevice_t pVCI_CloseDevice = nullptr;
+static VCI_InitCAN_t pVCI_InitCAN = nullptr;
+static VCI_StartCAN_t pVCI_StartCAN = nullptr;
+static VCI_ResetCAN_t pVCI_ResetCAN = nullptr;
+static VCI_Transmit_t pVCI_Transmit = nullptr;
+static VCI_Receive_t pVCI_Receive = nullptr;
+static VCI_TransmitFD_t pVCI_TransmitFD = nullptr;
+static VCI_ReceiveFD_t pVCI_ReceiveFD = nullptr;
+
+static bool load_zlg_library(void) {
+  if (g_zlg_loaded) return g_zlg_lib != nullptr;
+  g_zlg_loaded = true;
+
+  // Check for custom library path
+  const char* lib_path = getenv("STARK_ZLG_LIB_PATH");
+
+  if (lib_path && lib_path[0]) {
+    g_zlg_lib = dlopen(lib_path, RTLD_NOW);
+  }
+  if (!g_zlg_lib) g_zlg_lib = dlopen("libusbcanfd.so", RTLD_NOW);
+  if (!g_zlg_lib) g_zlg_lib = dlopen("./libusbcanfd.so", RTLD_NOW);
+
+  if (!g_zlg_lib) {
+    printf("[ZLG] Library not found. Set STARK_ZLG_LIB_PATH or install to system path.\n");
+    return false;
+  }
+
+  #define LOAD_SYM(name) p##name = (name##_t)dlsym(g_zlg_lib, #name)
+
+  LOAD_SYM(VCI_OpenDevice);
+  LOAD_SYM(VCI_CloseDevice);
+  LOAD_SYM(VCI_InitCAN);
+  LOAD_SYM(VCI_StartCAN);
+  LOAD_SYM(VCI_ResetCAN);
+  LOAD_SYM(VCI_Transmit);
+  LOAD_SYM(VCI_Receive);
+  LOAD_SYM(VCI_TransmitFD);
+  LOAD_SYM(VCI_ReceiveFD);
+
+#undef LOAD_SYM
+
+  if (!pVCI_OpenDevice || !pVCI_CloseDevice || !pVCI_InitCAN || 
+      !pVCI_StartCAN || !pVCI_Transmit || !pVCI_Receive) {
+    printf("[ZLG] Failed to load required functions\n");
+    dlclose(g_zlg_lib);
+    g_zlg_lib = nullptr;
+    return false;
+  }
+
+  printf("[ZLG] Library loaded successfully\n");
+  return true;
+}
+#endif // STARK_USE_ZLG
+
+// SocketCAN backend (Linux only)
 #if STARK_USE_SOCKETCAN
 #include <fcntl.h>
 #include <linux/can.h>
@@ -36,34 +117,73 @@
 #endif
 
 /****************************************************************************/
-// Get CAN backend
-// Determines the CAN backend to use: ZLG or SocketCAN
-// @return CanBackend enum value
+// Get CAN backend (runtime selection)
 /****************************************************************************/
 
 enum CanBackend {
+  kBackendNone,
   kBackendZlg,
   kBackendSocketcan,
 };
 
-static CanBackend get_can_backend(void) {
-  static CanBackend backend = kBackendZlg;
-  static bool initialized = false;
-  if (initialized) {
-    return backend;
-  }
-  initialized = true;
+static CanBackend g_selected_backend = kBackendNone;
 
-  const char *env = getenv("STARK_CAN_BACKEND");
-  if (env && (strcasecmp(env, "socketcan") == 0 || strcasecmp(env, "socket_can") == 0 ||
-              strcasecmp(env, "socket") == 0)) {
-#if STARK_USE_SOCKETCAN
-    backend = kBackendSocketcan;
-#else
-    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
-#endif
+static CanBackend get_can_backend(void) {
+  if (g_selected_backend != kBackendNone) {
+    return g_selected_backend;
   }
-  return backend;
+
+  // Check environment variable
+  const char *env = getenv("STARK_CAN_BACKEND");
+  if (env) {
+    if (strcasecmp(env, "socketcan") == 0 || strcasecmp(env, "socket") == 0) {
+#if STARK_USE_SOCKETCAN
+      g_selected_backend = kBackendSocketcan;
+      return g_selected_backend;
+#else
+      printf("[WARN] SocketCAN not compiled in, trying ZLG\n");
+#endif
+    } else if (strcasecmp(env, "zlg") == 0) {
+#if STARK_USE_ZLG
+      if (load_zlg_library()) {
+        g_selected_backend = kBackendZlg;
+        return g_selected_backend;
+      }
+#else
+      printf("[WARN] ZLG not compiled in\n");
+#endif
+    }
+  }
+
+  // Default: prefer SocketCAN on Linux, then ZLG
+#if STARK_USE_SOCKETCAN
+  g_selected_backend = kBackendSocketcan;
+#elif STARK_USE_ZLG
+  if (load_zlg_library()) {
+    g_selected_backend = kBackendZlg;
+  }
+#endif
+
+  return g_selected_backend;
+}
+
+// Allow explicit backend selection (called from CLI parsing)
+void set_can_backend_zlg(void) {
+#if STARK_USE_ZLG
+  if (load_zlg_library()) {
+    g_selected_backend = kBackendZlg;
+  }
+#else
+  printf("[ERROR] ZLG backend not compiled\n");
+#endif
+}
+
+void set_can_backend_socketcan(void) {
+#if STARK_USE_SOCKETCAN
+  g_selected_backend = kBackendSocketcan;
+#else
+  printf("[ERROR] SocketCAN backend not compiled\n");
+#endif
 }
 
 /****************************************************************************/
@@ -193,11 +313,11 @@ static int socketcan_recv_can(uint32_t expected_can_id, uint8_t expected_frames,
   uint8_t cmd = (expected_can_id >> 3) & 0x0F;
   bool is_multi_frame_cmd = (cmd == 0x0B || cmd == 0x0D);  // MultiRead or TouchSensorRead
 
-  // Determine retry strategy:
+  // Determine retry strategy (aligned with Rust ZQWL):
   // - DFU mode: 200 attempts (for CRC verification)
-  // - Multi-frame commands: 30 attempts
-  // - Single frame: 10 attempts
-  int max_attempts = is_dfu_mode ? 200 : (expected_frames > 1 || is_multi_frame_cmd ? 30 : 10);
+  // - Multi-frame commands: 5 attempts
+  // - Single frame: 2 attempts
+  int max_attempts = is_dfu_mode ? 200 : (expected_frames > 1 || is_multi_frame_cmd ? 5 : 2);
 
   for (int attempt = 0; attempt < max_attempts; attempt++) {
     int ret = socketcan_wait_for_frame();
@@ -219,6 +339,11 @@ static int socketcan_recv_can(uint32_t expected_can_id, uint8_t expected_frames,
     uint32_t can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK)
                                                     : (frame.can_id & CAN_SFF_MASK);
     int can_dlc = frame.can_dlc;
+
+    // Skip non-matching frames (unless DFU mode)
+    if (!is_dfu_mode && expected_can_id != 0 && can_id != expected_can_id) {
+      continue;
+    }
 
     // Check for multi-frame protocol format
     if (is_multi_frame_cmd && can_dlc > 0) {
@@ -325,44 +450,47 @@ static int socketcan_recv_canfd(uint32_t expected_can_id, uint8_t expected_frame
     return -1;
   }
 
-  // Check if this is DFU mode (expected_can_id == 0)
-  bool is_dfu_mode = (expected_can_id == 0);
+  (void)expected_frames;  // Not used for CANFD single-frame
+
+  // CANFD CAN ID format: (slave_id << 16) | (master_id << 8) | payload_len
+  uint8_t expected_slave_id = (expected_can_id >> 16) & 0xFF;
+  uint8_t expected_master_id = (expected_can_id >> 8) & 0xFF;
 
   // CANFD uses application-layer chunking, so most operations are single-frame
-  // But we still need retry logic for DFU and slow responses
-  int max_attempts = is_dfu_mode ? 200 : 10;
+  // Retry strategy (aligned with Rust ZQWL): normal=2, DFU not applicable for CANFD
+  int max_attempts = 2;
 
   for (int attempt = 0; attempt < max_attempts; attempt++) {
     int ret = socketcan_wait_for_frame();
     if (ret <= 0) {
-      if (is_dfu_mode) {
-        // DFU may take longer, wait more
-        usleep(100 * 1000);
-      } else {
-        int wait_ms = (attempt < 5) ? 2 : 5;
-        usleep(wait_ms * 1000);
-      }
+      int wait_ms = (attempt < 5) ? 2 : 5;
+      usleep(wait_ms * 1000);
       continue;
     }
 
+    // Read into canfd_frame buffer (can hold both CAN and CANFD frames)
     struct canfd_frame frame;
     int nbytes = read(g_socketcan_fd, &frame, sizeof(frame));
-    if (nbytes != static_cast<int>(sizeof(frame))) {
+    
+    // Accept both CAN frames (16 bytes) and CANFD frames (72 bytes)
+    if (nbytes != static_cast<int>(sizeof(struct can_frame)) && 
+        nbytes != static_cast<int>(sizeof(struct canfd_frame))) {
       continue;
     }
 
     uint32_t can_id = (frame.can_id & CAN_EFF_FLAG) ? (frame.can_id & CAN_EFF_MASK)
                                                     : (frame.can_id & CAN_SFF_MASK);
 
-    // For non-DFU mode, filter by expected CAN ID if specified
-    if (!is_dfu_mode && expected_can_id != 0 && can_id != expected_can_id) {
-      continue;
-    }
+    // Match slave_id and master_id from CAN ID
+    uint8_t resp_slave_id = (can_id >> 16) & 0xFF;
+    uint8_t resp_master_id = (can_id >> 8) & 0xFF;
 
-    *can_id_out = can_id;
-    *data_len_out = frame.len;
-    memcpy(data_out, frame.data, frame.len);
-    return 0;
+    if (resp_slave_id == expected_slave_id && resp_master_id == expected_master_id) {
+      *can_id_out = can_id;
+      *data_len_out = frame.len;
+      memcpy(data_out, frame.data, frame.len);
+      return 0;
+    }
   }
 
   return -1;
@@ -376,37 +504,51 @@ static int socketcan_recv_canfd(uint32_t expected_can_id, uint8_t expected_frame
 /****************************************************************************/
 
 bool init_can_device(void) {
-  if (get_can_backend() == kBackendSocketcan) {
+  CanBackend backend = get_can_backend();
+  
+  if (backend == kBackendSocketcan) {
 #if STARK_USE_SOCKETCAN
     return init_socketcan_device(false);
 #else
-    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+    printf("[ERROR] SocketCAN not compiled\n");
     return false;
 #endif
   }
+  
+  if (backend == kBackendZlg) {
 #if STARK_USE_ZLG
-  // Open device
-  if (!VCI_OpenDevice(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX)) {
-    printf("Failed to open CAN device\n");
-    return false;
-  }
-  return true;
+    if (!pVCI_OpenDevice) {
+      printf("[ERROR] ZLG library not loaded\n");
+      return false;
+    }
+    if (!pVCI_OpenDevice(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX)) {
+      printf("[ERROR] Failed to open ZLG CAN device\n");
+      return false;
+    }
+    return true;
 #else
-  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
-  return false;
+    printf("[ERROR] ZLG not compiled\n");
+    return false;
 #endif
+  }
+  
+  printf("[ERROR] No CAN backend available\n");
+  return false;
 }
 
 bool init_canfd_device(void) {
-  if (get_can_backend() == kBackendSocketcan) {
+  CanBackend backend = get_can_backend();
+  
+  if (backend == kBackendSocketcan) {
 #if STARK_USE_SOCKETCAN
     return init_socketcan_device(true);
 #else
-    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+    printf("[ERROR] SocketCAN not compiled\n");
     return false;
 #endif
   }
-  // Same as CAN device initialization for ZLG
+  
+  // ZLG: same as CAN device initialization
   return init_can_device();
 }
 
@@ -418,11 +560,15 @@ bool init_canfd_device(void) {
 
 bool start_can_channel(void) {
   if (get_can_backend() == kBackendSocketcan) {
-    return true;
+    return true;  // SocketCAN doesn't need channel setup
   }
 #if STARK_USE_ZLG
-  ZCAN_INIT init;      // Baud rate configuration, values are based on ZCANPRO baud-rate calculator
-                       // [ZCANPRO](https://zlg.cn/data/upload/software/Can/CAN-bus-ZCANPRO_Setup.zip)
+  if (!pVCI_InitCAN || !pVCI_StartCAN) {
+    printf("[ERROR] ZLG library not loaded\n");
+    return false;
+  }
+  
+  ZCAN_INIT init;      // Baud rate configuration
   init.mode = 0;       // 0 - normal mode
   init.clk = 60000000; // clock: 60M (V1.01) or 80M (V1.03 and above)
 
@@ -441,20 +587,20 @@ bool start_can_channel(void) {
   init.dset.smp = 0;
 
   // Initialize CAN channel
-  if (!VCI_InitCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, &init)) {
-    printf("Failed to initialize CAN channel\n");
+  if (!pVCI_InitCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, &init)) {
+    printf("[ERROR] Failed to initialize ZLG CAN channel\n");
     return false;
   }
 
   // Start CAN channel
-  if (!VCI_StartCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX)) {
-    printf("Failed to start CAN channel\n");
+  if (!pVCI_StartCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX)) {
+    printf("[ERROR] Failed to start ZLG CAN channel\n");
     return false;
   }
 
   return true;
 #else
-  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+  printf("[ERROR] ZLG not compiled\n");
   return false;
 #endif
 }
@@ -489,7 +635,7 @@ void setup_can_callbacks(void) {
       return socketcan_recv_can(expected_can_id, expected_frames, can_id_out, data_out, data_len_out);
     });
 #else
-    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+    printf("[ERROR] SocketCAN not compiled\n");
 #endif
     return;
   }
@@ -499,6 +645,9 @@ void setup_can_callbacks(void) {
                          uint32_t can_id,
                          const uint8_t *data,
                          uintptr_t data_len) -> int {
+    (void)slave_id;
+    if (!pVCI_Transmit) return -1;
+    
     // Construct CAN transmit message
     ZCAN_20_MSG can_msg;
     memset(&can_msg, 0, sizeof(ZCAN_20_MSG));
@@ -518,16 +667,13 @@ void setup_can_callbacks(void) {
     }
 
     // Transmit CAN frame
-    int result = VCI_Transmit(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, &can_msg, 1);
+    int result = pVCI_Transmit(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, &can_msg, 1);
     if (result != 1)
       printf("CAN Transmit result: %d\n", result);
     return result == 1 ? 0 : -1; // 0 indicates success
   });
 
   // CAN receive callback with multi-frame support
-  // SDK tells us how many frames to expect via expected_frames parameter.
-  // We need to collect all frames and return concatenated data.
-  // Supports MultiRead (0x0B) and TouchSensorRead (0x0D) multi-frame protocols.
   set_can_rx_callback([](uint8_t slave_id,
                          uint32_t expected_can_id,
                          uint8_t expected_frames,
@@ -535,6 +681,7 @@ void setup_can_callbacks(void) {
                          uint8_t *data_out,
                          uintptr_t *data_len_out) -> int {
     (void)slave_id;
+    if (!pVCI_Receive) return -1;
     
     int total_dlc = 0;
     int received_count = 0;
@@ -550,13 +697,13 @@ void setup_can_callbacks(void) {
     
     // Determine retry strategy:
     // - DFU mode: 200 attempts (for CRC verification)
-    // - Multi-frame commands: 30 attempts
-    // - Single frame: 10 attempts
-    int max_attempts = is_dfu_mode ? 200 : (expected_frames > 1 || is_multi_frame_cmd ? 30 : 10);
+    // - Multi-frame commands: 5 attempts
+    // - Single frame: 2 attempts
+    int max_attempts = is_dfu_mode ? 200 : (expected_frames > 1 || is_multi_frame_cmd ? 5 : 2);
     
     for (int attempt = 0; attempt < max_attempts; attempt++) {
       ZCAN_20_MSG can_data[RX_BUFF_SIZE];
-      int len = VCI_Receive(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME);
+      int len = pVCI_Receive(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, can_data, RX_BUFF_SIZE, RX_WAIT_TIME);
       
       if (len < 1) {
         int wait_ms = (attempt < 5) ? 2 : 5;
@@ -567,7 +714,13 @@ void setup_can_callbacks(void) {
       // Process all frames in this batch
       for (int i = 0; i < len; i++) {
         ZCAN_20_MSG& frame = can_data[i];
+        uint32_t can_id = frame.hdr.id & 0x1FFFFFFF;
         int can_dlc = frame.hdr.len;
+        
+        // Skip non-matching frames (unless DFU mode)
+        if (!is_dfu_mode && expected_can_id != 0 && can_id != expected_can_id) {
+          continue;
+        }
         
         // Check for multi-frame protocol format
         if (is_multi_frame_cmd && can_dlc > 0) {
@@ -587,7 +740,7 @@ void setup_can_callbacks(void) {
               
               // Check if this is the last frame
               if (is_last) {
-                *can_id_out = frame.hdr.id & 0x1FFFFFFF;
+                *can_id_out = can_id;
                 *data_len_out = total_dlc;
                 return 0;
               }
@@ -613,7 +766,7 @@ void setup_can_callbacks(void) {
               
               // Check if all frames received
               if (received_count >= total_frames) {
-                *can_id_out = frame.hdr.id & 0x1FFFFFFF;
+                *can_id_out = can_id;
                 *data_len_out = total_dlc;
                 return 0;
               }
@@ -622,23 +775,11 @@ void setup_can_callbacks(void) {
           }
         }
         
-        // Standard single-frame or non-protocol data
+        // Standard single-frame data - return immediately
         for (int j = 0; j < can_dlc; j++) {
           data_out[total_dlc++] = frame.dat[j];
         }
-        received_count++;
-      }
-      
-      *can_id_out = can_data[0].hdr.id & 0x1FFFFFFF;
-      
-      // For single frame request, return immediately
-      if (expected_frames <= 1 && !is_multi_frame_cmd) {
-        *data_len_out = total_dlc;
-        return 0;
-      }
-      
-      // Check if we have enough frames (for non-protocol multi-frame)
-      if (expected_frames > 1 && received_count >= expected_frames) {
+        *can_id_out = can_id;
         *data_len_out = total_dlc;
         return 0;
       }
@@ -654,7 +795,7 @@ void setup_can_callbacks(void) {
     return -1;
   });
 #else
-  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+  printf("[ERROR] ZLG not compiled\n");
 #endif
 }
 
@@ -683,7 +824,7 @@ void setup_canfd_callbacks(void) {
       return socketcan_recv_canfd(expected_can_id, expected_frames, can_id_out, data_out, data_len_out);
     });
 #else
-    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+    printf("[ERROR] SocketCAN not compiled\n");
 #endif
     return;
   }
@@ -693,13 +834,16 @@ void setup_canfd_callbacks(void) {
                          uint32_t canfd_id,
                          const uint8_t *data,
                          uintptr_t data_len) -> int {
+    (void)slave_id;
+    if (!pVCI_TransmitFD) return -1;
+    
     // Construct CANFD transmit message
     ZCAN_FD_MSG canfd_msg;
     memset(&canfd_msg, 0, sizeof(ZCAN_FD_MSG));
 
     canfd_msg.hdr.inf.txm = 0; // 0 - normal transmit
     canfd_msg.hdr.inf.fmt = 1; // 0 - CAN, 1 - CANFD
-    canfd_msg.hdr.inf.sdf = 0; // 0 - data frame, CANFD only supports data frames
+    canfd_msg.hdr.inf.sdf = 0; // 0 - data frame
     canfd_msg.hdr.inf.sef = 1; // 0 - standard frame, 1 - extended frame
 
     canfd_msg.hdr.id = canfd_id;              // ID
@@ -712,57 +856,68 @@ void setup_canfd_callbacks(void) {
     }
 
     // Transmit CANFD frame
-    int result = VCI_TransmitFD(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, &canfd_msg, 1);
+    int result = pVCI_TransmitFD(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, &canfd_msg, 1);
     if (result != 1)
       printf("CANFD Transmit result: %d\n", result);
-    return result == 1 ? 0 : -1; // 0 indicates success
+    return result == 1 ? 0 : -1;
   });
 
   // CANFD receive callback
-  // Parameters:
-  // - slave_id: Slave ID
-  // - expected_can_id: Expected CAN ID to filter responses
-  // - expected_frames: Expected frame count (0=auto-detect, >0=specific count)
-  // - canfd_id_out: Output CAN ID
-  // - data_out: Output data buffer
-  // - data_len_out: Output data length
   set_can_rx_callback([](uint8_t slave_id,
                          uint32_t expected_can_id,
                          uint8_t expected_frames,
                          uint32_t *canfd_id_out,
                          uint8_t *data_out,
                          uintptr_t *data_len_out) -> int {
-    (void)expected_can_id;   // Can be used for filtering if needed
-    (void)expected_frames;   // Can be used for multi-frame handling if needed
+    (void)slave_id;
+    (void)expected_frames;
+    if (!pVCI_ReceiveFD) return -1;
     
-    // Read data
-    ZCAN_FD_MSG canfd_data[RX_BUFF_SIZE];
-    int len = VCI_ReceiveFD(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, canfd_data, RX_BUFF_SIZE, RX_WAIT_TIME);
-    if (len < 1) {
-      printf("CANFD Receive, len: %d\n", len);
-      // Retry once; the last response may take a long time while firmware writes to flash, wait 2 seconds then continue
-      usleep(2000 * 1000);
-      printf("Retrying CANFD Receive...\n");
-      len = VCI_ReceiveFD(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, canfd_data, RX_BUFF_SIZE, RX_WAIT_TIME);
-      printf("CANFD Receive, len: %d\n", len);
+    // CANFD CAN ID format: (slave_id << 16) | (master_id << 8) | payload_len
+    uint8_t expected_slave_id = (expected_can_id >> 16) & 0xFF;
+    uint8_t expected_master_id = (expected_can_id >> 8) & 0xFF;
+    
+    // Retry strategy (aligned with Rust ZQWL): normal=2
+    int max_attempts = 2;
+    
+    for (int attempt = 0; attempt < max_attempts; attempt++) {
+      ZCAN_FD_MSG canfd_data[RX_BUFF_SIZE];
+      int len = pVCI_ReceiveFD(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX, 
+                               canfd_data, RX_BUFF_SIZE, RX_WAIT_TIME);
+      
+      if (len < 1) {
+        int wait_ms = (attempt < 5) ? 2 : 5;
+        usleep(wait_ms * 1000);
+        continue;
+      }
+      
+      // Find matching frame by slave_id and master_id
+      for (int i = 0; i < len; i++) {
+        ZCAN_FD_MSG& frame = canfd_data[i];
+        uint32_t can_id = frame.hdr.id & 0x1FFFFFFF;
+        
+        // Match slave_id and master_id from CAN ID
+        uint8_t resp_slave_id = (can_id >> 16) & 0xFF;
+        uint8_t resp_master_id = (can_id >> 8) & 0xFF;
+        
+        if (resp_slave_id == expected_slave_id && resp_master_id == expected_master_id) {
+          int canfd_dlc = (frame.hdr.len < 64) ? frame.hdr.len : 64;
+          *canfd_id_out = can_id;
+          *data_len_out = canfd_dlc;
+          
+          for (int j = 0; j < canfd_dlc; j++) {
+            data_out[j] = frame.dat[j];
+          }
+          return 0;
+        }
+      }
     }
-    if (len < 1) {
-      return -1;
-    }
-
-    // Handle the first frame
-    ZCAN_FD_MSG recv_data = canfd_data[0];
-    int canfd_dlc = recv_data.hdr.len;
-    *canfd_id_out = recv_data.hdr.id;
-    *data_len_out = canfd_dlc;
-
-    for (int j = 0; j < canfd_dlc && j < 64; j++) {
-      data_out[j] = recv_data.dat[j];
-    }
-    return 0; // Return 0 on success
+    
+    // No matching frame found
+    return -1;
   });
 #else
-  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+  printf("[ERROR] ZLG not compiled\n");
 #endif
 }
 
@@ -825,24 +980,29 @@ bool setup_canfd(void) {
 /****************************************************************************/
 
 void cleanup_can_resources(void) {
-  if (get_can_backend() == kBackendSocketcan) {
+  CanBackend backend = get_can_backend();
+  
+  if (backend == kBackendSocketcan) {
 #if STARK_USE_SOCKETCAN
     if (g_socketcan_fd >= 0) {
       close(g_socketcan_fd);
       g_socketcan_fd = -1;
       g_socketcan_is_canfd = false;
     }
-    printf("SocketCAN resources cleaned up.\n");
-#else
-    printf("SocketCAN backend not compiled. Rebuild with CAN_BACKEND=socketcan or both.\n");
+    printf("[SocketCAN] Resources cleaned up\n");
 #endif
     return;
   }
+  
+  if (backend == kBackendZlg) {
 #if STARK_USE_ZLG
-  VCI_ResetCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX);
-  VCI_CloseDevice(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX);
-  printf("CAN/CANFD resources cleaned up.\n");
-#else
-  printf("ZLG backend disabled. Rebuild with CAN_BACKEND=zlg.\n");
+    if (pVCI_ResetCAN) {
+      pVCI_ResetCAN(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX, ZCANFD_CHANNEL_INDEX);
+    }
+    if (pVCI_CloseDevice) {
+      pVCI_CloseDevice(ZCANFD_TYPE_USBCANFD, ZCANFD_CARD_INDEX);
+    }
+    printf("[ZLG] Resources cleaned up\n");
 #endif
+  }
 }

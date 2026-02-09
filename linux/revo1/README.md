@@ -8,7 +8,7 @@ The new `make run` command automatically detects the program type and uses the c
 # Smart compile + run (automatically detects MODE)
 make run revo1_ctrl           # Modbus programs (default mode)
 make run revo1_touch          # Modbus touch-hand example
-make run revo1_can            # Auto-detects CAN mode, includes -lusbcanfd (ZLG)
+make run revo1_can            # Auto-detects CAN mode
 
 # Show usage help
 make run                      # Shows available targets and examples
@@ -21,10 +21,8 @@ make clean # Clean old build artifacts
 
 # Build with specific modes
 make                          # Build with default mode (Modbus)
-make MODE=can                 # Build with CAN (ZLG + SocketCAN)
-make MODE=can CAN_BACKEND=zlg  # Build with CAN (ZLG only)
-make MODE=can CAN_BACKEND=socketcan  # Build with SocketCAN (no -lusbcanfd)
-make MODE=can CAN_BACKEND=both  # Build with both ZLG + SocketCAN
+make MODE=can                 # Build with CAN (all backends compiled)
+make STARK_NO_CAN=1           # Disable CAN support entirely
 
 # Run only (must be compiled first)
 make run_revo1_ctrl           # Run revo1_modbus_ctrl example
@@ -33,17 +31,26 @@ make run_revo1_touch          # Run revo1_modbus_touch example
 make run_revo1_can            # Run revo1_can_ctrl example
 ```
 
-## SocketCAN Backend (Linux)
+## CAN Backend Selection (Runtime)
 
-Use SocketCAN for standard Linux CAN interfaces (e.g., `can0`, `can1`, `vcan0`).
+All CAN backends are compiled by default. Select at runtime via environment variables:
 
 ```shell
+# SocketCAN (Linux default, no 3rd party deps)
 export STARK_CAN_BACKEND=socketcan
 export STARK_SOCKETCAN_IFACE=can0
+
+# ZLG USB-CANFD (dynamic loading)
+export STARK_CAN_BACKEND=zlg
+export STARK_ZLG_LIB_PATH=/path/to/libusbcanfd.so  # Optional custom path
 ```
 
-Run with SocketCAN:
+Run examples:
 
 ```shell
-STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo1_can
+# SocketCAN (default on Linux)
+STARK_SOCKETCAN_IFACE=can0 make run revo1_can
+
+# ZLG backend
+STARK_CAN_BACKEND=zlg make run revo1_can
 ```

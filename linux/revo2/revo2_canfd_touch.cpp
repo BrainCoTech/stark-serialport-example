@@ -26,7 +26,9 @@ int main(int argc, char const *argv[]) {
   init_logging(LOG_LEVEL_INFO);
   const uint8_t MASTER_ID = 1; // Master device ID
   auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN_FD, MASTER_ID);
-  uint8_t slave_id = 0x7f; // Default right-hand ID for Revo2 is 0x7f
+  // Revo2 CANFD slave ID: 0x7e = left hand, 0x7f = right hand
+  // uint8_t slave_id = 0x7e;
+  uint8_t slave_id = 0x7f;
 
   get_device_info(handle, slave_id);
 

@@ -14,9 +14,60 @@ zlgcan_receive_message: Callable[..., Optional[Tuple[int, bytes]]]
 if platform.system() == "Windows":
     from zlg_win import zlgcan_open, zlgcan_close, zlgcan_send_message, zlgcan_receive_message  # type: ignore
 elif platform.system() == "Linux":
-    from zlg_linux import zlgcan_open, zlgcan_close, zlgcan_send_message, zlgcan_receive_message  # type: ignore
+    from zlg_linux import zlgcan_open, zlgcan_close, zlgcan_send_message, zlgcan_receive_message, zlgcan_receive_canfd_filtered  # type: ignore
 else:
     raise NotImplementedError(f"Unsupported operating system: {platform.system()}")
+
+
+class Revo2CanfdController:
+    """Revo2 CANFD communication controller for use with common_init.py"""
+
+    def __init__(self, master_id: int = 1, slave_id: int = 0x7e):
+        self.master_id = master_id
+        self.slave_id = slave_id
+        self.client = None
+        self.device_info = None
+
+    async def initialize(self):
+        """Initialize CANFD connection"""
+        try:
+            zlgcan_open()
+            libstark.set_can_tx_callback(self._canfd_send)
+            libstark.set_can_rx_callback(self._canfd_read)
+            self.client = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, self.master_id)
+            logger.info(f"CANFD connection initialized - Master ID: {self.master_id}, Slave ID: {self.slave_id}")
+            return True
+        except Exception as e:
+            logger.error(f"CANFD initialization failed: {e}")
+            return False
+
+    def _canfd_send(self, _slave_id: int, can_id: int, data: list) -> bool:
+        if not zlgcan_send_message(can_id, bytes(data)):
+            logger.error("Failed to send CANFD message")
+            return False
+        return True
+
+    def _canfd_read(self, _slave_id: int, expected_can_id: int, expected_frames: int) -> tuple:
+        result = zlgcan_receive_canfd_filtered(expected_can_id, expected_frames)
+        if result is None:
+            return 0, bytes([])
+        can_id, data, _frame_count = result
+        return can_id, bytes(data)
+
+    async def get_device_info(self):
+        """Get device information"""
+        try:
+            self.device_info = await self.client.get_device_info(self.slave_id)
+            logger.info(f"Device: {self.device_info.description}")
+            return self.device_info
+        except Exception as e:
+            logger.error(f"Failed to get device info: {e}")
+            return None
+
+    def cleanup(self):
+        """Cleanup resources"""
+        zlgcan_close()
+
 
 def canfd_send(_slave_id: int, can_id: int, data: list) -> None:
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")
@@ -27,7 +78,10 @@ def canfd_send(_slave_id: int, can_id: int, data: list) -> None:
 
 def canfd_read(_slave_id: int, expected_can_id: int, expected_frames: int):
     """
-    CANFD message receiving with filtering and multi-frame support
+    CANFD message receiving with slave_id/master_id filtering
+    
+    CANFD CAN ID format: (slave_id << 16) | (master_id << 8) | payload_len
+    Matches slave_id and master_id from CAN ID (not exact CAN ID match).
     
     Args:
         _slave_id: Slave ID (not used)
@@ -35,22 +89,15 @@ def canfd_read(_slave_id: int, expected_can_id: int, expected_frames: int):
         expected_frames: Expected frame count (0=auto-detect, >0=specific count)
         
     Returns:
-        tuple: (can_id, data) where data is concatenated frames if multi-frame
+        tuple: (can_id, data)
     """
-    recv_msg = zlgcan_receive_message(quick_retries=5, dely_retries=2)
-    if recv_msg is None:
-        logger.error("No message received")
+    result = zlgcan_receive_canfd_filtered(expected_can_id, expected_frames)
+    if result is None:
         return 0, bytes([])
 
-    (can_id, data) = recv_msg
-    
-    # Filter by expected CAN ID
-    if can_id != expected_can_id:
-        logger.warning(f"CAN ID mismatch: expected 0x{expected_can_id:X}, got 0x{can_id:X}")
-        return 0, bytes([])
-    
+    can_id, data, _frame_count = result
     logger.debug(f"Received CANFD - ID: 0x{can_id:02x}, Data: {bytes(data).hex()}")
-    return can_id, data
+    return can_id, bytes(data)
 
 
 async def configure_control_mode(client, slave_id):
@@ -214,14 +261,18 @@ async def get_and_display_motor_status(client, slave_id):
     logger.info(f"Finger status: {status.description}")
 
 
-async def get_motor_status_periodically(client, slave_id):
+async def get_motor_status_periodically(client, slave_id, shutdown_event=None):
     logger.info(f"Motor status monitoring started for device {slave_id:02x}")
     while True:
+        if shutdown_event and shutdown_event.is_set():
+            break
         try:
             await get_and_display_motor_status(client, slave_id)
             # Add delay to avoid too frequent queries
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.01)
 
+        except asyncio.CancelledError:
+            break
         except Exception as e:
             logger.error(
                 f"Error in motor status monitoring for device {slave_id:02x}: {e}"
@@ -234,9 +285,10 @@ async def main():
     """
     Main function: Initialize Revo2 dexterous hand and execute control examples
     """
-    # Connect to Revo2 device
+    # NOTE: Run auto_detect.py first to find actual device ID.
+    # Revo2 CANFD: Left hand default ID is 0x7e, right hand default ID is 0x7f.
     master_id = 1
-    slave_id = 0x7e # Left hand default ID is 0x7e, right hand default ID is 0x7f
+    slave_id = 0x7e
     client = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, master_id)
 
     zlgcan_open()
@@ -259,7 +311,7 @@ async def main():
     shutdown_event = setup_shutdown_event(logger)
 
     # Get motor status
-    reader_task = asyncio.create_task(get_motor_status_periodically(client, slave_id))
+    reader_task = asyncio.create_task(get_motor_status_periodically(client, slave_id, shutdown_event))
 
     # Execute control examples
     await execute_control_examples(client, slave_id)
@@ -267,6 +319,10 @@ async def main():
     await shutdown_event.wait()  # Wait for shutdown event
     logger.info("Shutdown event received, stopping motor status monitoring...")
     reader_task.cancel()  # Cancel motor status monitoring task
+    try:
+        await asyncio.wait_for(reader_task, timeout=1.0)
+    except (asyncio.CancelledError, asyncio.TimeoutError):
+        pass
     # Clean up resources
     zlgcan_close()
 

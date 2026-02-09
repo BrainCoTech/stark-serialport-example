@@ -157,8 +157,10 @@ class Revo2CanController:
 async def main():
     controller: Revo2CanController | None = None
     try:
+        # NOTE: Use `STARK_SLAVE_ID` env var to override. Run auto_detect.py first to find actual device ID.
+        # Revo1 devices typically use slave_id=2, while Revo2 devices use slave_id=1.
         master_id = int(os.getenv("STARK_MASTER_ID", "1"), 0)
-        slave_id = int(os.getenv("STARK_SLAVE_ID", "1"), 0)
+        slave_id = int(os.getenv("STARK_SLAVE_ID", "2"), 0)
         controller = Revo2CanController(master_id, slave_id)
         await controller.run()
 

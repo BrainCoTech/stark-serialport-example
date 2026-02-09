@@ -224,7 +224,7 @@ bool init_zqwl_device(DeviceContext* ctx, const char* port, uint32_t arb_baudrat
  * @brief Initialize device via SocketCAN (using example's can_common.cpp implementation)
  * 
  * This uses the example's own SocketCAN implementation in can_common.cpp.
- * Requires: make CAN_BACKEND=socketcan
+ * All backends compiled by default on Linux, select at runtime.
  * 
  * @param ctx Output: Device context to fill
  * @param iface CAN interface name (e.g., "can0")

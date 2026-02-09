@@ -4,7 +4,7 @@
 .DEFAULT_GOAL := all
 
 # Pass through variables to sub-makefiles
-MAKE_ARGS := $(if $(TARGET),TARGET=$(TARGET)) $(if $(CAN_BACKEND),CAN_BACKEND=$(CAN_BACKEND))
+MAKE_ARGS := $(if $(TARGET),TARGET=$(TARGET)) $(if $(STARK_NO_CAN),STARK_NO_CAN=$(STARK_NO_CAN))
 
 # Build demo (main entry point)
 all: demo
@@ -45,10 +45,9 @@ help:
 	@echo "\033[1;32m=== Stark C/C++ Examples ===\033[0m"
 	@echo ""
 	@echo "\033[1;33mBuild:\033[0m"
-	@echo "  make                        # Build (default: SDK built-in ZQWL only)"
+	@echo "  make                        # Build (all CAN backends on Linux)"
 	@echo "  make TARGET=win             # Cross-compile for Windows"
-	@echo "  make CAN_BACKEND=zlg        # Enable ZLG support (Linux/Windows)"
-	@echo "  make CAN_BACKEND=socketcan  # Enable SocketCAN support (Linux only)"
+	@echo "  make STARK_NO_CAN=1         # Disable CAN support"
 	@echo ""
 	@echo "\033[1;33mRun:\033[0m"
 	@echo "  make run hand_demo          # Comprehensive demo (8 modes)"
@@ -56,8 +55,9 @@ help:
 	@echo "  make run hand_dfu           # Firmware upgrade"
 	@echo "  make run auto_detect        # Device detection"
 	@echo ""
-	@echo "  (Alternative syntax with underscore also works:)"
-	@echo "  make run_hand_demo"
+	@echo "\033[1;33mCAN Backend (runtime):\033[0m"
+	@echo "  Default: SocketCAN on Linux"
+	@echo "  STARK_CAN_BACKEND=zlg ./hand_demo.exe  # Use ZLG"
 	@echo ""
 	@echo "\033[1;33mClean:\033[0m"
 	@echo "  make clean                  # Clean all"

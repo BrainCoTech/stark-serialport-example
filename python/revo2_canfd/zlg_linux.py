@@ -78,6 +78,63 @@ def zlgcan_receive_message(quick_retries: int = 2, dely_retries: int = 0) -> Opt
     return None
 
 
+def zlgcan_receive_canfd_filtered(
+    expected_can_id: int, expected_frames: int = 1, max_retries: int = 2
+) -> Optional[tuple[int, list[int], int]]:
+    """
+    Receive CANFD message filtered by slave_id and master_id.
+    
+    CANFD CAN ID format: (slave_id << 16) | (master_id << 8) | payload_len
+    
+    This function matches the Rust implementation for CANFD receive:
+    - Extract expected_slave_id and expected_master_id from expected_can_id
+    - Match received frames by slave_id and master_id (not exact CAN ID match)
+    
+    Args:
+        expected_can_id: Expected CAN ID containing slave_id and master_id
+        expected_frames: Expected frame count (hint from SDK)
+        max_retries: Maximum retry attempts (default: 2, aligned with Rust ZQWL)
+        
+    Returns:
+        (can_id, data, frame_count) tuple or None if timeout
+    """
+    # CANFD CAN ID format: (slave_id << 16) | (master_id << 8) | payload_len
+    expected_slave_id = (expected_can_id >> 16) & 0xFF
+    expected_master_id = (expected_can_id >> 8) & 0xFF
+    
+    logger.debug(f"CANFD RX: waiting, expected_can_id=0x{expected_can_id:08X}, "
+                 f"slave=0x{expected_slave_id:02X}, master=0x{expected_master_id:02X}")
+    
+    for attempt in range(max_retries):
+        wait_ms = 0.002 if attempt < 5 else 0.005
+        time.sleep(wait_ms)
+        
+        try:
+            can_msgs = canfd_receive(DEVICE_TYPE, DEVICE_INDEX, 0)
+            if can_msgs is None:
+                continue
+            
+            for msg in can_msgs:
+                can_id = msg.hdr.id
+                
+                # Match slave_id and master_id from CAN ID
+                resp_slave_id = (can_id >> 16) & 0xFF
+                resp_master_id = (can_id >> 8) & 0xFF
+                
+                logger.debug(f"CANFD RX: received - can_id=0x{can_id:08X}, "
+                             f"slave=0x{resp_slave_id:02X}, master=0x{resp_master_id:02X}")
+                
+                if resp_slave_id == expected_slave_id and resp_master_id == expected_master_id:
+                    data = [msg.dat[i] for i in range(msg.hdr.len)]
+                    return (can_id, data, 1)
+                    
+        except Exception as e:
+            logger.error(f"CANFD receive filtered exception: {e}")
+    
+    logger.debug(f"CANFD receive timeout after {max_retries} attempts")
+    return None
+
+
 def _zlgcan_read_messages() -> Optional[tuple[int, list[int]]]:
     """
     Read messages from ZLG CAN device, support multi-frame response concatenation

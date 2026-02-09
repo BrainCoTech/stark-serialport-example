@@ -24,7 +24,8 @@ int main(int argc, char const *argv[]) {
   // Initialize STARK SDK
   init_logging(LOG_LEVEL_INFO);
   auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN, 0);
-  uint8_t slave_id = 1; // Default slave ID for Revo1 is 1
+  // Revo1 CAN slave ID: 1 = left hand, 2 = right hand
+  uint8_t slave_id = 1;
   get_device_info(handle, slave_id);
 
   uint16_t positions_fist[] = {500, 500, 1000, 1000, 1000, 1000}; // Fist

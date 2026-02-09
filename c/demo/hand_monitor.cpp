@@ -121,10 +121,10 @@ void print_usage(const char* prog_name) {
     printf("    dual     - Motor + Pressure summary + detailed (Revo2 Modulus)\n");
     printf("    auto     - Auto-detect based on device type (default)\n");
     printf("\n");
-    printf("CAN Backend (compile-time):\n");
-    printf("  ZQWL (default) - SDK built-in, auto-detect\n");
-    printf("  ZLG            - make CAN_BACKEND=zlg, use -z/-Z\n");
-    printf("  SocketCAN      - make CAN_BACKEND=socketcan, use -s/-S (Linux)\n");
+    printf("CAN Backend (runtime selection):\n");
+    printf("  SocketCAN (default) - use -s/-S, or STARK_CAN_BACKEND=socketcan\n");
+    printf("  ZLG                 - use -z/-Z, or STARK_CAN_BACKEND=zlg\n");
+    printf("  ZQWL (SDK built-in) - use -c/-f\n");
     printf("\n");
     printf("Examples:\n");
     printf("  %s                # Auto-detect, auto mode\n", prog_name);
@@ -269,12 +269,12 @@ void run_touch_collection(
                            item->self_proximity1, item->self_proximity2, item->mutual_proximity,
                            status_str);
                 } else {
-                    // Pinky: 2 force groups, 1 self-proximity, 1 mutual-proximity
-                    printf("  %s: F1(%4u,%4u) F2(%4u,%4u) Prox=(%u,%u) [%s]\n",
+                    // Pinky: 2 force groups, 1 self-proximity, NO mutual-proximity
+                    printf("  %s: F1(%4u,%4u) F2(%4u,%4u) Prox=%u [%s]\n",
                            finger_names[finger],
                            item->normal_force1, item->tangential_force1,
                            item->normal_force2, item->tangential_force2,
-                           item->self_proximity1, item->mutual_proximity,
+                           item->self_proximity1,
                            status_str);
                 }
             }

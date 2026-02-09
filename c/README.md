@@ -63,11 +63,10 @@ c/
 
 ```bash
 cd c
-make                        # Build (default: SDK built-in ZQWL only)
+make                        # Build (all CAN backends on Linux)
 make clean                  # Clean
 make TARGET=win             # Cross-compile for Windows
-make CAN_BACKEND=zlg        # Enable ZLG support (Linux/Windows)
-make CAN_BACKEND=socketcan  # Enable SocketCAN support (Linux only)
+make STARK_NO_CAN=1         # Disable CAN support
 ```
 
 ### Build Options
@@ -75,8 +74,19 @@ make CAN_BACKEND=socketcan  # Enable SocketCAN support (Linux only)
 | Option | Description |
 |--------|-------------|
 | `TARGET=win` | Cross-compile for Windows |
-| `CAN_BACKEND=zlg` | Enable ZLG CAN adapter support (requires external library) |
-| `CAN_BACKEND=socketcan` | Enable SocketCAN support (Linux only) |
+| `STARK_NO_CAN=1` | Disable CAN support entirely |
+
+### CAN Backend (Runtime Selection)
+
+All CAN backends are compiled by default on Linux. Select at runtime:
+
+| Backend | CLI Options | Environment Variable |
+|---------|-------------|---------------------|
+| SocketCAN (default) | `-s`/`-S` | `STARK_CAN_BACKEND=socketcan` |
+| ZLG | `-z`/`-Z` | `STARK_CAN_BACKEND=zlg` |
+| ZQWL (SDK built-in) | `-c`/`-f` | - |
+
+Note: ZLG requires `libusbcanfd.so` at runtime (dynamic loading).
 
 ## Running Examples
 
@@ -163,33 +173,28 @@ sudo ip link set can0 up
 
 **Option 2: Example's can_common.cpp**
 
-Requires build-time enable:
+All backends compiled by default on Linux:
 
 ```bash
-# Build with SocketCAN support
-make CAN_BACKEND=socketcan
-
 # Configure interface
 sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 
-# Run
+# Run (SocketCAN is default on Linux)
 ./hand_demo.exe -s can0 1       # CAN 2.0
 ./hand_demo.exe -S can0 127     # CANFD
 ```
 
 > **ZLG USB-CAN/CANFD with SocketCAN**: If using ZLG adapter with SocketCAN driver, see [platform/linux/README.md](platform/linux/README.md) for driver installation.
 
-### ZLG (requires external library + build-time enable)
+### ZLG (dynamic loading at runtime)
 
-Requires `libusbcanfd.so` (Linux) or `zlgcan.dll` (Windows).
+Requires `libusbcanfd.so` (Linux) or `libusbcanfd.dll` (Windows) at runtime.
 
 ```bash
-# Build with ZLG support
-make CAN_BACKEND=zlg
-
-# Run
-./hand_demo.exe -x can 1
+# Run with ZLG backend
+STARK_CAN_BACKEND=zlg ./hand_demo.exe -z 1      # CAN 2.0
+STARK_CAN_BACKEND=zlg ./hand_demo.exe -Z 127    # CANFD
 ```
 
 ## Device Types

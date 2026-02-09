@@ -549,7 +549,7 @@ bool init_zqwl_device(DeviceContext* ctx, const char* port, uint32_t arb_baudrat
     return true;
 }
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(STARK_NO_CAN)
 #include "can_common.h"
 
 bool init_socketcan_device(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd) {
@@ -680,6 +680,9 @@ bool init_zlg_device(DeviceContext* ctx, uint8_t slave_id, bool is_canfd) {
     printf("\n[Init] Mode: ZLG USB-CANFD %s\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
     printf("  Slave ID: %d\n", slave_id);
     
+    // Force ZLG backend
+    set_can_backend_zlg();
+    
     bool success = is_canfd ? setup_canfd() : setup_can();
     if (!success) {
         printf("[ERROR] Failed to initialize ZLG CAN device\n");
@@ -731,7 +734,7 @@ bool init_zlg_device(DeviceContext* ctx, uint8_t slave_id, bool is_canfd) {
     ctx->touch_freq = is_canfd ? 50 : 20;
     return true;
 }
-#endif
+#endif // defined(__linux__) && !defined(STARK_NO_CAN)
 
 void print_init_usage(const char* prog_name) {
     printf("Initialization options:\n");
@@ -740,7 +743,7 @@ void print_init_usage(const char* prog_name) {
     printf("  -p <port> [id]               Protobuf (115200 baud, default id=10)\n");
     printf("  -c <port> <baud> <id>        CAN 2.0 (ZQWL)\n");
     printf("  -f <port> <arb> <data> <id>  CANFD (ZQWL)\n");
-#ifdef __linux__
+#if defined(__linux__) && !defined(STARK_NO_CAN)
     printf("  -s <iface> <id>              SocketCAN CAN 2.0\n");
     printf("  -S <iface> <id>              SocketCAN CANFD\n");
     printf("  -z <id>                      ZLG USB-CANFD CAN 2.0\n");
@@ -833,7 +836,7 @@ bool parse_args_and_init(DeviceContext* ctx, int argc, const char* argv[], int* 
                 *arg_idx += 5;
                 break;
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(STARK_NO_CAN)
             case 's': // SocketCAN CAN 2.0: -s <iface> <slave_id>
                 if (argc < 4) {
                     printf("[ERROR] -s requires: <interface> <slave_id>\n");
@@ -899,7 +902,7 @@ bool parse_args_and_init(DeviceContext* ctx, int argc, const char* argv[], int* 
                 }
                 *arg_idx += 2;
                 break;
-#endif
+#endif // defined(__linux__) && !defined(STARK_NO_CAN)
                 
             case 'h': // Help
                 return false;

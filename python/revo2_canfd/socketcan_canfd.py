@@ -16,30 +16,24 @@ def canfd_send(_slave_id: int, can_id: int, data: list):
 
 def canfd_read(_slave_id: int, expected_can_id: int, expected_frames: int):
     """
-    CANFD message receiving with filtering and multi-frame support
+    CANFD read callback
+    
+    CANFD CAN ID format: (slave_id << 16) | (master_id << 8) | payload_len
+    Matches slave_id and master_id from CAN ID (not exact CAN ID match).
     
     Args:
-        _slave_id: Slave ID (not used)
-        expected_can_id: Expected CAN ID to filter responses
-        expected_frames: Expected frame count (0=auto-detect, >0=specific count)
-        
-    Returns:
-        tuple: (can_id, data) where data is concatenated frames if multi-frame
+        _slave_id: Slave ID (not used for SocketCAN)
+        expected_can_id: Expected CAN ID for filtering
+        expected_frames: Expected frame count (hint from SDK)
     """
-    recv_msg = socketcan_receive_message(quick_retries=5, dely_retries=2)
-    if recv_msg is None:
-        logger.error("No message received")
+    result = socketcan_receive_canfd_filtered(expected_can_id, expected_frames)
+    if result is None:
+        logger.debug("No message received")
         return 0, bytes([])
 
-    can_id, data = recv_msg
-    
-    # Filter by expected CAN ID
-    if can_id != expected_can_id:
-        logger.warning(f"CAN ID mismatch: expected 0x{expected_can_id:X}, got 0x{can_id:X}")
-        return 0, bytes([])
-    
-    logger.debug(f"Received CANFD - ID: 0x{can_id:02x}, Data: {bytes(data).hex()}")
-    return can_id, data
+    can_id, data, _frame_count = result
+    logger.debug(f"Received CANFD - ID: {can_id:02x}, Data: {data.hex()}")
+    return can_id, bytes(data)
 
 
 async def configure_control_mode(client, slave_id):
@@ -100,12 +94,34 @@ async def get_motor_status_periodically(client, slave_id):
 async def main():
     """
     Main function: Initialize Revo2 dexterous hand and execute control examples
+    
+    Usage:
+        python socketcan_canfd.py                    # Use default can0, slave 0x7e
+        python socketcan_canfd.py can1               # Use can1, slave 0x7e
+        python socketcan_canfd.py can1 0x7f          # Use can1, slave 0x7f
+        STARK_SOCKETCAN_IFACE=can1 python socketcan_canfd.py  # Use env var
+    
+    Note:
+        Default slave_id is 0x7e (126). Revo2 devices typically use 0x7e,
+        while Revo1 devices use 0x7f (127). Adjust if your device differs.
     """
+    import sys
+    
+    # Parse command line args: [iface] [slave_id]
+    # Or use env vars: STARK_SOCKETCAN_IFACE, STARK_SLAVE_ID
+    # Note: Revo2 default slave_id is 0x7e, Revo1 is 0x7f
+    iface = os.getenv("STARK_SOCKETCAN_IFACE", "can0")
+    slave_id = int(os.getenv("STARK_SLAVE_ID", "0x7e"), 0)
+    
+    if len(sys.argv) > 1:
+        iface = sys.argv[1]
+    if len(sys.argv) > 2:
+        slave_id = int(sys.argv[2], 0)
+    
     master_id = int(os.getenv("STARK_MASTER_ID", "1"), 0)
-    slave_id = int(os.getenv("STARK_SLAVE_ID", "0x7f"), 0)
     client = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, master_id)
 
-    socketcan_open()
+    socketcan_open(iface)
     libstark.set_can_tx_callback(canfd_send)
     libstark.set_can_rx_callback(canfd_read)
 

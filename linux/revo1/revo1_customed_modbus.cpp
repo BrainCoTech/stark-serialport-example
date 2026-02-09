@@ -15,6 +15,7 @@ int main(int argc, char const *argv[]) {
 
   init_logging(LOG_LEVEL_INFO);
   auto handle = init_device_handler(STARK_PROTOCOL_TYPE_MODBUS, 0);
+  // Revo1 Modbus slave ID: 1 (default, same for left/right hand)
   uint8_t slave_id = 1;
   get_device_info(handle, slave_id);
   return 0;

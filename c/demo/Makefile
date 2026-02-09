@@ -7,7 +7,7 @@ include ../common.mk
 LIBS := $(BASE_LIBS)
 
 ifeq ($(OS),linux)
-    EXTRA_LDFLAGS := -rdynamic
+    EXTRA_LDFLAGS := -rdynamic -ldl
 else
     EXTRA_LDFLAGS :=
 endif
@@ -54,24 +54,24 @@ help:
 	@echo "All examples auto-detect device and protocol by default."
 	@echo ""
 	@echo "Build:"
-	@echo "  make                        # Build (default: ZQWL backend)"
-	@echo "  make CAN_BACKEND=zlg        # Build with ZLG USB-CANFD"
-	@echo "  make CAN_BACKEND=socketcan  # Build with SocketCAN (Linux)"
+	@echo "  make                        # All CAN backends compiled"
+	@echo "  make STARK_NO_CAN=1         # Disable CAN support"
 	@echo ""
 	@echo "Run:"
-	@echo "  ./hand_demo.exe             # Auto-detect all protocols"
+	@echo "  ./hand_demo.exe             # Auto-detect (default: SocketCAN)"
 	@echo "  ./hand_monitor.exe motor    # Auto-detect, motor monitor"
+	@echo ""
+	@echo "Runtime CAN backend selection:"
+	@echo "  STARK_CAN_BACKEND=zlg ./hand_demo.exe    # Use ZLG adapter"
+	@echo "  STARK_CAN_BACKEND=socketcan ./hand_demo.exe  # Use SocketCAN"
 	@echo ""
 	@echo "Manual init (optional, skip auto-detect):"
 	@echo "  -m <port> <baud> <id>          Modbus"
 	@echo "  -c <port> <baud> <id>          CAN 2.0 (ZQWL)"
 	@echo "  -f <port> <arb> <data> <id>    CANFD (ZQWL)"
-	@echo "  -s <iface> <id>                SocketCAN CAN 2.0 (Linux)"
-	@echo "  -S <iface> <id>                SocketCAN CANFD (Linux)"
-	@echo ""
-	@echo "CAN Backend:"
-	@echo "  ZQWL (default) - SDK built-in, auto-detect"
-	@echo "  ZLG            - make CAN_BACKEND=zlg"
-	@echo "  SocketCAN      - make CAN_BACKEND=socketcan (Linux)"
+	@echo "  -s <iface> <id>                SocketCAN CAN 2.0"
+	@echo "  -S <iface> <id>                SocketCAN CANFD"
+	@echo "  -z <id>                        ZLG CAN 2.0"
+	@echo "  -Z <id>                        ZLG CANFD"
 
 .PHONY: all clean help

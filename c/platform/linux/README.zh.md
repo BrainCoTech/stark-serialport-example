@@ -109,13 +109,12 @@ make run
 
 ### SocketCAN
 
-SocketCAN 在跨平台示例中通过构建选项支持：
+SocketCAN 在 Linux 上默认编译，运行时选择：
 
 ```bash
 cd ../../demo/
-make CAN_BACKEND=socketcan
 
-export STARK_CAN_BACKEND=socketcan
+# SocketCAN 是 Linux 默认后端
 export STARK_SOCKETCAN_IFACE=can0
 ./hand_demo.exe -s can0 1       # CAN 2.0
 ./hand_demo.exe -S can0 127     # CANFD
@@ -123,13 +122,14 @@ export STARK_SOCKETCAN_IFACE=can0
 
 ### ZLG USB-CAN/CANFD
 
-ZLG 适配器支持（需要 libusbcanfd.so）：
+ZLG 适配器支持（运行时需要 libusbcanfd.so）：
 
 ```bash
 cd ../../demo/
-make CAN_BACKEND=zlg
-./hand_demo.exe -z 1            # ZLG CAN 2.0
-./hand_demo.exe -Z 127          # ZLG CANFD
+
+# 运行时选择 ZLG 后端
+STARK_CAN_BACKEND=zlg ./hand_demo.exe -z 1            # ZLG CAN 2.0
+STARK_CAN_BACKEND=zlg ./hand_demo.exe -Z 127          # ZLG CANFD
 ```
 
 ## EtherCAT 库 (revo2_ec/)

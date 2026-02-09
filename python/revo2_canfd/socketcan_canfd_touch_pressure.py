@@ -1,110 +1,79 @@
+"""
+Revo2 CANFD Touch Pressure Example - SocketCAN (SDK built-in)
+
+Demonstrates pressure touch sensor reading via SDK's built-in SocketCAN (Linux only).
+
+Usage:
+    python socketcan_canfd_touch_pressure.py [iface] [slave_id]
+    python socketcan_canfd_touch_pressure.py can1 0x7e
+"""
 import asyncio
 import os
 import platform
 import sys
 
-from canfd_utils import *
-
 if platform.system() != "Linux":
-    raise NotImplementedError("SocketCAN is only supported on Linux.")
+    raise NotImplementedError("SocketCAN is only supported on Linux")
 
-from socketcan_linux_utils import *
-
-
-def canfd_send(_slave_id: int, can_id: int, data: list):
-    if not socketcan_send_message(can_id, bytes(data)):
-        logger.error("Failed to send CANFD message")
-        return
+from canfd_utils import (
+    logger, libstark, setup_shutdown_event,
+    display_pressure_touch_status, setup_pressure_touch_sensors
+)
 
 
-def canfd_read(_slave_id: int):
-    recv_msg = socketcan_receive_message()
-    if recv_msg is None:
-        logger.error("No message received")
-        return 0, bytes([])
-
-    (can_id, data) = recv_msg
-    logger.debug(f"Received CANFD - ID: {can_id:02x}, Data: {bytes(data).hex()}")
-    return can_id, data
-
-
-async def get_and_display_motor_status(client: "libstark.DeviceHandler", slave_id: int):
-    logger.debug("get_motor_status")
-    status: libstark.MotorStatusData = await client.get_motor_status(slave_id)
-    logger.info(f"Finger status: {status.description}")
-
-    thumb = await client.get_single_modulus_touch_summary(slave_id, 0)
-    pinky = await client.get_single_modulus_touch_summary(slave_id, 4)
-    palm = await client.get_single_modulus_touch_summary(slave_id, 5)
-    logger.info(f"Thumb: {thumb}")
-    logger.info(f"Pinky: {pinky}")
-    logger.info(f"Palm: {palm}")
-
-    touch_summary: list[int] = await client.get_modulus_touch_summary(slave_id)
-    logger.info(f"Touch summary: {touch_summary}")
-    touch_data: list[int] = await client.get_modulus_touch_data(slave_id)
-    logger.info(f"Touch Data: {touch_data}")
-
-
-async def get_motor_status_periodically(client, slave_id):
-    logger.info(f"Motor status monitoring started for device {slave_id:02x}")
-    while True:
+async def monitor_pressure_touch(client, slave_id: int, shutdown_event):
+    """Monitor pressure touch data periodically"""
+    logger.info(f"Pressure touch monitoring started for device 0x{slave_id:02x}")
+    while not shutdown_event.is_set():
         try:
-            await get_and_display_motor_status(client, slave_id)
-            await asyncio.sleep(0.001)
+            await display_pressure_touch_status(client, slave_id)
+            await asyncio.sleep(0.1)
         except Exception as e:
-            logger.error(
-                f"Error in motor status monitoring for device {slave_id:02x}: {e}"
-            )
+            logger.error(f"Monitor error: {e}")
             await asyncio.sleep(1)
 
 
-async def setup_touch_sensors(client, slave_id):
-    logger.debug("get_touch_sensor_enabled")
-    bits = await client.get_touch_sensor_enabled(slave_id)
-    logger.info(f"Touch Sensor Enabled: {(bits & 0x3F):06b}")
-
-    touch_fw_versions = await client.get_touch_sensor_fw_versions(slave_id)
-    logger.info(f"Touch Fw Versions: {touch_fw_versions}")
-
-    data_type = await client.get_modulus_touch_data_type(slave_id)
-    logger.info(f"Modulus Touch Data Type: {data_type}")
-
-
 async def main():
-    """
-    Main function: initialize Revo2 dexterous hand and execute control example
-    """
+    # Parse command line args: [iface] [slave_id]
+    iface = sys.argv[1] if len(sys.argv) > 1 else os.getenv("STARK_SOCKETCAN_IFACE", "can0")
+    slave_id = int(sys.argv[2], 0) if len(sys.argv) > 2 else int(os.getenv("STARK_SLAVE_ID", "0x7e"), 0)
     master_id = int(os.getenv("STARK_MASTER_ID", "1"), 0)
-    slave_id = int(os.getenv("STARK_SLAVE_ID", "0x7f"), 0)
+
+    # Use SDK built-in SocketCAN (more reliable than Python socket)
+    libstark.init_socketcan_canfd(iface)
     client = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, master_id)
 
-    socketcan_open()
-    libstark.set_can_tx_callback(canfd_send)
-    libstark.set_can_rx_callback(canfd_read)
-
-    logger.debug("get_device_info")
+    # Get device info
     device_info = await client.get_device_info(slave_id)
-    logger.info(f"Device info: {device_info.description}")
+    logger.info(f"Device: {device_info.description}")
 
     baudrate = await client.get_canfd_baudrate(slave_id)
-    logger.info(f"CANFD, Baudrate: {baudrate}")
+    logger.info(f"CANFD Baudrate: {baudrate}")
 
-    if not client.is_touch_pressure():
-        logger.error("This example is only for Revo2 Touch Pressure hardware")
-        socketcan_close()
+    # Check hardware type
+    if not client.uses_pressure_touch_api(slave_id):
+        logger.error("This example requires Revo2 Touch Pressure hardware")
+        libstark.close_socketcan()
         sys.exit(1)
 
-    await setup_touch_sensors(client, slave_id)
+    # Setup touch sensors
+    await setup_pressure_touch_sensors(client, slave_id)
 
+    # Monitor
     shutdown_event = setup_shutdown_event(logger)
-    reader_task = asyncio.create_task(get_motor_status_periodically(client, slave_id))
+    monitor_task = asyncio.create_task(monitor_pressure_touch(client, slave_id, shutdown_event))
 
     await shutdown_event.wait()
-    logger.info("Shutdown event received, stopping motor status monitoring...")
-    reader_task.cancel()
-    socketcan_close()
+    logger.info("Shutting down...")
+    monitor_task.cancel()
+    libstark.close_socketcan()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("User interrupted")
+    except Exception as e:
+        logger.error(f"Error: {e}", exc_info=True)
+        sys.exit(1)

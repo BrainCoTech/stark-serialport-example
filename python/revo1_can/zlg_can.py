@@ -127,12 +127,12 @@ class Revo1CanController:
         except Exception as e:
             logger.error(f"Failed to get device information: {e}")
             return None
-    
-    def is_revo1_advanced_touch(self) -> bool:
-        """Check if device is Revo1AdvancedTouch"""
-        if not hasattr(self, 'device_info') or self.device_info is None:
+
+    def uses_revo1_touch_api(self) -> bool:
+        """Check if device uses Revo1 Touch API"""
+        if self.device_info is None:
             return False
-        return self.device_info.hardware_type == libstark.StarkHardwareType.Revo1AdvancedTouch
+        return self.device_info.uses_revo1_touch_api()
 
     async def change_slave_id(self, new_slave_id: int):
         """Modify device slave ID (cautious use, device will restart)"""
@@ -340,11 +340,10 @@ class Revo1CanController:
             logger.info(f"  Self-proximity 1: {finger.self_proximity1}, Self-proximity 2: {finger.self_proximity2}")
             logger.info(f"  Mutual-proximity: {finger.mutual_proximity}")
         elif channel == 4:
-            # Pinky: 2 force groups, 1 self-proximity, 1 mutual-proximity
+            # Pinky: 2 force groups, 1 self-proximity, NO mutual-proximity
             logger.info(f"  Force Group 1: Normal={finger.normal_force1}, Tangential={finger.tangential_force1}, Direction={finger.tangential_direction1}°")
             logger.info(f"  Force Group 2: Normal={finger.normal_force2}, Tangential={finger.tangential_force2}, Direction={finger.tangential_direction2}°")
             logger.info(f"  Self-proximity: {finger.self_proximity1}")
-            logger.info(f"  Mutual-proximity: {finger.mutual_proximity}")
 
         # Display status
         status_map = {0: "Normal", 1: "Data Error", 2: "Communication Error"}
@@ -402,12 +401,11 @@ class Revo1CanController:
         # Configure device parameters, enable as needed
         # await self.configure_device()
 
-        # Check if device is Revo1AdvancedTouch
-        if self.is_revo1_advanced_touch():
-            logger.info("Detected Revo1AdvancedTouch device, running touch sensor demos...")
+        if self.uses_revo1_touch_api():
+            logger.info("Detected Revo1 Touch device, running touch sensor demos...")
             await self.test_touch_sensor_control()
             await self.test_touch_sensor_reading()
-            await self.monitor_touch_sensor(iterations=10, interval=0.5)
+            await self.monitor_touch_sensor(iterations=1000, interval=0.5)
         else:
             # Enable the following demos for other devices
             await self.finger_position_examples()
@@ -434,6 +432,8 @@ class Revo1CanController:
 
 async def main():
     """Main function"""
+    # NOTE: Run auto_detect.py first to find actual device ID.
+    # Revo1 devices typically use slave_id=2, while Revo2 devices use slave_id=1.
     controller = Revo1CanController(master_id=1, slave_id=2)
 
     try:

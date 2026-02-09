@@ -129,14 +129,16 @@ Hardware type values:
 
 ### Supported CAN Backends
 
-| Backend   | Platform      | Build                        | Description               |
-| --------- | ------------- | ---------------------------- | ------------------------- |
-| ZQWL      | All           | Default                      | SDK built-in, auto-detect |
-| SocketCAN | Linux         | Default                      | SDK built-in (`-b/-B`)    |
-| SocketCAN | Linux         | `make CAN_BACKEND=socketcan` | can_common.cpp (`-s/-S`)  |
-| ZLG       | Linux/Windows | `make CAN_BACKEND=zlg`       | ZLG USB-CANFD             |
+All backends are compiled by default on Linux. Select at runtime via CLI or environment variable.
 
-### ZQWL (Default)
+| Backend   | Platform      | CLI Options | Environment Variable |
+| --------- | ------------- | ----------- | -------------------- |
+| SocketCAN | Linux (default) | `-s/-S`   | `STARK_CAN_BACKEND=socketcan` |
+| ZLG       | Linux/Windows | `-z/-Z`     | `STARK_CAN_BACKEND=zlg` |
+| ZQWL      | All           | `-c/-f`     | - (SDK built-in) |
+| SDK SocketCAN | Linux     | `-b/-B`     | - (SDK built-in) |
+
+### ZQWL (SDK Built-in)
 
 SDK built-in support with auto-detection:
 
@@ -152,44 +154,31 @@ Manual specification (optional, skip auto-detect):
 ./hand_demo.exe -f /dev/ttyUSB0 1000000 5000000 127    # CANFD
 ```
 
-### ZLG (ZLG USB-CANFD)
+### ZLG (Dynamic Loading)
 
-Download driver library from: https://manual.zlg.cn/web/#/146
-
-```bash
-# 1. Install libusbcanfd.so to /usr/local/lib
-
-# 2. Build
-cd c/demo
-make CAN_BACKEND=zlg
-
-# 3. Run
-./hand_demo.exe -z 1              # ZLG CAN 2.0
-./hand_demo.exe -Z 127            # ZLG CANFD
-./hand_monitor.exe -z 1 motor     # ZLG CAN 2.0, motor mode
-./hand_monitor.exe -Z 127 touch   # ZLG CANFD, touch mode
-```
-
-Custom library path:
+Requires `libusbcanfd.so` at runtime (download from: https://manual.zlg.cn/web/#/146)
 
 ```bash
-make CAN_BACKEND=zlg ZLG_LIB_DIR=/path/to/lib
+# Install libusbcanfd.so to /usr/local/lib or current directory
+
+# Run with ZLG backend
+STARK_CAN_BACKEND=zlg ./hand_demo.exe -z 1              # ZLG CAN 2.0
+STARK_CAN_BACKEND=zlg ./hand_demo.exe -Z 127            # ZLG CANFD
+STARK_CAN_BACKEND=zlg ./hand_monitor.exe -z 1 motor     # ZLG CAN 2.0, motor mode
 ```
 
 **Notes:**
 
 - `-z <slave_id>` - ZLG CAN 2.0 mode
 - `-Z <slave_id>` - ZLG CANFD mode
-- ZLG uses device index, no port required
+- ZLG library loaded dynamically at runtime (no compile-time dependency)
 - macOS not supported
 
 ### SocketCAN (Linux)
 
 Two implementations available:
 
-**Option 1: SDK Built-in (Recommended)**
-
-No additional compile flags needed:
+**Option 1: SDK Built-in**
 
 ```bash
 # Configure interface
@@ -201,19 +190,14 @@ sudo ip link set can0 up
 ./hand_demo.exe -B can0 127     # CANFD
 ```
 
-**Option 2: Example's can_common.cpp**
-
-Requires build-time enable:
+**Option 2: can_common.cpp (default on Linux)**
 
 ```bash
 # Configure interface
 sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 
-# Build
-make CAN_BACKEND=socketcan
-
-# Run
+# Run (SocketCAN is default on Linux)
 ./hand_demo.exe -s can0 1       # CAN 2.0
 ./hand_demo.exe -S can0 127     # CANFD
 ```
@@ -223,7 +207,8 @@ make CAN_BACKEND=socketcan
 **Environment variables:**
 
 ```bash
-export STARK_CAN_BACKEND=socketcan    # Switch backend
+export STARK_CAN_BACKEND=socketcan    # Explicit SocketCAN (default on Linux)
+export STARK_CAN_BACKEND=zlg          # Switch to ZLG
 export STARK_SOCKETCAN_IFACE=can0     # Specify interface
 ```
 

@@ -2,7 +2,10 @@ import asyncio
 import sys
 import platform
 from typing import Optional
-from can_utils import *
+from can_utils import (
+    logger, libstark, setup_shutdown_event,
+    print_finger_touch_data
+)
 
 # Import the corresponding ZLG CAN driver module according to the operating system
 if platform.system() == "Windows":
@@ -21,7 +24,7 @@ else:
 class Revo2CanController:
     """Revo2 CAN communication controller"""
 
-    def __init__(self, master_id: int = 1, slave_id: int = 1):
+    def __init__(self, master_id: int = 1, slave_id: int = 2):
         self.master_id = master_id
         self.slave_id = slave_id
         self.client = None  # Will be initialized in initialize()
@@ -102,11 +105,11 @@ class Revo2CanController:
             logger.error(f"Failed to get device information: {e}")
             return None
     
-    def is_revo1_advanced_touch(self) -> bool:
-        """Check if device is Revo1AdvancedTouch"""
-        if not hasattr(self, 'device_info') or self.device_info is None:
+    def uses_revo1_touch_api(self) -> bool:
+        """Check if device uses Revo1 Touch API"""
+        if self.device_info is None:
             return False
-        return self.device_info.hardware_type == libstark.StarkHardwareType.Revo1AdvancedTouch
+        return self.device_info.uses_revo1_touch_api()
 
     async def change_slave_id(self, new_slave_id: int):
         """Change device slave ID (use with caution, device will reboot)"""
@@ -297,37 +300,8 @@ class Revo2CanController:
         except Exception as e:
             logger.error(f"Touch sensor control test failed: {e}")
 
-    def print_finger_touch_data(self, finger, channel: int, finger_name: str):
-        """Print touch data for a single finger"""
-        logger.info(f"\n--- {finger_name} (Channel {channel}) ---")
-
-        # Display different data groups based on finger type
-        if channel == 0:
-            # Thumb: 2 force groups, 1 self-proximity
-            logger.info(f"  Force Group 1: Normal={finger.normal_force1}, Tangential={finger.tangential_force1}, Direction={finger.tangential_direction1}°")
-            logger.info(f"  Force Group 2: Normal={finger.normal_force2}, Tangential={finger.tangential_force2}, Direction={finger.tangential_direction2}°")
-            logger.info(f"  Self-proximity: {finger.self_proximity1}")
-        elif channel in [1, 2, 3]:
-            # Index/Middle/Ring: 3 force groups, 2 self-proximity, 1 mutual-proximity
-            logger.info(f"  Force Group 1: Normal={finger.normal_force1}, Tangential={finger.tangential_force1}, Direction={finger.tangential_direction1}°")
-            logger.info(f"  Force Group 2: Normal={finger.normal_force2}, Tangential={finger.tangential_force2}, Direction={finger.tangential_direction2}°")
-            logger.info(f"  Force Group 3: Normal={finger.normal_force3}, Tangential={finger.tangential_force3}, Direction={finger.tangential_direction3}°")
-            logger.info(f"  Self-proximity 1: {finger.self_proximity1}, Self-proximity 2: {finger.self_proximity2}")
-            logger.info(f"  Mutual-proximity: {finger.mutual_proximity}")
-        elif channel == 4:
-            # Pinky: 2 force groups, 1 self-proximity, 1 mutual-proximity
-            logger.info(f"  Force Group 1: Normal={finger.normal_force1}, Tangential={finger.tangential_force1}, Direction={finger.tangential_direction1}°")
-            logger.info(f"  Force Group 2: Normal={finger.normal_force2}, Tangential={finger.tangential_force2}, Direction={finger.tangential_direction2}°")
-            logger.info(f"  Self-proximity: {finger.self_proximity1}")
-            logger.info(f"  Mutual-proximity: {finger.mutual_proximity}")
-
-        # Display status
-        status_map = {0: "Normal", 1: "Data Error", 2: "Communication Error"}
-        status_str = status_map.get(finger.status, "Unknown")
-        logger.info(f"  Status: {finger.status} ({status_str})")
-
     async def test_touch_sensor_reading(self):
-        """Test touch sensor data reading (Revo1AdvancedTouch)"""
+        """Test touch sensor data reading"""
         logger.info("\n=== Test touch sensor data reading ===")
 
         try:
@@ -335,20 +309,25 @@ class Revo2CanController:
             logger.info(f"Successfully read touch data for {len(touch_data)} fingers")
 
             finger_names = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
+            uses_revo1 = self.uses_revo1_touch_api()
 
             for i, finger in enumerate(touch_data):
                 if i < len(finger_names):
-                    self.print_finger_touch_data(finger, i, finger_names[i])
+                    if uses_revo1:
+                        print_finger_touch_data_revo1(finger, i, finger_names[i])
+                    else:
+                        print_finger_touch_data_revo2(finger, finger_names[i])
 
             logger.info("\nTouch sensor data reading test completed\n")
         except Exception as e:
             logger.error(f"Touch sensor data reading failed: {e}")
 
-    async def monitor_touch_sensor(self, iterations: int = 10, interval: float = 0.5):
-        """Periodic touch sensor data monitoring (Revo1AdvancedTouch)"""
+    async def monitor_touch_sensor(self, iterations: int = 1000, interval: float = 0.5):
+        """Periodic touch sensor data monitoring"""
         logger.info(f"\n=== Periodic touch sensor monitoring ({iterations} iterations) ===")
 
         finger_names = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
+        uses_revo1 = self.uses_revo1_touch_api()
 
         for i in range(iterations):
             try:
@@ -357,11 +336,10 @@ class Revo2CanController:
                 logger.info(f"\n[{i + 1}] Touch data snapshot:")
                 for idx, finger in enumerate(touch_data):
                     if idx < len(finger_names):
-                        logger.info(
-                            f"  {finger_names[idx]}: Normal={finger.normal_force1:4}, "
-                            f"Tangential={finger.tangential_force1:4}, "
-                            f"Self-prox={finger.self_proximity1:8}, Status={finger.status}"
-                        )
+                        if uses_revo1:
+                            print_finger_touch_data_revo1(finger, idx, finger_names[idx])
+                        else:
+                            print_finger_touch_data_revo2(finger, finger_names[idx])
 
                 await asyncio.sleep(interval)
             except Exception as e:
@@ -377,12 +355,12 @@ class Revo2CanController:
         # Configure device parameters, enable as needed
         # await self.configure_device()
 
-        # Check if device is Revo1AdvancedTouch
-        if self.is_revo1_advanced_touch():
-            logger.info("Detected Revo1AdvancedTouch device, running touch sensor demos...")
+        # Check if device uses Revo1 Touch API
+        if self.uses_revo1_touch_api():
+            logger.info("Detected Revo1 Touch device, running touch sensor demos...")
             # await self.test_touch_sensor_control()
             await self.test_touch_sensor_reading()
-            await self.monitor_touch_sensor(iterations=10, interval=0.5)
+            await self.monitor_touch_sensor(iterations=1000, interval=0.5)
         else:
             # Enable the following demos for other devices
             await self.finger_position_examples()

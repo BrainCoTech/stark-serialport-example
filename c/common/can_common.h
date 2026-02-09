@@ -5,21 +5,46 @@
  * This header provides shared utility functions for CAN/CANFD device
  * initialization, channel configuration, and callback setup.
  *
- * Supported CAN backends:
- * 1. ZQWL (default): SDK built-in support, no configuration needed
- * 2. ZLG: ZLG USB-CANFD adapter
- *    - Compile: make CAN_BACKEND=zlg
- *    - Device type: 41 (USB-CANFD)
- *    - Default config: Arbitration 1 Mbps, Data 5 Mbps
- * 3. SocketCAN (Linux only):
- *    - Compile: make CAN_BACKEND=socketcan
+ * ============================================================================
+ * CAN Backend Options (Runtime Selection)
+ * ============================================================================
+ *
+ * All backends are compiled by default on Linux. Select at runtime via
+ * environment variable or CLI options.
+ *
+ * 1. SocketCAN (Linux default, no 3rd party deps):
+ *    - CLI options: -s (CAN 2.0), -S (CANFD)
  *    - Environment: STARK_CAN_BACKEND=socketcan
  *    - Interface: STARK_SOCKETCAN_IFACE=can0 (default)
  *
- * Backend selection priority:
- * - Environment variable STARK_CAN_BACKEND (socketcan/zlg)
- * - Compile-time flag (STARK_USE_ZLG / STARK_USE_SOCKETCAN)
- * - Default: ZLG if compiled with STARK_USE_ZLG=1
+ * 2. ZLG USB-CANFD adapter (dynamic loading):
+ *    - CLI options: -z (CAN 2.0), -Z (CANFD)
+ *    - Environment: STARK_CAN_BACKEND=zlg
+ *    - Requires: libusbcanfd.so/.dll at runtime
+ *    - Platforms: Linux, Windows
+ *
+ * 3. ZQWL (SDK built-in, cross-platform):
+ *    - CLI options: -c (CAN 2.0), -f (CANFD)
+ *    - No external dependencies
+ *
+ * 4. Disable CAN support:
+ *    - Compile: make STARK_NO_CAN=1
+ *
+ * ============================================================================
+ * Build & Run Examples
+ * ============================================================================
+ *
+ *   # Build (all backends compiled by default on Linux)
+ *   make
+ *   make STARK_NO_CAN=1       # Disable CAN support
+ *
+ *   # Run with different backends
+ *   ./hand_demo.exe                              # Default: SocketCAN
+ *   STARK_CAN_BACKEND=zlg ./hand_demo.exe        # Use ZLG
+ *   ./hand_demo.exe -s can0 1                    # SocketCAN explicit
+ *   ./hand_demo.exe -z 1                         # ZLG explicit
+ *
+ * ============================================================================
  */
 
 #ifndef CAN_COMMON_H
@@ -48,14 +73,14 @@ extern "C" {
 
 /**
  * @brief Initialize CAN device
- * Opens the ZLG USB-CANFD device
+ * Opens the CAN device (SocketCAN or ZLG depending on backend)
  * @return true if successful, false otherwise
  */
 bool init_can_device(void);
 
 /**
  * @brief Initialize CANFD device
- * Opens the ZLG USB-CANFD device (same as init_can_device)
+ * Opens the CANFD device (SocketCAN or ZLG depending on backend)
  * @return true if successful, false otherwise
  */
 bool init_canfd_device(void);
@@ -107,6 +132,18 @@ bool setup_canfd(void);
  * Resets channel and closes device
  */
 void cleanup_can_resources(void);
+
+/**
+ * @brief Select ZLG backend explicitly
+ * Call before setup_can/setup_canfd to use ZLG adapter
+ */
+void set_can_backend_zlg(void);
+
+/**
+ * @brief Select SocketCAN backend explicitly
+ * Call before setup_can/setup_canfd to use SocketCAN
+ */
+void set_can_backend_socketcan(void);
 
 #ifdef __cplusplus
 }

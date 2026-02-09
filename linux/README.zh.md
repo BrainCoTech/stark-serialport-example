@@ -461,29 +461,31 @@ make run_revo2_ctrl           # 运行 revo2_ctrl 示例
 - `-I../../dist/include` - SDK 头文件
 - `-L../../dist/lib` - SDK 库
 - `-lstark-sdk` - Stark SDK 库
-- `-lusbcanfd` - USB-CANFD 库（CAN 模式，仅 ZLG 后端需要）
+- `-ldl` - 动态加载库（用于 ZLG 运行时加载）
 - `-std=c++11` - C++11 标准
 
-### SocketCAN 后端（Linux）
+### CAN 后端选择（运行时）
 
-使用 SocketCAN 可支持 Linux 标准 CAN/CANFD 接口（如 `can0`、`can1`、`vcan0`）。
+所有 CAN 后端默认编译，运行时通过环境变量选择：
 
 ```bash
-# 构建时同时编译 ZLG + SocketCAN 后端
+# 构建（默认编译所有后端）
 make MODE=can
 
-# 仅使用 ZLG USB-CAN(FD) 后端构建
-make MODE=can CAN_BACKEND=zlg
+# 禁用 CAN 支持
+make STARK_NO_CAN=1
+```
 
-# 构建时不链接 ZLG USB-CANFD 库
-make MODE=can CAN_BACKEND=socketcan
+运行时后端选择：
 
-# 同时编译 ZLG + SocketCAN 后端
-make MODE=can CAN_BACKEND=both
-
-# 运行时选择后端与接口名
+```bash
+# SocketCAN（Linux 默认，无第三方依赖）
 export STARK_CAN_BACKEND=socketcan
 export STARK_SOCKETCAN_IFACE=can0
+
+# ZLG USB-CANFD（动态加载，无编译时依赖）
+export STARK_CAN_BACKEND=zlg
+export STARK_ZLG_LIB_PATH=/path/to/libusbcanfd.so  # 可选自定义路径
 ```
 
 典型 CANFD 接口配置示例（仅供参考）：
@@ -494,15 +496,16 @@ sudo ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
 sudo ip link set can0 up
 ```
 
-使用 SocketCAN 运行示例：
+运行示例：
 
 ```bash
-# CAN
-STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo1_can
-STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_can_ctrl
+# SocketCAN（Linux 默认后端）
+STARK_SOCKETCAN_IFACE=can0 make run revo1_can
+STARK_SOCKETCAN_IFACE=can0 make run revo2_can_ctrl
+STARK_SOCKETCAN_IFACE=can0 make run revo2_canfd
 
-# CANFD
-STARK_CAN_BACKEND=socketcan STARK_SOCKETCAN_IFACE=can0 make run revo2_canfd
+# ZLG 后端
+STARK_CAN_BACKEND=zlg make run revo2_canfd
 ```
 
 ## 📖 其他资源

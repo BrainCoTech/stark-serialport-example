@@ -15,6 +15,7 @@ int main(int argc, char const *argv[]) {
 
   init_logging(LOG_LEVEL_INFO);
   auto handle = init_device_handler(STARK_PROTOCOL_TYPE_CAN, 0);
+  // Revo1 CAN slave ID: 1 = left hand, 2 = right hand
   uint8_t slave_id = 1;
   get_device_info(handle, slave_id);
   return 0;

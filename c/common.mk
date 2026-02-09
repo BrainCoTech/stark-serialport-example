@@ -80,68 +80,39 @@ else
 endif
 
 # CAN backend configuration
-# CAN_BACKEND: zlg, socketcan, or unset (default: ZQWL built-in)
+# ============================================================================
 #
-# Supported backends:
-# 1. ZQWL (default): SDK built-in support, no external dependencies
-#    - Usage: make (no CAN_BACKEND needed)
-#    - Platforms: Linux, macOS, Windows
+# All backends compiled by default (runtime selection via CLI or environment)
 #
-# 2. ZLG: ZLG USB-CANFD adapter (device type 41)
-#    - Usage: make CAN_BACKEND=zlg
-#    - Platforms: Linux, Windows (not supported on macOS)
-#    - Requires: libusbcanfd.so/.dll from https://manual.zlg.cn/web/#/146
-#      - Windows: libusbcanfd.dll (x64/x86 versions available)
-#      - Linux: libusbcanfd.so (x86_64/aarch64 versions available)
-#        - Depends on libusb-1.0:
-#          Ubuntu/Debian: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
-#          CentOS/RHEL:   sudo yum install libusb1-devel
-#    - Config: Arbitration 1 Mbps, Data 5 Mbps
+# Runtime selection:
+#   - CLI: -s/-S (SocketCAN), -z/-Z (ZLG), -c/-f (ZQWL)
+#   - Environment: STARK_CAN_BACKEND=socketcan|zlg
 #
-# 3. SocketCAN: Linux kernel CAN interface
-#    - Usage: make CAN_BACKEND=socketcan
-#    - Platforms: Linux only
-#    - Requires: CAN interface configured (e.g., can0)
+# Compile options:
+#   - make                    # All backends (SocketCAN + ZLG on Linux)
+#   - make STARK_NO_CAN=1     # Disable CAN support entirely
 #
-# Examples:
-#   make                      # Use ZQWL (default)
-#   make CAN_BACKEND=zlg      # Use ZLG USB-CANFD
-#   make CAN_BACKEND=socketcan # Use SocketCAN (Linux)
+# Note: ZLG uses dynamic loading (dlopen), no compile-time dependency
 #
+# ============================================================================
 
-# ZLG library directory (can be overridden)
-ZLG_LIB_DIR ?=
-
-ifeq ($(CAN_BACKEND),zlg)
-    ifneq ($(OS),mac)
-        CAN_CFLAGS := -DSTARK_USE_ZLG=1 -DSTARK_USE_SOCKETCAN=0
-        CAN_LIBS := -lusbcanfd
-        # Add ZLG lib dir to search paths if specified
-        ifneq ($(ZLG_LIB_DIR),)
-            BASE_LIBS := -L$(LIB_DIR) -L$(ZLG_LIB_DIR) $(RPATH_FLAG) -Wl,-rpath,$(ZLG_LIB_DIR) -lbc_stark_sdk $(PLATFORM_LIBS) $(CAN_LIBS)
-        else
-            BASE_LIBS := -L$(LIB_DIR) $(RPATH_FLAG) -lbc_stark_sdk $(PLATFORM_LIBS) $(CAN_LIBS)
-        endif
-    else
-        $(warning ZLG not supported on macOS, ignoring CAN_BACKEND=zlg)
-        CAN_CFLAGS := -DSTARK_USE_ZLG=0 -DSTARK_USE_SOCKETCAN=0
-        CAN_LIBS :=
-        BASE_LIBS := -L$(LIB_DIR) $(RPATH_FLAG) -lbc_stark_sdk $(PLATFORM_LIBS)
-    endif
-else ifeq ($(CAN_BACKEND),socketcan)
-    ifeq ($(OS),linux)
-        CAN_CFLAGS := -DSTARK_USE_ZLG=0 -DSTARK_USE_SOCKETCAN=1
-        CAN_LIBS :=
-        BASE_LIBS := -L$(LIB_DIR) $(RPATH_FLAG) -lbc_stark_sdk $(PLATFORM_LIBS)
-    else
-        $(warning SocketCAN only available on Linux, ignoring CAN_BACKEND=socketcan)
-        CAN_CFLAGS := -DSTARK_USE_ZLG=0 -DSTARK_USE_SOCKETCAN=0
-        CAN_LIBS :=
-        BASE_LIBS := -L$(LIB_DIR) $(RPATH_FLAG) -lbc_stark_sdk $(PLATFORM_LIBS)
-    endif
+# Check for STARK_NO_CAN first
+ifeq ($(STARK_NO_CAN),1)
+    CAN_CFLAGS := -DSTARK_NO_CAN
+    CAN_LIBS :=
+    BASE_LIBS := -L$(LIB_DIR) $(RPATH_FLAG) -lbc_stark_sdk $(PLATFORM_LIBS)
 else
-    # Default: no external CAN backend (use SDK built-in ZQWL)
-    CAN_CFLAGS := -DSTARK_USE_ZLG=0 -DSTARK_USE_SOCKETCAN=0
+    # Compile with all available backends
+    ifeq ($(OS),linux)
+        # Linux: SocketCAN + ZLG
+        CAN_CFLAGS := -DSTARK_USE_ZLG=1 -DSTARK_USE_SOCKETCAN=1
+    else ifeq ($(OS),win)
+        # Windows: ZLG only
+        CAN_CFLAGS := -DSTARK_USE_ZLG=1 -DSTARK_USE_SOCKETCAN=0
+    else
+        # macOS: Neither (ZQWL only via SDK)
+        CAN_CFLAGS := -DSTARK_USE_ZLG=0 -DSTARK_USE_SOCKETCAN=0
+    endif
     CAN_LIBS :=
     BASE_LIBS := -L$(LIB_DIR) $(RPATH_FLAG) -lbc_stark_sdk $(PLATFORM_LIBS)
 endif

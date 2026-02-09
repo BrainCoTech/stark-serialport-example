@@ -388,8 +388,8 @@ def can_receive(DevType: int, DevIdx: int, ChIdx: int):
                 rx_count += 1
 
         if rx_count == 0:
-            # 如果所有消息都是TX回显，返回None
-            print("All messages are TX echo, no RX data")
+            # All messages are TX echo, return None
+            # print("All messages are TX echo, no RX data")
             return None
 
         # 创建只包含RX数据的新数组
@@ -402,7 +402,8 @@ def can_receive(DevType: int, DevIdx: int, ChIdx: int):
 
         return rx_data
     else:
-        print("No CAN data received")
+        # No data available, this is normal during polling
+        pass
     return None
 
 
@@ -434,8 +435,8 @@ def canfd_receive(DevType: int, DevIdx: int, ChIdx: int):
                 rx_count += 1
 
         if rx_count == 0:
-            # 如果所有消息都是TX回显，返回None
-            print("All messages are TX echo, no RX data")
+            # All messages are TX echo, return None
+            # print("All messages are TX echo, no RX data")
             return None
 
         # 创建只包含RX数据的新数组
@@ -448,5 +449,6 @@ def canfd_receive(DevType: int, DevIdx: int, ChIdx: int):
 
         return rx_data
     else:
-        print("No CANFD data received")
+        # No data available, this is normal during polling
+        pass
     return None

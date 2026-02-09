@@ -35,8 +35,9 @@ int main(int argc, char const *argv[]) {
   printf("init_device_handler\n");
 
   // Get device information
-  uint8_t slave_id = 0x7e; // 0x7e for left hand
-  // uint8_t slave_id = 0x7f; // 0x7f for right hand
+  // Revo2 CANFD slave ID: 0x7e = left hand, 0x7f = right hand
+  uint8_t slave_id = 0x7e;
+  // uint8_t slave_id = 0x7f;
   get_device_info(handle, slave_id);
   printf("get_device_info\n");
 

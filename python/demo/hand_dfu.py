@@ -42,6 +42,8 @@ FIRMWARE_PATHS = {
     "revo1_touch": OTA_DIR / "touch" / "FW_MotorController_Release_SecureOTA_V1.8.53.F.ota",
     "revo1_advanced": OTA_DIR / "stark2" / "Revo1.8_V1.0.3.C_2602031800.bin",
     "revo2_485_canfd": OTA_DIR / "stark2" / "Revo2_V1.0.20.U_2501091030.bin",
+    "revo2_ethercat_canfd": OTA_DIR / "stark2" / "Revo2_V1.0.16.F_2512051618.bin",
+    # "revo2_485_canfd": OTA_DIR / "stark2" / "Revo2_V1.0.16.F_2512051618.bin", 
 }
 
 # DFU state tracking

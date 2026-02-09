@@ -62,7 +62,7 @@ TOUCH_SENSOR_CONFIG = {
     'Index':  (3, 2, 1),  # 3 force groups, 2 self-proximity, 1 mutual
     'Middle': (3, 2, 1),  # 3 force groups
     'Ring':   (3, 2, 1),  # 3 force groups
-    'Pinky':  (2, 1, 1),  # 2 force groups, 1 self-proximity, 1 mutual
+    'Pinky':  (2, 1, 0),  # 2 force groups, 1 self-proximity, NO mutual
 }
 
 # Default force sensor index to display per finger
