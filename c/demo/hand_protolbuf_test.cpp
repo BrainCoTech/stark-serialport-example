@@ -31,18 +31,16 @@ void test_finger_control(DeviceHandler *handle, uint8_t slave_id) {
 }
 
 int main(int argc, char* argv[]) {
-    // const char* port = argc > 1 ? argv[1] : "/dev/ttyUSB0";
-    const char* port = argc > 1 ? argv[1] : "/dev/tty.usbserial-D30JUGUO";
-
     init_logging(LogLevel::LOG_LEVEL_INFO);
 
     // Step 1: stark_auto_detect
-    printf("[Step 1] Calling stark_auto_detect on %s ...\n", port);
-    CDetectedDeviceList* list = stark_auto_detect(false, port, STARK_PROTOCOL_TYPE_PROTOBUF);
+    printf("[Step 1] Calling stark_auto_detect...\n");
+    CDetectedDeviceList* list = stark_auto_detect(false, NULL, STARK_PROTOCOL_TYPE_PROTOBUF);
     if (!list || list->count == 0) {
         printf("[Step 1] No Protobuf device found, trying protobuf_open with defaults...\n");
         if (list) free_detected_device_list(list);
 
+        const char* port = argc > 1 ? argv[1] : "/dev/ttyUSB0";
         DeviceHandler* handle = protobuf_open(port, 10, 0);
         if (handle) {
             printf("  protobuf_open succeeded (default slave_id=10, baudrate=115200)\n");
