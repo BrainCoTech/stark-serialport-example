@@ -32,7 +32,7 @@ pip3 install -r requirements.txt
 
 ### 依赖包
 
-- `bc-stark-sdk==1.1.1` - BrainCo Stark SDK 核心库
+- `bc-stark-sdk==1.1.5` - BrainCo Stark SDK 核心库
 - `asyncio>=3.4.3` - 异步 I/O 支持
 - `colorlog>=6.9.0` - 彩色日志输出
 
@@ -193,6 +193,48 @@ if devices:
 ctx = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, 0)
 ```
 
+#### `protobuf_open(port_name, slave_id)` (v1.1.2 新增)
+打开 Protobuf 协议连接（Revo1 旧版串口协议）。
+
+**参数：**
+- `port_name` (str)：串口名称
+- `slave_id` (int)：从站 ID（默认：10，范围：10-254）
+
+**返回值：** `DeviceContext` - 客户端实例
+
+**注意：** Protobuf 使用固定波特率 115200。位置范围由 SDK 自动转换。
+
+**示例：**
+```python
+ctx = await libstark.protobuf_open("/dev/ttyUSB0")  # 默认 slave_id=10
+ctx = await libstark.protobuf_open("/dev/ttyUSB0", 11)  # 自定义 slave_id
+```
+
+#### `init_socketcan_canfd(iface)` / `init_socketcan_can(iface)` (v1.1.5 新增)
+初始化 SDK 内置 SocketCAN 支持（仅限 Linux）。
+
+**参数：**
+- `iface` (str)：CAN 接口名称（例如："can0"）
+
+**示例：**
+```python
+# 初始化 SocketCAN CANFD
+libstark.init_socketcan_canfd("can0")
+ctx = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, 0)
+
+# 初始化 SocketCAN CAN 2.0
+libstark.init_socketcan_can("can0")
+ctx = libstark.init_device_handler(libstark.StarkProtocolType.Can, 0)
+```
+
+#### `close_socketcan()` (v1.1.5 新增)
+关闭 SocketCAN 连接。
+
+#### `socketcan_scan_devices()` (v1.1.5 新增)
+扫描 SocketCAN 接口上的设备。
+
+**返回值：** `list[DetectedDevice]` - 检测到的设备列表
+
 ### 设备信息
 
 #### `client.get_device_info(slave_id)`
@@ -342,7 +384,9 @@ print(f"是否闭合: {status.is_closed()}")
 #### 端口检测
 
 ```python
-from revo1_utils import get_stark_port_name
+from revo1.revo1_utils import get_stark_port_name
+# 或者在 revo1/ 目录下：
+# from revo1_utils import get_stark_port_name
 
 # 获取第一个可用端口
 port_name = get_stark_port_name()
@@ -351,7 +395,7 @@ port_name = get_stark_port_name()
 #### 角度/位置转换（Revo1）
 
 ```python
-from revo1_utils import convert_to_position, convert_to_angle
+from revo1.revo1_utils import convert_to_position, convert_to_angle
 
 # 将角度转换为位置百分比
 angles = [30, 45, 35, 35, 35, 35]  # 度
@@ -365,7 +409,7 @@ angles = convert_to_angle(positions)  # 度
 #### 电流转换（Revo1）
 
 ```python
-from revo1_utils import convert_to_mA
+from revo1.revo1_utils import convert_to_mA
 
 # 将原始电流值转换为毫安
 raw_currents = [100, 120, 110, 115, 105, 108]
@@ -477,10 +521,17 @@ logger.error("错误消息")
 - 自动文件日志记录到 `logs/` 目录
 - 可配置的日志级别
 
+### 通用模块
+
+- **common_imports.py** - 统一的 SDK 导入、日志和硬件类型辅助函数
+- **common_init.py** - 统一的设备初始化（`parse_args_and_init`、`DeviceContext`、`cleanup_context`）
+- **common_utils.py** - 关闭事件处理器、触觉传感器打印工具
+- **common_socketcan.py** - SocketCAN 工具函数
+
 ### 设备特定工具
 
-- **Revo1**：`revo1_utils.py` - 连接辅助函数、角度/位置转换、电流转换
-- **Revo2**：`revo2_utils.py` - 连接辅助函数、位置状态检查
+- **Revo1**：`revo1/revo1_utils.py` - 连接辅助函数、角度/位置转换、电流转换
+- **Revo2**：`revo2/revo2_utils.py` - 连接辅助函数、位置状态检查
 
 ## 📖 其他资源
 
@@ -504,4 +555,4 @@ logger.error("错误消息")
 
 ---
 
-**版本：** 兼容 bc-stark-sdk 1.1.4
+**版本：** 兼容 bc-stark-sdk 1.1.5

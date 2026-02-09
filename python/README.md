@@ -32,7 +32,7 @@ pip3 install -r requirements.txt
 
 ### Dependencies
 
-- `bc-stark-sdk==1.1.1` - BrainCo Stark SDK core library
+- `bc-stark-sdk==1.1.5` - BrainCo Stark SDK core library
 - `asyncio>=3.4.3` - Asynchronous I/O support
 - `colorlog>=6.9.0` - Colored logging output
 
@@ -193,6 +193,48 @@ Initialize device handler for CAN/CANFD/EtherCAT protocols.
 ctx = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, 0)
 ```
 
+#### `protobuf_open(port_name, slave_id)` (New in v1.1.2)
+Open Protobuf protocol connection (Revo1 legacy serial protocol).
+
+**Parameters:**
+- `port_name` (str): Serial port name
+- `slave_id` (int): Slave ID (default: 10, range: 10-254)
+
+**Returns:** `DeviceContext` - Client instance
+
+**Note:** Protobuf uses fixed baudrate 115200. Position range is automatically converted by SDK.
+
+**Example:**
+```python
+ctx = await libstark.protobuf_open("/dev/ttyUSB0")  # Default slave_id=10
+ctx = await libstark.protobuf_open("/dev/ttyUSB0", 11)  # Custom slave_id
+```
+
+#### `init_socketcan_canfd(iface)` / `init_socketcan_can(iface)` (New in v1.1.5)
+Initialize SDK built-in SocketCAN support (Linux only).
+
+**Parameters:**
+- `iface` (str): CAN interface name (e.g., "can0")
+
+**Example:**
+```python
+# Initialize SocketCAN CANFD
+libstark.init_socketcan_canfd("can0")
+ctx = libstark.init_device_handler(libstark.StarkProtocolType.CanFd, 0)
+
+# Initialize SocketCAN CAN 2.0
+libstark.init_socketcan_can("can0")
+ctx = libstark.init_device_handler(libstark.StarkProtocolType.Can, 0)
+```
+
+#### `close_socketcan()` (New in v1.1.5)
+Close SocketCAN connection.
+
+#### `socketcan_scan_devices()` (New in v1.1.5)
+Scan for devices on SocketCAN interface.
+
+**Returns:** `list[DetectedDevice]` - List of detected devices
+
 ### Device Information
 
 #### `client.get_device_info(slave_id)`
@@ -342,7 +384,9 @@ Set force level for grip strength.
 #### Port Detection
 
 ```python
-from revo1_utils import get_stark_port_name
+from revo1.revo1_utils import get_stark_port_name
+# Or when in revo1/ directory:
+# from revo1_utils import get_stark_port_name
 
 # Get first available port
 port_name = get_stark_port_name()
@@ -351,7 +395,7 @@ port_name = get_stark_port_name()
 #### Angle/Position Conversion (Revo1)
 
 ```python
-from revo1_utils import convert_to_position, convert_to_angle
+from revo1.revo1_utils import convert_to_position, convert_to_angle
 
 # Convert angles to position percentages
 angles = [30, 45, 35, 35, 35, 35]  # degrees
@@ -365,7 +409,7 @@ angles = convert_to_angle(positions)  # degrees
 #### Current Conversion (Revo1)
 
 ```python
-from revo1_utils import convert_to_mA
+from revo1.revo1_utils import convert_to_mA
 
 # Convert raw current values to milliamps
 raw_currents = [100, 120, 110, 115, 105, 108]
@@ -477,10 +521,17 @@ Supports ZLG USBCAN-FD and SocketCAN devices.
 - Automatic file logging to `logs/` directory
 - Configurable log levels
 
+### Common Modules
+
+- **common_imports.py** - Unified SDK import, logging, and hardware type helpers
+- **common_init.py** - Unified device initialization (`parse_args_and_init`, `DeviceContext`, `cleanup_context`)
+- **common_utils.py** - Shutdown event handler, touch sensor print utilities
+- **common_socketcan.py** - SocketCAN utilities
+
 ### Device-Specific Utilities
 
-- **Revo1**: `revo1_utils.py` - Connection helpers, angle/position conversion, current conversion
-- **Revo2**: `revo2_utils.py` - Connection helpers, position state checking
+- **Revo1**: `revo1/revo1_utils.py` - Connection helpers, angle/position conversion, current conversion
+- **Revo2**: `revo2/revo2_utils.py` - Connection helpers, position state checking
 
 ## 📖 Additional Resources
 
@@ -504,4 +555,4 @@ For technical support:
 
 ---
 
-**Version:** Compatible with bc-stark-sdk 1.1.4
+**Version:** Compatible with bc-stark-sdk 1.1.5

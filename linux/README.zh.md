@@ -530,4 +530,4 @@ STARK_CAN_BACKEND=zlg make run revo2_canfd
 
 ---
 
-**版本：** 兼容 Stark SDK v1.1.0
+**版本：** 兼容 Stark SDK v1.1.5

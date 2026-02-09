@@ -1,6 +1,6 @@
 # BrainCo RevoHand SDK Examples
 
-[![Version](https://img.shields.io/badge/version-v1.1.4-blue.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-v1.1.5-blue.svg)](VERSION)
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)]()
 
 [English](README.md) | [中文](README.zh.md)
@@ -94,7 +94,8 @@ For ROS/ROS2 integration and examples: [ROS Development Guide](https://github.co
 │   ├── revo2/          # Revo2 RS-485 examples
 │   ├── revo2_can/      # Revo2 CAN examples
 │   ├── revo2_canfd/    # Revo2 CANFD examples
-│   └── revo2_ethercat/ # Revo2 EtherCAT examples
+│   ├── revo2_ethercat/ # Revo2 EtherCAT examples
+│   └── revo2_tactile_grasp/ # Revo2 tactile grasping examples
 ├── linux/              # ⚠️ DEPRECATED - use c/ folder instead
 ├── windows/            # ⚠️ DEPRECATED - use c/ folder instead
 ├── dll/                # Required DLL files for Windows
@@ -116,7 +117,7 @@ Each example directory contains its own README with specific usage instructions.
 
 ## 📝 Version
 
-Current SDK Version: **v1.1.4**
+Current SDK Version: **v1.1.5**
 
 See [CHANGELOG](CHANGELOG.md) for update history.
 

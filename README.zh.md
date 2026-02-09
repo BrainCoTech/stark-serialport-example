@@ -1,6 +1,6 @@
 # BrainCo 灵巧手 SDK 开发示例
 
-[![版本](https://img.shields.io/badge/版本-v1.1.4-blue.svg)](VERSION)
+[![版本](https://img.shields.io/badge/版本-v1.1.5-blue.svg)](VERSION)
 [![许可证](https://img.shields.io/badge/许可证-专有-red.svg)]()
 
 [English](README.md) | [中文](README.zh.md)
@@ -94,7 +94,8 @@ ROS/ROS2 集成和示例：[ROS 开发指南](https://github.com/BrainCoTech/bra
 │   ├── revo2/          # Revo2 RS-485 示例
 │   ├── revo2_can/      # Revo2 CAN 示例
 │   ├── revo2_canfd/    # Revo2 CANFD 示例
-│   └── revo2_ethercat/ # Revo2 EtherCAT 示例
+│   ├── revo2_ethercat/ # Revo2 EtherCAT 示例
+│   └── revo2_tactile_grasp/ # Revo2 触觉抓取示例
 ├── linux/              # ⚠️ 已弃用 - 请使用 c/ 文件夹
 ├── windows/            # ⚠️ 已弃用 - 请使用 c/ 文件夹
 ├── dll/                # Windows 所需的 DLL 文件
@@ -116,7 +117,7 @@ ROS/ROS2 集成和示例：[ROS 开发指南](https://github.com/BrainCoTech/bra
 
 ## 📝 版本信息
 
-当前 SDK 版本：**v1.1.4**
+当前 SDK 版本：**v1.1.5**
 
 更新历史请查看 [CHANGELOG](CHANGELOG.md) 文件。
 
