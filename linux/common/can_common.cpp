@@ -313,7 +313,7 @@ static int socketcan_recv_can(uint32_t expected_can_id, uint8_t expected_frames,
   uint8_t cmd = (expected_can_id >> 3) & 0x0F;
   bool is_multi_frame_cmd = (cmd == 0x0B || cmd == 0x0D);  // MultiRead or TouchSensorRead
 
-  // Determine retry strategy (aligned with Rust ZQWL):
+  // Determine retry strategy (aligned with SDK):
   // - DFU mode: 200 attempts (for CRC verification)
   // - Multi-frame commands: 5 attempts
   // - Single frame: 2 attempts
@@ -457,7 +457,7 @@ static int socketcan_recv_canfd(uint32_t expected_can_id, uint8_t expected_frame
   uint8_t expected_master_id = (expected_can_id >> 8) & 0xFF;
 
   // CANFD uses application-layer chunking, so most operations are single-frame
-  // Retry strategy (aligned with Rust ZQWL): normal=2, DFU not applicable for CANFD
+  // Retry strategy (aligned with SDK): normal=2, DFU not applicable for CANFD
   int max_attempts = 2;
 
   for (int attempt = 0; attempt < max_attempts; attempt++) {
@@ -877,7 +877,7 @@ void setup_canfd_callbacks(void) {
     uint8_t expected_slave_id = (expected_can_id >> 16) & 0xFF;
     uint8_t expected_master_id = (expected_can_id >> 8) & 0xFF;
     
-    // Retry strategy (aligned with Rust ZQWL): normal=2
+    // Retry strategy (aligned with SDK): normal=2
     int max_attempts = 2;
     
     for (int attempt = 0; attempt < max_attempts; attempt++) {

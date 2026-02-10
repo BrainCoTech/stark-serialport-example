@@ -166,7 +166,7 @@ def socketcan_receive_filtered(
     # Check if this is DFU mode (expected_can_id == 0)
     is_dfu_mode = (expected_can_id == 0)
     
-    # Determine retry strategy (aligned with Rust ZQWL):
+    # Determine retry strategy (aligned with SDK):
     # - DFU mode: 200 attempts (for CRC verification)
     # - Multi-frame commands: 5 attempts
     # - Single frame: 2 attempts
@@ -307,7 +307,7 @@ def socketcan_receive_canfd_filtered(
     Args:
         expected_can_id: Expected CAN ID containing slave_id and master_id
         expected_frames: Expected frame count (hint from SDK)
-        max_retries: Maximum retry attempts (default: 2, aligned with Rust ZQWL)
+        max_retries: Maximum retry attempts (default: 2, aligned with SDK)
         
     Returns:
         (can_id, data, frame_count) tuple or None if timeout

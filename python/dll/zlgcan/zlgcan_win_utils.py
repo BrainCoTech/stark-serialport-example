@@ -190,7 +190,7 @@ def zlgcan_receive_filtered(expected_can_id: int, expected_frames: int = 1, max_
     is_multi_frame_cmd = (cmd == 0x0B or cmd == 0x0D)
     is_dfu_mode = (expected_can_id == 0)
     
-    # Determine retry strategy (aligned with Rust ZQWL):
+    # Determine retry strategy (aligned with SDK):
     # - DFU mode: 200 attempts (for CRC verification)
     # - Multi-frame commands: 5 attempts
     # - Single frame: 2 attempts
