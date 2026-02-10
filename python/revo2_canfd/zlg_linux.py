@@ -79,7 +79,7 @@ def zlgcan_receive_message(quick_retries: int = 2, dely_retries: int = 0) -> Opt
 
 
 def zlgcan_receive_canfd_filtered(
-    expected_can_id: int, expected_frames: int = 1, max_retries: int = 2
+    expected_can_id: int, expected_frames: int = 1, max_retries: int = 100
 ) -> Optional[tuple[int, list[int], int]]:
     """
     Receive CANFD message filtered by slave_id and master_id.
@@ -93,10 +93,14 @@ def zlgcan_receive_canfd_filtered(
     Args:
         expected_can_id: Expected CAN ID containing slave_id and master_id
         expected_frames: Expected frame count (hint from SDK)
-        max_retries: Maximum retry attempts (default: 2, aligned with Rust ZQWL)
+        max_retries: Maximum retry attempts (default: 100 for ~200ms timeout)
         
     Returns:
         (can_id, data, frame_count) tuple or None if timeout
+        
+    Note:
+        Sleep timing (0.1ms) optimized for Linux (Ubuntu).
+        Windows not tested - may need adjustment if performance issues occur.
     """
     # CANFD CAN ID format: (slave_id << 16) | (master_id << 8) | payload_len
     expected_slave_id = (expected_can_id >> 16) & 0xFF
@@ -106,12 +110,11 @@ def zlgcan_receive_canfd_filtered(
                  f"slave=0x{expected_slave_id:02X}, master=0x{expected_master_id:02X}")
     
     for attempt in range(max_retries):
-        wait_ms = 0.002 if attempt < 5 else 0.005
-        time.sleep(wait_ms)
-        
         try:
             can_msgs = canfd_receive(DEVICE_TYPE, DEVICE_INDEX, 0)
             if can_msgs is None:
+                # Only sleep on empty receive, minimal delay
+                time.sleep(0.0001)  # 0.1ms
                 continue
             
             for msg in can_msgs:

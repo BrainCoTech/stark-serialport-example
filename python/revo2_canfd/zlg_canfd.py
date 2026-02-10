@@ -68,6 +68,10 @@ class Revo2CanfdController:
         """Cleanup resources"""
         zlgcan_close()
 
+    async def close(self):
+        """Async close method for compatibility"""
+        self.cleanup()
+
 
 def canfd_send(_slave_id: int, can_id: int, data: list) -> None:
     # logger.debug(f"Sending CAN ID: {can_id}, Data: {data}, type: {type(data)}")

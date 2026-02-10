@@ -429,6 +429,10 @@ class Revo1CanController:
         except Exception as e:
             logger.error(f"Error cleaning up resources: {e}")
 
+    async def close(self):
+        """Async close method for compatibility"""
+        self.cleanup()
+
 
 async def main():
     """Main function"""

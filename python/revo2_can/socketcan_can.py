@@ -153,6 +153,10 @@ class Revo2CanController:
     def cleanup(self):
         socketcan_close()
 
+    async def close(self):
+        """Async close method for compatibility"""
+        self.cleanup()
+
 
 async def main():
     controller: Revo2CanController | None = None

@@ -11,6 +11,8 @@ Supports: Modbus (RS485), Protobuf, CAN 2.0, CANFD, SocketCAN, ZLG
 | `hand_monitor.py` | High-performance data monitor |
 | `hand_dfu.py` | Firmware upgrade |
 | `auto_detect.py` | Device detection |
+| `comm_frequency_test.py` | Communication frequency test (auto-detect) |
+| `comm_frequency_test_zlg.py` | Communication frequency test (ZLG CANFD, Linux) |
 
 ## Quick Start
 
@@ -32,6 +34,17 @@ python hand_dfu.py firmware.bin
 
 # Device detection
 python auto_detect.py
+
+# Communication frequency test (auto-detect)
+python comm_frequency_test.py        # Auto-detect, interactive menu
+python comm_frequency_test.py 1      # Run specific test (1-4)
+python comm_frequency_test.py 0      # Run all tests
+
+# Communication frequency test (ZLG CANFD, Linux only)
+python comm_frequency_test_zlg.py              # Interactive menu
+python comm_frequency_test_zlg.py 1            # Run specific test (1-4)
+python comm_frequency_test_zlg.py 0            # Run all tests
+python comm_frequency_test_zlg.py -s 0x7F      # Custom slave_id (right hand)
 ```
 
 ## Initialization Options
