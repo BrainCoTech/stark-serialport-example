@@ -63,6 +63,26 @@ def _int_to_baudrate_fallback(value: int):
     return baudrate_map.get(value, sdk.Baudrate.Baud460800)
 
 
+def baudrate_to_int(baudrate) -> int:
+    """Convert Baudrate enum to actual bps value.
+    
+    int(Baudrate.Baud1Mbps) returns the enum index (4), not the bps value.
+    This function returns the actual bps value (e.g. 1000000).
+    """
+    if sdk is None:
+        return 0
+    _baudrate_bps_map = {
+        sdk.Baudrate.Baud115200: 115200,
+        sdk.Baudrate.Baud57600: 57600,
+        sdk.Baudrate.Baud19200: 19200,
+        sdk.Baudrate.Baud460800: 460800,
+        sdk.Baudrate.Baud1Mbps: 1000000,
+        sdk.Baudrate.Baud2Mbps: 2000000,
+        sdk.Baudrate.Baud5Mbps: 5000000,
+    }
+    return _baudrate_bps_map.get(baudrate, 0)
+
+
 def str_to_protocol_type(protocol_str: str):
     """Convert protocol string to StarkProtocolType enum (deprecated)
 

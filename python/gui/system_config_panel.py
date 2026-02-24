@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QSpinBox, QTextEdit,
     QFormLayout, QMessageBox, QComboBox, QCheckBox,
-    QScrollArea, QFrame, QTabWidget
+    QScrollArea, QFrame, QTabWidget, QGridLayout
 )
 from PySide6.QtCore import Signal
 
@@ -393,45 +393,50 @@ class SystemConfigPanel(QWidget):
         self.finger_max_speed_spins = []
         self.finger_max_current_spins = []
         
+        # Use QGridLayout for proper column alignment
+        grid = QGridLayout()
+        grid.setSpacing(8)
+        
         # Header row
-        header_layout = QHBoxLayout()
-        header_layout.addWidget(QLabel("Finger"), 2)
-        header_layout.addWidget(QLabel(tr("min_position")), 1)
-        header_layout.addWidget(QLabel(tr("max_position")), 1)
-        header_layout.addWidget(QLabel(tr("max_speed")), 1)
-        header_layout.addWidget(QLabel(tr("max_current")), 1)
-        finger_layout.addLayout(header_layout)
+        grid.addWidget(QLabel("Finger"), 0, 0)
+        grid.addWidget(QLabel(tr("min_position")), 0, 1)
+        grid.addWidget(QLabel(tr("max_position")), 0, 2)
+        grid.addWidget(QLabel(tr("max_speed")), 0, 3)
+        grid.addWidget(QLabel(tr("max_current")), 0, 4)
         
         # Create row for each finger
         for i, name in enumerate(self.finger_names):
-            row = QHBoxLayout()
-            row.addWidget(QLabel(name), 2)
+            row = i + 1  # Start from row 1 (row 0 is header)
+            grid.addWidget(QLabel(name), row, 0)
             
             min_pos = QSpinBox()
             min_pos.setRange(0, 65535)
-            min_pos.setMaximumWidth(80)
+            min_pos.setFixedWidth(80)
             self.finger_min_pos_spins.append(min_pos)
-            row.addWidget(min_pos, 1)
+            grid.addWidget(min_pos, row, 1)
             
             max_pos = QSpinBox()
             max_pos.setRange(0, 65535)
-            max_pos.setMaximumWidth(80)
+            max_pos.setFixedWidth(80)
             self.finger_max_pos_spins.append(max_pos)
-            row.addWidget(max_pos, 1)
+            grid.addWidget(max_pos, row, 2)
             
             max_speed = QSpinBox()
             max_speed.setRange(0, 65535)
-            max_speed.setMaximumWidth(80)
+            max_speed.setFixedWidth(80)
             self.finger_max_speed_spins.append(max_speed)
-            row.addWidget(max_speed, 1)
+            grid.addWidget(max_speed, row, 3)
             
             max_current = QSpinBox()
             max_current.setRange(0, 65535)
-            max_current.setMaximumWidth(80)
+            max_current.setFixedWidth(80)
             self.finger_max_current_spins.append(max_current)
-            row.addWidget(max_current, 1)
-            
-            finger_layout.addLayout(row)
+            grid.addWidget(max_current, row, 4)
+        
+        # Set column stretch: first column (Finger name) stretches, others fixed
+        grid.setColumnStretch(0, 1)
+        
+        finger_layout.addLayout(grid)
         
         # Apply button
         apply_row = QHBoxLayout()
@@ -450,24 +455,29 @@ class SystemConfigPanel(QWidget):
         
         self.protected_current_spins = []
         
+        # Use QGridLayout for proper column alignment
+        prot_grid = QGridLayout()
+        prot_grid.setSpacing(8)
+        
         # Header
-        prot_header = QHBoxLayout()
-        prot_header.addWidget(QLabel("Finger"), 2)
-        prot_header.addWidget(QLabel(tr("protected_current")), 1)
-        protected_layout.addLayout(prot_header)
+        prot_grid.addWidget(QLabel("Finger"), 0, 0)
+        prot_grid.addWidget(QLabel(tr("protected_current")), 0, 1)
         
         # Create row for each finger
         for i, name in enumerate(self.finger_names):
-            row = QHBoxLayout()
-            row.addWidget(QLabel(name), 2)
+            row = i + 1
+            prot_grid.addWidget(QLabel(name), row, 0)
             
             prot_spin = QSpinBox()
             prot_spin.setRange(0, 1000)
-            prot_spin.setMaximumWidth(80)
+            prot_spin.setFixedWidth(80)
             self.protected_current_spins.append(prot_spin)
-            row.addWidget(prot_spin, 1)
-            
-            protected_layout.addLayout(row)
+            prot_grid.addWidget(prot_spin, row, 1)
+        
+        # Set column stretch
+        prot_grid.setColumnStretch(0, 1)
+        
+        protected_layout.addLayout(prot_grid)
         
         # Apply button
         prot_apply_row = QHBoxLayout()

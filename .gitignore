@@ -28,3 +28,4 @@ python/revo1/revo1_touch_collector.py
 python/revo2/revo2_basic_collector.py
 python/revo2/revo2_dfu.py
 python/revo2_canfd/zlg_canfd_dfu.py
+python/demo/touch_data_stability_test.py

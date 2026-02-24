@@ -97,6 +97,8 @@ class FrequencyTestReport:
         print(f"\n{'=' * 60}")
         print(f"📊 {self.function_name} frequency test report")
         print("=" * 60)
+        print(f"System:           {platform.system()} {platform.release()}")
+        print(f"Language:         Python {platform.python_version()}")
         self.connection.print_header()
         print()
         print(f"Total tests:      {self.total_tests}")

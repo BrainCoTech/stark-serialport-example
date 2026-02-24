@@ -28,7 +28,7 @@ from typing import List, Optional, Dict, Any
 
 # Setup path and imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common_imports import sdk, check_sdk, get_hw_type_name, get_protocol_display_name, logger
+from common_imports import sdk, check_sdk, get_hw_type_name, get_protocol_display_name, logger, baudrate_to_int
 
 check_sdk()
 
@@ -67,19 +67,17 @@ class ConnectionInfo:
         print(f"Connection:       {self.protocol} via {self.adapter_type}")
         print(f"Port:             {self.port_name}")
         print(f"Slave ID:         0x{self.slave_id:02X} ({self.slave_id})")
-        # Convert baudrate to int (may be Baudrate enum)
-        try:
-            baud = int(self.baudrate)
-        except (TypeError, ValueError):
-            baud = 0
+        # Convert baudrate to actual bps value
+        # Note: Baudrate enum's int() returns index (0-6), not bps value
+        baud = baudrate_to_int(self.baudrate) if hasattr(self.baudrate, 'int_value') else self.baudrate
         try:
             data_baud = int(self.data_baudrate)
         except (TypeError, ValueError):
             data_baud = 0
         if data_baud > 0:
-            print(f"Baudrate:         {baud // 1_000_000} Mbps / {data_baud // 1_000_000} Mbps")
+            print(f"Baudrate:         {baud / 1_000_000:.0f} Mbps / {data_baud / 1_000_000:.0f} Mbps")
         elif baud >= 1_000_000:
-            print(f"Baudrate:         {baud // 1_000_000} Mbps")
+            print(f"Baudrate:         {baud / 1_000_000:.0f} Mbps")
         elif baud > 0:
             print(f"Baudrate:         {baud} bps")
         else:
@@ -104,9 +102,12 @@ class FrequencyTestReport:
     total_duration_secs: float
 
     def print_report(self):
+        import platform
         print(f"\n{'=' * 60}")
         print(f"📊 {self.function_name} frequency test report")
         print("=" * 60)
+        print(f"System:           {platform.system()} {platform.release()}")
+        print(f"Language:         Python {platform.python_version()}")
         self.connection.print_header()
         print()
         print(f"Total tests:      {self.total_tests}")

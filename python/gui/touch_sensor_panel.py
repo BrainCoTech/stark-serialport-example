@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 from .i18n import tr
 from .styles import COLORS
 from .constants import TOUCH_COLORS, TOUCH_NAMES_EN, TOUCH_COUNT, TOUCH_SENSOR_CONFIG
-
+from common_imports import logger
 
 def run_async(coro):
     """Run async coroutine in a new event loop (for Qt callbacks)"""
@@ -726,15 +726,18 @@ class TouchSensorPanel(QWidget):
         """Enable touch sensors"""
         if self.device:
             bits = self._get_selected_fingers_bits()
+            logger.info(f"[TouchSensorPanel] Enable touch sensors: bits=0x{bits:02X}")
             run_async(self._async_enable_touch(bits))
     
     async def _async_enable_touch(self, bits):
         if not self.device:
             return
         try:
+            logger.info(f"[TouchSensorPanel] Calling touch_sensor_setup(slave_id={self.slave_id}, bits=0x{bits:02X})")
             await self.device.touch_sensor_setup(self.slave_id, bits)
+            logger.info(f"[TouchSensorPanel] touch_sensor_setup completed successfully")
         except Exception as e:
-            print(f"Enable touch failed: {e}")
+            logger.info(f"[TouchSensorPanel] Enable touch failed: {e}")
     
     def _calibrate(self):
         """Calibrate touch sensors with confirmation dialog"""
@@ -752,15 +755,18 @@ class TouchSensorPanel(QWidget):
         
         if reply == QMessageBox.Yes:
             bits = self._get_selected_fingers_bits()
+            print(f"[TouchSensorPanel] Calibrate touch sensors: bits=0x{bits:02X}")
             run_async(self._async_calibrate(bits))
     
     async def _async_calibrate(self, bits):
         if not self.device:
             return
         try:
+            print(f"[TouchSensorPanel] Calling touch_sensor_calibrate(slave_id={self.slave_id}, bits=0x{bits:02X})")
             await self.device.touch_sensor_calibrate(self.slave_id, bits)
+            print(f"[TouchSensorPanel] touch_sensor_calibrate completed successfully")
         except Exception as e:
-            print(f"Calibrate failed: {e}")
+            print(f"[TouchSensorPanel] Calibrate failed: {e}")
     
     def _reset(self):
         """Reset touch sensors with confirmation dialog"""
@@ -778,12 +784,15 @@ class TouchSensorPanel(QWidget):
         
         if reply == QMessageBox.Yes:
             bits = self._get_selected_fingers_bits()
+            print(f"[TouchSensorPanel] Reset touch sensors: bits=0x{bits:02X}")
             run_async(self._async_reset(bits))
     
     async def _async_reset(self, bits):
         if not self.device:
             return
         try:
+            print(f"[TouchSensorPanel] Calling touch_sensor_reset(slave_id={self.slave_id}, bits=0x{bits:02X})")
             await self.device.touch_sensor_reset(self.slave_id, bits)
+            print(f"[TouchSensorPanel] touch_sensor_reset completed successfully")
         except Exception as e:
-            print(f"Reset failed: {e}")
+            print(f"[TouchSensorPanel] Reset failed: {e}")

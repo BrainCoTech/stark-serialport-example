@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 from .i18n import tr
 from .styles import COLORS
-
+from common_imports import logger
 
 def run_async(coro):
     """Run async coroutine in a new event loop (for Qt callbacks)"""
@@ -390,6 +390,10 @@ class PressureTouchPanel(QWidget):
         self.calibrate_btn.clicked.connect(self._calibrate)
         control_layout.addWidget(self.calibrate_btn)
         
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.clicked.connect(self._reset)
+        control_layout.addWidget(self.reset_btn)
+        
         self.clear_btn = QPushButton("Clear")
         self.clear_btn.clicked.connect(self._clear_charts)
         control_layout.addWidget(self.clear_btn)
@@ -510,6 +514,7 @@ class PressureTouchPanel(QWidget):
         """Update texts for i18n"""
         self.enable_btn.setText(tr("btn_enable_touch"))
         self.calibrate_btn.setText(tr("btn_calibrate"))
+        self.reset_btn.setText(tr("btn_reset"))
         self.clear_btn.setText(tr("btn_clear"))
     
     def set_device(self, device, slave_id, device_info, shared_data=None):
@@ -611,7 +616,7 @@ class PressureTouchPanel(QWidget):
     
     def _on_data_type_changed(self, index):
         """Data type combo changed"""
-        # TODO: Update data collection mode via SDK
+        # TODO: Update data collection mode via er.inf
         pass
     
     def _get_selected_sensors_bits(self):
@@ -626,26 +631,49 @@ class PressureTouchPanel(QWidget):
         """Enable pressure touch sensors"""
         if self.device:
             bits = self._get_selected_sensors_bits()
+            logger.info(f"[PressureTouchPanel] Enable touch sensors: bits=0x{bits:02X}")
             run_async(self._async_enable_touch(bits))
     
     async def _async_enable_touch(self, bits):
         if not self.device:
             return
         try:
+            logger.info(f"[PressureTouchPanel] Calling touch_sensor_setup(slave_id={self.slave_id}, bits=0x{bits:02X})")
             await self.device.touch_sensor_setup(self.slave_id, bits)
+            logger.info(f"[PressureTouchPanel] touch_sensor_setup completed successfully")
         except Exception as e:
-            print(f"Enable touch failed: {e}")
+            logger.warn(f"[PressureTouchPanel] Enable touch failed: {e}")
     
     def _calibrate(self):
         """Calibrate pressure touch sensors"""
         if self.device:
             bits = self._get_selected_sensors_bits()
+            logger.info(f"[PressureTouchPanel] Calibrate touch sensors: bits=0x{bits:02X}")
             run_async(self._async_calibrate(bits))
     
     async def _async_calibrate(self, bits):
         if not self.device:
             return
         try:
+            logger.info(f"[PressureTouchPanel] Calling touch_sensor_calibrate(slave_id={self.slave_id}, bits=0x{bits:02X})")
             await self.device.touch_sensor_calibrate(self.slave_id, bits)
+            logger.info(f"[PressureTouchPanel] touch_sensor_calibrate completed successfully")
         except Exception as e:
-            print(f"Calibrate failed: {e}")
+            logger.warn(f"[PressureTouchPanel] Calibrate failed: {e}")
+    
+    def _reset(self):
+        """Reset pressure touch sensors"""
+        if self.device:
+            bits = self._get_selected_sensors_bits()
+            logger.info(f"[PressureTouchPanel] Reset touch sensors: bits=0x{bits:02X}")
+            run_async(self._async_reset(bits))
+    
+    async def _async_reset(self, bits):
+        if not self.device:
+            return
+        try:
+            logger.info(f"[PressureTouchPanel] Calling touch_sensor_reset(slave_id={self.slave_id}, bits=0x{bits:02X})")
+            await self.device.touch_sensor_reset(self.slave_id, bits)
+            logger.info(f"[PressureTouchPanel] touch_sensor_reset completed successfully")
+        except Exception as e:
+            logger.warn(f"[PressureTouchPanel] Reset failed: {e}")

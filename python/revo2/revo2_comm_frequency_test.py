@@ -386,9 +386,12 @@ class Revo2CommTester:
 
     def print_report(self, report: FrequencyTestReport):
         """Print test report"""
+        import platform
         print(f"\n{'='*60}")
         print(f"📊 {report.function_name} frequency test report")
         print(f"{'='*60}")
+        print(f"System:          {platform.system()} {platform.release()}")
+        print(f"Language:        Python {platform.python_version()}")
         print(f"Total tests:     {report.total_tests}")
         print(f"Successful tests: {report.successful_tests}")
         print(f"Failed tests:    {report.failed_tests}")
