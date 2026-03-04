@@ -1,4 +1,5 @@
 #include "ros2_stark_controller/stark_node.hpp"
+#include <unistd.h>
 
 // ================== 函数声明 ==================
 int canfd_open();
@@ -74,6 +75,11 @@ bool StarkNode::initialize_stark_handler() {
       RCLCPP_ERROR(this->get_logger(), "Failed to open Modbus on %s", port_.c_str());
       return false;
     }
+    // Brief warm-up: Allow the FTDI USB driver and RS-485 transceiver to settle
+    // before the initial communication. On a cold start, the kernel driver may 
+    // not have flushed its TX/RX FIFOs, which could drop the first response 
+    // and cause a false timeout.
+    usleep(100 * 1000); // 100ms warm-up
   } else if (protocol_type_ == STARK_PROTOCOL_TYPE_CAN) {
     if (can_2_0_open() != 0) {
       RCLCPP_ERROR(this->get_logger(), "Failed to open CAN 2.0");
