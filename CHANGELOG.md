@@ -2,6 +2,23 @@
 
 > This changelog is for external customers and integration developers. For SDK internal implementation details, please contact BrainCo technical support.
 
+## v1.1.9 (2026/03/03)
+
+### Improvements
+- Added 150ms warm-up delay after port open to improve Modbus auto-detection reliability on first attempt
+
+### New Examples
+- `c/demo/debug_detect.cpp` — C++ debug tool for Modbus register inspection and raw Protobuf auto-detection
+
+---
+
+## v1.1.6 (2026/02/24)
+
+### New Features
+- Auto-detection now supports BrainCo USBCANFD adapter
+
+---
+
 ## v1.1.5 (2026/02/09)
 
 ### SDK Changes

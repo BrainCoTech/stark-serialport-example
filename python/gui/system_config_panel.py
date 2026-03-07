@@ -469,7 +469,8 @@ class SystemConfigPanel(QWidget):
             prot_grid.addWidget(QLabel(name), row, 0)
             
             prot_spin = QSpinBox()
-            prot_spin.setRange(0, 1000)
+            prot_spin.setRange(100, 1500)
+            prot_spin.setValue(500)  # Default protected current
             prot_spin.setFixedWidth(80)
             self.protected_current_spins.append(prot_spin)
             prot_grid.addWidget(prot_spin, row, 1)

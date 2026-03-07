@@ -1,6 +1,6 @@
 # BrainCo 灵巧手 SDK 开发示例
 
-[![版本](https://img.shields.io/badge/版本-v1.1.5-blue.svg)](VERSION)
+[![版本](https://img.shields.io/badge/版本-v1.1.9-blue.svg)](VERSION)
 [![许可证](https://img.shields.io/badge/许可证-专有-red.svg)]()
 
 [English](README.md) | [中文](README.zh.md)
@@ -117,7 +117,7 @@ ROS/ROS2 集成和示例：[ROS 开发指南](https://github.com/BrainCoTech/bra
 
 ## 📝 版本信息
 
-当前 SDK 版本：**v1.1.5**
+当前 SDK 版本：**v1.1.9**
 
 更新历史请查看 [CHANGELOG](CHANGELOG.md) 文件。
 

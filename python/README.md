@@ -32,7 +32,7 @@ pip3 install -r requirements.txt
 
 ### Dependencies
 
-- `bc-stark-sdk==1.1.5` - BrainCo Stark SDK core library
+- `bc-stark-sdk==1.1.9` - BrainCo Stark SDK core library
 - `asyncio>=3.4.3` - Asynchronous I/O support
 - `colorlog>=6.9.0` - Colored logging output
 
@@ -210,7 +210,7 @@ ctx = await libstark.protobuf_open("/dev/ttyUSB0")  # Default slave_id=10
 ctx = await libstark.protobuf_open("/dev/ttyUSB0", 11)  # Custom slave_id
 ```
 
-#### `init_socketcan_canfd(iface)` / `init_socketcan_can(iface)` (New in v1.1.5)
+#### `init_socketcan_canfd(iface)` / `init_socketcan_can(iface)` (New in v1.1.9)
 Initialize SDK built-in SocketCAN support (Linux only).
 
 **Parameters:**
@@ -227,10 +227,10 @@ libstark.init_socketcan_can("can0")
 ctx = libstark.init_device_handler(libstark.StarkProtocolType.Can, 0)
 ```
 
-#### `close_socketcan()` (New in v1.1.5)
+#### `close_socketcan()` (New in v1.1.9)
 Close SocketCAN connection.
 
-#### `socketcan_scan_devices()` (New in v1.1.5)
+#### `socketcan_scan_devices()` (New in v1.1.9)
 Scan for devices on SocketCAN interface.
 
 **Returns:** `list[DetectedDevice]` - List of detected devices
@@ -555,4 +555,4 @@ For technical support:
 
 ---
 
-**Version:** Compatible with bc-stark-sdk 1.1.5
+**Version:** Compatible with bc-stark-sdk 1.1.9

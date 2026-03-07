@@ -32,7 +32,7 @@ pip3 install -r requirements.txt
 
 ### 依赖包
 
-- `bc-stark-sdk==1.1.5` - BrainCo Stark SDK 核心库
+- `bc-stark-sdk==1.1.9` - BrainCo Stark SDK 核心库
 - `asyncio>=3.4.3` - 异步 I/O 支持
 - `colorlog>=6.9.0` - 彩色日志输出
 
@@ -210,7 +210,7 @@ ctx = await libstark.protobuf_open("/dev/ttyUSB0")  # 默认 slave_id=10
 ctx = await libstark.protobuf_open("/dev/ttyUSB0", 11)  # 自定义 slave_id
 ```
 
-#### `init_socketcan_canfd(iface)` / `init_socketcan_can(iface)` (v1.1.5 新增)
+#### `init_socketcan_canfd(iface)` / `init_socketcan_can(iface)` (v1.1.9 新增)
 初始化 SDK 内置 SocketCAN 支持（仅限 Linux）。
 
 **参数：**
@@ -227,10 +227,10 @@ libstark.init_socketcan_can("can0")
 ctx = libstark.init_device_handler(libstark.StarkProtocolType.Can, 0)
 ```
 
-#### `close_socketcan()` (v1.1.5 新增)
+#### `close_socketcan()` (v1.1.9 新增)
 关闭 SocketCAN 连接。
 
-#### `socketcan_scan_devices()` (v1.1.5 新增)
+#### `socketcan_scan_devices()` (v1.1.9 新增)
 扫描 SocketCAN 接口上的设备。
 
 **返回值：** `list[DetectedDevice]` - 检测到的设备列表
@@ -555,4 +555,4 @@ logger.error("错误消息")
 
 ---
 
-**版本：** 兼容 bc-stark-sdk 1.1.5
+**版本：** 兼容 bc-stark-sdk 1.1.9

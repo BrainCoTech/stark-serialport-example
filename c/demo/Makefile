@@ -36,8 +36,15 @@ hand_protolbuf_test.exe: hand_protolbuf_test.cpp $(DEMO_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $< $(DEMO_OBJ) $(INCLUDE) $(LIBS) $(EXTRA_LDFLAGS)
 	@echo "\033[1;32m[$(OS)] Built $@\033[0m"
 
+# debug_detect: cross-platform (POSIX serial on Linux/macOS, Win32 serial on Windows)
+debug_detect.exe: debug_detect.cpp $(DEMO_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(DEMO_OBJ) $(INCLUDE) $(LIBS) $(EXTRA_LDFLAGS)
+	@echo "\033[1;32m[$(OS)] Built $@\033[0m"
+
 # Default target
-all: hand_demo.exe hand_monitor.exe auto_detect.exe hand_dfu.exe hand_protolbuf_test.exe
+ALL_TARGETS := hand_demo.exe hand_monitor.exe auto_detect.exe hand_dfu.exe hand_protolbuf_test.exe debug_detect.exe
+
+all: $(ALL_TARGETS)
 	@echo "\033[1;32m[$(OS)] build done\033[0m"
 
 # Run targets
