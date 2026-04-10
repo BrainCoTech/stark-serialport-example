@@ -36,8 +36,8 @@ make clean              # Clean
 ./hand_demo.exe -p /dev/ttyUSB0 10                 # Protobuf with custom slave_id
 ./hand_demo.exe -c /dev/ttyUSB0 1000000 1          # CAN 2.0 (ZQWL)
 ./hand_demo.exe -f /dev/ttyUSB0 1000000 5000000 127  # CANFD (ZQWL)
-./hand_demo.exe -b can0 1                          # SocketCAN CAN 2.0 - SDK built-in (Linux)
-./hand_demo.exe -B can0 127                        # SocketCAN CANFD - SDK built-in (Linux)
+./hand_demo.exe -b can0 1                          # SocketCAN CAN 2.0 - SDK built-in
+./hand_demo.exe -B can0 127                        # SocketCAN CANFD - SDK built-in
 ./hand_demo.exe -s can0 1                          # SocketCAN CAN 2.0 - can_common.cpp (Linux)
 ./hand_demo.exe -S can0 127                        # SocketCAN CANFD - can_common.cpp (Linux)
 ./hand_demo.exe -z 1                               # ZLG CAN 2.0 (Linux)
@@ -97,7 +97,7 @@ Hardware type values:
 ./hand_monitor.exe -m /dev/ttyUSB0 460800 127 motor   # Modbus
 ./hand_monitor.exe -p /dev/ttyUSB0 motor              # Protobuf (115200 baud)
 ./hand_monitor.exe -c /dev/ttyUSB0 1000000 1 touch    # CAN 2.0 (ZQWL)
-./hand_monitor.exe -b can0 1 motor                    # SocketCAN - SDK built-in (Linux)
+./hand_monitor.exe -b can0 1 motor                    # SocketCAN - SDK built-in
 ./hand_monitor.exe -s can0 1 motor                    # SocketCAN - can_common.cpp (Linux)
 ./hand_monitor.exe -z 1 motor                         # ZLG CAN 2.0 (Linux)
 ./hand_monitor.exe -Z 127 touch                       # ZLG CANFD (Linux)
@@ -136,7 +136,7 @@ All backends are compiled by default on Linux. Select at runtime via CLI or envi
 | SocketCAN | Linux (default) | `-s/-S`   | `STARK_CAN_BACKEND=socketcan` |
 | ZLG       | Linux/Windows | `-z/-Z`     | `STARK_CAN_BACKEND=zlg` |
 | ZQWL      | All           | `-c/-f`     | - (SDK built-in) |
-| SDK SocketCAN | Linux     | `-b/-B`     | - (SDK built-in) |
+| SDK SocketCAN | All (Linux runtime) | `-b/-B` | - (SDK built-in) |
 
 ### ZQWL (SDK Built-in)
 

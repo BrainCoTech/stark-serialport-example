@@ -871,19 +871,9 @@ bool init_custom_callback(DeviceContext *ctx, StarkProtocolType protocol, uint8_
 
 void print_usage(const char *prog_name) {
     printf("Usage: %s [options] [demo_id]\n\n", prog_name);
-    printf("Initialization modes:\n");
-    printf("  (default)                    Auto-detect device and protocol\n");
-    printf("  -m <port> <baud> <id>        Manual Modbus\n");
-    printf("  -c <port> <baud> <id>        Manual CAN 2.0 (ZQWL)\n");
-    printf("  -f <port> <arb> <data> <id>  Manual CANFD (ZQWL)\n");
-#ifdef __linux__
-    printf("  -s <iface> <id>              SocketCAN CAN 2.0\n");
-    printf("  -S <iface> <id>              SocketCAN CANFD\n");
-    printf("  -z <id>                      ZLG USB-CANFD CAN 2.0\n");
-    printf("  -Z <id>                      ZLG USB-CANFD CANFD\n");
-#endif
+    print_init_usage(prog_name);
+    printf("\nDemo-specific options:\n");
     printf("  -x <protocol> <id>           Custom callback mode (protocol: modbus/can/canfd)\n");
-    printf("\n");
     printf("Demo IDs:\n");
     printf("    1 - Basic position control\n");
     printf("    2 - Speed & current control\n");
@@ -894,16 +884,6 @@ void print_usage(const char *prog_name) {
     printf("    7 - Interactive loop\n");
     printf("    8 - Multi-device control\n");
     printf("    0 - Run all demos (default)\n");
-    printf("\n");
-    printf("Examples:\n");
-    printf("  %s                           # Auto-detect, run all demos\n", prog_name);
-    printf("  %s 1                         # Auto-detect, run demo 1\n", prog_name);
-    printf("  %s -m /dev/ttyUSB0 460800 127 1  # Manual Modbus, run demo 1\n", prog_name);
-#ifdef __linux__
-    printf("  %s -s can0 1                 # SocketCAN CAN 2.0\n", prog_name);
-    printf("  %s -z 1                      # ZLG CAN 2.0\n", prog_name);
-    printf("  %s -Z 127                    # ZLG CANFD\n", prog_name);
-#endif
 }
 
 int main(int argc, char const *argv[]) {
@@ -924,117 +904,52 @@ int main(int argc, char const *argv[]) {
     int arg_idx = 1;
     bool init_success = false;
 
-    // Parse initialization mode
-    if (argc > 1 && argv[1][0] == '-') {
-        char mode = argv[1][1];
+    // Handle -x (custom callback, hand_demo-specific) before common parsing
+    // Check after optional -t prefix: find the actual init option
+    int check_idx = 1;
+    if (argc > 2 && argv[1][0] == '-' && argv[1][1] == 't') {
+        check_idx = 3;  // Skip -t <type>
+    }
 
-        switch (mode) {
-            case 'm': // Manual Modbus: -m <port> <baud> <slave_id> [demo_id]
-                if (argc < 5) {
-                    printf("[ERROR] -m requires: <port> <baudrate> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_modbus(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]));
-                arg_idx = 5;
-                break;
-
-            case 'c': // Manual CAN: -c <port> <baud> <slave_id> [demo_id]
-                if (argc < 5) {
-                    printf("[ERROR] -c requires: <port> <baudrate> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_zqwl_device(&ctx, argv[2], atoi(argv[3]), 0, atoi(argv[4]), false);
-                arg_idx = 5;
-                break;
-
-            case 'f': // Manual CANFD: -f <port> <arb_baud> <data_baud> <slave_id> [demo_id]
-                if (argc < 6) {
-                    printf("[ERROR] -f requires: <port> <arb_baudrate> <data_baudrate> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_zqwl_device(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), true);
-                arg_idx = 6;
-                break;
-
-            case 'x': // Custom callback: -x <protocol> <slave_id> [demo_id]
-                if (argc < 4) {
-                    printf("[ERROR] -x requires: <protocol> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                {
-                    StarkProtocolType protocol = STARK_PROTOCOL_TYPE_MODBUS;
-                    if (strcmp(argv[2], "can") == 0) {
-                        protocol = STARK_PROTOCOL_TYPE_CAN;
-                    } else if (strcmp(argv[2], "canfd") == 0) {
-                        protocol = STARK_PROTOCOL_TYPE_CAN_FD;
-                    }
-                    init_success = init_custom_callback(&ctx, protocol, atoi(argv[3]));
-                }
-                arg_idx = 4;
-                break;
-
-#ifdef __linux__
-            case 's': // SocketCAN CAN 2.0: -s <iface> <slave_id> [demo_id]
-                if (argc < 4) {
-                    printf("[ERROR] -s requires: <interface> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_socketcan_device(&ctx, argv[2], atoi(argv[3]), false);
-                arg_idx = 4;
-                break;
-
-            case 'S': // SocketCAN CANFD: -S <iface> <slave_id> [demo_id]
-                if (argc < 4) {
-                    printf("[ERROR] -S requires: <interface> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_socketcan_device(&ctx, argv[2], atoi(argv[3]), true);
-                arg_idx = 4;
-                break;
-
-            case 'z': // ZLG CAN 2.0: -z <slave_id> [demo_id]
-                if (argc < 3) {
-                    printf("[ERROR] -z requires: <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_zlg_device(&ctx, atoi(argv[2]), false);
-                arg_idx = 3;
-                break;
-
-            case 'Z': // ZLG CANFD: -Z <slave_id> [demo_id]
-                if (argc < 3) {
-                    printf("[ERROR] -Z requires: <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_zlg_device(&ctx, atoi(argv[2]), true);
-                arg_idx = 3;
-                break;
-#endif
-
-            case 'h': // Help
-                print_usage(argv[0]);
-                return 0;
-
-            default:
-                printf("[ERROR] Unknown option: %s\n", argv[1]);
+    if (check_idx < argc && argv[check_idx][0] == '-' && argv[check_idx][1] == 'x') {
+        // Handle -t prefix manually if present
+        if (check_idx == 3) {
+            int hw_type_val = atoi(argv[2]);
+            if (hw_type_val < 0 || hw_type_val > 7) {
+                printf("[ERROR] Invalid hardware type: %d (valid: 0-7)\n", hw_type_val);
                 print_usage(argv[0]);
                 return -1;
+            }
+            ctx.hw_type_override = (StarkHardwareType)hw_type_val;
+            printf("[INFO] Hardware type override: %s (%d)\n",
+                   get_hardware_type_name_str(ctx.hw_type_override), ctx.hw_type_override);
         }
+
+        int x_argc = argc - check_idx;  // Remaining args from -x onward
+        const char** x_argv = (const char**)argv + check_idx;
+
+        if (x_argc < 3) {
+            printf("[ERROR] -x requires: <protocol> <slave_id>\n");
+            print_usage(argv[0]);
+            return -1;
+        }
+
+        StarkProtocolType protocol = STARK_PROTOCOL_TYPE_MODBUS;
+        if (strcmp(x_argv[1], "can") == 0) {
+            protocol = STARK_PROTOCOL_TYPE_CAN;
+        } else if (strcmp(x_argv[1], "canfd") == 0) {
+            protocol = STARK_PROTOCOL_TYPE_CAN_FD;
+        }
+        init_success = init_custom_callback(&ctx, protocol, atoi(x_argv[2]));
+        arg_idx = check_idx + 3;
     } else {
-        // Default: auto-detect
-        init_success = init_auto_detect(&ctx, false);
+        // Use unified parse_args_and_init for all standard options
+        init_success = parse_args_and_init(&ctx, argc, argv, &arg_idx);
     }
 
     if (!init_success) {
         printf("[ERROR] Device initialization failed\n");
+        print_usage(argv[0]);
         return -1;
     }
 

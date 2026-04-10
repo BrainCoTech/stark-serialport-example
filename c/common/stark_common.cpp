@@ -613,69 +613,6 @@ bool init_socketcan_device(DeviceContext* ctx, const char* iface, uint8_t slave_
     return true;
 }
 
-bool init_socketcan_device_builtin(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd) {
-    const char* iface_name = iface ? iface : "can0";
-    printf("\n[Init] Mode: SocketCAN %s (SDK built-in)\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
-    printf("  Interface: %s, Slave ID: %d\n", iface_name, slave_id);
-    
-    // Use SDK built-in SocketCAN API
-    int result = is_canfd ? init_socketcan_canfd(iface_name) : init_socketcan_can(iface_name);
-    if (result != 0) {
-        printf("[ERROR] Failed to initialize SocketCAN (SDK built-in)\n");
-        printf("[TIP] Make sure the interface is up:\n");
-        printf("      sudo ip link set %s type can bitrate 1000000\n", iface_name);
-        if (is_canfd) {
-            printf("      sudo ip link set %s type can dbitrate 5000000 fd on\n", iface_name);
-        }
-        printf("      sudo ip link set %s up\n", iface_name);
-        return false;
-    }
-    
-    StarkProtocolType protocol = is_canfd ? STARK_PROTOCOL_TYPE_CAN_FD : STARK_PROTOCOL_TYPE_CAN;
-    
-    // SocketCAN baudrates are configured at OS level, but we store typical values for query APIs
-    uint32_t arb_baudrate = 1000000;  // 1 Mbps (typical for both CAN 2.0 and CANFD)
-    uint32_t data_baudrate = is_canfd ? 5000000 : 1000000;  // 5 Mbps for CANFD, 1 Mbps for CAN 2.0
-    
-    // Use hw_type override if set
-    if (ctx->hw_type_override != 0) {
-        printf("  Hardware type override: %s (%d)\n", 
-               get_hardware_type_name_str(ctx->hw_type_override), ctx->hw_type_override);
-        ctx->handle = init_device_handler_can_with_hw_type(protocol, 1, slave_id, arb_baudrate, data_baudrate, ctx->hw_type_override);
-        ctx->hw_type = ctx->hw_type_override;
-    } else {
-        ctx->handle = init_device_handler_can(protocol, 1, arb_baudrate, data_baudrate);
-    }
-    
-    if (ctx->handle == NULL) {
-        printf("[ERROR] Failed to create device handler\n");
-        close_socketcan();
-        return false;
-    }
-    
-    ctx->slave_id = slave_id;
-    
-    // Get device info if no override
-    if (ctx->hw_type_override == 0) {
-        CDeviceInfo* info = stark_get_device_info(ctx->handle, slave_id);
-        if (info != NULL) {
-            ctx->hw_type = (StarkHardwareType)info->hardware_type;
-            
-            // Copy serial number
-            if (info->serial_number) {
-                strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
-                ctx->serial_number[sizeof(ctx->serial_number) - 1] = '\0';
-            }
-            
-            free_device_info(info);
-        }
-    }
-    
-    ctx->motor_freq = is_canfd ? 100 : 50;
-    ctx->touch_freq = is_canfd ? 50 : 20;
-    return true;
-}
-
 bool init_zlg_device(DeviceContext* ctx, uint8_t slave_id, bool is_canfd) {
     printf("\n[Init] Mode: ZLG USB-CANFD %s\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
     printf("  Slave ID: %d\n", slave_id);
@@ -736,6 +673,69 @@ bool init_zlg_device(DeviceContext* ctx, uint8_t slave_id, bool is_canfd) {
 }
 #endif // defined(__linux__) && !defined(STARK_NO_CAN)
 
+bool init_socketcan_device_builtin(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd) {
+    const char* iface_name = iface ? iface : "can0";
+    printf("\n[Init] Mode: SocketCAN %s (SDK built-in)\n", is_canfd ? "(CANFD)" : "(CAN 2.0)");
+    printf("  Interface: %s, Slave ID: %d\n", iface_name, slave_id);
+    
+    // Use SDK built-in SocketCAN API (available on all platforms, returns -1 on non-Linux)
+    int result = is_canfd ? init_socketcan_canfd(iface_name) : init_socketcan_can(iface_name);
+    if (result != 0) {
+        printf("[ERROR] Failed to initialize SocketCAN (SDK built-in)\n");
+        printf("[TIP] SocketCAN is only supported on Linux. Make sure:\n");
+        printf("      sudo ip link set %s type can bitrate 1000000\n", iface_name);
+        if (is_canfd) {
+            printf("      sudo ip link set %s type can dbitrate 5000000 fd on\n", iface_name);
+        }
+        printf("      sudo ip link set %s up\n", iface_name);
+        return false;
+    }
+    
+    StarkProtocolType protocol = is_canfd ? STARK_PROTOCOL_TYPE_CAN_FD : STARK_PROTOCOL_TYPE_CAN;
+    
+    // SocketCAN baudrates are configured at OS level, but we store typical values for query APIs
+    uint32_t arb_baudrate = 1000000;  // 1 Mbps (typical for both CAN 2.0 and CANFD)
+    uint32_t data_baudrate = is_canfd ? 5000000 : 1000000;  // 5 Mbps for CANFD, 1 Mbps for CAN 2.0
+    
+    // Use hw_type override if set
+    if (ctx->hw_type_override != 0) {
+        printf("  Hardware type override: %s (%d)\n", 
+               get_hardware_type_name_str(ctx->hw_type_override), ctx->hw_type_override);
+        ctx->handle = init_device_handler_can_with_hw_type(protocol, 1, slave_id, arb_baudrate, data_baudrate, ctx->hw_type_override);
+        ctx->hw_type = ctx->hw_type_override;
+    } else {
+        ctx->handle = init_device_handler_can(protocol, 1, arb_baudrate, data_baudrate);
+    }
+    
+    if (ctx->handle == NULL) {
+        printf("[ERROR] Failed to create device handler\n");
+        close_socketcan();
+        return false;
+    }
+    
+    ctx->slave_id = slave_id;
+    
+    // Get device info if no override
+    if (ctx->hw_type_override == 0) {
+        CDeviceInfo* info = stark_get_device_info(ctx->handle, slave_id);
+        if (info != NULL) {
+            ctx->hw_type = (StarkHardwareType)info->hardware_type;
+            
+            // Copy serial number
+            if (info->serial_number) {
+                strncpy(ctx->serial_number, info->serial_number, sizeof(ctx->serial_number) - 1);
+                ctx->serial_number[sizeof(ctx->serial_number) - 1] = '\0';
+            }
+            
+            free_device_info(info);
+        }
+    }
+    
+    ctx->motor_freq = is_canfd ? 100 : 50;
+    ctx->touch_freq = is_canfd ? 50 : 20;
+    return true;
+}
+
 void print_init_usage(const char* prog_name) {
     printf("Initialization options:\n");
     printf("  (default)                    Auto-detect device and protocol\n");
@@ -744,17 +744,25 @@ void print_init_usage(const char* prog_name) {
     printf("  -c <port> <baud> <id>        CAN 2.0 (ZQWL)\n");
     printf("  -f <port> <arb> <data> <id>  CANFD (ZQWL)\n");
 #if defined(__linux__) && !defined(STARK_NO_CAN)
-    printf("  -s <iface> <id>              SocketCAN CAN 2.0\n");
-    printf("  -S <iface> <id>              SocketCAN CANFD\n");
+    printf("  -s <iface> <id>              SocketCAN CAN 2.0 (can_common)\n");
+    printf("  -S <iface> <id>              SocketCAN CANFD (can_common)\n");
     printf("  -z <id>                      ZLG USB-CANFD CAN 2.0\n");
     printf("  -Z <id>                      ZLG USB-CANFD CANFD\n");
 #endif
+    printf("  -b <iface> <id>              SocketCAN CAN 2.0 (SDK built-in)\n");
+    printf("  -B <iface> <id>              SocketCAN CANFD (SDK built-in)\n");
     printf("\n");
     printf("Hardware type override (use before init option):\n");
     printf("  -t <type>                    Override hardware type detection\n");
     printf("                               0=Revo1 ProtoBuf, 1=Revo1 Basic, 2=Revo1 Touch\n");
     printf("                               3=Revo1 Advanced, 4=Revo1 Advanced Touch\n");
     printf("                               5=Revo2 Basic, 6=Revo2 Touch, 7=Revo2 Touch Pressure\n");
+    printf("\n");
+    printf("Examples:\n");
+    printf("  %s                           # Auto-detect\n", prog_name);
+    printf("  %s -m /dev/ttyUSB0 460800 1  # Modbus\n", prog_name);
+    printf("  %s -b can0 1                 # SocketCAN (SDK built-in)\n", prog_name);
+    printf("  %s -t 5 -b can0 1            # Override hw type + init\n", prog_name);
 }
 
 bool parse_args_and_init(DeviceContext* ctx, int argc, const char* argv[], int* arg_idx) {
@@ -859,28 +867,6 @@ bool parse_args_and_init(DeviceContext* ctx, int argc, const char* argv[], int* 
                 *arg_idx += 3;
                 break;
 
-            case 'b': // SocketCAN CAN 2.0 (SDK built-in): -b <iface> <slave_id>
-                if (argc < 4) {
-                    printf("[ERROR] -b requires: <interface> <slave_id>\n");
-                    return false;
-                }
-                if (!init_socketcan_device_builtin(ctx, argv[2], atoi(argv[3]), false)) {
-                    return false;
-                }
-                *arg_idx += 3;
-                break;
-                
-            case 'B': // SocketCAN CANFD (SDK built-in): -B <iface> <slave_id>
-                if (argc < 4) {
-                    printf("[ERROR] -B requires: <interface> <slave_id>\n");
-                    return false;
-                }
-                if (!init_socketcan_device_builtin(ctx, argv[2], atoi(argv[3]), true)) {
-                    return false;
-                }
-                *arg_idx += 3;
-                break;
-
             case 'z': // ZLG CAN 2.0: -z <slave_id>
                 if (argc < 3) {
                     printf("[ERROR] -z requires: <slave_id>\n");
@@ -903,6 +889,28 @@ bool parse_args_and_init(DeviceContext* ctx, int argc, const char* argv[], int* 
                 *arg_idx += 2;
                 break;
 #endif // defined(__linux__) && !defined(STARK_NO_CAN)
+
+            case 'b': // SocketCAN CAN 2.0 (SDK built-in): -b <iface> <slave_id>
+                if (argc < 4) {
+                    printf("[ERROR] -b requires: <interface> <slave_id>\n");
+                    return false;
+                }
+                if (!init_socketcan_device_builtin(ctx, argv[2], atoi(argv[3]), false)) {
+                    return false;
+                }
+                *arg_idx += 3;
+                break;
+                
+            case 'B': // SocketCAN CANFD (SDK built-in): -B <iface> <slave_id>
+                if (argc < 4) {
+                    printf("[ERROR] -B requires: <interface> <slave_id>\n");
+                    return false;
+                }
+                if (!init_socketcan_device_builtin(ctx, argv[2], atoi(argv[3]), true)) {
+                    return false;
+                }
+                *arg_idx += 3;
+                break;
                 
             case 'h': // Help
                 return false;

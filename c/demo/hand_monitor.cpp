@@ -95,23 +95,7 @@ const char* mode_to_string(CollectionMode mode) {
 
 void print_usage(const char* prog_name) {
     printf("Usage: %s [options] [mode]\n\n", prog_name);
-    printf("Initialization (default: auto-detect all protocols):\n");
-    printf("  (no options)                 Auto-detect device and protocol\n");
-    printf("  -m <port> <baud> <id>        Manual Modbus\n");
-    printf("  -c <port> <baud> <id>        Manual CAN 2.0 (ZQWL)\n");
-    printf("  -f <port> <arb> <data> <id>  Manual CANFD (ZQWL)\n");
-#ifdef __linux__
-    printf("  -s <iface> <id>              SocketCAN CAN 2.0\n");
-    printf("  -S <iface> <id>              SocketCAN CANFD\n");
-    printf("  -z <id>                      ZLG USB-CANFD CAN 2.0\n");
-    printf("  -Z <id>                      ZLG USB-CANFD CANFD\n");
-#endif
-    printf("\n");
-    printf("Hardware type override (use before init option):\n");
-    printf("  -t <type>                    Override hardware type detection\n");
-    printf("                               0=Revo1 ProtoBuf, 1=Revo1 Basic, 2=Revo1 Touch\n");
-    printf("                               3=Revo1 Advanced, 4=Revo1 Advanced Touch\n");
-    printf("                               5=Revo2 Basic, 6=Revo2 Touch, 7=Revo2 Touch Pressure\n");
+    print_init_usage(prog_name);
     printf("\n");
     printf("Monitor modes:\n");
     printf("    motor    - Motor status only (all devices)\n");
@@ -121,20 +105,9 @@ void print_usage(const char* prog_name) {
     printf("    dual     - Motor + Pressure summary + detailed (Revo2 Modulus)\n");
     printf("    auto     - Auto-detect based on device type (default)\n");
     printf("\n");
-    printf("CAN Backend (runtime selection):\n");
-    printf("  SocketCAN (default) - use -s/-S, or STARK_CAN_BACKEND=socketcan\n");
-    printf("  ZLG                 - use -z/-Z, or STARK_CAN_BACKEND=zlg\n");
-    printf("  ZQWL (SDK built-in) - use -c/-f\n");
-    printf("\n");
-    printf("Examples:\n");
-    printf("  %s                # Auto-detect, auto mode\n", prog_name);
+    printf("Mode examples:\n");
     printf("  %s motor          # Auto-detect, motor only\n", prog_name);
-    printf("  %s touch          # Auto-detect, touch mode\n", prog_name);
-#ifdef __linux__
-    printf("  %s -z 1 motor     # ZLG CAN 2.0, motor mode\n", prog_name);
-    printf("  %s -Z 127 touch   # ZLG CANFD, touch mode\n", prog_name);
-    printf("  %s -t 6 -z 2 touch  # ZLG CAN 2.0, force Revo2 Touch type\n", prog_name);
-#endif
+    printf("  %s -b can0 1 touch  # SocketCAN + touch mode\n", prog_name);
 }
 
 //=============================================================================
@@ -441,120 +414,18 @@ int main(int argc, char const *argv[]) {
     int arg_idx = 1;
     bool init_success = false;
     
-    // Check for -t option first (hardware type override)
-    if (argc > 2 && argv[1][0] == '-' && argv[1][1] == 't') {
-        int hw_type_val = atoi(argv[2]);
-        if (hw_type_val < 0 || hw_type_val > 7) {
-            printf("[ERROR] Invalid hardware type: %d (valid: 0-7)\n", hw_type_val);
-            print_usage(argv[0]);
-            return -1;
-        }
-        ctx.hw_type_override = (StarkHardwareType)hw_type_val;
-        printf("[INFO] Hardware type override: %s (%d)\n", 
-               get_hardware_type_name_str(ctx.hw_type_override), ctx.hw_type_override);
-        
-        // Shift arguments
-        argc -= 2;
-        argv += 2;
-        arg_idx = 1;
-    }
-    
     // Parse initialization mode
-    if (argc > 1 && argv[1][0] == '-') {
-        char opt = argv[1][1];
-        
-        switch (opt) {
-            case 'm': // Manual Modbus: -m <port> <baud> <slave_id> [mode]
-                if (argc < 5) {
-                    printf("[ERROR] -m requires: <port> <baudrate> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_modbus(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]));
-                arg_idx = 5;
-                break;
-                
-            case 'c': // Manual CAN: -c <port> <baud> <slave_id> [mode]
-                if (argc < 5) {
-                    printf("[ERROR] -c requires: <port> <baudrate> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_zqwl_device(&ctx, argv[2], atoi(argv[3]), 0, atoi(argv[4]), false);
-                arg_idx = 5;
-                break;
-                
-            case 'f': // Manual CANFD: -f <port> <arb_baud> <data_baud> <slave_id> [mode]
-                if (argc < 6) {
-                    printf("[ERROR] -f requires: <port> <arb_baudrate> <data_baudrate> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_zqwl_device(&ctx, argv[2], atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), true);
-                arg_idx = 6;
-                break;
-
-#ifdef __linux__
-            case 's': // SocketCAN CAN 2.0: -s <iface> <slave_id> [mode]
-                if (argc < 4) {
-                    printf("[ERROR] -s requires: <interface> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_socketcan_device(&ctx, argv[2], atoi(argv[3]), false);
-                arg_idx = 4;
-                break;
-                
-            case 'S': // SocketCAN CANFD: -S <iface> <slave_id> [mode]
-                if (argc < 4) {
-                    printf("[ERROR] -S requires: <interface> <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_socketcan_device(&ctx, argv[2], atoi(argv[3]), true);
-                arg_idx = 4;
-                break;
-
-            case 'z': // ZLG CAN 2.0: -z <slave_id> [mode]
-                if (argc < 3) {
-                    printf("[ERROR] -z requires: <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_zlg_device(&ctx, atoi(argv[2]), false);
-                arg_idx = 3;
-                break;
-                
-            case 'Z': // ZLG CANFD: -Z <slave_id> [mode]
-                if (argc < 3) {
-                    printf("[ERROR] -Z requires: <slave_id>\n");
-                    print_usage(argv[0]);
-                    return -1;
-                }
-                init_success = init_zlg_device(&ctx, atoi(argv[2]), true);
-                arg_idx = 3;
-                break;
-#endif
-                
-            case 'h': // Help
-                print_usage(argv[0]);
-                return 0;
-                
-            default:
-                printf("[ERROR] Unknown option: %s\n", argv[1]);
-                print_usage(argv[0]);
-                return -1;
-        }
-    } else {
-        // Default: auto-detect
-        bool require_touch = false;
-        if (argc > 1) {
-            mode = parse_mode(argv[1]);
-            require_touch = (mode == MODE_TOUCH || mode == MODE_SUMMARY ||
+    // If first arg is not an option, it's a mode string -> handle auto-detect with require_touch
+    if (argc > 1 && argv[1][0] != '-') {
+        // No init option, first arg is mode
+        mode = parse_mode(argv[1]);
+        bool require_touch = (mode == MODE_TOUCH || mode == MODE_SUMMARY ||
                             mode == MODE_DETAILED || mode == MODE_DUAL);
-            arg_idx = 2;
-        }
+        arg_idx = 2;
         init_success = auto_detect_and_init(&ctx, require_touch);
+    } else {
+        // Use unified parse_args_and_init for all standard options (including auto-detect)
+        init_success = parse_args_and_init(&ctx, argc, argv, &arg_idx);
     }
     
     if (!init_success) {

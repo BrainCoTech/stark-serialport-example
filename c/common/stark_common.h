@@ -235,20 +235,6 @@ bool init_zqwl_device(DeviceContext* ctx, const char* port, uint32_t arb_baudrat
 bool init_socketcan_device(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd);
 
 /**
- * @brief Initialize device via SocketCAN (using SDK built-in implementation)
- * 
- * This uses the SDK's built-in SocketCAN support (init_socketcan_can/init_socketcan_canfd).
- * No additional compile flags needed, works out of the box on Linux.
- * 
- * @param ctx Output: Device context to fill
- * @param iface CAN interface name (e.g., "can0"). If NULL, uses "can0"
- * @param slave_id Slave ID
- * @param is_canfd true for CANFD, false for CAN 2.0
- * @return true if successful
- */
-bool init_socketcan_device_builtin(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd);
-
-/**
  * @brief Initialize device via ZLG USB-CANFD
  * @param ctx Output: Device context to fill
  * @param slave_id Slave ID
@@ -257,6 +243,20 @@ bool init_socketcan_device_builtin(DeviceContext* ctx, const char* iface, uint8_
  */
 bool init_zlg_device(DeviceContext* ctx, uint8_t slave_id, bool is_canfd);
 #endif
+
+/**
+ * @brief Initialize device via SocketCAN (using SDK built-in implementation)
+ * 
+ * This uses the SDK's built-in SocketCAN support (init_socketcan_can/init_socketcan_canfd).
+ * Available on all platforms; returns failure on non-Linux.
+ * 
+ * @param ctx Output: Device context to fill
+ * @param iface CAN interface name (e.g., "can0"). If NULL, uses "can0"
+ * @param slave_id Slave ID
+ * @param is_canfd true for CANFD, false for CAN 2.0
+ * @return true if successful
+ */
+bool init_socketcan_device_builtin(DeviceContext* ctx, const char* iface, uint8_t slave_id, bool is_canfd);
 
 /**
  * @brief Parse command line arguments and initialize device
