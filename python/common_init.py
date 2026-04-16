@@ -26,7 +26,7 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 if _current_dir not in sys.path:
     sys.path.insert(0, _current_dir)
 
-from common_imports import sdk, logger, get_hw_type_name, check_sdk
+from common_imports import sdk, logger, get_hw_type_name, check_sdk, modbus_open
 
 
 @dataclass
@@ -50,7 +50,7 @@ async def init_modbus(port: str, baudrate: int, slave_id: int) -> Optional[Devic
     """Initialize device via Modbus (RS485)"""
     check_sdk()
     try:
-        ctx = await sdk.init_modbus(port, baudrate)
+        ctx = await modbus_open(port, baudrate)
         
         # Get device info
         info = await ctx.get_device_info(slave_id)

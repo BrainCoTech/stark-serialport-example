@@ -82,6 +82,23 @@ def baudrate_to_int(baudrate) -> int:
     }
     return _baudrate_bps_map.get(baudrate, 0)
 
+async def modbus_open(port_name: str, baudrate):
+    """Open Modbus connection with automatic baudrate conversion.
+
+    Accepts either an int (e.g. 5000000) or a Baudrate enum.
+    Converts int to Baudrate enum automatically.
+
+    Args:
+        port_name: Serial port name (e.g. "/dev/ttyUSB0")
+        baudrate: Baud rate as int or Baudrate enum
+
+    Returns:
+        DeviceContext instance
+    """
+    if sdk is None:
+        raise RuntimeError("SDK not available")
+    baudrate_enum = int_to_baudrate(baudrate) if isinstance(baudrate, int) else baudrate
+    return await sdk.modbus_open(port_name, baudrate_enum)
 
 def str_to_protocol_type(protocol_str: str):
     """Convert protocol string to StarkProtocolType enum (deprecated)
